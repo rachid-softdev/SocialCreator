@@ -174,11 +174,19 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
                 <span className="text-body-strong text-ink">{profile._count.generatedContents}</span>
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-body-sm text-muted">
+                <Link
+                  href={`/profiles/${profile.id}/accounts`}
+                  className="flex items-center gap-2 text-body-sm text-muted hover:text-ink transition-colors"
+                >
                   <Link2 className="w-4 h-4" />
                   Accounts
-                </div>
-                <span className="text-body-strong text-ink">{profile._count.connectedAccounts}</span>
+                </Link>
+                <Link
+                  href={`/profiles/${profile.id}/accounts`}
+                  className="text-body-strong text-ink hover:underline"
+                >
+                  {profile._count.connectedAccounts}
+                </Link>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-hairline">
                 <span className="text-body-sm text-muted">Approval Rate</span>
