@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── NextAuth required ────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  stripeSubscriptionStatus String?
+  cguAccepted      Boolean   @default(false)
+  cguAcceptedAt    DateTime?
+  accounts         Account[]
+  sessions         Session[]
+  profiles         Profile[]
+  apiKeys          ApiKey[]
+  publishLogs      PublishLog[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+// ── Application ─────────────────────────────────────────────
+
+model Profile {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  brandVoice       String             @db.Text
+  contentBank     String?            @db.Text
+  platforms       Platform[]
+  avatarUrl        String?
+  isActive        Boolean            @default(true)
+  connectedAccounts ConnectedAccount[]
+  agents           Agent[]
+  analytics        Analytics[]
+  generatedContents GeneratedContent[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model ConnectedAccount {
+  id           String    @id @default(cuid())
+  profileId    String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  platform    Platform
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
+  expiresAt   DateTime?
+  accountId   String
+  accountName String
+  accountAvatarUrl String?
+  isActive   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([profileId, platform])
+}
+
+enum Platform {
+  TIKTOK
+  INSTAGRAM
+  YOUTUBE
+  FACEBOOK
+  X
+  LINKEDIN
+  THREADS
+  PINTEREST
+}
+
+model Agent {
+  id           String      @id @default(cuid())
+  profileId    String
+  profile     Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name        String
+  type        AgentType
+  platforms   Platform[]
+  scheduleCron String?
+  isActive    Boolean           @default(false)
+  autoPublish Boolean           @default(false)
+  maxPerDay   Int               @default(2)
+  config      Json              @default("{}")
+  runs        AgentRun[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum AgentType {
+  TEXT_POST
+  VIDEO_CLIP
+  CROSS_POST
+}
+
+model AgentRun {
+  id               String             @id @default(cuid())
+  agentId          String
+  agent            Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  brief            String             @db.Text
+  status           RunStatus          @default(PENDING)
+  startedAt        DateTime?
+  finishedAt      DateTime?
+  error           String?
+  generatedContents GeneratedContent[]
+  createdAt       DateTime           @default(now())
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+model GeneratedContent {
+  id           String        @id @default(cuid())
+  runId        String?
+  run          AgentRun?     @relation(fields: [runId], references: [id])
+  profileId   String
+  profile     Profile       @relation(fields: [profileId], references: [id])
+  platform    Platform
+  textContent String        @db.Text
+  mediaUrls   String[]
+  hashtags   String[]
+  status     ContentStatus  @default(DRAFT)
+  postId      String?
+  publishedAt DateTime?
+  rejectedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum ContentStatus {
+  DRAFT
+  APPROVED
+  PUBLISHED
+  FAILED
+  REJECTED
+}
+
+model PublishLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  profileId   String
+  platform   Platform
+  contentId  String
+  contentHash String
+  success    Boolean
+  error      String?
+  publishedAt DateTime @default(now())
+
+  @@index([userId, publishedAt])
+  @@index([profileId, publishedAt])
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  keyHash   String    @unique
+  prefix    String
+  lastUsed  DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Analytics {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date       DateTime @default(now()) @db.Date
+  platform  Platform
+  impressions Int   @default(0)
+  engagements Int   @default(0)
+  clicks     Int    @default(0)
+  followers  Int     @default(0)
+
+  @@unique([profileId, date, platform])
+  @@index([profileId, date])
+}
+
+model VideoAsset {
+  id           String    @id @default(cuid())
+  profileId    String
+  uploadUrl    String    @db.Text
+  muxAssetId   String?   @unique
+  muxPlaybackId String?
+  transcript  String?   @db.Text
+  segments    Json?
+  status      String    @default("UPLOADING")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
