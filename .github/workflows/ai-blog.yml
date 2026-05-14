@@ -1,0 +1,74 @@
+name: "AI Blog Generator"
+
+on:
+  schedule:
+    # Every Monday at 00:00 UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force generation even if no new posts needed"
+        required: false
+        default: "false"
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  generate-blog-posts:
+    name: Generate Blog Posts with AI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate blog posts
+        run: node scripts/generate-blog-posts.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Check for changes
+        id: git-status
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet src/content/blog/posts.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No new posts to commit."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.git-status.outputs.changed == 'true'
+        run: |
+          git add src/content/blog/posts.json
+          git commit -m "ai: generate blog posts [skip ci]"
+          git push
+
+      - name: Summary
+        if: steps.git-status.outputs.changed == 'true'
+        run: |
+          echo "## ✅ Blog Posts Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "New articles have been generated and committed to \`src/content/blog/posts.json\`." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Trigger | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | $(git log -1 --oneline) |" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_STEP_SUMMARY: ${{ steps.git-status.outputs.summary }}
