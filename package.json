@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "generate-blog": "node scripts/generate-blog-posts.js"
+    "generate-blog": "node scripts/generate-blog-posts.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -51,6 +54,8 @@
     "prisma": "^6.3.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
   }
 }

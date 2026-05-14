@@ -5,7 +5,7 @@
 // 3. Clip creation via Mux
 // 4. Content generation via Claude
 
-import { client } from "@/trigger";
+import { client } from "@/lib/trigger";
 import { triggerHttpPayload } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";

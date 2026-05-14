@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import Stripe from "stripe"
-import { stripe, PLANS } from "@/lib/stripe"
+import { getStripe, PLANS } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   }
 
   let event: Stripe.Event
+  const stripe = getStripe()
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -149,7 +150,24 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  console.log(`Invoice ${invoice.id} paid successfully`)
+  const customerId = invoice.customer as string
+  const subscriptionId = invoice.subscription as string
+  const amountPaid = invoice.amount_paid
+  const currency = invoice.currency
+  
+  console.log(`Invoice ${invoice.id} paid successfully: ${amountPaid / 100} ${currency}`)
+  
+  // Log the payment for audit
+  if (customerId) {
+    await prisma.user.findFirst({
+      where: { stripeCustomerId: customerId },
+      select: { id: true },
+    }).then(user => {
+      if (user) {
+        console.log(`Payment logged for user ${user.id}: ${amountPaid / 100} ${currency}`)
+      }
+    })
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
