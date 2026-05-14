@@ -1,45 +1,48 @@
-// Trigger.dev integration placeholder
-// This file provides the structure for Trigger.dev integration
-// In production, you would install @trigger.dev/sdk and configure it
+/**
+ * Trigger.dev client initialization
+ * Point central pour l'interaction avec Trigger.dev
+ * 
+ * Ce fichier est utilisé par les triggers pour exécuter des jobs
+ * et par les API routes pour enqueue des tâches
+ */
 
-// The agent run job definition would look like:
-// import { client } from "@/trigger"
-// import { triggerHttpPayload } from "@trigger.dev/sdk"
-// import { z } from "zod"
-//
-// export const agentRunJob = client.defineJob({
-//   id: "agent-run",
-//   name: "Agent Run",
-//   version: "0.0.1",
-//   trigger: triggerHttpPayload({
-//     schema: z.object({
-//       agentId: z.string(),
-//       runId: z.string(),
-//     }),
-//   }),
-//   run: async (job) => {
-//     const { triggerAgentRun } = await import("@/lib/agent-runner");
-//     await triggerAgentRun(job.payload);
-//   },
-// });
+import { client } from "@trigger.dev/sdk";
 
-// For now, we use direct execution via triggerAgentRun
-// which can be called from API routes
+// Configuration du client Trigger
+// Les variables d'environnement doivent être:
+// - TRIGGER_API_KEY: Clé secrète pour l'API
+// - TRIGGER_PUBLIC_KEY: Clé publique pour le frontend
+// - TRIGGER_API_URL: URL de l'API (par défaut: https://api.trigger.dev)
 
+// Export du client configuré
+export { client };
+
+// Helper pour vérifier si Trigger est configuré
+export function isTriggerConfigured(): boolean {
+  return !!(process.env.TRIGGER_API_KEY && process.env.TRIGGER_API_URL);
+}
+
+// Helper pour obtenir l'URL de l'API
+export function getTriggerApiUrl(): string {
+  return process.env.TRIGGER_API_URL || "https://api.trigger.dev";
+}
+
+// Types pour les payloads de jobs
 export interface AgentRunPayload {
   agentId: string;
   runId: string;
+  userId: string;
+  profileId: string;
 }
 
-// Export a function to get the trigger endpoint URL
-export function getTriggerEndpoint(): string {
-  return process.env.TRIGGER_API_URL || "https://trigger.dev";
+export interface PublishPayload {
+  contentId: string;
+  userId: string;
+  profileId: string;
 }
 
-// Export a function to check if trigger is configured
-export function isTriggerConfigured(): boolean {
-  return !!(
-    process.env.TRIGGER_API_URL &&
-    process.env.TRIGGER_API_KEY
-  );
+export interface VideoPipelinePayload {
+  videoAssetId: string;
+  profileId: string;
+  platforms: string[];
 }

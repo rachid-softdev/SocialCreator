@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { authenticateMcpRequest } from "./auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { agentRunner } from "@/lib/agent-runner"
+import { triggerAgentRun } from "@/lib/agent-runner"
 import { AgentType, Platform, RunStatus } from "@prisma/client"
+import { checkRateLimit, getUserIdFromAuth } from "@/lib/rate-limit"
 
 // JSON-RPC error codes
 const ERROR_INVALID_REQUEST = -32600
@@ -52,7 +53,13 @@ const GetRunStatusSchema = z.object({
   run_id: z.string(),
 })
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting check
+  const rateLimitResponse = checkRateLimit(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   // Authenticate request
   const auth = await authenticateMcpRequest()
   if (!auth) {
@@ -202,18 +209,7 @@ async function handleCreateAgent(userId: string, params: unknown) {
     throw { code: ERROR_NOT_FOUND, message: "Profile not found" }
   }
 
-  // Check if there's a running agent
-  const runningAgent = await prisma.agentRun.findFirst({
-    where: {
-      agent: { id: parsed.profile_id },
-      status: "RUNNING",
-    },
-  })
-
-  if (runningAgent) {
-    throw { code: ERROR_CONFLICT, message: "An agent is already running for this profile" }
-  }
-
+  // Create the agent first, then we can check runs on this specific agent
   const agent = await prisma.agent.create({
     data: {
       profileId: parsed.profile_id,
