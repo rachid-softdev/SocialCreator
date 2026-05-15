@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastLayoutWrapper } from "@/components/toast-layout-wrapper";
 
 export const metadata: Metadata = {
   title: "SocialCreator - AI-Powered Social Media Content",
@@ -13,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <ToastLayoutWrapper>
+          {children}
+        </ToastLayoutWrapper>
+      </body>
     </html>
   );
 }

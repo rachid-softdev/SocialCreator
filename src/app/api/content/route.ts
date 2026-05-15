@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { contentFilterSchema, isValidUuid, sanitizeString } from "@/lib/sanitize";
 
 // GET /api/content?profileId=xxx&status=DRAFT&page=1
 export async function GET(request: Request) {
@@ -15,11 +16,35 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const profileId = searchParams.get("profileId");
-    const status = searchParams.get("status");
-    const platform = searchParams.get("platform");
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+
+    // Extract raw values
+    const rawFilters = {
+      profileId: searchParams.get("profileId"),
+      status: searchParams.get("status"),
+      platform: searchParams.get("platform"),
+      page: searchParams.get("page"),
+      pageSize: searchParams.get("pageSize"),
+    };
+
+    // Validate filters with Zod
+    const validation = contentFilterSchema.safeParse(rawFilters);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { profileId, status, platform, page, pageSize } = validation.data;
+
+    // Validate profileId if provided
+    if (profileId && !isValidUuid(profileId)) {
+      return NextResponse.json(
+        { error: "Invalid profile ID" },
+        { status: 400 }
+      );
+    }
 
     // Build where clause
     const whereClause: Record<string, unknown> = {
