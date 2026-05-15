@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { approveContentSchema } from "@/lib/validations";
+import { isValidUuid } from "@/lib/sanitize";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -26,6 +28,26 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+
+    // Validate content ID
+    if (!isValidUuid(id)) {
+      return NextResponse.json(
+        { error: "Invalid content ID" },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = approveContentSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
     const content = await getContentOr404(id, session.user.id);
 
     if (!content) {

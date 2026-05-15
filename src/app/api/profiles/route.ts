@@ -1,43 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
+import { createProfileSchema } from "@/lib/validations";
+import { checkProfileQuota } from "@/lib/quota-guard";
 
-const createProfileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(50),
-  brandVoice: z.string().max(500).optional(),
-  contentBank: z.string().optional(),
-  platforms: z.array(z.enum([
-    "TIKTOK",
-    "INSTAGRAM",
-    "YOUTUBE",
-    "FACEBOOK",
-    "X",
-    "LINKEDIN",
-    "THREADS",
-    "PINTEREST",
-  ])).optional(),
-});
-
-async function checkProfileQuota(userId: string): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      stripeSubscriptionId: true,
-      _count: { select: { profiles: true } },
-    },
-  });
-
-  if (!user) return false;
-
-  // Free tier: 1 profile max
-  if (!user.stripeSubscriptionId) {
-    return user._count.profiles < 1;
-  }
-
-  // Paid tier: unlimited
-  return true;
-}
+// checkProfileQuota imported from quota-guard
 
 export async function GET() {
   try {

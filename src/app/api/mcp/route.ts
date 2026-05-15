@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { triggerAgentRun } from "@/lib/agent-runner"
 import { AgentType, Platform, RunStatus } from "@prisma/client"
-import { checkRateLimit, getUserIdFromAuth } from "@/lib/rate-limit"
+import { checkRateLimit, withRateLimit, getIdentifier } from "@/lib/rate-limit-redis"
 
 // JSON-RPC error codes
 const ERROR_INVALID_REQUEST = -32600
@@ -54,16 +54,39 @@ const GetRunStatusSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  // Rate limiting check
-  const rateLimitResponse = checkRateLimit(request)
-  if (rateLimitResponse) {
-    return rateLimitResponse
+  // First, try Redis rate limiting (with fallback to in-memory if Redis not configured)
+  const identifier = getIdentifier(request);
+  const rateLimitResult = await checkRateLimit(request, identifier);
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        jsonrpc: "2.0",
+        id: null,
+        error: {
+          code: -32001,
+          message: `Rate limit exceeded. Try again in ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds.`,
+        },
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+        },
+      }
+    );
   }
 
   // Authenticate request
   const auth = await authenticateMcpRequest()
   if (!auth) {
-    return createJsonRpcErrorResponse(null, ERROR_AUTH_ERROR, "Invalid or missing API key")
+    const response = createJsonRpcErrorResponse(null, ERROR_AUTH_ERROR, "Invalid or missing API key");
+    response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString());
+    response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString());
+    response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString());
+    return response;
   }
 
   try {
