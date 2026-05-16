@@ -321,7 +321,7 @@ export default function VideoPipelinePage() {
                   segments={videoAsset.segments}
                   playbackId={videoAsset.muxPlaybackId}
                   onSelectSegments={() => {}}
-                  onGenerateContent={handleCreateClips}
+                  onGenerateContent={() => handleCreateClips([])}
                   isGenerating={isCreatingClips}
                 />
               </div>
@@ -394,6 +394,7 @@ export default function VideoPipelinePage() {
                     hook={videoAsset.segments?.[0]?.hook}
                   />
                   <VideoTimeline
+                    words={[]}
                     segments={videoAsset.segments || []}
                     duration={120}
                   />

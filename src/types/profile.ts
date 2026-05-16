@@ -32,6 +32,7 @@ export const CONTENT_STATUS_LABELS: Record<ContentStatus, string> = {
   PUBLISHED: "Published",
   FAILED: "Failed",
   REJECTED: "Rejected",
+  SCHEDULED: "Scheduled",
 };
 
 export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
@@ -40,4 +41,5 @@ export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
   PUBLISHED: "bg-semantic-success/10 text-semantic-success",
   FAILED: "bg-semantic-error/10 text-semantic-error",
   REJECTED: "bg-semantic-error/10 text-semantic-error",
+  SCHEDULED: "bg-blue-100 text-blue-800",
 };

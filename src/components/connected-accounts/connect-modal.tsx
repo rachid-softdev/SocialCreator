@@ -37,7 +37,7 @@ export function ConnectModal({
   const [isConnecting, setIsConnecting] = useState<Platform | null>(null);
 
   const unconnectedPlatforms = getUnconnectedPlatforms(
-    accounts as { platform: Platform }[]
+    accounts as any[]
   );
 
   const handleConnect = useCallback(

@@ -111,7 +111,7 @@ export function prepareAccountForStorage(
 
   return {
     accessToken: encrypted.accessToken,
-    refreshToken: encrypted.refreshToken,
+    refreshToken: encrypted.refreshToken ?? null,
     expiresAt: expiresIn ? calculateTokenExpiration(expiresIn) : null,
   };
 }

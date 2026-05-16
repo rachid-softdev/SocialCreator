@@ -1,11 +1,14 @@
 /**
  * Publish guard - enforces daily cap limits per platform per profile
  * Rule: max 4 posts/day/account, configurable up to 8
+ *
+ * Uses Redis for scalable cap counting with fallback to database
  */
 
 import { prisma } from "@/lib/prisma";
 import { startOfDayUTC } from "@/lib/utils";
 import { Platform } from "@prisma/client";
+import { getRedis } from "./rate-limit-redis";
 
 export interface CapStatus {
   allowed: boolean;
@@ -14,15 +17,21 @@ export interface CapStatus {
 }
 
 /**
- * Check daily publishing cap for a profile/platform
- * Returns the current count and whether publishing is allowed
+ * Get Redis key for daily cap
  */
-export async function checkDailyCap(
+function getCapKey(profileId: string, platform: Platform): string {
+  const dateStr = startOfDayUTC(new Date()).toISOString().split("T")[0];
+  return `cap:${profileId}:${platform}:${dateStr}`;
+}
+
+/**
+ * Get maxPerDay for a profile/platform from active agents
+ */
+async function getMaxPerDay(
   profileId: string,
   platform: Platform,
   maxOverride?: number
-): Promise<CapStatus> {
-  // Get maxPerDay from active agents on this platform
+): Promise<number> {
   const agents = await prisma.agent.findMany({
     where: {
       profileId,
@@ -33,8 +42,39 @@ export async function checkDailyCap(
   });
 
   const maxByAgents = agents.length > 0 ? Math.max(...agents.map((a) => a.maxPerDay)) : 2;
-  const max = Math.min(maxByAgents, maxOverride ?? 8);
+  return Math.min(maxByAgents, maxOverride ?? 8);
+}
 
+/**
+ * Check daily publishing cap for a profile/platform
+ * Uses Redis for performance, falls back to database
+ */
+export async function checkDailyCap(
+  profileId: string,
+  platform: Platform,
+  maxOverride?: number
+): Promise<CapStatus> {
+  const max = await getMaxPerDay(profileId, platform, maxOverride);
+  const redis = getRedis();
+
+  if (redis) {
+    try {
+      const key = getCapKey(profileId, platform);
+      const count = await redis.incr(key);
+
+      // Set expiry on first increment (24 hours)
+      if (count === 1) {
+        await redis.expire(key, 86400); // 24 hours in seconds
+      }
+
+      return { allowed: count <= max, count, max };
+    } catch (error) {
+      console.warn("Redis cap check failed, falling back to database:", error);
+      // Fall through to database fallback
+    }
+  }
+
+  // Fallback to database count
   const startOfDay = startOfDayUTC(new Date());
   const count = await prisma.publishLog.count({
     where: {
@@ -46,6 +86,32 @@ export async function checkDailyCap(
   });
 
   return { allowed: count < max, count, max };
+}
+
+/**
+ * Record a successful publish (increment cap counter)
+ */
+export async function recordPublish(
+  profileId: string,
+  platform: Platform
+): Promise<void> {
+  const redis = getRedis();
+
+  if (redis) {
+    try {
+      const key = getCapKey(profileId, platform);
+      await redis.incr(key);
+
+      // Set expiry on first increment
+      const current = await redis.get(key);
+      if (current === "1") {
+        await redis.expire(key, 86400);
+      }
+    } catch (error) {
+      console.warn("Failed to record publish in Redis:", error);
+    }
+  }
+  // Note: Database write happens via PublishLog in the publish flow
 }
 
 /**
@@ -88,16 +154,8 @@ export async function getProfileCapStatus(profileId: string): Promise<
     allowed: boolean;
   }>
 > {
-  const platforms: Platform[] = [
-    "INSTAGRAM",
-    "TIKTOK",
-    "YOUTUBE",
-    "FACEBOOK",
-    "X",
-    "LINKEDIN",
-    "THREADS",
-    "PINTEREST",
-  ];
+  // Use Platform enum instead of hardcoded array
+  const platforms: Platform[] = Object.values(Platform);
 
   const results = await Promise.all(
     platforms.map(async (platform) => {

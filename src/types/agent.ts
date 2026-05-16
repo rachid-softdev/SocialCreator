@@ -11,7 +11,6 @@ export type AgentWithRelations = Agent & {
   };
   _count: {
     runs: number;
-    generatedContents: number;
   };
   runs?: AgentRun[];
 };

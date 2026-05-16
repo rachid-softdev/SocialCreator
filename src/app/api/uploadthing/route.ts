@@ -1,20 +1,18 @@
-import { createUploadThing, type FileRouter } from "uploadthing";
+import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { createRouteHandler } from "uploadthing/next";
 
-const f = createUploadThing({
-  define: () => ({
-    videoUpload: "video",
-  }),
-});
+const f = createUploadthing();
 
-export const uploadRouter = {
-  videoUpload: f({
-    video: ({ file }) => {
-      return {
-        url: file.url,
-        key: file.key,
-      };
-    },
-  }),
+const uploadRouter = {
+  videoUpload: f({ video: { maxFileSize: "512MB", maxFileCount: 1 } })
+    .onUploadComplete(async ({ file }) => {
+      console.log("Upload complete:", file.url);
+      return { url: file.url, key: file.key };
+    }),
 } satisfies FileRouter;
 
 export type AppUploadRouter = typeof uploadRouter;
+
+export const { GET, POST } = createRouteHandler({
+  router: uploadRouter,
+});

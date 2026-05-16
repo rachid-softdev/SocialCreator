@@ -36,7 +36,6 @@ export default async function AgentsPage({ params }: PageProps) {
       _count: {
         select: {
           runs: true,
-          generatedContents: true,
         },
       },
       runs: {

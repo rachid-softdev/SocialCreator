@@ -13,23 +13,21 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get("profileId");
 
-    // Build query
-    const where: { profile: { userId: string }; profileId?: string } = {
-      profile: { userId: session.user.id },
-    };
+    // Build query - get all videos for user's profiles
+    const profileIds = await prisma.profile.findMany({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
 
-    if (profileId) {
-      where.profileId = profileId;
-    }
+    const pids = profileIds.map(p => p.id);
 
     const videos = await prisma.videoAsset.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        profile: {
-          select: { id: true, name: true },
-        },
+      where: {
+        profileId: profileId
+          ? profileId
+          : { in: pids }
       },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({ videos });
@@ -41,3 +39,6 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";

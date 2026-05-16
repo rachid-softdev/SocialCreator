@@ -20,7 +20,7 @@ export const PLATFORMS = [
   'PINTEREST',
 ] as const;
 
-export const CONTENT_STATUS = ['DRAFT', 'APPROVED', 'PUBLISHED', 'REJECTED', 'FAILED'] as const;
+export const CONTENT_STATUS = ['DRAFT', 'APPROVED', 'PUBLISHED', 'REJECTED', 'FAILED', 'SCHEDULED'] as const;
 
 export const AGENT_TYPES = ['TEXT_POST', 'VIDEO_CLIP', 'CROSS_POST'] as const;
 
@@ -49,6 +49,10 @@ export const createProfileSchema = z.object({
     .url('Invalid avatar URL')
     .optional()
     .or(z.literal('')),
+  platforms: z
+    .array(z.enum(PLATFORMS))
+    .optional()
+    .default([]),
 });
 
 export const updateProfileSchema = createProfileSchema.partial();

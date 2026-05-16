@@ -79,7 +79,7 @@ export default function Error({ error, reset }: ErrorProps) {
       <div className="flex gap-4">
         <Button
           onClick={() => reset()}
-          variant="default"
+          variant="primary"
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
@@ -123,12 +123,12 @@ export function NotFoundError() {
           Page Not Found
         </h2>
         <p className="text-body-md text-body max-w-md">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
       </div>
       <Button
         onClick={() => window.location.href = "/dashboard"}
-        variant="default"
+        variant="primary"
         className="flex items-center gap-2"
       >
         <Home className="h-4 w-4" />
@@ -156,7 +156,7 @@ export function SessionExpiredError() {
       <div className="flex gap-4">
         <Button
           onClick={() => window.location.href = "/login"}
-          variant="default"
+          variant="primary"
         >
           Sign In
         </Button>

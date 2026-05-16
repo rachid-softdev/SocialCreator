@@ -33,7 +33,7 @@ export default async function PricingPage() {
     <div className="relative min-h-screen">
       {/* Background orb */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none">
-        <GradientOrb className="opacity-30" />
+        <GradientOrb color="mint" className="opacity-30" />
       </div>
 
       <div className="relative max-w-content mx-auto px-6 py-section">

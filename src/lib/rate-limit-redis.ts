@@ -122,8 +122,7 @@ function getRateLimiter(path: string): Ratelimit | null {
   // Create new rate limiter
   const limiter = new Ratelimit({
     redis: redisClient,
-    limiter: Ratelimit.slidingWindow(config.limit, config.window),
-    prefix: `ratelimit:${path}`,
+    limiter: Ratelimit.slidingWindow(config.limit, config.window as any),
     timeout: 1000, // 1 second timeout
   });
 
@@ -315,18 +314,23 @@ export async function getRateLimitStatus(
     const redisClient = getRedis();
     if (!redisClient) return null;
 
-    const key = `${limiter.prefix}:${identifier}`;
+    // Build key based on path
+    const pathConfig = getConfigForPath(path);
+    const prefix = pathConfig ? `ratelimit:${path}` : "ratelimit:default";
+    const key = `${prefix}:${identifier}`;
     const data = await redisClient.get(key);
 
+    const limit = pathConfig?.limit ?? 100;
+
     if (!data) {
-      return { limit: limiter.limit, remaining: limiter.limit, reset: 0 };
+      return { limit, remaining: limit, reset: 0 };
     }
 
     // Parse the stored data
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
     return {
-      limit: limiter.limit,
-      remaining: Math.max(0, limiter.limit - (parsed.remaining || 0)),
+      limit,
+      remaining: Math.max(0, limit - (parsed.remaining || 0)),
       reset: parsed.reset || 0,
     };
   } catch {

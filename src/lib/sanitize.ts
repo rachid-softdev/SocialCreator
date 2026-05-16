@@ -76,7 +76,7 @@ function sanitizeValue(value: unknown, depth: number): unknown {
   }
 
   if (Array.isArray(value)) {
-    return sanitizeObject(value, depth + 1);
+    return value.map(item => sanitizeValue(item, depth + 1));
   }
 
   if (typeof value === 'object') {

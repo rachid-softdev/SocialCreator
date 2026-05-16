@@ -40,7 +40,10 @@ export function PlatformTable({ data }: PlatformTableProps) {
     if (typeof aVal === "number" && typeof bVal === "number") {
       return (aVal - bVal) * multiplier
     }
-    return aVal.localeCompare(bVal) * multiplier
+    // Handle string values, converting to string if needed
+    const aStr = String(aVal ?? "")
+    const bStr = String(bVal ?? "")
+    return aStr.localeCompare(bStr) * multiplier
   })
 
   const SortIcon = ({ column }: { column: SortKey }) => {

@@ -292,7 +292,7 @@ async function handleRunAgent(userId: string, params: unknown) {
   // For now, we execute immediately
   setImmediate(async () => {
     try {
-      await agentRunner.executeRun(run.id, agent.id, parsed.brief)
+      await triggerAgentRun({ runId: run.id, agentId: agent.id })
     } catch (error) {
       console.error("Agent run error:", error)
       await prisma.agentRun.update({

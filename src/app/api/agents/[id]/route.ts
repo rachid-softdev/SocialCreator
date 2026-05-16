@@ -37,7 +37,6 @@ async function getAgentOr404(id: string, userId: string) {
       _count: {
         select: {
           runs: true,
-          generatedContents: true,
         },
       },
       runs: {
@@ -133,7 +132,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const agent = await prisma.agent.update({
       where: { id },
-      data: updateData,
+      data: updateData as any,
       include: {
         profile: {
           select: { id: true, name: true },

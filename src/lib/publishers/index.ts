@@ -59,6 +59,26 @@ export function getPublisher(platform: Platform): Publisher {
   }
 }
 
+/**
+ * Publish content to a platform (convenience function)
+ */
+export async function publishContent(
+  platform: Platform,
+  content: {
+    textContent: string;
+    mediaUrls: string[];
+    hashtags: string[];
+  },
+  account: {
+    accountId: string;
+    accessToken: string;
+    refreshToken?: string;
+  }
+): Promise<PublishResult> {
+  const publisher = getPublisher(platform);
+  return publisher.publish(content, account);
+}
+
 // Export individual publishers for direct use
 export {
   publishToInstagram,

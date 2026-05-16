@@ -184,7 +184,7 @@ export async function isAccountValid(accountId: string): Promise<boolean> {
           account.platform as OAuthProvider,
           refreshToken
         );
-        await updateAccountToken(accountId, newTokens);
+        await updateAccountToken(accountId, newTokens.access_token, newTokens.refresh_token, newTokens.expires_in);
         return true;
       } catch {
         // Refresh failed, account is invalid

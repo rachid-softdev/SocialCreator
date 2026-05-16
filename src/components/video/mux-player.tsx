@@ -38,7 +38,6 @@ export function MuxPlayer({
       if (Hls.isSupported()) {
         const hls = new Hls({
           startPosition: startTime,
-          endPosition: endTime,
         });
 
         hlsRef.current = hls;

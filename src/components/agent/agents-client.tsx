@@ -55,7 +55,7 @@ export function AgentsClient({ profileId, initialAgents }: AgentsClientProps) {
       <PageHeader
         title="AI Agents"
         description={`${totalAgents} agent${totalAgents !== 1 ? "s" : ""} · ${activeAgents} active`}
-        action={
+        actions={
           <Link
             href={`/profiles/${profileId}/agents/new`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors"

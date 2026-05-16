@@ -6,6 +6,7 @@ import { z } from "zod";
 
 const uploadSchema = z.object({
   profileId: z.string(),
+  videoUrl: z.string().url(),
 });
 
 const utapi = new UTApi();
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { profileId } = validationResult.data;
+    const { profileId, videoUrl } = validationResult.data;
 
     // Verify profile ownership
     const profile = await prisma.profile.findUnique({
@@ -39,10 +40,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Generate upload URL via UploadThing
-    const uploadResult = await utapi.uploadFilesFromRequest(request);
-    
-    // For multipart uploads, get the first file result
+    // Upload video from URL via UploadThing
+    const uploadResult = await utapi.uploadFilesFromUrl(videoUrl);
+
+    // Get the file result
     const fileResult = Array.isArray(uploadResult) ? uploadResult[0] : uploadResult;
 
     // Create video asset in database
@@ -58,11 +59,14 @@ export async function POST(request: Request) {
       uploadUrl: fileResult.url,
       videoAssetId: videoAsset.id,
     });
-  } catch (error) {
+} catch (error) {
     console.error("Error uploading video:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Video upload failed" },
       { status: 500 }
     );
   }
 }
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";

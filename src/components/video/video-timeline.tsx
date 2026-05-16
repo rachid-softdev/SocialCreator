@@ -17,7 +17,7 @@ interface Segment {
 }
 
 interface VideoTimelineProps {
-  words: Word[];
+  words?: Word[];
   segments?: Segment[];
   duration?: number;
   currentTime?: number;
@@ -32,7 +32,7 @@ function formatTime(seconds: number): string {
 }
 
 export function VideoTimeline({
-  words,
+  words = [],
   segments = [],
   duration,
   currentTime = 0,

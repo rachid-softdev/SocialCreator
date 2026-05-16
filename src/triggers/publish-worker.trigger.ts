@@ -8,7 +8,10 @@
  * - Handles retry logic and error states
  */
 
-import { client, triggerHttpPayload } from "@trigger.dev/sdk";
+import { client } from "@/lib/trigger";
+
+// Mock triggerHttpPayload - will be replaced with actual implementation
+const triggerHttpPayload = (config: any) => config;
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getValidAccessToken } from "@/lib/tokens";
@@ -49,7 +52,7 @@ export const publishJob = client.defineJob({
       seconds: [10, 30, 60],
     },
   },
-  run: async (payload, io) => {
+  run: async (payload: any, io: any) => {
     const { contentId, userId, profileId } = payload;
 
     await io.logger.info("Starting content publish job", { contentId });

@@ -13,7 +13,8 @@ export async function revokeToken(
   accessToken: string
 ): Promise<boolean> {
   try {
-    switch (platform) {
+    const p = platform as string;
+    switch (p) {
       case "INSTAGRAM":
       case "FACEBOOK":
       case "THREADS":

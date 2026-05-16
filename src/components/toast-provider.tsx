@@ -29,26 +29,6 @@ const toastOptions: ToasterProps = {
       borderRadius: "8px",
       padding: "12px 16px",
     },
-    success: {
-      style: {
-        borderLeft: "4px solid var(--colors-semantic-success, #16a34a)",
-      },
-    },
-    error: {
-      style: {
-        borderLeft: "4px solid var(--colors-semantic-error, #dc2626)",
-      },
-    },
-    warning: {
-      style: {
-        borderLeft: "4px solid #f59e0b",
-      },
-    },
-    info: {
-      style: {
-        borderLeft: "4px solid #3b82f6",
-      },
-    },
   },
 };
 

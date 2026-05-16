@@ -42,15 +42,12 @@ export async function verifyAgentOwnership(
   userId: string,
   agentId: string
 ): Promise<{ valid: boolean; agent?: any; error?: NextResponse }> {
-  const agent = await prisma.agent.findFirst({
-    where: {
-      id: agentId,
-      profile: { userId },
-    },
+  const agent = await prisma.agent.findUnique({
+    where: { id: agentId },
     include: { profile: true },
-  })
+  }) as any
 
-  if (!agent) {
+  if (!agent || agent.profile.userId !== userId) {
     return {
       valid: false,
       error: NextResponse.json(
@@ -70,15 +67,12 @@ export async function verifyContentOwnership(
   userId: string,
   contentId: string
 ): Promise<{ valid: boolean; content?: any; error?: NextResponse }> {
-  const content = await prisma.generatedContent.findFirst({
-    where: {
-      id: contentId,
-      profile: { userId },
-    },
+  const content = await prisma.generatedContent.findUnique({
+    where: { id: contentId },
     include: { profile: true },
-  })
+  }) as any
 
-  if (!content) {
+  if (!content || content.profile.userId !== userId) {
     return {
       valid: false,
       error: NextResponse.json(
@@ -98,15 +92,12 @@ export async function verifyConnectedAccountOwnership(
   userId: string,
   accountId: string
 ): Promise<{ valid: boolean; account?: any; error?: NextResponse }> {
-  const account = await prisma.connectedAccount.findFirst({
-    where: {
-      id: accountId,
-      profile: { userId },
-    },
+  const account = await prisma.connectedAccount.findUnique({
+    where: { id: accountId },
     include: { profile: true },
-  })
+  }) as any
 
-  if (!account) {
+  if (!account || account.profile.userId !== userId) {
     return {
       valid: false,
       error: NextResponse.json(
@@ -120,48 +111,56 @@ export async function verifyConnectedAccountOwnership(
 }
 
 /**
- * Vérifie que l'utilisateur est propriétaire d'un API key
+ * Vérifie que l'utilisateur est propriétaire d'un video asset
  */
-export async function verifyApiKeyOwnership(
+export async function verifyVideoAssetOwnership(
   userId: string,
-  apiKeyId: string
-): Promise<{ valid: boolean; apiKey?: any; error?: NextResponse }> {
-  const apiKey = await prisma.apiKey.findFirst({
-    where: {
-      id: apiKeyId,
-      userId,
-    },
-  })
+  videoAssetId: string
+): Promise<{ valid: boolean; videoAsset?: any; error?: NextResponse }> {
+  const videoAsset = await prisma.videoAsset.findUnique({
+    where: { id: videoAssetId },
+  }) as any
 
-  if (!apiKey) {
+  if (!videoAsset) {
     return {
       valid: false,
       error: NextResponse.json(
-        { error: "API key not found or access denied" },
+        { error: "Video asset not found" },
         { status: 404 }
       ),
     }
   }
 
-  return { valid: true, apiKey }
+  const profile = await prisma.profile.findUnique({
+    where: { id: videoAsset.profileId },
+  }) as any
+
+  if (!profile || profile.userId !== userId) {
+    return {
+      valid: false,
+      error: NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
+      ),
+    }
+  }
+
+  return { valid: true, videoAsset }
 }
 
 /**
- * Vérifie que l'utilisateur est propriétaire d'un run d'agent
+ * Vérifie que l'utilisateur est propriétaire d'un agent run
  */
 export async function verifyAgentRunOwnership(
   userId: string,
   runId: string
 ): Promise<{ valid: boolean; run?: any; error?: NextResponse }> {
-  const run = await prisma.agentRun.findFirst({
-    where: {
-      id: runId,
-      agent: { profile: { userId } },
-    },
-    include: { agent: true },
-  })
+  const run = await prisma.agentRun.findUnique({
+    where: { id: runId },
+    include: { agent: { include: { profile: true } } },
+  }) as any
 
-  if (!run) {
+  if (!run || run.agent.profile.userId !== userId) {
     return {
       valid: false,
       error: NextResponse.json(
@@ -172,99 +171,4 @@ export async function verifyAgentRunOwnership(
   }
 
   return { valid: true, run }
-}
-
-/**
- * Vérifie que l'utilisateur est propriétaire d'une vidéo
- */
-export async function verifyVideoAssetOwnership(
-  userId: string,
-  videoAssetId: string
-): Promise<{ valid: boolean; videoAsset?: any; error?: NextResponse }> {
-  const videoAsset = await prisma.videoAsset.findFirst({
-    where: {
-      id: videoAssetId,
-      profile: { userId },
-    },
-    include: { profile: true },
-  })
-
-  if (!videoAsset) {
-    return {
-      valid: false,
-      error: NextResponse.json(
-        { error: "Video asset not found or access denied" },
-        { status: 404 }
-      ),
-    }
-  }
-
-  return { valid: true, videoAsset }
-}
-
-/**
- * Type guard pour les erreurs NextResponse
- */
-function isNextResponse(obj: any): obj is NextResponse {
-  return obj && typeof obj.status === "number"
-}
-
-/**
- * Wrapper pour ajouter automatiquement le ownership check à une route
- * Usage:
- * 
- * export async function GET(
- *   request: NextRequest,
- *   { params }: { params: { id: string } }
- * ) {
- *   return withOwnership(request, async (userId) => {
- *     const { profile, error } = await verifyProfileOwnership(userId, params.id)
- *     if (error) return error
- *     // ... logique
- *   })
- * }
- */
-export async function withOwnership(
-  request: Request,
-  handler: (userId: string) => Promise<any>
-): Promise<any> {
-  const session = await (await import("@/lib/auth")).auth()
-  
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Authentication required" },
-      { status: 401 }
-    )
-  }
-
-  return handler(session.user.id)
-}
-
-/**
- * Middleware pour vérifier le ownership sur les routes agent
- * Usage dans /api/agents/[id]/run/route.ts
- */
-export async function withAgentOwnership(
-  agentId: string,
-  userId: string
-): Promise<{ agent: any; error?: NextResponse }> {
-  const result = await verifyAgentOwnership(userId, agentId)
-  if (!result.valid) {
-    return { agent: null, error: result.error || undefined }
-  }
-  return { agent: result.agent }
-}
-
-/**
- * Middleware pour vérifier le ownership sur les routes content
- */
-export async function withContentOwnership(
-  contentId: string,
-  userId: string
-): Promise<{ content: any; error?: NextResponse }> {
-  const result = await verifyContentOwnership(userId, contentId)
-  if (!result.valid) {
-    return { content: null, error: result.error || undefined }
-  }
-  return { content: result.content }
 }

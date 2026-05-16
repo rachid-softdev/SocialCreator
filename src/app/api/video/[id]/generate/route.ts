@@ -46,19 +46,21 @@ export async function POST(
 
     const { id } = await params;
 
-    // Get video asset and verify ownership
+    // Get video asset
     const videoAsset = await prisma.videoAsset.findUnique({
       where: { id },
-      include: {
-        profile: true,
-      },
     });
 
     if (!videoAsset) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    if (videoAsset.profile.userId !== session.user.id) {
+    // Verify ownership through profile
+    const profile = await prisma.profile.findFirst({
+      where: { id: videoAsset.profileId, userId: session.user.id },
+    }) as any;
+
+    if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -91,9 +93,9 @@ export async function POST(
 
     // Build prompts
     const systemPrompt = buildSystemPrompt({
-      name: videoAsset.profile.name,
-      brandVoice: videoAsset.profile.brandVoice,
-      contentBank: videoAsset.profile.contentBank,
+      name: profile.name,
+      brandVoice: profile.brandVoice,
+      contentBank: profile.contentBank,
     });
 
     // Generate content for each segment + platform
@@ -101,10 +103,10 @@ export async function POST(
 
     for (const segment of segments) {
       for (const platform of platforms) {
-        const userPrompt = buildGenerationPrompt(
-          `${segment.hook}\n\nContexte: ${segment.reason}`,
-          platform
-        );
+        const userPrompt = buildGenerationPrompt({
+          brief: `${segment.hook}\n\nContexte: ${segment.reason}`,
+          platform,
+        });
 
         const result = await generateContent(systemPrompt, userPrompt);
 
@@ -137,3 +139,6 @@ export async function POST(
     );
   }
 }
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";

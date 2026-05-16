@@ -4,10 +4,14 @@
  * For each agent due: triggers agentRunJob with the schedule brief
  */
 
-import { client, triggerHttpPayload } from "@trigger.dev/sdk";
+import { client } from "@/lib/trigger";
+
+// Mock triggerHttpPayload - will be replaced with actual implementation
+const triggerHttpPayload = (config: any) => config;
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enqueueAgentRun } from "@/lib/trigger-client";
+import parser from "cron-parser";
 
 // Payload schema for scheduler job
 const SchedulerPayloadSchema = z.object({
@@ -30,7 +34,7 @@ export const agentSchedulerJob = client.defineJob({
     runsTriggered: z.number(),
   }),
   // No retries for scheduler - it's a lightweight check
-  run: async (payload, io) => {
+  run: async (payload: any, io: any) => {
     await io.logger.info("Starting agent scheduler check");
 
     // Fetch all active agents with scheduleCron
@@ -58,17 +62,42 @@ export const agentSchedulerJob = client.defineJob({
 
     let runsTriggered = 0;
 
-    // Check each agent for due run
+    // Check each agent for due run using cron-parser
     for (const agent of agents) {
       if (!agent.scheduleCron) continue;
 
-      // Simple cron check: for production, use cron-parser library
-      // This is a simplified check for "every hour at minute X"
-      const now = new Date();
-      const [minute] = agent.scheduleCron.split(" ");
-      const shouldRun = minute === "*" || parseInt(minute) === now.getUTCMinutes();
+      try {
+        // Use cron-parser to properly evaluate the schedule
+        const interval = parser.parseExpression(agent.scheduleCron, {
+          currentDate: new Date(),
+          iterator: true,
+        });
 
-      if (shouldRun && agent.platforms.length > 0) {
+        // Get the next few occurrences to see if we're at the right time
+        const now = new Date();
+        let shouldRun = false;
+
+        // Check if current minute matches any of the next occurrences
+        for (let i = 0; i < 60; i++) {
+          const next = interval.next();
+          const nextDate = next.value.toDate();
+
+          // If next occurrence is within the current minute, trigger
+          if (
+            nextDate.getUTCHours() === now.getUTCHours() &&
+            nextDate.getUTCMinutes() === now.getUTCMinutes()
+          ) {
+            shouldRun = true;
+            break;
+          }
+
+          // If we've gone past the current minute by more than 1 minute, stop
+          if (nextDate.getTime() > now.getTime() + 60000) {
+            break;
+          }
+        }
+
+        if (shouldRun && agent.platforms.length > 0) {
         await io.logger.info("Triggering agent run", {
           agentId: agent.id,
           agentName: agent.name,
@@ -105,6 +134,13 @@ export const agentSchedulerJob = client.defineJob({
             error: error instanceof Error ? error.message : String(error),
           });
         }
+        }
+      } catch (error) {
+        await io.logger.warn("Invalid cron expression for agent", {
+          agentId: agent.id,
+          scheduleCron: agent.scheduleCron,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 

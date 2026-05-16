@@ -25,6 +25,9 @@ export default async function EditAgentPage({ params }: PageProps) {
       profileId,
       profile: { userId: session.user.id },
     },
+    include: {
+      profile: { select: { id: true, name: true } },
+    },
   });
 
   if (!agent) {

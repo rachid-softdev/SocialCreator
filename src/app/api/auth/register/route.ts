@@ -44,15 +44,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user
+    // Create user (OAuth-based auth, no password stored)
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password: hashedPassword,
         cguAccepted: false,
       },
     });

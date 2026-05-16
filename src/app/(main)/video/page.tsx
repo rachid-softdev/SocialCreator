@@ -231,7 +231,7 @@ export default function AllVideosPage() {
                 status={video.status}
                 createdAt={video.createdAt}
                 onClick={() =>
-                  window.location.href(`/profiles/${video.profileId}/video?id=${video.id}`)
+                  window.location.href = `/profiles/${video.profileId}/video?id=${video.id}`
                 }
               />
             ))}

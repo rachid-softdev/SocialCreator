@@ -142,9 +142,7 @@ export default function ConnectedAccountsPage() {
     }
   };
 
-  const unconnectedPlatforms = getUnconnectedPlatforms(
-    accounts as { platform: Platform }[]
-  );
+  const unconnectedPlatforms = getUnconnectedPlatforms(accounts);
 
   const breadcrumbItems = [
     { label: "Profils", href: "/profiles" },

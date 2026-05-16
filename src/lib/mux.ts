@@ -1,11 +1,14 @@
 import Mux from "@mux/mux-node";
 
-const mux = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID!,
-  tokenSecret: process.env.MUX_TOKEN_SECRET!,
-});
-
-export { mux };
+// Lazy initialization to prevent build-time errors
+function getMuxClient() {
+  const tokenId = process.env.MUX_TOKEN_ID;
+  const tokenSecret = process.env.MUX_TOKEN_SECRET;
+  if (!tokenId || !tokenSecret) {
+    throw new Error("MUX_TOKEN_ID or MUX_TOKEN_SECRET is not configured");
+  }
+  return new Mux({ tokenId, tokenSecret });
+}
 
 export interface MuxClipResult {
   assetId: string;
@@ -23,6 +26,7 @@ export async function createMuxClip(
   startTime: number,
   endTime: number
 ): Promise<MuxClipResult> {
+  const mux = getMuxClient();
   const asset = await mux.video.assets.create({
     input: [
       {
@@ -42,6 +46,7 @@ export async function createMuxClip(
 }
 
 export async function getMuxAsset(assetId: string): Promise<MuxAssetResult> {
+  const mux = getMuxClient();
   const asset = await mux.video.assets.retrieve(assetId);
   return {
     status: asset.status,
@@ -59,5 +64,6 @@ export function getMuxThumbnailUrl(playbackId: string, time?: number): string {
 }
 
 export async function deleteMuxAsset(assetId: string): Promise<void> {
+  const mux = getMuxClient();
   await mux.video.assets.delete(assetId);
 }
