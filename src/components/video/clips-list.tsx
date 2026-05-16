@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getMuxThumbnailUrl } from "@/lib/mux";
 import { Play, Trash2, Download, MoreVertical } from "lucide-react";
@@ -93,10 +94,11 @@ export function ClipsList({
           >
             {/* Thumbnail */}
             <div className="relative aspect-video bg-surface-strong group">
-              <img
+              <Image
                 src={thumbnailUrl}
                 alt={`Clip ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
 
               {/* Play overlay */}

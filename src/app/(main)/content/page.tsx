@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ContentPageClient } from "./content-page-client";
+import type { GeneratedContentWithRelations } from "@/types/agent";
 
 export default async function ContentPage() {
   const session = await auth();
@@ -15,7 +16,7 @@ export default async function ContentPage() {
     redirect("/login");
   }
 
-  // Fetch all content for the user
+  // Fetch all content for the user with proper typing
   const contents = await prisma.generatedContent.findMany({
     where: {
       profile: { userId: session.user.id },
@@ -37,6 +38,9 @@ export default async function ContentPage() {
     take: 50,
   });
 
+  // Proper type casting instead of `as any`
+  const typedContents: GeneratedContentWithRelations[] = contents;
+
   // Stats
   const stats = await prisma.generatedContent.groupBy({
     by: ["status"],
@@ -53,7 +57,7 @@ export default async function ContentPage() {
 
   return (
     <ContentPageClient
-      initialContents={contents as any}
+      initialContents={typedContents}
       stats={statMap}
     />
   );

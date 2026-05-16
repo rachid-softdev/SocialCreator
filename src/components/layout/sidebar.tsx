@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
@@ -90,12 +91,14 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
         {/* User section */}
         <div className="border-t border-hairline p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-surface-strong flex items-center justify-center text-body-strong text-muted">
+            <div className="w-9 h-9 rounded-full bg-surface-strong flex items-center justify-center text-body-strong text-muted overflow-hidden">
               {user?.image ? (
-                <img
+                <Image
                   src={user.image}
                   alt={user.name || "User"}
-                  className="w-full h-full rounded-full object-cover"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 user?.name?.charAt(0).toUpperCase() || "U"

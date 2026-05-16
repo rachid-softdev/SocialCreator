@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -49,12 +50,14 @@ export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
       <Link href={`/profiles/${profile.id}`} className="block">
         {/* Header */}
         <div className="flex items-start gap-4 mb-4">
-          <div className="w-12 h-12 rounded-full bg-surface-strong flex items-center justify-center text-body-strong text-ink">
+          <div className="w-12 h-12 rounded-full bg-surface-strong flex items-center justify-center text-body-strong text-ink overflow-hidden">
             {profile.avatarUrl ? (
-              <img
+              <Image
                 src={profile.avatarUrl}
                 alt={profile.name}
-                className="w-full h-full rounded-full object-cover"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
               />
             ) : (
               getInitials(profile.name)

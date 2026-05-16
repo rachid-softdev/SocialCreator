@@ -1,3 +1,5 @@
+import withBundleAnalyzer from '@next/bundle-analyzer';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -18,8 +20,20 @@ const nextConfig = {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "image.mux.com",
+      },
+      {
+        protocol: "https",
+        hostname: "stream.mux.com",
+      },
     ],
   },
 };
 
-export default nextConfig;
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withAnalyzer(nextConfig);

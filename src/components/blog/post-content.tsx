@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Image from "next/image";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Components } from "react-markdown";
@@ -168,11 +169,17 @@ export function PostContent({ content }: PostContentProps) {
     ),
     img: ({ src, alt }) => (
       <figure className="my-6">
-        <img
-          src={src}
-          alt={alt || ""}
-          className="rounded-lg w-full object-cover max-h-96"
-        />
+        {src && (
+          <div className="relative w-full h-96 rounded-lg overflow-hidden">
+            <Image
+              src={src}
+              alt={alt || ""}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 800px"
+            />
+          </div>
+        )}
         {alt && (
           <figcaption className="mt-2 text-caption text-muted text-center">
             {alt}

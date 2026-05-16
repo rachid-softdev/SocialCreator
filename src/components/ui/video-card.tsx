@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getMuxThumbnailUrl } from "@/lib/mux";
 
@@ -65,10 +66,11 @@ export function VideoCard({
       {/* Thumbnail */}
       <div className="relative aspect-video bg-surface-strong">
         {thumbnailUrl ? (
-          <img
+          <Image
             src={thumbnailUrl}
             alt="Video thumbnail"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

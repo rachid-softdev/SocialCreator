@@ -31,7 +31,14 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ profiles });
+    return NextResponse.json(
+      { profiles },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching profiles:", error);
     return NextResponse.json(

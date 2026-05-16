@@ -81,7 +81,14 @@ export async function GET(request: Request) {
       })
     );
 
-    return NextResponse.json({ agents: agentsWithStats });
+    return NextResponse.json(
+      { agents: agentsWithStats },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching agents:", error);
     return NextResponse.json(

@@ -1,11 +1,36 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Eye, MousePointerClick, Heart, TrendingUp } from "lucide-react"
 import { StatsCard } from "@/components/analytics/stats-card"
-import { ImpressionsChart, PlatformBreakdown, EngagementPie } from "@/components/analytics/charts"
 import { PlatformTable } from "@/components/analytics/platform-table"
 import { DateRangePicker } from "@/components/analytics/date-range-picker"
+
+// Lazy load Recharts - only load when charts are in viewport
+const ImpressionsChart = dynamic(
+  () => import("@/components/analytics/charts").then((mod) => mod.ImpressionsChart),
+  { 
+    ssr: true,
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
+  }
+)
+
+const PlatformBreakdown = dynamic(
+  () => import("@/components/analytics/charts").then((mod) => mod.PlatformBreakdown),
+  { 
+    ssr: true,
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
+  }
+)
+
+const EngagementPie = dynamic(
+  () => import("@/components/analytics/charts").then((mod) => mod.EngagementPie),
+  { 
+    ssr: true,
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
+  }
+)
 
 interface Profile {
   id: string

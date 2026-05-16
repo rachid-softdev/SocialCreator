@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Filter, Grid, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VideoCard } from "@/components/ui/video-card";
@@ -43,41 +44,74 @@ export default function AllVideosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch profiles
+  // Fetch profiles with AbortController to avoid memory leaks
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchProfiles = async () => {
       try {
-        const response = await fetch("/api/profiles");
+        const response = await fetch("/api/profiles", { signal });
+        // Ignore if request was aborted
+        if (signal.aborted) return;
+        
         if (response.ok) {
           const { profiles } = await response.json();
           setProfiles(profiles);
         }
       } catch (error) {
+        // Ignore abort errors - they are expected when component unmounts
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
         console.error("Failed to fetch profiles:", error);
       }
     };
 
     fetchProfiles();
+
+    // Cleanup: abort fetch if component unmounts
+    return () => controller.abort();
   }, []);
 
-  // Fetch videos
-  const fetchVideos = useCallback(async () => {
+  // Fetch videos with AbortController
+  const fetchVideos = useCallback(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
     setIsLoading(true);
-    try {
-      // Fetch videos from all profiles (in a real app, you'd have a dedicated endpoint)
-      const videosPromises = profiles.map(async (profile) => {
-        // This would be a dedicated endpoint in production
-        return [];
-      });
+    
+    const fetchVideosAsync = async () => {
+      try {
+        // Fetch videos from all profiles (in a real app, you'd have a dedicated endpoint)
+        const videosPromises = profiles.map(async (profile) => {
+          if (signal.aborted) return [];
+          // This would be a dedicated endpoint in production
+          return [];
+        });
 
-      const results = await Promise.all(videosPromises);
-      const allVideos = results.flat();
-      setVideos(allVideos);
-    } catch (error) {
-      console.error("Failed to fetch videos:", error);
-    } finally {
-      setIsLoading(false);
-    }
+        const results = await Promise.all(videosPromises);
+        
+        if (!signal.aborted) {
+          const allVideos = results.flat();
+          setVideos(allVideos);
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        console.error("Failed to fetch videos:", error);
+      } finally {
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchVideosAsync();
+
+    // Cleanup
+    return () => controller.abort();
   }, [profiles]);
 
   useEffect(() => {
@@ -248,9 +282,11 @@ export default function AllVideosPage() {
                 >
                   <div className="w-32 h-18 bg-surface-strong rounded-lg overflow-hidden">
                     {video.muxPlaybackId ? (
-                      <img
+                      <Image
                         src={`https://image.mux.com/${video.muxPlaybackId}/thumbnail.jpg`}
                         alt="Video thumbnail"
+                        width={128}
+                        height={72}
                         className="w-full h-full object-cover"
                       />
                     ) : (

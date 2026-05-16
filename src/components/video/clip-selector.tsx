@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getMuxThumbnailUrl } from "@/lib/mux";
 import { Play, Check, X, Clock } from "lucide-react";
@@ -121,10 +122,11 @@ export function ClipSelector({
               {/* Thumbnail */}
               <div className="relative aspect-video bg-surface-strong">
                 {thumbnailUrl ? (
-                  <img
+                  <Image
                     src={thumbnailUrl}
                     alt={`Clip ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display, EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { ToastLayoutWrapper } from "@/components/toast-layout-wrapper";
 
@@ -8,13 +8,28 @@ export const metadata: Metadata = {
   description: "Generate and publish social media content using AI agents",
 };
 
-// Playfair Display for display/headings (replaces licensed Waldenburg)
-// Inter for body text is already in globals.css
+// Inter for body/sans-serif text - zero layout shift, auto-optimisé
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+  weight: ["300", "400", "500", "600"],
+});
+
+// EB Garamond for display/headings - replaces licensed Waldenburg
+const ebGaramond = EB_Garamond({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-eb-garamond",
+  weight: ["300", "400", "500", "600"],
+});
+
+// Playfair Display for alternative headings
 const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-display",
   display: "swap",
+  variable: "--font-display",
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export default function RootLayout({
@@ -24,7 +39,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`antialiased ${playfair.variable}`}>
+      <body className={`antialiased ${inter.variable} ${ebGaramond.variable} ${playfair.variable}`}>
         <ToastLayoutWrapper>
           {children}
         </ToastLayoutWrapper>

@@ -6,6 +6,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
 import { PlatformIcon, getPlatformColor, getPlatformName } from "./platform-icon";
 import { formatDistanceToNow } from "date-fns";
@@ -73,10 +74,12 @@ export function AccountCard({
             </p>
             {account.accountAvatarUrl && (
               <div className="mt-2">
-                <img
+                <Image
                   src={account.accountAvatarUrl}
                   alt={account.accountName}
-                  className="w-10 h-10 rounded-full object-cover"
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
                 />
               </div>
             )}

@@ -1,8 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Respecter les préférences d'accessibilité - Désactiver les animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 @layer base {
   :root {
@@ -77,14 +87,15 @@
   }
 
   body {
-    @apply bg-canvas text-ink font-sans;
+    @apply bg-canvas text-ink;
+    font-family: var(--font-sans), Inter, system-ui, sans-serif;
   }
 }
 
 @layer utilities {
-  /* Display text utilities - use full font property */
+  /* Display text utilities - utilisent les variables CSS de next/font */
   .text-display-mega {
-    font-family: 'EB Garamond', 'Times New Roman', serif;
+    font-family: var(--font-eb-garamond), 'Times New Roman', serif;
     font-size: 64px;
     line-height: 1.05;
     letter-spacing: -1.92px;
@@ -92,7 +103,7 @@
   }
 
   .text-display-xl {
-    font-family: 'EB Garamond', serif;
+    font-family: var(--font-eb-garamond), serif;
     font-size: 48px;
     line-height: 1.08;
     letter-spacing: -0.96px;
@@ -100,7 +111,7 @@
   }
 
   .text-display-lg {
-    font-family: 'EB Garamond', serif;
+    font-family: var(--font-eb-garamond), serif;
     font-size: 36px;
     line-height: 1.17;
     letter-spacing: -0.36px;
@@ -108,7 +119,7 @@
   }
 
   .text-display-md {
-    font-family: 'EB Garamond', serif;
+    font-family: var(--font-eb-garamond), serif;
     font-size: 32px;
     line-height: 1.13;
     letter-spacing: -0.32px;
@@ -116,7 +127,7 @@
   }
 
   .text-display-sm {
-    font-family: 'EB Garamond', serif;
+    font-family: var(--font-eb-garamond), serif;
     font-size: 24px;
     line-height: 1.2;
     letter-spacing: 0;
@@ -125,7 +136,7 @@
 
   /* Title utilities */
   .text-title-md {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 20px;
     line-height: 1.35;
     letter-spacing: 0;
@@ -133,7 +144,7 @@
   }
 
   .text-title-sm {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 18px;
     line-height: 1.44;
     letter-spacing: 0.18px;
@@ -142,7 +153,7 @@
 
   /* Body utilities */
   .text-body-md {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 16px;
     line-height: 1.5;
     letter-spacing: 0.16px;
@@ -150,7 +161,7 @@
   }
 
   .text-body-strong {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 16px;
     line-height: 1.5;
     letter-spacing: 0.16px;
@@ -158,7 +169,7 @@
   }
 
   .text-body-sm {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 15px;
     line-height: 1.47;
     letter-spacing: 0.15px;
@@ -167,7 +178,7 @@
 
   /* Caption utilities */
   .text-caption {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     letter-spacing: 0;
@@ -175,7 +186,7 @@
   }
 
   .text-caption-uppercase {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 12px;
     line-height: 1.4;
     letter-spacing: 0.96px;
@@ -185,7 +196,7 @@
 
   /* Button utility */
   .text-button {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 15px;
     line-height: 1;
     letter-spacing: 0;
@@ -194,7 +205,7 @@
 
   /* Nav link utility */
   .text-nav-link {
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans), Inter, sans-serif;
     font-size: 15px;
     line-height: 1.4;
     letter-spacing: 0;

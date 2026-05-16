@@ -87,13 +87,20 @@ export async function GET(request: Request) {
       prisma.generatedContent.count({ where: whereClause }),
     ]);
 
-    return NextResponse.json({
-      contents,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    });
+    return NextResponse.json(
+      {
+        contents,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching content:", error);
     return NextResponse.json(

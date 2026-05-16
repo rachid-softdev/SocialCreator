@@ -111,19 +111,26 @@ export async function GET(request: Request) {
     const totalEngagements = analytics.reduce((sum, r) => sum + r.engagements, 0);
     const totalPosts = publishLogs.filter((l) => l.success).length;
 
-    return NextResponse.json({
-      daily,
-      platformBreakdown,
-      totals: {
-        posts: totalPosts,
-        impressions: totalImpressions,
-        engagements: totalEngagements,
+    return NextResponse.json(
+      {
+        daily,
+        platformBreakdown,
+        totals: {
+          posts: totalPosts,
+          impressions: totalImpressions,
+          engagements: totalEngagements,
+        },
+        dateRange: {
+          from: from.toISOString(),
+          to: to.toISOString(),
+        },
       },
-      dateRange: {
-        from: from.toISOString(),
-        to: to.toISOString(),
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching analytics:", error);
     return NextResponse.json(
