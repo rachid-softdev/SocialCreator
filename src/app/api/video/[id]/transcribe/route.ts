@@ -7,6 +7,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await auth();
 
@@ -14,23 +16,21 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-
     // Get video asset and verify ownership
     const videoAsset = await prisma.videoAsset.findUnique({
       where: { id },
-      include: {
-        profile: {
-          select: { userId: true },
-        },
-      },
     });
 
     if (!videoAsset) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    if (videoAsset.profile.userId !== session.user.id) {
+    // Verify ownership through profile
+    const profile = await prisma.profile.findFirst({
+      where: { id: videoAsset.profileId, userId: session.user.id },
+    });
+
+    if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -68,3 +68,6 @@ export async function POST(
     );
   }
 }
+
+// Force dynamic rendering to prevent build-time API calls
+export const dynamic = "force-dynamic";

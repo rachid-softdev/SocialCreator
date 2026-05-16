@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 const rejectContentSchema = z.object({
   reason: z.string().max(500).optional(),
@@ -21,6 +22,10 @@ async function getContentOr404(id: string, userId: string) {
 // POST /api/content/[id]/reject
 export async function POST(request: Request, { params }: RouteParams) {
   try {
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, {});
+    if (rateLimitResponse) return rateLimitResponse;
+
     const session = await auth();
 
     if (!session?.user?.id) {

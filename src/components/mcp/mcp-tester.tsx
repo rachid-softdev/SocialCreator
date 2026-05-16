@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play2, Copy, Check, AlertCircle } from "lucide-react"
+import { Play, Copy, Check, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface McpTesterProps {
@@ -192,7 +192,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
       <Button
         onClick={handleSend}
         disabled={isLoading}
-        icon={Play2}
+        icon={Play}
         iconPosition="right"
         className="w-full"
       >

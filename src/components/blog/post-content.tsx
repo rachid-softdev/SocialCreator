@@ -57,14 +57,18 @@ export function PostContent({ content }: PostContentProps) {
         {children}
       </ol>
     ),
-    li: ({ children, ordered }) => (
-      <li className={`text-body leading-relaxed ${ordered ? "" : "flex items-start gap-3"}`}>
-        {!ordered && (
-          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary mt-2.5" />
-        )}
-        <span className="flex-1">{children}</span>
-      </li>
-    ),
+    li: ({ children, ...props }) => {
+      // @ts-ignore - ordered prop may not exist in all versions
+      const ordered = props.ordered as boolean | undefined
+      return (
+        <li className={`text-body leading-relaxed ${ordered ? "" : "flex items-start gap-3"}`}>
+          {!ordered && (
+            <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary mt-2.5" />
+          )}
+          <span className="flex-1">{children}</span>
+        </li>
+      )
+    },
     blockquote: ({ children }) => (
       <blockquote className="relative my-8 mx-0 pl-6 py-1 border-l-4 border-primary">
         <div className="absolute -left-2 -top-2 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -106,7 +110,6 @@ export function PostContent({ content }: PostContentProps) {
               borderRadius: 0,
               fontSize: "14px",
             }}
-            {...props}
           >
             {String(children).replace(/\n$/, "")}
           </SyntaxHighlighter>

@@ -25,21 +25,21 @@ export async function POST(
 
     const { id } = await params;
 
-    // Get video asset and verify ownership
+    // Get video asset
     const videoAsset = await prisma.videoAsset.findUnique({
       where: { id },
-      include: {
-        profile: {
-          select: { userId: true },
-        },
-      },
     });
 
     if (!videoAsset) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    if (videoAsset.profile.userId !== session.user.id) {
+    // Verify ownership through profile
+    const profile = await prisma.profile.findFirst({
+      where: { id: videoAsset.profileId, userId: session.user.id },
+    });
+
+    if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -56,18 +56,33 @@ export async function POST(
       `${SEGMENT_PROMPT}\n\nTranscript:\n${videoAsset.transcript}`
     );
 
-    const segments = result.segments as Array<{
+    // Parse segments from the response (which is in textContent as JSON)
+    let segments: Array<{
       start: number;
       end: number;
       reason: string;
       hook: string;
-    }>;
+    }> = [];
+
+    try {
+      // The response should be an array in textContent
+      const parsed = JSON.parse(result.textContent);
+      if (Array.isArray(parsed)) {
+        segments = parsed;
+      }
+    } catch (parseError) {
+      console.error("Failed to parse segments:", parseError);
+      return NextResponse.json(
+        { error: "Failed to parse segments from AI response" },
+        { status: 500 }
+      );
+    }
 
     // Update asset with segments
     await prisma.videoAsset.update({
       where: { id },
       data: {
-        segments: segments as unknown as Record<string, unknown>,
+        segments: segments as any,
         status: "SEGMENTS_IDENTIFIED",
       },
     });
@@ -81,3 +96,6 @@ export async function POST(
     );
   }
 }
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";

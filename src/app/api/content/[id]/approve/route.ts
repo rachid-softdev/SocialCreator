@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { approveContentSchema } from "@/lib/validations";
 import { isValidUuid } from "@/lib/sanitize";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -18,6 +19,10 @@ async function getContentOr404(id: string, userId: string) {
 // POST /api/content/[id]/approve
 export async function POST(request: Request, { params }: RouteParams) {
   try {
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, {});
+    if (rateLimitResponse) return rateLimitResponse;
+
     const session = await auth();
 
     if (!session?.user?.id) {

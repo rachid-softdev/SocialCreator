@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { contentFilterSchema, isValidUuid, sanitizeString } from "@/lib/sanitize";
+import { contentFilterSchema } from "@/lib/validations";
+import { isValidUuid } from "@/lib/sanitize";
 
 // GET /api/content?profileId=xxx&status=DRAFT&page=1
 export async function GET(request: Request) {

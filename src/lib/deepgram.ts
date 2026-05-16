@@ -1,6 +1,13 @@
 import { createClient } from "@deepgram/sdk";
 
-const deepgram = createClient(process.env.DEEPGRAM_API_KEY!);
+// Lazy initialization to prevent build-time errors
+function getDeepgramClient() {
+  const apiKey = process.env.DEEPGRAM_API_KEY;
+  if (!apiKey) {
+    throw new Error("DEEPGRAM_API_KEY is not configured");
+  }
+  return createClient(apiKey);
+}
 
 export interface TranscriptResult {
   transcript: string;
@@ -10,6 +17,7 @@ export interface TranscriptResult {
 }
 
 export async function transcribeVideo(videoUrl: string): Promise<TranscriptResult> {
+  const deepgram = getDeepgramClient();
   const result = await deepgram.transcription.preRecorded(
     { url: videoUrl },
     {
@@ -30,6 +38,7 @@ export async function transcribeVideo(videoUrl: string): Promise<TranscriptResul
 export async function getTranscriptWithTimestamps(videoUrl: string): Promise<{
   words: Array<{ word: string; start: number; end: number }>;
 }> {
+  const deepgram = getDeepgramClient();
   const result = await deepgram.transcription.preRecorded(
     { url: videoUrl },
     {

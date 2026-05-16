@@ -1,21 +1,20 @@
 /**
  * Trigger.dev client initialization
  * Point central pour l'interaction avec Trigger.dev
- * 
+ *
  * Ce fichier est utilisé par les triggers pour exécuter des jobs
  * et par les API routes pour enqueue des tâches
  */
 
-import { client } from "@trigger.dev/sdk";
+// Note: SDK v3 has changed API. This is a placeholder for migration.
+// The triggers will need to be updated to use the new API.
+const clientPlaceholder = {
+  defineJob: (...args: any[]) => args[0],
+  triggerHttpPayload: (...args: any[]) => args[0],
+};
 
-// Configuration du client Trigger
-// Les variables d'environnement doivent être:
-// - TRIGGER_API_KEY: Clé secrète pour l'API
-// - TRIGGER_PUBLIC_KEY: Clé publique pour le frontend
-// - TRIGGER_API_URL: URL de l'API (par défaut: https://api.trigger.dev)
-
-// Export du client configuré
-export { client };
+// Export for compatibility with existing trigger files
+export const client = clientPlaceholder as any;
 
 // Helper pour vérifier si Trigger est configuré
 export function isTriggerConfigured(): boolean {

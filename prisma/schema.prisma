@@ -15,11 +15,14 @@ model User {
   email            String    @unique
   emailVerified    DateTime?
   image            String?
+  password         String?   // For credentials auth (optional, OAuth users don't have password)
   stripeCustomerId String?
   stripeSubscriptionId String?
   stripeSubscriptionStatus String?
   cguAccepted      Boolean   @default(false)
   cguAcceptedAt    DateTime?
+  ownedTeams       Team[]    @relation("TeamOwner")
+  teamMemberships  TeamMember[]
   accounts         Account[]
   sessions         Session[]
   profiles         Profile[]
@@ -63,10 +66,68 @@ model VerificationToken {
 
 // ── Application ─────────────────────────────────────────────
 
+// ── Team Collaboration ─────────────────────────────────────
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  ownerId     String
+  owner       User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  members     TeamMember[]
+  profiles    Profile[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model TeamMember {
+  id          String    @id @default(cuid())
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        TeamRole  @default(VIEWER)
+  invitedAt   DateTime  @default(now())
+  joinedAt    DateTime?
+  @@unique([teamId, userId])
+}
+
+// ── Media Library ─────────────────────────────────────────
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  profileId   String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type        MediaType
+  url         String    @db.Text
+  filename    String?
+  mimeType    String?
+  size        Int?
+  width       Int?
+  height      Int?
+  duration    Float?    // For video/audio
+  uploadedAt  DateTime  @default(now())
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
 model Profile {
   id               String             @id @default(cuid())
   userId           String
   user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId           String?
+  team             Team?              @relation(fields: [teamId], references: [id])
   name             String
   brandVoice       String             @db.Text
   contentBank     String?            @db.Text
@@ -77,8 +138,11 @@ model Profile {
   agents           Agent[]
   analytics        Analytics[]
   generatedContents GeneratedContent[]
+  mediaAssets      MediaAsset[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+
+  @@index([teamId])
 }
 
 model ConnectedAccount {
@@ -155,21 +219,26 @@ enum RunStatus {
 }
 
 model GeneratedContent {
-  id           String        @id @default(cuid())
-  runId        String?
-  run          AgentRun?     @relation(fields: [runId], references: [id])
-  profileId   String
-  profile     Profile       @relation(fields: [profileId], references: [id])
-  platform    Platform
-  textContent String        @db.Text
-  mediaUrls   String[]
-  hashtags   String[]
-  status     ContentStatus  @default(DRAFT)
-  postId      String?
-  publishedAt DateTime?
-  rejectedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  runId              String?
+  run                AgentRun?     @relation(fields: [runId], references: [id])
+  profileId          String
+  profile            Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  platform           Platform
+  textContent        String        @db.Text
+  mediaUrls          String[]
+  hashtags           String[]
+  status             ContentStatus  @default(DRAFT)
+  postId             String?
+  publishedAt        DateTime?
+  rejectedAt         DateTime?
+  scheduledPublishAt DateTime?     // Publication planifiée
+  scheduledTimezone  String?        @default("UTC")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status, scheduledPublishAt])
+  @@index([profileId, status])
 }
 
 enum ContentStatus {
@@ -178,6 +247,7 @@ enum ContentStatus {
   PUBLISHED
   FAILED
   REJECTED
+  SCHEDULED  // En attente de publication planifiée
 }
 
 model PublishLog {

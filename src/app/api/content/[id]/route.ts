@@ -6,8 +6,22 @@ import { z } from "zod";
 const updateContentSchema = z.object({
   textContent: z.string().min(1).max(10000).optional(),
   hashtags: z.array(z.string()).optional(),
-  mediaUrls: z.array(z.string()).optional(),
-  status: z.enum(["DRAFT", "APPROVED", "PUBLISHED", "FAILED", "REJECTED"]).optional(),
+  mediaUrls: z.array(z.string().url()).optional(),
+  status: z.enum(["DRAFT", "APPROVED", "PUBLISHED", "FAILED", "REJECTED", "SCHEDULED"]).optional(),
+  scheduledPublishAt: z.string().datetime().optional(),
+  scheduledTimezone: z.string().optional(),
+});
+
+// Schema for scheduling content
+const scheduleContentSchema = z.object({
+  scheduledPublishAt: z.string().datetime(),
+  scheduledTimezone: z.string().optional().default("UTC"),
+});
+
+// Schema for bulk operations
+const bulkActionSchema = z.object({
+  contentIds: z.array(z.string().uuid()).min(1).max(50),
+  action: z.enum(["approve", "reject", "publish", "delete"]),
 });
 
 interface RouteParams {

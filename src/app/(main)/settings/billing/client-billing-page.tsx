@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { SubscriptionStatus } from "@/components/billing/subscription-status"
 import { formatDate } from "@/lib/utils"
-import type { PlanKey, PlanDetails } from "@/lib/stripe"
+import { getPlanData, type PlanKey } from "@/lib/stripe"
 import type Stripe from "stripe"
 
 interface ClientBillingPageProps {
@@ -12,7 +12,7 @@ interface ClientBillingPageProps {
   status?: string | null
   renewalDate: Date
   profileCount: number
-  planData: PlanDetails | null
+  planData: Record<string, unknown> | null
   invoices: Stripe.Invoice[]
 }
 
@@ -60,7 +60,7 @@ export function ClientBillingPage({
           status={status || undefined}
           renewalDate={renewalDate}
           profilesUsed={profileCount}
-          profilesMax={planData?.profiles || 1}
+          profilesMax={getPlanData(currentPlan)?.profiles || 1}
           onManagePortal={isLoadingPortal ? undefined : handleManagePortal}
         />
 
@@ -70,7 +70,7 @@ export function ClientBillingPage({
             <h3 className="text-title-sm mb-4">Plan features</h3>
 
             <ul className="space-y-2">
-              {planData.features.map((feature) => (
+              {(getPlanData(currentPlan)?.features || []).map((feature) => (
                 <li key={feature} className="flex items-center gap-2 text-body-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-semantic-success" />
                   {feature}
@@ -121,7 +121,7 @@ export function ClientBillingPage({
                     className="border-b border-hairline hover:bg-surface-strong transition-colors"
                   >
                     <td className="px-4 py-3 text-body-sm">
-                      {formatDate(invoice.created * 1000)}
+                      {formatDate(new Date(invoice.created * 1000))}
                     </td>
                     <td className="px-4 py-3 text-body-sm">
                       {new Intl.NumberFormat("en-US", {

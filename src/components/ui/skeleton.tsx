@@ -161,13 +161,16 @@ export function ChartSkeleton() {
         <Skeleton className="h-8 w-40" />
       </div>
       <div className="h-64 flex items-end gap-2">
-        {[...Array(12)].map((_, i) => (
-          <Skeleton
-            key={i}
-            className="flex-1 rounded-t"
-            style={{ height: `${Math.random() * 60 + 20}%` }}
-          />
-        ))}
+        {[...Array(12)].map((_, i) => {
+          const height = Math.floor(Math.random() * 60 + 20);
+          return (
+            <div
+              key={i}
+              className="flex-1 rounded-t animate-pulse bg-hairline"
+              style={{ height: `${height}%` }}
+            />
+          );
+        })}
       </div>
     </div>
   );

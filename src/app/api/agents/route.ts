@@ -52,7 +52,6 @@ export async function GET(request: Request) {
         _count: {
           select: {
             runs: true,
-            generatedContents: true,
           },
         },
         runs: {
@@ -138,7 +137,7 @@ export async function POST(request: Request) {
         scheduleCron,
         autoPublish: autoPublish ?? false,
         maxPerDay: maxPerDay ?? 2,
-        config: config ?? {},
+        config: (config ?? {}) as any,
       },
       include: {
         profile: {

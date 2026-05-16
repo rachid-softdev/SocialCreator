@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Check, Minus, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PLANS, type PlanKey } from "@/lib/stripe"
+import { getPlanData, type PlanKey, PLANS } from "@/lib/stripe"
 
 interface PlanSelectorProps {
   onSubmit?: (plan: PlanKey, additionalProfiles: number) => void
@@ -14,9 +14,9 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>(currentPlan || "starter")
   const [additionalProfiles, setAdditionalProfiles] = useState(0)
 
-  const plan = PLANS[selectedPlan]
+  const plan = getPlanData(selectedPlan)!
 
-  const totalPrice = plan.price + plan.addOnPrice * additionalProfiles
+  const totalPrice = (plan?.price ?? 0) + (plan?.addOnPrice ?? 0) * additionalProfiles
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -56,7 +56,7 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
                     : "border-hairline text-ink hover:border-hairline-strong"
                 }`}
               >
-                {PLANS[planKey].name}
+                {getPlanData(planKey)?.name}
                 {isCurrent && " (current)"}
               </button>
             )

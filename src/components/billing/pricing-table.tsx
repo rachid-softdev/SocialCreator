@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PLANS, type PlanKey } from "@/lib/stripe"
+import { getPlanData, type PlanKey } from "@/lib/stripe"
 
 interface PricingTableProps {
   onSelectPlan?: (plan: PlanKey) => void
@@ -21,7 +21,7 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {(["starter", "pro", "team"] as PlanKey[]).map((planKey) => {
-        const plan = PLANS[planKey]
+        const plan = getPlanData(planKey)!
         const isCurrent = currentPlan === planKey
         const isPro = planKey === "pro"
 

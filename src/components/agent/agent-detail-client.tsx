@@ -38,7 +38,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: Settings },
     { id: "runs" as const, label: "Runs", icon: RefreshCw, count: agent._count?.runs || 0 },
-    { id: "content" as const, label: "Content", icon: FileText, count: agent._count?.generatedContents || 0 },
+    { id: "content" as const, label: "Content", icon: FileText, count: (agent._count as any)?.generatedContents || 0 },
   ];
 
   const handleToggleActive = async () => {

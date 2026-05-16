@@ -24,7 +24,6 @@ export default async function AllAgentsPage() {
         _count: {
           select: {
             runs: true,
-            generatedContents: true,
           },
         },
         runs: {

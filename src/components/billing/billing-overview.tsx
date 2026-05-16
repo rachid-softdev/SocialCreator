@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { PLANS, type PlanKey } from "@/lib/stripe"
+import { getPlanData, type PlanKey } from "@/lib/stripe"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
@@ -37,7 +37,10 @@ export function BillingOverview({
   const [isLoadingPortal, setIsLoadingPortal] = useState(false)
   const [isChangingPlan, setIsChangingPlan] = useState(false)
 
-  const plan = currentPlan ? PLANS[currentPlan] : null
+  const planData = getPlanData(currentPlan ?? "free")
+
+  // Free plan fallback
+  const plan = planData ?? { name: "Free", price: 0, profiles: 1, addOnPrice: 0, addOnProfiles: 1, features: [] }
 
   const getStatusBadge = () => {
     switch (status) {

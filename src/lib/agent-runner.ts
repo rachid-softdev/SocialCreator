@@ -30,7 +30,7 @@ export async function triggerAgentRun(params: TriggerAgentRunParams): Promise<vo
   const systemPrompt = buildSystemPrompt({
     name: agent.profile.name,
     brandVoice: agent.profile.brandVoice,
-    contentBank: agent.contentBank,
+    contentBank: agent.profile.contentBank,
   });
 
   const run = await prisma.agentRun.findUnique({ where: { id: runId } });

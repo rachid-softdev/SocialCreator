@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { CreditCard, ExternalLink, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PLANS, type PlanKey } from "@/lib/stripe"
+import { getPlanData, type PlanKey } from "@/lib/stripe"
 
 interface SubscriptionStatusProps {
   plan?: PlanKey
@@ -22,7 +22,7 @@ export function SubscriptionStatus({
   profilesMax = 1,
   onManagePortal,
 }: SubscriptionStatusProps) {
-  const planData = plan !== "free" ? PLANS[plan] : null
+  const planData = getPlanData(plan)
 
   const statusColors: Record<string, string> = {
     active: "bg-semantic-success/10 text-semantic-success",

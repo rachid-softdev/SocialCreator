@@ -9,18 +9,45 @@ export function getStripe(): Stripe {
     throw new Error("STRIPE_SECRET_KEY is not set")
   }
   stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2025-02-24.acacia" as any,
   })
   return stripeInstance
 }
 
 export const PLANS = {
-  starter: { name: "Starter", price: 5000, profiles: 1, addOnPrice: 2000, addOnProfiles: 1 },
-  pro: { name: "Pro", price: 7000, profiles: 2, addOnPrice: 2000, addOnProfiles: 1 },
-  team: { name: "Team", price: 11000, profiles: 4, addOnPrice: 2000, addOnProfiles: 1 },
+  starter: {
+    name: "Starter",
+    price: 5000,
+    profiles: 1,
+    addOnPrice: 2000,
+    addOnProfiles: 1,
+    features: ["1 profile", "AI content generation", "Basic scheduling", "Email support"],
+  },
+  pro: {
+    name: "Pro",
+    price: 7000,
+    profiles: 2,
+    addOnPrice: 2000,
+    addOnProfiles: 1,
+    features: ["2 profiles", "AI content generation", "Advanced scheduling", "Video clipping", "Priority support"],
+  },
+  team: {
+    name: "Team",
+    price: 11000,
+    profiles: 4,
+    addOnPrice: 2000,
+    addOnProfiles: 1,
+    features: ["4 profiles", "AI content generation", "Advanced scheduling", "Video clipping", "Team collaboration", "Dedicated support"],
+  },
 } as const
 
-export type PlanKey = keyof typeof PLANS
+export type PlanKey = keyof typeof PLANS | "free"
+export type PaidPlanKey = keyof typeof PLANS
+
+export function getPlanData(plan: PlanKey) {
+  if (plan === "free") return null
+  return PLANS[plan]
+}
 
 export async function createCheckoutSession(
   userId: string,
@@ -28,15 +55,20 @@ export async function createCheckoutSession(
   plan: PlanKey,
   additionalProfiles: number = 0
 ): Promise<{ sessionId: string; url: string }> {
+  // Free plan doesn't need a checkout session
+  if (plan === "free") {
+    throw new Error("Free plan does not require checkout");
+  }
+
   const stripe = getStripe()
-  const planData = PLANS[plan]
+  const planData = PLANS[plan as Exclude<PlanKey, "free">]
 
   const lineItems = [
     {
       price_data: {
         currency: "usd",
         product_data: { name: `SocialCreator ${planData.name}` },
-        unit_amount: planData.price,
+        unit_amount: planData.price as number,
         recurring: { interval: "month" as const },
       },
       quantity: 1,
@@ -48,7 +80,7 @@ export async function createCheckoutSession(
       price_data: {
         currency: "usd",
         product_data: { name: `Additional Profile (+${additionalProfiles})` },
-        unit_amount: planData.addOnPrice * additionalProfiles,
+        unit_amount: (planData.addOnPrice as number) * additionalProfiles,
         recurring: { interval: "month" as const },
       },
       quantity: 1,
@@ -79,13 +111,25 @@ export async function createBillingPortal(customerId: string): Promise<string> {
 
 /**
  * Mapping des price IDs Stripe vers les plans internes
- * Ces IDs doivent être configurés selon votre compte Stripe
- * Vous pouvez les trouver dans la console Stripe -> Products -> Prices
+ * Ces IDs sont configurés via variables d'environnement:
+ * - STRIPE_PRICE_STARTER
+ * - STRIPE_PRICE_PRO
+ * - STRIPE_PRICE_TEAM
  */
-const STRIPE_PRICE_TO_PLAN: Record<string, PlanKey> = {
-  // À configurer avec vos vrais price IDs Stripe
-  // Exemple: "price_1234567890" -> "starter"
-  // Vous pouvez aussi les définir via variables d'environnement
+function getStripePriceToPlan(): Record<string, PlanKey> {
+  const mapping: Record<string, PlanKey> = {}
+
+  if (process.env.STRIPE_PRICE_STARTER) {
+    mapping[process.env.STRIPE_PRICE_STARTER] = "starter"
+  }
+  if (process.env.STRIPE_PRICE_PRO) {
+    mapping[process.env.STRIPE_PRICE_PRO] = "pro"
+  }
+  if (process.env.STRIPE_PRICE_TEAM) {
+    mapping[process.env.STRIPE_PRICE_TEAM] = "team"
+  }
+
+  return mapping
 }
 
 // Fallback: Mapping par prix (unit_amount en cents)
@@ -96,13 +140,17 @@ function inferPlanFromPrice(unitAmount: number): PlanKey | null {
   return null
 }
 
-export async function getPlanDetails(userId: string): Promise<{
+export type PlanDetails = {
   plan: PlanKey | null
   status: string | null
   renewalDate: Date | null
   customerId: string | null
   cancelAtPeriodEnd: boolean
-}> {
+  profiles: number
+  features: string[]
+}
+
+export async function getPlanDetails(userId: string): Promise<PlanDetails> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { stripeSubscriptionId: true, stripeSubscriptionStatus: true, stripeCustomerId: true },
@@ -115,6 +163,8 @@ export async function getPlanDetails(userId: string): Promise<{
       renewalDate: null,
       customerId: null,
       cancelAtPeriodEnd: false,
+      profiles: 1,
+      features: [],
     }
   }
 
@@ -136,10 +186,13 @@ export async function getPlanDetails(userId: string): Promise<{
     // Récupérer le price ID du premier item
     const priceId = subscription.items.data[0]?.price.id
     const unitAmount = subscription.items.data[0]?.price.unit_amount
-    
+
+    // Get mapping from env vars
+    const priceToPlan = getStripePriceToPlan()
+
     // Essayer d'abord le mapping direct par price ID
-    if (priceId && STRIPE_PRICE_TO_PLAN[priceId]) {
-      plan = STRIPE_PRICE_TO_PLAN[priceId]
+    if (priceId && priceToPlan[priceId]) {
+      plan = priceToPlan[priceId]
     } else if (unitAmount) {
       // Fallback: inferrer le plan depuis le prix
       plan = inferPlanFromPrice(unitAmount)
@@ -156,12 +209,21 @@ export async function getPlanDetails(userId: string): Promise<{
     // En cas d'erreur, on retourne les info de base
   }
 
+  const planFeatures = {
+    free: ["1 profile", "Basic scheduling"],
+    starter: ["1 profile", "AI content generation", "Basic analytics"],
+    pro: ["2 profiles", "AI content generation", "Advanced analytics", "Priority support"],
+    team: ["4 profiles", "AI content generation", "Advanced analytics", "Priority support", "Team collaboration"],
+  } as const satisfies Partial<Record<PlanKey, string[]>>
+
   return {
     plan,
     status: user.stripeSubscriptionStatus,
     renewalDate,
     customerId: user.stripeCustomerId,
     cancelAtPeriodEnd,
+    profiles: plan && plan !== "free" ? (PLANS[plan as Exclude<PlanKey, "free">].profiles as number) : 1,
+    features: plan && plan !== "free" ? planFeatures[plan as Exclude<PlanKey, "free">] : [],
   }
 }
 

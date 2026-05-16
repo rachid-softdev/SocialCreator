@@ -4,6 +4,8 @@ import { useState } from "react";
 import { LayoutGrid, List, Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "./content-card";
+import { PlatformBadge } from "./platform-badge";
+import { ContentStatusBadge } from "./content-status-badge";
 import type { GeneratedContentWithRelations } from "@/types/agent";
 import type { ContentStatus, Platform } from "@prisma/client";
 import { CONTENT_STATUS_LABELS } from "@/types/profile";

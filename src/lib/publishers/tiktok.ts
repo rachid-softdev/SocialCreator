@@ -134,12 +134,51 @@ export async function publishToTikTok(
 
       // Handle video upload URL response (for large video uploads)
       if (data.upload_url) {
-        // In production, you'd upload to the returned URL
-        // For now, we'll assume the video is uploaded directly
+        // Upload video to TikTok's upload URL
+        console.log("TikTok: Starting video upload to", data.upload_url);
+
+        // Fetch the video from our storage
+        const videoResponse = await fetch(content.mediaUrls[0]);
+
+        if (!videoResponse.ok) {
+          throw new Error(`Failed to fetch video: ${videoResponse.status}`);
+        }
+
+        const videoBlob = await videoResponse.blob();
+
+        // Upload to TikTok's upload URL with proper headers
+        const uploadResponse = await fetch(data.upload_url, {
+          method: "PUT",
+          body: videoBlob,
+          headers: {
+            "Content-Type": "video/mp4",
+            "Content-Length": videoBlob.size.toString(),
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error("TikTok video upload failed:", errorText);
+          throw new Error(`Video upload failed: ${uploadResponse.status}`);
+        }
+
+        console.log("TikTok: Video upload complete");
+
+        // After upload, need to finalize the post
+        // The post_id should now be available
+        if (data.post_id) {
+          return {
+            success: true,
+            postId: data.post_id,
+            postUrl: `https://www.tiktok.com/@user/video/${data.post_id}`,
+          };
+        }
+
+        // If no post_id yet, the video is being processed
         return {
           success: true,
-          postId: data.post_id || "pending",
-          postUrl: data.post_id ? `https://www.tiktok.com/@user/video/${data.post_id}` : undefined,
+          postId: "pending",
+          postUrl: undefined,
         };
       }
 

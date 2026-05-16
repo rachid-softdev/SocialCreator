@@ -28,21 +28,21 @@ export async function POST(
 
     const { id } = await params;
 
-    // Get video asset and verify ownership
+    // Get video asset
     const videoAsset = await prisma.videoAsset.findUnique({
       where: { id },
-      include: {
-        profile: {
-          select: { userId: true },
-        },
-      },
     });
 
     if (!videoAsset) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    if (videoAsset.profile.userId !== session.user.id) {
+    // Verify ownership through profile
+    const profile = await prisma.profile.findFirst({
+      where: { id: videoAsset.profileId, userId: session.user.id },
+    });
+
+    if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -92,3 +92,6 @@ export async function POST(
     );
   }
 }
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";

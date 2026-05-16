@@ -8,7 +8,7 @@ import { ContentEditor } from "@/components/content/content-editor";
 import { ApprovalPanel } from "@/components/content/approval-panel";
 import { formatDateTime } from "@/lib/utils";
 import { Check, X, Send } from "lucide-react";
-import { ContentDetailClient } from "./content-detail-client";
+import { ContentDetailClient } from "@/app/(main)/content/[id]/content-detail-client";
 
 interface PageProps {
   params: Promise<{ id: string }>;

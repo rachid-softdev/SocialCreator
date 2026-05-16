@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getPlanDetails, getInvoices, type PlanKey } from "@/lib/stripe"
-import { SubscriptionStatus } from "@/components/billing/subscription-status"
-import { formatDate } from "@/lib/utils"
+import { getPlanData, getInvoices, type PlanKey } from "@/lib/stripe"
 import { ClientBillingPage } from "./client-billing-page"
 
 export default async function BillingSettingsPage() {
@@ -25,12 +23,12 @@ export default async function BillingSettingsPage() {
 
   // Determine current plan
   let currentPlan: PlanKey = "free"
-  let planData = null
 
   if (user?.stripeSubscriptionStatus === "active" || user?.stripeSubscriptionStatus === "trialing") {
     currentPlan = "starter" // Default for subscribers
-    planData = getPlanDetails(currentPlan)
   }
+
+  const planData = getPlanData(currentPlan)
 
   // Get invoices if customer
   const invoices = user?.stripeCustomerId
