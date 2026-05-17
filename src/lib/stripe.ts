@@ -14,10 +14,127 @@ export function getStripe(): Stripe {
   return stripeInstance
 }
 
+// ============================================
+// Dynamic Price Fetching from Stripe
+// ============================================
+
+interface PriceCache {
+  prices: Record<PaidPlanKey, number>;
+  timestamp: number;
+  error?: string;
+}
+
+let priceCache: PriceCache | null = null;
+const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Fetch active prices from Stripe API
+ * Falls back to static prices if Stripe is not configured or API fails
+ */
+export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> {
+  // Return cached prices if still valid
+  if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION_MS) {
+    console.debug("[Stripe] Using cached prices");
+    return priceCache.prices;
+  }
+
+  // Check if Stripe is configured
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn("[Stripe] STRIPE_SECRET_KEY not set, using static prices");
+    return getStaticPrices();
+  }
+
+  try {
+    const stripe = getStripe();
+
+    // Fetch active prices from Stripe
+    const prices = await stripe.prices.list({
+      active: true,
+      type: "recurring",
+      limit: 10,
+    });
+
+    // Map Stripe prices to our plans
+    const priceMapping: Record<string, PaidPlanKey> = {
+      starter: "starter",
+      pro: "pro",
+      team: "team",
+    };
+
+    const activePrices: Record<PaidPlanKey, number> = {
+      starter: 5000, // fallback
+      pro: 7000,     // fallback
+      team: 11000,   // fallback
+    };
+
+    for (const price of prices.data) {
+      if (!price.id || !price.unit_amount) continue;
+
+      // Try to match price to plan via product name or metadata
+      const productName = price.product as unknown as string;
+
+      if (productName.toLowerCase().includes("starter")) {
+        activePrices.starter = price.unit_amount;
+      } else if (productName.toLowerCase().includes("pro")) {
+        activePrices.pro = price.unit_amount;
+      } else if (productName.toLowerCase().includes("team")) {
+        activePrices.team = price.unit_amount;
+      }
+    }
+
+    // Update cache
+    priceCache = {
+      prices: activePrices,
+      timestamp: Date.now(),
+    };
+
+    console.log("[Stripe] Successfully fetched dynamic prices:", activePrices);
+    return activePrices;
+  } catch (error) {
+    console.error("[Stripe] Failed to fetch prices, using static:", error);
+    priceCache = {
+      prices: getStaticPrices(),
+      timestamp: Date.now(),
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+    return getStaticPrices();
+  }
+}
+
+/**
+ * Get static fallback prices
+ */
+function getStaticPrices(): Record<PaidPlanKey, number> {
+  return {
+    starter: 5000,
+    pro: 7000,
+    team: 11000,
+  };
+}
+
+/**
+ * Clear price cache (useful for testing or manual refresh)
+ */
+export function clearPriceCache(): void {
+  priceCache = null;
+}
+
+/**
+ * Get price for a specific plan (dynamic or static)
+ */
+export async function getPlanPrice(plan: PaidPlanKey): Promise<number> {
+  const prices = await fetchActivePrices();
+  return prices[plan] || getStaticPrices()[plan];
+}
+
+// ============================================
+// Plan Configuration
+// ============================================
+
 export const PLANS = {
   starter: {
     name: "Starter",
-    price: 5000,
+    price: 5000, // Will be overridden by dynamic fetch
     profiles: 1,
     addOnPrice: 2000,
     addOnProfiles: 1,
@@ -25,7 +142,7 @@ export const PLANS = {
   },
   pro: {
     name: "Pro",
-    price: 7000,
+    price: 7000, // Will be overridden by dynamic fetch
     profiles: 2,
     addOnPrice: 2000,
     addOnProfiles: 1,
@@ -33,7 +150,7 @@ export const PLANS = {
   },
   team: {
     name: "Team",
-    price: 11000,
+    price: 11000, // Will be overridden by dynamic fetch
     profiles: 4,
     addOnPrice: 2000,
     addOnProfiles: 1,
@@ -43,6 +160,29 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS | "free"
 export type PaidPlanKey = keyof typeof PLANS
+
+/**
+ * Get plan data - uses dynamic prices if available
+ */
+export async function getPlanDataWithDynamicPrice(plan: PlanKey): Promise<{
+  name: string;
+  price: number;
+  profiles: number;
+  addOnPrice: number;
+  addOnProfiles: number;
+  features: string[];
+} | null> {
+  if (plan === "free") return null;
+
+  const staticPlan = PLANS[plan as PaidPlanKey];
+  const dynamicPrice = await getPlanPrice(plan as PaidPlanKey);
+
+  return {
+    ...staticPlan,
+    price: dynamicPrice,
+    features: [...staticPlan.features] as string[],
+  };
+}
 
 export function getPlanData(plan: PlanKey) {
   if (plan === "free") return null
@@ -62,13 +202,14 @@ export async function createCheckoutSession(
 
   const stripe = getStripe()
   const planData = PLANS[plan as Exclude<PlanKey, "free">]
+  const dynamicPrice = await getPlanPrice(plan as PaidPlanKey)
 
   const lineItems = [
     {
       price_data: {
         currency: "usd",
         product_data: { name: `SocialCreator ${planData.name}` },
-        unit_amount: planData.price as number,
+        unit_amount: dynamicPrice,
         recurring: { interval: "month" as const },
       },
       quantity: 1,
@@ -80,7 +221,7 @@ export async function createCheckoutSession(
       price_data: {
         currency: "usd",
         product_data: { name: `Additional Profile (+${additionalProfiles})` },
-        unit_amount: (planData.addOnPrice as number) * additionalProfiles,
+        unit_amount: planData.addOnPrice * additionalProfiles,
         recurring: { interval: "month" as const },
       },
       quantity: 1,

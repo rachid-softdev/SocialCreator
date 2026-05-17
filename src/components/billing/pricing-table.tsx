@@ -1,15 +1,49 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getPlanData, type PlanKey } from "@/lib/stripe"
+import { getPlanData, type PlanKey, type PaidPlanKey } from "@/lib/stripe"
 
 interface PricingTableProps {
   onSelectPlan?: (plan: PlanKey) => void
   currentPlan?: PlanKey
 }
 
+interface PlanWithPrice {
+  name: string
+  price: number
+  profiles: number
+  addOnPrice: number
+  addOnProfiles: number
+  features: string[]
+}
+
 export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
+  const [loading, setLoading] = useState(true)
+  const [planPrices, setPlanPrices] = useState<Record<PaidPlanKey, number>>({
+    starter: 5000,
+    pro: 7000,
+    team: 11000,
+  })
+
+  useEffect(() => {
+    // Fetch dynamic prices from Stripe API
+    async function fetchPrices() {
+      try {
+        const { fetchActivePrices } = await import("@/lib/stripe")
+        const prices = await fetchActivePrices()
+        setPlanPrices(prices)
+      } catch (error) {
+        console.error("Failed to fetch prices:", error)
+        // Fallback to static prices on error
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPrices()
+  }, [])
+
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -20,8 +54,9 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {(["starter", "pro", "team"] as PlanKey[]).map((planKey) => {
+      {(["starter", "pro", "team"] as PaidPlanKey[]).map((planKey) => {
         const plan = getPlanData(planKey)!
+        const price = planPrices[planKey]
         const isCurrent = currentPlan === planKey
         const isPro = planKey === "pro"
 
@@ -42,10 +77,14 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
 
             <div className="mb-4">
               <h3 className="text-title-md font-medium">{plan.name}</h3>
-              <p className="text-2xl font-semibold mt-2">
-                {formatPrice(plan.price)}
-                <span className="text-base font-normal opacity-70">/month</span>
-              </p>
+              {loading ? (
+                <div className="animate-pulse h-8 w-24 bg-gray-300 rounded mt-2" />
+              ) : (
+                <p className="text-2xl font-semibold mt-2">
+                  {formatPrice(price)}
+                  <span className="text-base font-normal opacity-70">/month</span>
+                </p>
+              )}
             </div>
 
             <ul className="space-y-3 mb-6 flex-1">

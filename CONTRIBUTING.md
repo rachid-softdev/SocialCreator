@@ -34,6 +34,19 @@ npm run dev
 - Run `npm run lint` before committing
 - Run `npm run typecheck` to check types
 
+## Development Scripts
+
+```bash
+# Start development server
+npm run dev
+
+# Start scheduler (for testing scheduled posts in dev mode)
+npm run dev:scheduler
+
+# Run both Next.js and scheduler together
+npm run dev:all
+```
+
 ## Testing
 
 ```bash
@@ -43,9 +56,27 @@ npm run test
 # Run tests with coverage
 npm run test:coverage
 
-# Run E2E tests (requires dev server)
-npx playwright test
+# Install Playwright browsers (run once)
+npm run test:e2e:install
+
+# Run E2E tests headless
+npm run test:e2e
+
+# Run E2E tests with visible browser
+npm run test:e2e:headed
+
+# Run E2E tests with interactive UI
+npm run test:e2e:ui
 ```
+
+## Scheduler
+
+The development scheduler (`scripts/dev-scheduler.ts`) runs alongside the Next.js dev server to simulate scheduled tasks:
+- Publishes scheduled posts every minute
+- Checks token expiration every 5 minutes
+- Processes pending media every 10 minutes
+
+Use `npm run dev:scheduler` to run it standalone, or `npm run dev:all` to run both together.
 
 ## Pull Request Process
 

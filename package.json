@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:scheduler": "tsx scripts/dev-scheduler.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:scheduler\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -12,7 +14,11 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
