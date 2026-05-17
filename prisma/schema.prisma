@@ -347,3 +347,145 @@ model VideoAsset {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+// ============================================
+// Feature Flags & Entitlements System
+// ============================================
+
+model Plan {
+  id            String        @id @default(cuid())
+  key           String        @unique // "free", "starter", "pro", "team"
+  name          String
+  priceMonthly  Int           @default(0) // cents
+  isActive      Boolean       @default(true)
+  sortOrder     Int           @default(0)
+  planFeatures  PlanFeature[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Feature {
+  id              String         @id @default(cuid())
+  key             String         @unique // "EXPORT_PDF", "AI_SUMMARY", etc.
+  name            String
+  description     String?
+  type            FeatureType    @default(BOOLEAN) // "boolean", "limit", "experiment"
+  defaultConfig   Json           @default("{}") // default values for experiment type
+  isActive        Boolean        @default(true)
+  planFeatures    PlanFeature[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum FeatureType {
+  BOOLEAN
+  LIMIT
+  EXPERIMENT
+}
+
+model PlanFeature {
+  id                String           @id @default(cuid())
+  planId            String
+  plan              Plan             @relation(fields: [planId], references: [id], onDelete: Cascade)
+  featureId         String
+  feature           Feature          @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  enabled           Boolean          @default(false)
+  limitValue        Int?             // null = unlimited (Enterprise)
+  configJson        Json             @default("{}") // experiment config, downgrade strategy
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([planId, featureId])
+}
+
+model Organization {
+  id                  String           @id @default(cuid())
+  name                String
+  stripeCustomerId    String?          @unique
+  stripeSubscriptionId String?
+  subscription        Subscription?
+  teamId              String?          @unique
+  entitlementOverrides EntitlementOverride[]
+  usageTrackings      UsageTracking[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+model Subscription {
+  id                  String           @id @default(cuid())
+  orgId               String           @unique
+  organization        Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  planKey             String           // "free", "starter", "pro", "team"
+  status              SubscriptionStatus @default(ACTIVE) // ACTIVE, TRIALING, PAST_DUE, CANCELED, UNPAID
+  stripeSubId         String?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+model EntitlementOverride {
+  id          String        @id @default(cuid())
+  scope       OverrideScope // "org" or "user"
+  scopeId     String        // orgId or userId
+  featureKey  String
+  enabled     Boolean
+  limitValue  Int?
+  expiresAt   DateTime?
+  reason      String?       // mandatory for admin-created overrides
+  org         Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([scope, scopeId])
+  @@index([scope, scopeId, featureKey])
+}
+
+enum OverrideScope {
+  ORG
+  USER
+}
+
+model UsageTracking {
+  id            String      @id @default(cuid())
+  orgId         String
+  organization  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  featureKey    String
+  usageCount    Int         @default(0)
+  periodStart   DateTime
+  periodEnd     DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([orgId, featureKey, periodStart])
+  @@index([orgId, featureKey])
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique // Stripe event ID
+  type        String
+  processedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model Experiment {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  config      Json     @default("{}") // { percentage, seed, variantNames }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
