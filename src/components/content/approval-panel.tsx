@@ -11,8 +11,8 @@ interface ApprovalPanelProps {
   content: GeneratedContentWithRelations | null;
   isOpen: boolean;
   onClose: () => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason?: string) => void;
+  onApprove: (id: string) => void | Promise<void>;
+  onReject: (id: string, reason?: string) => void | Promise<void>;
   isLoading?: boolean;
 }
 

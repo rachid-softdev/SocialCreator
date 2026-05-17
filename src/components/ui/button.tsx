@@ -15,6 +15,7 @@ interface ButtonProps {
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
   href?: string;
+  title?: string;
 }
 
 export function Button({
@@ -28,6 +29,7 @@ export function Button({
   onClick,
   type = "button",
   href,
+  title,
 }: ButtonProps) {
   const baseStyles =
     "inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
@@ -64,6 +66,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={cn(combinedStyles, disabled && "opacity-50 cursor-not-allowed")}
     >
       {Icon && iconPosition === "left" && <Icon className="w-4 h-4" />}

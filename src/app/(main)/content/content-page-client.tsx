@@ -1,28 +1,13 @@
 "use client";
 
 import { useState, memo } from "react";
-import dynamic from "next/dynamic";
 import { PageHeader } from "@/components/layout/page-header";
 import { ContentList } from "@/components/content/content-list";
+import { ApprovalPanel } from "@/components/content/approval-panel";
 import type { GeneratedContentWithRelations } from "@/types/agent";
 import { CONTENT_STATUS_LABELS } from "@/types/profile";
 import type { ContentStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
-
-// Lazy load ApprovalPanel - only load when needed (modal)
-const ApprovalPanel = dynamic(
-  () => import("@/components/content/approval-panel"),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="bg-surface-card rounded-xl p-6">
-          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-        </div>
-      </div>
-    )
-  }
-);
 
 interface ContentPageClientProps {
   initialContents: GeneratedContentWithRelations[];

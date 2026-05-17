@@ -150,13 +150,32 @@ model ConnectedAccount {
   profileId    String
   profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform    Platform
+
+  /// Access token stocké chiffré via AES-256 (cf. src/lib/crypto.ts)
+  /// L'encrypt/decrypt est géré côté application via getValidAccessToken()
   accessToken  String    @db.Text
+
+  /// Refresh token stocké chiffré via AES-256
+  /// Utilisé pour automatiquement renouveler l'access token avant expiration
   refreshToken String?   @db.Text
+
+  /// Date d'expiration de l'access token
+  /// Si expiré, le système tente automatiquement un refresh via refreshToken
   expiresAt   DateTime?
+
+  /// ID du compte sur la plateforme (ex: Instagram Business Account ID)
   accountId   String
+
+  /// Nom du compte (ex: @username)
   accountName String
+
+  /// URL de l'avatar du compte
   accountAvatarUrl String?
+
+  /// Indique si le compte est actif pour la publication
+  /// Un compte peut être désactivé sans être supprimé (pour révocation de permissions)
   isActive   Boolean   @default(true)
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -250,6 +269,9 @@ enum ContentStatus {
   SCHEDULED  // En attente de publication planifiée
 }
 
+/// Journal d'audit immuable pour chaque publication
+/// Aucune mise à jour possible - uniquement des lectures et insertions
+/// Utilisé pour vérifier les caps quotidiens et pour l'audit de conformité
 model PublishLog {
   id          String   @id @default(cuid())
   userId      String
@@ -257,9 +279,16 @@ model PublishLog {
   profileId   String
   platform   Platform
   contentId  String
+
+  /// Hash SHA-256 du contenu publié - permet détection de doublons
   contentHash String
+
+  /// Indique si la publication a réussi
   success    Boolean
+
+  /// Message d'erreur si échec (null si succès)
   error      String?
+
   publishedAt DateTime @default(now())
 
   @@index([userId, publishedAt])
@@ -270,11 +299,24 @@ model ApiKey {
   id        String    @id @default(cuid())
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Nom arbitraire pour identifier la clé (ex: "Production API Key")
   name      String
+
+  /// Hash SHA-256 de la clé API - JAMAIS stocké en clair
+  /// Pour valider: hash(input) === keyHash
   keyHash   String    @unique
+
+  /// Préfixe pour identifier le type de clé (ex: "sc_live_" ou "sc_test_")
+  /// Permet d'afficher un préfixe à l'utilisateur sans révéler la clé complète
   prefix    String
+
+  /// Dernière utilisation de la clé
   lastUsed  DateTime?
+
+  /// Date de révocation (si non null, la clé ne fonctionne plus)
   revokedAt DateTime?
+
   createdAt DateTime  @default(now())
 }
 

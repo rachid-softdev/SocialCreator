@@ -49,6 +49,98 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
 };
 
 // ============================================
+// In-Memory Fallback Store
+// ============================================
+
+interface InMemoryEntry {
+  count: number;
+  resetTime: number;
+}
+
+/**
+ * In-memory rate limiting store (fallback when Redis unavailable)
+ * Resets on server restart - not persistent
+ */
+const inMemoryStore = new Map<string, InMemoryEntry>();
+
+/**
+ * Clean up expired entries from in-memory store
+ */
+function cleanupInMemoryStore(): void {
+  const now = Date.now();
+  for (const [key, entry] of inMemoryStore.entries()) {
+    if (entry.resetTime < now) {
+      inMemoryStore.delete(key);
+    }
+  }
+}
+
+// Clean up every 5 minutes
+if (typeof setInterval !== "undefined") {
+  setInterval(cleanupInMemoryStore, 5 * 60 * 1000);
+}
+
+/**
+ * Check rate limit using in-memory store (fallback)
+ */
+function checkRateLimitInMemory(
+  identifier: string,
+  path: string
+): RateLimitResult {
+  const config = getConfigForPath(path);
+  const limit = config?.limit ?? 100;
+  const windowSeconds = config ? parseWindowToSeconds(config.window) : 60;
+
+  const key = `${path}:${identifier}`;
+  const now = Date.now();
+  const resetTime = now + windowSeconds * 1000;
+
+  const entry = inMemoryStore.get(key);
+
+  if (!entry || entry.resetTime < now) {
+    // New window
+    inMemoryStore.set(key, { count: 1, resetTime });
+    return {
+      success: true,
+      limit,
+      remaining: limit - 1,
+      reset: resetTime,
+    };
+  }
+
+  // Existing window - check and increment
+  entry.count++;
+
+  const remaining = Math.max(0, limit - entry.count);
+  const success = entry.count <= limit;
+
+  return {
+    success,
+    limit,
+    remaining,
+    reset: entry.resetTime,
+  };
+}
+
+/**
+ * Parse window string to seconds
+ */
+function parseWindowToSeconds(window: string): number {
+  const match = window.match(/^(\d+)(s|m|h)$/);
+  if (!match) return 60;
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+
+  switch (unit) {
+    case "s": return value;
+    case "m": return value * 60;
+    case "h": return value * 3600;
+    default: return 60;
+  }
+}
+
+// ============================================
 // Redis Instance
 // ============================================
 
@@ -64,7 +156,7 @@ export function initRedis(): Redis | null {
 
   if (!url || !token) {
     console.warn(
-      "Upstash Redis not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment."
+      "Upstash Redis not configured. Using in-memory fallback. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment for production."
     );
     return null;
   }
@@ -198,8 +290,9 @@ export async function checkRateLimit(
   const limiter = getRateLimiter(path);
 
   if (!limiter) {
-    // Redis not configured, allow request
-    return { success: true, limit: 0, remaining: 0, reset: 0 };
+    // Redis not configured - use in-memory fallback
+    console.debug(`Using in-memory rate limiting for ${path}`);
+    return checkRateLimitInMemory(identifier, path);
   }
 
   try {
@@ -212,9 +305,9 @@ export async function checkRateLimit(
       reset: result.reset,
     };
   } catch (error) {
-    // On error, allow the request (fail open)
-    console.error("Rate limit check failed:", error);
-    return { success: true, limit: 0, remaining: 0, reset: 0 };
+    // On error, fall back to in-memory (fail graceful)
+    console.error("Rate limit Redis check failed, using in-memory fallback:", error);
+    return checkRateLimitInMemory(identifier, path);
   }
 }
 

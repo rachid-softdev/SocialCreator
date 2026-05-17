@@ -15,6 +15,16 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   return <>{children}</>;
 }
 
+// DialogTrigger - container for the trigger button
+interface DialogTriggerProps {
+  asChild?: boolean;
+  children: React.ReactNode;
+}
+
+export function DialogTrigger({ asChild, children }: DialogTriggerProps) {
+  return <>{children}</>;
+}
+
 // DialogContent
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;

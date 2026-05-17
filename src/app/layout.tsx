@@ -21,7 +21,7 @@ const ebGaramond = EB_Garamond({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-eb-garamond",
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600"],
 });
 
 // Playfair Display for alternative headings

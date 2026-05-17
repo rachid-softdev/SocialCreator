@@ -172,7 +172,7 @@ export function PostContent({ content }: PostContentProps) {
         {src && (
           <div className="relative w-full h-96 rounded-lg overflow-hidden">
             <Image
-              src={src}
+              src={typeof src === 'string' ? src : ''}
               alt={alt || ""}
               fill
               className="object-cover"
