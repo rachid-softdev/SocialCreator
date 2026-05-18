@@ -1,0 +1,31 @@
+{
+  "name": "@socialcreator/root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=socialcreator-web",
+    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run dev:scheduler\"",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=socialcreator-web",
+    "start": "turbo start",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:run": "turbo test -- --run",
+    "test:coverage": "turbo test -- --run --coverage",
+    "test:e2e": "turbo test:e2e",
+    "test:e2e:headed": "turbo test:e2e -- --headed",
+    "test:e2e:ui": "turbo test:e2e -- --ui",
+    "db:generate": "turbo db:generate",
+    "db:seed": "pnpm --filter=socialcreator-web run db:seed",
+    "clean": "turbo clean && rm -rf node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "concurrently": "^9.1.2",
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "pnpm@9.15.9"
+}

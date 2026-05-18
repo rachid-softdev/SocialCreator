@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+  - 'socialcreator-web'
+  - 'socialcreator-desktop'
+  - 'socialcreator-extension'
+  - 'socialcreator-mobile'

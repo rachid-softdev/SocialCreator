@@ -1,0 +1,98 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { approveContentSchema } from "@socialcreator/types";
+import { isValidUuid } from "@/lib/sanitize";
+import { withRateLimit } from "@/lib/rate-limit-redis";
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+async function getContentOr404(id: string, userId: string) {
+  const content = await prisma.generatedContent.findFirst({
+    where: { id, profile: { userId } },
+  });
+  return content;
+}
+
+// POST /api/content/[id]/approve
+export async function POST(request: Request, { params }: RouteParams) {
+  try {
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, {});
+    if (rateLimitResponse) return rateLimitResponse;
+
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+
+    // Validate content ID
+    if (!isValidUuid(id)) {
+      return NextResponse.json(
+        { error: "Invalid content ID" },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = approveContentSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const content = await getContentOr404(id, session.user.id);
+
+    if (!content) {
+      return NextResponse.json(
+        { error: "Content not found" },
+        { status: 404 }
+      );
+    }
+
+    if (content.status !== "DRAFT") {
+      return NextResponse.json(
+        { error: "Only draft content can be approved" },
+        { status: 400 }
+      );
+    }
+
+    const updatedContent = await prisma.generatedContent.update({
+      where: { id },
+      data: { status: "APPROVED" },
+      include: {
+        profile: {
+          select: { id: true, name: true },
+        },
+        run: {
+          select: {
+            id: true,
+            agent: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ content: updatedContent });
+  } catch (error) {
+    console.error("Error approving content:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

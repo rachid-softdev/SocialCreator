@@ -1,0 +1,13 @@
+{
+  "name": "@socialcreator/config",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tailwind": "./tailwind"
+  },
+  "files": [
+    "tsconfig.base.json",
+    "tailwind"
+  ]
+}

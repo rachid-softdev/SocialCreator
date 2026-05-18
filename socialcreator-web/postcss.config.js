@@ -1,0 +1,1 @@
+module.exports = require("@socialcreator/config/tailwind/postcss.js");

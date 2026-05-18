@@ -1,0 +1,179 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const updateContentSchema = z.object({
+  textContent: z.string().min(1).max(10000).optional(),
+  hashtags: z.array(z.string()).optional(),
+  mediaUrls: z.array(z.string().url()).optional(),
+  status: z.enum(["DRAFT", "APPROVED", "PUBLISHED", "FAILED", "REJECTED", "SCHEDULED"]).optional(),
+  scheduledPublishAt: z.string().datetime().optional(),
+  scheduledTimezone: z.string().optional(),
+});
+
+// Schema for scheduling content
+const scheduleContentSchema = z.object({
+  scheduledPublishAt: z.string().datetime(),
+  scheduledTimezone: z.string().optional().default("UTC"),
+});
+
+// Schema for bulk operations
+const bulkActionSchema = z.object({
+  contentIds: z.array(z.string().uuid()).min(1).max(50),
+  action: z.enum(["approve", "reject", "publish", "delete"]),
+});
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+async function getContentOr404(id: string, userId: string) {
+  const content = await prisma.generatedContent.findFirst({
+    where: { id, profile: { userId } },
+    include: {
+      profile: {
+        select: { id: true, name: true },
+      },
+      run: {
+        select: {
+          id: true,
+          agent: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
+  return content;
+}
+
+// GET /api/content/[id]
+export async function GET(request: Request, { params }: RouteParams) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const content = await getContentOr404(id, session.user.id);
+
+    if (!content) {
+      return NextResponse.json(
+        { error: "Content not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ content });
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/content/[id]
+export async function PATCH(request: Request, { params }: RouteParams) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const existingContent = await getContentOr404(id, session.user.id);
+
+    if (!existingContent) {
+      return NextResponse.json(
+        { error: "Content not found" },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json();
+    const validationResult = updateContentSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: validationResult.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const updateData = validationResult.data;
+
+    const content = await prisma.generatedContent.update({
+      where: { id },
+      data: updateData,
+      include: {
+        profile: {
+          select: { id: true, name: true },
+        },
+        run: {
+          select: {
+            id: true,
+            agent: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ content });
+  } catch (error) {
+    console.error("Error updating content:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/content/[id]
+export async function DELETE(request: Request, { params }: RouteParams) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const existingContent = await getContentOr404(id, session.user.id);
+
+    if (!existingContent) {
+      return NextResponse.json(
+        { error: "Content not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.generatedContent.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting content:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
