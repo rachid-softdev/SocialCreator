@@ -14,10 +14,24 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "formatWithErrors": true
+    "formatWithErrors": false
   },
   "linter": {
-    "enabled": false
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "warn"
+      },
+      "style": {
+        "useConst": "warn",
+        "useImportType": "warn",
+        "noNegationElse": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
   },
   "assist": {
     "enabled": true,
