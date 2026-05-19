@@ -41,4 +41,16 @@ next-env.d.ts
 
 # Prisma
 prisma/*.db
-prisma/*.db-journal
+prisma*.db-journal
+
+# Biome
+.biome/
+
+# Husky
+.husky/
+
+# Biome ignore
+.biome/
+
+# Postcss config with non-standard syntax
+packages/socialcreator-config/tailwind/postcss.js

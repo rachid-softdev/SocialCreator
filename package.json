@@ -42,11 +42,27 @@
     "extension:lint": "pnpm --filter=socialcreator-extension lint",
     "extension:typecheck": "pnpm --filter=socialcreator-extension typecheck",
     "check-env": "pnpm --filter=socialcreator-web check-env",
-    "push-env": "pnpm --filter=socialcreator-web push-env"
+    "push-env": "pnpm --filter=socialcreator-web push-env",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": [
+      "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.15",
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
     "concurrently": "^9.1.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },
