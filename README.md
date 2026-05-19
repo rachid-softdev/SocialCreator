@@ -73,21 +73,21 @@ Générez, adaptez et publiez du contenu sur 8 plateformes (Instagram, TikTok, Y
 git clone https://github.com/rachid-softdev/SocialCreator.git
 cd SocialCreator
 
-# Installer les dépendances
-npm install
+# Installer les dépendances (pnpm)
+pnpm install
 
 # Configurer les variables d'environnement
 cp .env.local.example .env.local
 # Éditer .env.local avec vos clés API
 
 # Générer le client Prisma
-npx prisma generate
+pnpm --filter=socialcreator-web prisma generate
 
 # Push le schéma vers la base de données
-npx prisma db push
+pnpm --filter=socialcreator-web prisma db push
 
 # Lancer en développement
-npm run dev
+pnpm dev
 ```
 
 ### Configuration .env.local
@@ -122,14 +122,63 @@ NEXT_PUBLIC_TRIGGER_PUBLIC_KEY="your-trigger-public"
 ### Build production
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
-### Commandes préfixées (pnpm)
+### Commandes
 
 ```bash
-# Application web
+# Installation des dépendances
+pnpm install
+
+# Développement
+pnpm dev              # Lance tous les packages en mode dev
+pnpm dev:web         # Lance uniquement l'app web
+pnpm dev:all         # Lance web + scheduler
+
+# Build
+pnpm build           # Build tous les packages
+pnpm build:web       # Build uniquement l'app web
+
+# Tests
+pnpm test            # Tests unitaires tous packages
+pnpm test:run        # Tests unitaires sans watch
+pnpm test:coverage   # Tests avec coverage
+pnpm test:e2e        # Tests end-to-end
+pnpm test:e2e:headed # Tests e2e avec navigateur visible
+
+# Linting & Typecheck
+pnpm lint            # Lint tous les packages
+pnpm typecheck       # Typecheck tous les packages
+```
+
+## Packages
+
+Ce projet est un **monorepo** utilisant [Turborepo](https://turbo.build/) et pnpm workspaces.
+
+### Applications
+
+| Package | Description | Commandes |
+|---------|-------------|-----------|
+| **socialcreator-web** | Application Next.js principale (Dashboard, Agents, Analytics) | `pnpm web:dev`, `pnpm web:build`, `pnpm web:start`, `pnpm web:lint`, `pnpm web:typecheck` |
+| **socialcreator-desktop** | Application desktop (Electron/Tauri) | `pnpm desktop:dev`, `pnpm desktop:build`, `pnpm desktop:test` |
+| **socialcreator-mobile** | Application mobile (React Native/Expo) | `pnpm mobile:dev`, `pnpm mobile:build`, `pnpm mobile:test` |
+| **socialcreator-extension** | Extension navigateur | `pnpm extension:dev`, `pnpm extension:build`, `pnpm extension:test` |
+
+### Packages partagés
+
+| Package | Description |
+|---------|-------------|
+| **@socialcreator/ui** | Composants UI, design system |
+| **@socialcreator/types** | Types TypeScript partagés |
+| **@socialcreator/utils** | Utilitaires et helpers |
+| **@socialcreator/config** | Configuration Tailwind, ESLint, etc. |
+
+### Commandes par package
+
+```bash
+# Web
 pnpm web:dev
 pnpm web:build
 pnpm web:start
@@ -137,14 +186,17 @@ pnpm web:test
 pnpm web:lint
 pnpm web:typecheck
 
+# Desktop
 pnpm desktop:dev
 pnpm desktop:build
 pnpm desktop:test
 
+# Mobile
 pnpm mobile:dev
 pnpm mobile:build
 pnpm mobile:test
 
+# Extension
 pnpm extension:dev
 pnpm extension:build
 pnpm extension:test

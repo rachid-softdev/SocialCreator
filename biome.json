@@ -11,9 +11,8 @@
         "noExplicitAny": "off"
       },
       "style": {
-        "useConst": "on",
-        "useImportType": "on",
-        "noUnusedVariables": "warn"
+        "useConst": "warn",
+        "useImportType": "warn"
       }
     }
   },
