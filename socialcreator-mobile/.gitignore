@@ -1,0 +1,39 @@
+# SocialCreator Mobile - .gitignore
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+expo-env.d.ts
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Testing
+coverage/
+
+# Misc
+.cache/
