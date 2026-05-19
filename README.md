@@ -126,6 +126,34 @@ npm run build
 npm start
 ```
 
+### Commandes préfixées (pnpm)
+
+```bash
+# Application web
+pnpm web:dev
+pnpm web:build
+pnpm web:start
+pnpm web:test
+pnpm web:lint
+pnpm web:typecheck
+
+pnpm desktop:dev
+pnpm desktop:build
+pnpm desktop:test
+
+pnpm mobile:dev
+pnpm mobile:build
+pnpm mobile:test
+
+pnpm extension:dev
+pnpm extension:build
+pnpm extension:test
+
+# Environment
+pnpm check-env     # Valider les variables d'environnement
+pnpm push-env      # Pousser les variables vers Vercel
+```
+
 ## Architecture
 
 ```

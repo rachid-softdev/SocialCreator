@@ -40,7 +40,9 @@
     "extension:build": "pnpm --filter=socialcreator-extension build",
     "extension:test": "pnpm --filter=socialcreator-extension test",
     "extension:lint": "pnpm --filter=socialcreator-extension lint",
-    "extension:typecheck": "pnpm --filter=socialcreator-extension typecheck"
+    "extension:typecheck": "pnpm --filter=socialcreator-extension typecheck",
+    "check-env": "pnpm --filter=socialcreator-web check-env",
+    "push-env": "pnpm --filter=socialcreator-web push-env"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
