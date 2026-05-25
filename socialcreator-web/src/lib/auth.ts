@@ -60,6 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.cguAccepted = (user as any).cguAccepted;
+        token.role = (user as any).role;
       }
 
       // Add CGU status to token from database on initial sign in
@@ -84,6 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token && session.user) {
         session.user.id = token.id as string;
         (session.user as any).cguAccepted = token.cguAccepted;
+        (session.user as any).role = token.role as "USER" | "ADMIN";
       }
       return session;
     },
