@@ -9,6 +9,12 @@ datasource db {
 
 // ── NextAuth required ────────────────────────────────────────
 
+// Role enum
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id               String    @id @default(cuid())
   name             String?
@@ -30,6 +36,7 @@ model User {
   publishLogs      PublishLog[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  role             Role      @default(USER)
 }
 
 model Account {
