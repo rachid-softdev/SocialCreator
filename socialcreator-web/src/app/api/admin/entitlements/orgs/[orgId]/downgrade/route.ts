@@ -1,6 +1,6 @@
 /**
  * Admin API for downgrade preview
- * GET /api/admin/entitlements/orgs/:orgId/downgrade-preview?targetPlan=X
+ * GET /api/admin/entitlements/orgs/:orgId/downgrade?targetPlan=X
  */
 
 import { NextResponse } from "next/server"

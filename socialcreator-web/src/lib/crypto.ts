@@ -3,10 +3,18 @@
  * AES-256 encryption for sensitive data (OAuth tokens, API keys)
  */
 
+import { randomBytes } from "node:crypto";
 import AES from "crypto-js/aes";
 import Utf8 from "crypto-js/enc-utf8";
+import SHA256 from "crypto-js/sha256";
 
-const SECRET = process.env.ENCRYPTION_KEY || "fallback-key-for-dev";
+const SECRET = process.env.ENCRYPTION_KEY;
+if (!SECRET) {
+  throw new Error(
+    "ENCRYPTION_KEY environment variable is required. " +
+    "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  );
+}
 
 /**
  * Encrypt a string token using AES-256
@@ -90,9 +98,10 @@ export function generateSecureToken(length: number = 32): string {
     crypto.getRandomValues(bytes);
   } else {
     // Fallback for Node.js
-    const { randomBytes } = require("crypto");
     const buf = randomBytes(length);
-    buf.copy(bytes);
+    for (let i = 0; i < length; i++) {
+      bytes[i] = buf[i];
+    }
   }
 
   for (let i = 0; i < length; i++) {
@@ -108,7 +117,6 @@ export function generateSecureToken(length: number = 32): string {
  * @returns Hex-encoded hash
  */
 export function hashString(input: string): string {
-  const SHA256 = require("crypto-js/sha256");
   return SHA256(input).toString();
 }
 

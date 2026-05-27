@@ -42,6 +42,9 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   // Video uploads
   "/api/video/upload": { limit: 10, window: 300 }, // 10 uploads/5min
   
+  // Auth
+  "/api/auth/register": { limit: 5, window: 300 },
+
   // Stripe
   "/api/stripe/checkout": { limit: 5, window: 60 },
   "/api/stripe/portal": { limit: 5, window: 60 },
