@@ -191,6 +191,8 @@ export const cacheService: ICacheService = {
     const redis = getEntitlementsRedis();
     if (redis) {
       try {
+        // ⚠️ redis.keys(pattern) is O(N) - avoid in production with large datasets.
+        // Consider using redis.SCAN for production workloads.
         const keys = await redis.keys(pattern);
         if (keys.length > 0) {
           await redis.del(...keys);

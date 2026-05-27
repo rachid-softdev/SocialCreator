@@ -82,7 +82,7 @@ export const createAgentSchema = z.object({
   scheduleCron: z
     .string()
     .regex(
-      /^(\*|([0-5]?\d)) (\*|([0-5]?\d)) (\*|([01]?\d|2[0-3])) (\*|([0-6])$)/,
+      /^(\*|[0-5]?\d) (\*|[01]?\d|2[0-3]) (\*|0?[1-9]|[12]\d|3[01]) (\*|0?[1-9]|1[0-2]) (\*|[0-6])$/,
       "Invalid cron format",
     )
     .optional()

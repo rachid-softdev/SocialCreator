@@ -46,7 +46,9 @@ export const createAgentSchema = z.object({
   platforms: z.array(z.enum(PLATFORMS)).min(1).max(8),
   scheduleCron: z
     .string()
-    .regex(/^(\*|[0-5]?\d) (\*|[0-5]?\d) (\*|[12]\d|3[01]|[1-9]) (\*|1[0-2]|[1-9]) (\*|[0-6])$/)
+    .regex(
+      /^(\*|[0-5]?\d) (\*|[01]?\d|2[0-3]) (\*|0?[1-9]|[12]\d|3[01]) (\*|0?[1-9]|1[0-2]) (\*|[0-6])$/,
+    )
     .optional()
     .or(z.literal("")),
   autoPublish: z.boolean().optional(),

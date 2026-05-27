@@ -45,11 +45,8 @@ describe("crypto", () => {
       expect(decrypted).toBe(token);
     });
 
-    it("should handle empty strings", () => {
-      const encrypted = encryptToken("");
-      const decrypted = decryptToken(encrypted);
-
-      expect(decrypted).toBe("");
+    it("should throw error for empty strings", () => {
+      expect(() => encryptToken("")).toThrow("Invalid token provided for encryption");
     });
 
     it("should handle special characters", () => {

@@ -7,6 +7,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import type { OverrideInput } from "@/lib/entitlements/types";
@@ -20,8 +21,11 @@ export async function GET(request: Request) {
     await requireAdmin();
     const url = new URL(request.url);
     const resource = url.searchParams.get("resource") || "plans";
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1") || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "20") || 20));
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10) || 20),
+    );
     const sort = url.searchParams.get("sort") || "sortOrder:asc";
     let [sortField, sortOrder] = sort.split(":");
 
@@ -104,26 +108,32 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await requireAdmin();
-    const body = await request.json();
-    const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = body;
+    const createOverrideSchema = z.object({
+      scope: z.enum(["ORG", "USER"]),
+      scopeId: z.string().min(1, "scopeId required"),
+      featureKey: z.string().min(1, "featureKey required"),
+      enabled: z.boolean().optional().default(true),
+      limitValue: z.number().int().nullable().optional(),
+      expiresAt: z.string().optional(),
+      reason: z.string().min(1, "reason required").max(500),
+    });
 
-    if (!scope || !scopeId || !featureKey || !reason) {
+    const body = await request.json();
+    const parsed = createOverrideSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Missing required fields: scope, scopeId, featureKey, reason" },
+        { error: parsed.error.errors.map((e) => e.message).join(", ") },
         { status: 400 },
       );
     }
 
-    const VALID_SCOPES = ["ORG", "USER"] as const;
-    if (!VALID_SCOPES.includes(scope as (typeof VALID_SCOPES)[number])) {
-      return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
-    }
+    const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = parsed.data;
 
     const input: OverrideInput = {
-      scope: scope as "ORG" | "USER",
+      scope,
       scopeId,
       featureKey,
-      enabled: enabled ?? true,
+      enabled,
       limitValue: limitValue ?? null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       reason,

@@ -72,7 +72,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Exchange code for tokens
     let tokenResponse;
     try {
-      tokenResponse = await exchangeCodeForToken(platformUpper as OAuthProvider, code, redirectUri);
+      tokenResponse = await exchangeCodeForToken(
+        platformUpper as OAuthProvider,
+        code,
+        redirectUri,
+        state,
+      );
     } catch (tokenError) {
       console.error("Token exchange error:", tokenError);
       return NextResponse.redirect(

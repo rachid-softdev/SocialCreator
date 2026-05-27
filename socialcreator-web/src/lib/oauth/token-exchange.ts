@@ -20,6 +20,7 @@ export async function exchangeCodeForToken(
   platform: OAuthProvider,
   code: string,
   redirectUri: string,
+  state?: string,
 ): Promise<TokenResponse> {
   const credentials = getProviderCredentials(platform);
 
@@ -36,8 +37,12 @@ export async function exchangeCodeForToken(
 
   // Platform-specific token request adjustments
   if (platform === "X") {
-    // Twitter OAuth 2.0
-    formData.append("code_verifier", "challenge");
+    // Twitter OAuth 2.0 requires PKCE code_verifier
+    const codeVerifier = extractCodeVerifierFromState(state);
+    if (!codeVerifier) {
+      throw new Error("Missing code_verifier in state for X platform");
+    }
+    formData.append("code_verifier", codeVerifier);
   }
 
   const response = await fetch(getTokenUrl(platform), {
@@ -79,11 +84,6 @@ export async function refreshAccessToken(
   formData.append("refresh_token", refreshToken);
   formData.append("grant_type", "refresh_token");
 
-  // Platform-specific adjustments
-  if (platform === "X") {
-    formData.append("grant_type", "refresh_token");
-  }
-
   const response = await fetch(getTokenUrl(platform), {
     method: "POST",
     headers: {
@@ -124,21 +124,30 @@ function getTokenUrl(platform: OAuthProvider): string {
  * Each platform may return the token in slightly different formats
  */
 function normalizeTokenResponse(platform: OAuthProvider, data: any): TokenResponse {
-  // Different platforms use different field names
-  const accessToken =
-    data.access_token || data.accessToken || data.access_token_response?.access_token;
-
-  if (!accessToken) {
+  if (!data.access_token) {
     throw new Error(`No access token in response for ${platform}`);
   }
 
   return {
-    access_token: accessToken,
-    refresh_token: data.refresh_token || data.refreshToken || undefined,
-    expires_in: data.expires_in || data.expiresIn || undefined,
-    token_type: data.token_type || data.tokenType || "Bearer",
+    access_token: data.access_token,
+    refresh_token: data.refresh_token || undefined,
+    expires_in: data.expires_in || undefined,
+    token_type: data.token_type || "Bearer",
     scope: data.scope || undefined,
   };
+}
+
+/**
+ * Extract code_verifier from the OAuth state parameter
+ */
+function extractCodeVerifierFromState(state?: string): string | null {
+  if (!state) return null;
+  try {
+    const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
+    return decoded.codeVerifier || null;
+  } catch {
+    return null;
+  }
 }
 
 /**

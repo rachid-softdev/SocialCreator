@@ -4,7 +4,6 @@
  * No if(plan === "PRO") in endpoints - everything goes through here
  */
 
-import { getStripe } from "@/lib/stripe";
 import { cacheService, getEntitlementsCacheKey } from "./cache";
 import { getEntitlementRepository } from "./repository";
 import type {
@@ -14,9 +13,7 @@ import type {
   EntitlementMap,
   EntitlementValue,
   ExperimentConfig,
-  FeatureType,
   ResolutionSource,
-  SubscriptionStatus,
 } from "./types";
 
 // Simple hash function for A/B testing (murmurhash-like)
@@ -28,7 +25,7 @@ function murmurhash(key: string): number {
   return h;
 }
 
-function getExperimentBucket(seed: string, userId: string, percentage: number): number {
+function getExperimentBucket(seed: string, userId: string, _percentage: number): number {
   const bucket = murmurhash(`${seed}:${userId}`) % 100;
   return bucket;
 }
@@ -92,34 +89,23 @@ export class FeatureGateService {
     const value = await this.resolveEntitlement(orgId, featureKey);
     const limit = value.limit;
 
-    // Get current period info
+    // Get current period info for period boundaries
     const periodInfo = await this.repo.getCurrentPeriodUsage(orgId, featureKey);
 
-    // Check if limit allows consumption
-    if (limit !== null && periodInfo.used + n > limit) {
-      return {
-        success: false,
-        used: periodInfo.used,
-        limit,
-        resetAt: periodInfo.periodEnd,
-        error: "LIMIT_REACHED",
-        feature: featureKey,
-      };
-    }
-
-    // Atomically consume
-    const consumed = await this.repo.consumeUsage(
+    // Atomically consume (read + check + upsert in a single transaction)
+    const result = await this.repo.consumeUsage(
       orgId,
       featureKey,
       n,
+      limit,
       periodInfo.periodStart,
       periodInfo.periodEnd,
     );
 
-    if (!consumed) {
+    if (!result.success) {
       return {
         success: false,
-        used: periodInfo.used,
+        used: result.currentCount,
         limit,
         resetAt: periodInfo.periodEnd,
         error: "LIMIT_REACHED",
@@ -127,12 +113,9 @@ export class FeatureGateService {
       };
     }
 
-    // Get updated usage
-    const updatedUsage = await this.repo.getCurrentPeriodUsage(orgId, featureKey);
-
     return {
       success: true,
-      used: updatedUsage.used,
+      used: result.currentCount,
       limit,
       resetAt: periodInfo.periodEnd,
     };
@@ -187,7 +170,7 @@ export class FeatureGateService {
       resolvedVia,
       value: value.enabled ? value.enabled : value.limit,
       planKey: subscription?.planKey,
-      expiresAt: orgOverride?.limit !== undefined ? undefined : undefined,
+      expiresAt: orgOverride?.expiresAt,
       featureConfig: feature?.defaultConfig,
     };
   }
@@ -205,7 +188,7 @@ export class FeatureGateService {
    */
   isInExperiment(
     userId: string,
-    experimentKey: string,
+    _experimentKey: string,
     experimentConfig: ExperimentConfig,
   ): boolean {
     const bucket = getExperimentBucket(experimentConfig.seed, userId, experimentConfig.percentage);
@@ -215,7 +198,7 @@ export class FeatureGateService {
   /**
    * Get experiment bucket for a user
    */
-  getExperimentVariant(userId: string, experimentKey: string, experimentConfig: ExperimentConfig) {
+  getExperimentVariant(userId: string, _experimentKey: string, experimentConfig: ExperimentConfig) {
     const bucket = getExperimentBucket(experimentConfig.seed, userId, 100);
     const variantNames = experimentConfig.variantNames || ["control", "variant"];
 
@@ -265,7 +248,7 @@ export class FeatureGateService {
       if (planFeature) {
         // Handle downgrade strategy for graceful
         if (subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd) {
-          const strategy = (planFeature.configJson as any)?.downgradeStrategy;
+          const strategy = planFeature.downgradeStrategy;
           if (strategy === "graceful") {
             // Still valid until period end
             const now = new Date();

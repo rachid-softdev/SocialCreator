@@ -40,7 +40,7 @@ export const OAUTH_PROVIDERS = {
     clientSecretEnv: "X_CLIENT_SECRET",
     authUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
-    scopes: "tweet.read users.write offline.access",
+    scopes: "tweet.read tweet.write users.read offline.access",
     userInfoUrl: "https://api.twitter.com/2/users/me",
     color: "#000000",
   },

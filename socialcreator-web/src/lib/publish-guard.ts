@@ -7,6 +7,7 @@
 
 import { Platform } from "@prisma/client";
 import { startOfDayUTC } from "@socialcreator/utils";
+import { getFeatureGateService } from "@/lib/entitlements/service";
 import { prisma } from "@/lib/prisma";
 import { getRedis } from "./rate-limit-redis";
 
@@ -60,6 +61,10 @@ export async function checkDailyCap(
   if (redis) {
     try {
       const key = getCapKey(profileId, platform);
+      // NOTE: incr happens BEFORE entitlement + account checks in canPublish().
+      // If publish is later rejected, the counter was already incremented.
+      // Acceptable because: Redis key has 24h TTL; incr is once per call;
+      // the cap is a soft limit, not a hard security measure.
       const count = await redis.incr(key);
 
       // Set expiry on first increment (24 hours)
@@ -113,12 +118,24 @@ export async function recordPublish(profileId: string, platform: Platform): Prom
 
 /**
  * Full publish eligibility check
- * Verifies both cap and account availability
+ * Verifies entitlement, daily cap, and account availability
  */
 export async function canPublish(
   profileId: string,
   platform: Platform,
+  orgId?: string,
 ): Promise<{ canPublish: boolean; reason?: string }> {
+  // Check entitlement first if orgId is provided
+  if (orgId) {
+    const hasFeature = await getFeatureGateService().hasFeature(orgId, `PUBLISH_${platform}`);
+    if (!hasFeature) {
+      return {
+        canPublish: false,
+        reason: "Votre plan ne permet pas la publication sur cette plateforme",
+      };
+    }
+  }
+
   const { allowed, count, max } = await checkDailyCap(profileId, platform);
 
   if (!allowed) {
@@ -133,7 +150,7 @@ export async function canPublish(
     where: { profileId_platform: { profileId, platform } },
   });
 
-  if (!account || !account.isActive) {
+  if (!account?.isActive) {
     return { canPublish: false, reason: `Aucun compte ${platform} connecté` };
   }
 

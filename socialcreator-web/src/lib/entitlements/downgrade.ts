@@ -3,16 +3,10 @@
  * Handles plan downgrades with configurable strategies
  */
 
-import { prisma } from "@/lib/prisma";
 import { getEntitlementRepository } from "./repository";
-import type { DowngradePreview, DowngradeStrategy, FeatureConfig } from "./types";
+import type { DowngradeStrategy } from "./types";
 
-interface PlanFeatureWithStrategy {
-  featureKey: string;
-  enabled: boolean;
-  limit: number | null;
-  strategy: DowngradeStrategy;
-}
+// Note: PlanFeatureWithStrategy was removed — defined but never used.
 
 interface DowngradeImpact {
   featureKey: string;
@@ -146,7 +140,7 @@ export class DowngradeService {
               enabled: true, // Keep access until period end
               limitValue: impact.currentLimit,
               expiresAt: periodEnd!,
-              reason: `Graceful downgrade - access until ${periodEnd!.toISOString()}`,
+              reason: `Graceful downgrade - access until ${periodEnd?.toISOString()}`,
             });
           }
           // If period ended, fall through to immediate
