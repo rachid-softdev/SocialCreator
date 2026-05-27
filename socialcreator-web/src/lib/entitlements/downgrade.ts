@@ -3,103 +3,101 @@
  * Handles plan downgrades with configurable strategies
  */
 
-import { prisma } from "@/lib/prisma"
-import type { DowngradeStrategy, DowngradePreview, FeatureConfig } from "./types"
-import { getEntitlementRepository } from "./repository"
+import { prisma } from "@/lib/prisma";
+import { getEntitlementRepository } from "./repository";
+import type { DowngradePreview, DowngradeStrategy, FeatureConfig } from "./types";
 
 interface PlanFeatureWithStrategy {
-  featureKey: string
-  enabled: boolean
-  limit: number | null
-  strategy: DowngradeStrategy
+  featureKey: string;
+  enabled: boolean;
+  limit: number | null;
+  strategy: DowngradeStrategy;
 }
 
 interface DowngradeImpact {
-  featureKey: string
-  currentEnabled: boolean
-  currentLimit: number | null
-  newEnabled: boolean
-  newLimit: number | null
-  affected: boolean
-  strategy: DowngradeStrategy
-  reason: string
+  featureKey: string;
+  currentEnabled: boolean;
+  currentLimit: number | null;
+  newEnabled: boolean;
+  newLimit: number | null;
+  affected: boolean;
+  strategy: DowngradeStrategy;
+  reason: string;
 }
 
 /**
  * DowngradeService - handles plan downgrade scenarios
  */
 export class DowngradeService {
-  private repo = getEntitlementRepository()
+  private repo = getEntitlementRepository();
 
   /**
    * Preview what features will be affected by a downgrade
    * Returns list of features that will change
    */
-  async previewDowngrade(
-    orgId: string,
-    targetPlanKey: string
-  ): Promise<DowngradeImpact[]> {
-    const impacts: DowngradeImpact[] = []
+  async previewDowngrade(orgId: string, targetPlanKey: string): Promise<DowngradeImpact[]> {
+    const impacts: DowngradeImpact[] = [];
 
     // Get current subscription
-    const subscription = await this.repo.getSubscription(orgId)
+    const subscription = await this.repo.getSubscription(orgId);
     if (!subscription) {
-      return impacts
+      return impacts;
     }
 
-    const currentPlanKey = subscription.planKey
+    const currentPlanKey = subscription.planKey;
 
     // Get features for both plans
-    const currentPlanFeatures = await this.repo.getPlanFeatures(currentPlanKey)
-    const targetPlanFeatures = await this.repo.getPlanFeatures(targetPlanKey)
+    const currentPlanFeatures = await this.repo.getPlanFeatures(currentPlanKey);
+    const targetPlanFeatures = await this.repo.getPlanFeatures(targetPlanKey);
 
     // Get all features to check
-    const allFeatures = await this.repo.getAllFeatures()
+    const allFeatures = await this.repo.getAllFeatures();
 
     for (const feature of allFeatures) {
-      const currentFeature = currentPlanFeatures.get(feature.key)
-      const targetFeature = targetPlanFeatures.get(feature.key)
+      const currentFeature = currentPlanFeatures.get(feature.key);
+      const targetFeature = targetPlanFeatures.get(feature.key);
 
       // Determine current state (consider overrides)
-      const currentEnabled = currentFeature?.enabled ?? false
-      const currentLimit = currentFeature?.limitValue ?? (feature.type === "LIMIT" ? 0 : null)
+      const currentEnabled = currentFeature?.enabled ?? false;
+      const currentLimit = currentFeature?.limitValue ?? (feature.type === "LIMIT" ? 0 : null);
 
       // Determine target state
-      const newEnabled = targetFeature?.enabled ?? false
-      const newLimit = targetFeature?.limitValue ?? (feature.type === "LIMIT" ? 0 : null)
+      const newEnabled = targetFeature?.enabled ?? false;
+      const newLimit = targetFeature?.limitValue ?? (feature.type === "LIMIT" ? 0 : null);
 
       // Get strategy from target plan
-      const strategy = (targetFeature?.configJson as any)?.downgradeStrategy || "immediate"
+      const strategy = (targetFeature?.configJson as any)?.downgradeStrategy || "immediate";
 
       // Check if will be affected
-      let affected = false
+      let affected = false;
 
       if (feature.type === "BOOLEAN") {
-        affected = currentEnabled && !newEnabled
+        affected = currentEnabled && !newEnabled;
       } else if (feature.type === "LIMIT") {
-        affected = (currentLimit === null) || (newLimit !== null && currentLimit > newLimit)
+        affected = currentLimit === null || (newLimit !== null && currentLimit > newLimit);
       }
 
       if (affected) {
-        let reason = ""
+        let reason = "";
 
         switch (strategy) {
-          case "graceful":
-            const periodEnd = subscription.currentPeriodEnd
+          case "graceful": {
+            const periodEnd = subscription.currentPeriodEnd;
             if (periodEnd && periodEnd > new Date()) {
-              reason = `Access retained until ${periodEnd.toISOString().split("T")[0]}`
+              reason = `Access retained until ${periodEnd.toISOString().split("T")[0]}`;
             } else {
-              reason = "Access will be removed immediately (period ended)"
+              reason = "Access will be removed immediately (period ended)";
             }
-            break
+            break;
+          }
 
           case "immediate":
-            reason = "Access removed immediately"
-            break
+            reason = "Access removed immediately";
+            break;
 
           case "freeze":
-            reason = "Existing data retained, no new consumption allowed"
-            break
+            reason = "Existing data retained, no new consumption allowed";
+            break;
         }
 
         impacts.push({
@@ -111,11 +109,11 @@ export class DowngradeService {
           affected: true,
           strategy,
           reason,
-        })
+        });
       }
     }
 
-    return impacts
+    return impacts;
   }
 
   /**
@@ -125,17 +123,17 @@ export class DowngradeService {
   async applyDowngrade(
     orgId: string,
     targetPlanKey: string,
-    strategyOverride?: DowngradeStrategy
+    strategyOverride?: DowngradeStrategy,
   ): Promise<void> {
-    const impacts = await this.previewDowngrade(orgId, targetPlanKey)
+    const impacts = await this.previewDowngrade(orgId, targetPlanKey);
 
-    const subscription = await this.repo.getSubscription(orgId)
-    const periodEnd = subscription?.currentPeriodEnd
-    const now = new Date()
-    const isWithinPeriod = periodEnd && periodEnd > now
+    const subscription = await this.repo.getSubscription(orgId);
+    const periodEnd = subscription?.currentPeriodEnd;
+    const now = new Date();
+    const isWithinPeriod = periodEnd && periodEnd > now;
 
     for (const impact of impacts) {
-      const strategy = strategyOverride || impact.strategy
+      const strategy = strategyOverride || impact.strategy;
 
       switch (strategy) {
         case "graceful":
@@ -149,15 +147,15 @@ export class DowngradeService {
               limitValue: impact.currentLimit,
               expiresAt: periodEnd!,
               reason: `Graceful downgrade - access until ${periodEnd!.toISOString()}`,
-            })
+            });
           }
           // If period ended, fall through to immediate
-          break
+          break;
 
         case "immediate":
           // No action needed - plan features will naturally apply
           // But we should invalidate cache to ensure fresh data
-          break
+          break;
 
         case "freeze":
           // For freeze, we keep existing data but create an override
@@ -170,15 +168,15 @@ export class DowngradeService {
             limitValue: impact.currentLimit, // Keep current limit (don't reduce)
             // No expiration - permanent freeze until upgrade
             reason: "Freeze - existing data preserved, new consumption blocked",
-          })
-          break
+          });
+          break;
       }
     }
 
     // Invalidate cache after downgrade
-    const { cacheService } = await import("./cache")
-    const { getEntitlementsCacheKey } = await import("./cache")
-    await cacheService.invalidate(getEntitlementsCacheKey(orgId))
+    const { cacheService } = await import("./cache");
+    const { getEntitlementsCacheKey } = await import("./cache");
+    await cacheService.invalidate(getEntitlementsCacheKey(orgId));
   }
 
   /**
@@ -186,16 +184,16 @@ export class DowngradeService {
    * Useful for pre-downgrade validation
    */
   async wouldBeAffected(orgId: string, targetPlanKey: string): Promise<boolean> {
-    const impacts = await this.previewDowngrade(orgId, targetPlanKey)
-    return impacts.some((i) => i.affected)
+    const impacts = await this.previewDowngrade(orgId, targetPlanKey);
+    return impacts.some((i) => i.affected);
   }
 
   /**
    * Get count of features that will be lost in downgrade
    */
   async getAffectedFeatureCount(orgId: string, targetPlanKey: string): Promise<number> {
-    const impacts = await this.previewDowngrade(orgId, targetPlanKey)
-    return impacts.filter((i) => i.affected).length
+    const impacts = await this.previewDowngrade(orgId, targetPlanKey);
+    return impacts.filter((i) => i.affected).length;
   }
 }
 
@@ -203,17 +201,17 @@ export class DowngradeService {
 // Singleton
 // ============================================
 
-let downgradeServiceInstance: DowngradeService | null = null
+let downgradeServiceInstance: DowngradeService | null = null;
 
 export function getDowngradeService(): DowngradeService {
   if (!downgradeServiceInstance) {
-    downgradeServiceInstance = new DowngradeService()
+    downgradeServiceInstance = new DowngradeService();
   }
-  return downgradeServiceInstance
+  return downgradeServiceInstance;
 }
 
 export function resetDowngradeService(): void {
-  downgradeServiceInstance = null
+  downgradeServiceInstance = null;
 }
 
-export default getDowngradeService
+export default getDowngradeService;

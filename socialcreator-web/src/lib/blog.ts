@@ -1,6 +1,6 @@
+import type { BlogPost, BlogPostsData } from "@socialcreator/types/blog";
 import fs from "fs";
 import path from "path";
-import type { BlogPostsData, BlogPost } from "@socialcreator/types/blog";
 
 const postsFilePath = path.join(process.cwd(), "src/content/blog/posts.json");
 
@@ -11,9 +11,7 @@ export function postsData(): BlogPostsData {
 
 export function getAllPosts(): BlogPost[] {
   const { posts } = postsData();
-  return posts.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {

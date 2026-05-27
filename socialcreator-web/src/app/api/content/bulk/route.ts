@@ -4,9 +4,9 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { canPublish } from "@/lib/publish-guard";
 import { publishContent } from "@/lib/publishers";
 
@@ -28,10 +28,7 @@ export async function POST(request: Request) {
     const validation = bulkActionSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { contentIds, action } = validation.data;
@@ -56,7 +53,7 @@ export async function POST(request: Request) {
     if (contents.length !== contentIds.length) {
       return NextResponse.json(
         { error: "Some content IDs not found or not authorized" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,9 +86,7 @@ export async function POST(request: Request) {
 
       case "reject": {
         // Can reject DRAFT or APPROVED content
-        const actionable = contents.filter((c) =>
-          ["DRAFT", "APPROVED"].includes(c.status)
-        );
+        const actionable = contents.filter((c) => ["DRAFT", "APPROVED"].includes(c.status));
 
         for (const content of actionable) {
           try {
@@ -115,14 +110,12 @@ export async function POST(request: Request) {
 
       case "publish": {
         // Can only publish APPROVED content (not SCHEDULED)
-        const approved = contents.filter(
-          (c) => c.status === "APPROVED" && !c.scheduledPublishAt
-        );
+        const approved = contents.filter((c) => c.status === "APPROVED" && !c.scheduledPublishAt);
 
         for (const content of approved) {
           try {
             const account = content.profile.connectedAccounts.find(
-              (a) => a.platform === content.platform
+              (a) => a.platform === content.platform,
             );
 
             if (!account) {
@@ -143,7 +136,7 @@ export async function POST(request: Request) {
               {
                 accountId: account.accountId,
                 accessToken: account.accessToken,
-              }
+              },
             );
 
             if (publishResult.success) {
@@ -203,9 +196,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error in bulk operation:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

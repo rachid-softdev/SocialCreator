@@ -1,10 +1,10 @@
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import type { BlogPost } from "@socialcreator/types/blog";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { PostContent } from "./post-content";
-import type { BlogPost } from "@socialcreator/types/blog";
 
 interface PostHeaderProps {
   post: BlogPost;
@@ -40,14 +40,10 @@ export function PostHeader({ post }: PostHeaderProps) {
       </div>
 
       {/* Title */}
-      <h1 className="font-display text-display-xl text-ink leading-tight mb-6">
-        {post.title}
-      </h1>
+      <h1 className="font-display text-display-xl text-ink leading-tight mb-6">{post.title}</h1>
 
       {/* Excerpt */}
-      <p className="text-body-lg text-muted leading-relaxed mb-6 max-w-3xl">
-        {post.excerpt}
-      </p>
+      <p className="text-body-lg text-muted leading-relaxed mb-6 max-w-3xl">{post.excerpt}</p>
 
       {/* Meta row */}
       <div className="flex flex-wrap items-center gap-6 text-body-sm text-muted">
@@ -66,19 +62,19 @@ export function PostHeader({ post }: PostHeaderProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <Calendar className="w-4 h-4" />
-          <span>
-            {formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}
-          </span>
+          <span>{formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="w-4 h-4" />
           <span>{post.readTime} min de lecture</span>
         </div>
-        <span className={`inline-flex items-center rounded-pill px-3 py-0.5 text-caption font-medium ${
-          post.type === "short"
-            ? "bg-gradient-mint/20 text-body-strong"
-            : "bg-gradient-lavender/20 text-body-strong"
-        }`}>
+        <span
+          className={`inline-flex items-center rounded-pill px-3 py-0.5 text-caption font-medium ${
+            post.type === "short"
+              ? "bg-gradient-mint/20 text-body-strong"
+              : "bg-gradient-lavender/20 text-body-strong"
+          }`}
+        >
           {post.type === "short" ? "⚡ Quick Read" : "📖 Guide Complet"}
         </span>
       </div>

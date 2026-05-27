@@ -3,12 +3,12 @@
  * Run with: npx prisma db seed
  */
 
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding Feature Flags & Entitlements...")
+  console.log("Seeding Feature Flags & Entitlements...");
 
   // ============================================
   // Create Plans
@@ -19,17 +19,17 @@ async function main() {
     { key: "starter", name: "Starter", priceMonthly: 5000, sortOrder: 1 },
     { key: "pro", name: "Pro", priceMonthly: 7000, sortOrder: 2 },
     { key: "team", name: "Team", priceMonthly: 11000, sortOrder: 3 },
-  ]
+  ];
 
   for (const plan of plans) {
     await prisma.plan.upsert({
       where: { key: plan.key },
       update: plan,
       create: plan,
-    })
+    });
   }
 
-  console.log("✓ Plans created")
+  console.log("✓ Plans created");
 
   // ============================================
   // Create Features
@@ -92,17 +92,17 @@ async function main() {
       type: "EXPERIMENT" as const,
       defaultConfig: { percentage: 50, seed: "NEW_DASHBOARD_v1" },
     },
-  ]
+  ];
 
   for (const feature of features) {
     await prisma.feature.upsert({
       where: { key: feature.key },
       update: feature,
       create: feature,
-    })
+    });
   }
 
-  console.log("✓ Features created")
+  console.log("✓ Features created");
 
   // ============================================
   // Create Plan Features (feature-to-plan mapping)
@@ -139,11 +139,11 @@ async function main() {
     { planKey: "team", featureKey: "TEAM_COLLABORATION", enabled: true, limitValue: null },
     { planKey: "team", featureKey: "ADVANCED_ANALYTICS", enabled: true, limitValue: null },
     { planKey: "team", featureKey: "SCHEDULED_PUBLISHING", enabled: true, limitValue: null },
-  ]
+  ];
 
   for (const pf of planFeatures) {
-    const plan = await prisma.plan.findUnique({ where: { key: pf.planKey } })
-    const feature = await prisma.feature.findUnique({ where: { key: pf.featureKey } })
+    const plan = await prisma.plan.findUnique({ where: { key: pf.planKey } });
+    const feature = await prisma.feature.findUnique({ where: { key: pf.featureKey } });
 
     if (plan && feature) {
       await prisma.planFeature.upsert({
@@ -164,11 +164,11 @@ async function main() {
           limitValue: pf.limitValue,
           configJson: {},
         },
-      })
+      });
     }
   }
 
-  console.log("✓ Plan features created")
+  console.log("✓ Plan features created");
 
   // ============================================
   // Create Experiments
@@ -181,26 +181,26 @@ async function main() {
       description: "A/B test for new dashboard UI",
       config: { percentage: 50, seed: "NEW_DASHBOARD_v1", variantNames: ["control", "variant"] },
     },
-  ]
+  ];
 
   for (const exp of experiments) {
     await prisma.experiment.upsert({
       where: { key: exp.key },
       update: { config: exp.config as any },
       create: exp,
-    })
+    });
   }
 
-  console.log("✓ Experiments created")
+  console.log("✓ Experiments created");
 
-  console.log("\n✅ Seed completed successfully!")
+  console.log("\n✅ Seed completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

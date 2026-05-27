@@ -3,11 +3,11 @@
  * Fetches data and renders the client component
  */
 
+import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import { ContentPageClient } from "./content-page-client";
-import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 
 export default async function ContentPage() {
   const session = await auth();
@@ -50,15 +50,13 @@ export default async function ContentPage() {
     _count: true,
   });
 
-  const statMap = stats.reduce((acc, s) => {
-    acc[s.status] = s._count;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return (
-    <ContentPageClient
-      initialContents={typedContents}
-      stats={statMap}
-    />
+  const statMap = stats.reduce(
+    (acc, s) => {
+      acc[s.status] = s._count;
+      return acc;
+    },
+    {} as Record<string, number>,
   );
+
+  return <ContentPageClient initialContents={typedContents} stats={statMap} />;
 }

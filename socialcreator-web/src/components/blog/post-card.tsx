@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
+import type { BlogPost } from "@socialcreator/types/blog";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Clock, Calendar } from "lucide-react";
-import type { BlogPost } from "@socialcreator/types/blog";
+import { Calendar, Clock } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 interface PostCardProps {
   post: BlogPost;
@@ -47,9 +47,7 @@ export function PostCard({ post, featured = false }: PostCardProps) {
               <h2 className="font-display text-display-sm text-on-dark leading-tight mb-2">
                 {post.title}
               </h2>
-              <p className="text-body-sm text-on-dark/80 line-clamp-2">
-                {post.excerpt}
-              </p>
+              <p className="text-body-sm text-on-dark/80 line-clamp-2">{post.excerpt}</p>
             </div>
           </div>
           <div className="flex items-center gap-4 p-4 border-t border-hairline/20">
@@ -61,13 +59,13 @@ export function PostCard({ post, featured = false }: PostCardProps) {
                 height={32}
                 className="rounded-full"
               />
-              <span className="text-caption text-on-dark/80">
-                {post.author.name}
-              </span>
+              <span className="text-caption text-on-dark/80">{post.author.name}</span>
             </div>
             <div className="flex items-center gap-1 text-caption text-on-dark/60">
               <Calendar className="w-3.5 h-3.5" />
-              <span>{formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}</span>
+              <span>
+                {formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}
+              </span>
             </div>
             <div className="flex items-center gap-1 text-caption text-on-dark/60">
               <Clock className="w-3.5 h-3.5" />
@@ -112,9 +110,7 @@ export function PostCard({ post, featured = false }: PostCardProps) {
           <h3 className="font-display text-display-sm text-ink leading-tight mb-2 group-hover:text-primary transition-colors">
             {post.title}
           </h3>
-          <p className="text-body-sm text-muted line-clamp-3 flex-1">
-            {post.excerpt}
-          </p>
+          <p className="text-body-sm text-muted line-clamp-3 flex-1">{post.excerpt}</p>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-hairline">
             <div className="flex items-center gap-2">
               <Image
@@ -124,14 +120,14 @@ export function PostCard({ post, featured = false }: PostCardProps) {
                 height={28}
                 className="rounded-full"
               />
-              <span className="text-caption text-muted">
-                {post.author.name}
-              </span>
+              <span className="text-caption text-muted">{post.author.name}</span>
             </div>
             <div className="flex items-center gap-3 text-caption text-muted-soft">
               <div className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}</span>
+                <span>
+                  {formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: fr })}
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />

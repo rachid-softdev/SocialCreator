@@ -5,15 +5,15 @@
 
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
-import { PlatformIcon, getPlatformColor, getPlatformName } from "./platform-icon";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { type ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
 import { Button } from "@socialcreator/ui/button";
-import { RefreshCw, Trash2, MoreVertical } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { MoreVertical, RefreshCw, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { getPlatformColor, getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface AccountCardProps {
   account: ConnectedAccountType;
@@ -53,18 +53,23 @@ export function AccountCard({
           {/* Account Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground truncate">
-                {account.accountName}
-              </h3>
+              <h3 className="font-semibold text-foreground truncate">{account.accountName}</h3>
               {/* Status Badge */}
               <Badge
                 variant={account.isActive ? "default" : "secondary"}
-                className={account.isActive ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"}
+                className={
+                  account.isActive
+                    ? "bg-green-500/10 text-green-500"
+                    : "bg-muted text-muted-foreground"
+                }
               >
                 {account.isActive ? "Actif" : "Inactif"}
               </Badge>
               {isExpired && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                <Badge
+                  variant="outline"
+                  className="bg-amber-500/10 text-amber-500 border-amber-500/20"
+                >
                   Expiré
                 </Badge>
               )}

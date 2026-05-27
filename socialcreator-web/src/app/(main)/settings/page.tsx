@@ -3,15 +3,14 @@
  * User settings and preferences
  */
 
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { Button } from "@socialcreator/ui/button";
+import { Bell, CreditCard, HelpCircle, Link2, Shield, User } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { User, CreditCard, Bell, Shield, Link2, HelpCircle } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -25,9 +24,7 @@ export default async function SettingsPage() {
     where: { userId: session.user.id },
   });
 
-  const breadcrumbItems = [
-    { label: "Paramètres" },
-  ];
+  const breadcrumbItems = [{ label: "Paramètres" }];
 
   const settingsSections = [
     {
@@ -77,10 +74,7 @@ export default async function SettingsPage() {
     <div className="container max-w-4xl">
       <Breadcrumb items={breadcrumbItems} />
 
-      <PageHeader
-        title="Paramètres"
-        description="Gérez vos préférences et votre compte"
-      />
+      <PageHeader title="Paramètres" description="Gérez vos préférences et votre compte" />
 
       <div className="mt-8 space-y-4">
         {settingsSections.map((section) => {
@@ -98,13 +92,9 @@ export default async function SettingsPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-title-sm text-ink">{section.title}</h3>
-                  <p className="text-body-sm text-muted mt-0.5">
-                    {section.description}
-                  </p>
+                  <p className="text-body-sm text-muted mt-0.5">{section.description}</p>
                 </div>
-                <span className="text-caption text-muted-soft">
-                  Bientôt disponible
-                </span>
+                <span className="text-caption text-muted-soft">Bientôt disponible</span>
               </div>
             );
           }
@@ -119,12 +109,8 @@ export default async function SettingsPage() {
                 <Icon className="w-5 h-5 text-ink" />
               </div>
               <div className="flex-1">
-                <h3 className="text-title-sm text-ink group-hover:text-ink">
-                  {section.title}
-                </h3>
-                <p className="text-body-sm text-muted mt-0.5">
-                  {section.description}
-                </p>
+                <h3 className="text-title-sm text-ink group-hover:text-ink">{section.title}</h3>
+                <p className="text-body-sm text-muted mt-0.5">{section.description}</p>
               </div>
               <svg
                 className="w-5 h-5 text-muted-soft group-hover:text-muted transition-colors"

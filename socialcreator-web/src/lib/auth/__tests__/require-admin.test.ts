@@ -1,12 +1,12 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the auth module before importing
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
 }));
 
-import { requireAdmin, AuthError } from "../require-admin";
 import { auth } from "@/lib/auth";
+import { AuthError, requireAdmin } from "../require-admin";
 
 describe("requireAdmin", () => {
   beforeEach(() => {
@@ -18,11 +18,16 @@ describe("requireAdmin", () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       await expect(requireAdmin()).rejects.toThrow(AuthError);
-      await expect(requireAdmin()).rejects.toMatchObject({ status: 401, message: "Non authentifié" });
+      await expect(requireAdmin()).rejects.toMatchObject({
+        status: 401,
+        message: "Non authentifié",
+      });
     });
 
     it("should throw AuthError with status 401 when session has no user id", async () => {
-      (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: "test@test.com" } });
+      (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+        user: { email: "test@test.com" },
+      });
 
       await expect(requireAdmin()).rejects.toThrow(AuthError);
       await expect(requireAdmin()).rejects.toMatchObject({ status: 401 });

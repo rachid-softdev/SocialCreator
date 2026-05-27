@@ -1,9 +1,9 @@
+import { notFound, redirect } from "next/navigation";
+import { AgentForm } from "@/components/agent/agent-form";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect, notFound } from "next/navigation";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { AgentForm } from "@/components/agent/agent-form";
 
 interface PageProps {
   params: Promise<{ profileId: string }>;

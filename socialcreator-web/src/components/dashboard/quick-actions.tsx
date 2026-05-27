@@ -1,7 +1,7 @@
 "use client";
 
+import { Bot, FileText, Plus } from "lucide-react";
 import Link from "next/link";
-import { Plus, Bot, FileText } from "lucide-react";
 
 export function QuickActions() {
   return (

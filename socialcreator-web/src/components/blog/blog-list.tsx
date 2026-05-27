@@ -1,9 +1,9 @@
 "use client";
 
+import type { BlogPost } from "@socialcreator/types/blog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { PostCard } from "./post-card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { BlogPost } from "@socialcreator/types/blog";
 
 interface BlogListProps {
   posts: BlogPost[];
@@ -33,9 +33,7 @@ export function BlogList({ posts, initialPage = 1, postsPerPage = 6 }: BlogListP
     return (
       <div className="text-center py-16">
         <div className="text-6xl mb-4">📝</div>
-        <h3 className="font-display text-display-sm text-ink mb-2">
-          Aucun article pour le moment
-        </h3>
+        <h3 className="font-display text-display-sm text-ink mb-2">Aucun article pour le moment</h3>
         <p className="text-body text-muted">
           Revenez bientôt pour découvrir nos nouveaux articles.
         </p>

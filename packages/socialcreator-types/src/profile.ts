@@ -1,4 +1,6 @@
-import type { Profile, Platform, ContentStatus } from "@prisma/client";
+import type { Profile, ContentStatus } from "@prisma/client";
+import type { Platform } from "./platforms";
+import { PLATFORM_DISPLAY } from "./platforms";
 
 export type ProfileWithStats = Profile & {
   _count: { agents: number; generatedContents: number; connectedAccounts: number };
@@ -10,17 +12,6 @@ export type ProfileFormData = {
   contentBank?: string;
   platforms?: Platform[] | string[];
 };
-
-export const PLATFORMS: { value: Platform; label: string; icon: string }[] = [
-  { value: "TIKTOK", label: "TikTok", icon: "TikTok" },
-  { value: "INSTAGRAM", label: "Instagram", icon: "Instagram" },
-  { value: "YOUTUBE", label: "YouTube", icon: "YouTube" },
-  { value: "FACEBOOK", label: "Facebook", icon: "Facebook" },
-  { value: "X", label: "X (Twitter)", icon: "X" },
-  { value: "LINKEDIN", label: "LinkedIn", icon: "LinkedIn" },
-  { value: "THREADS", label: "Threads", icon: "Threads" },
-  { value: "PINTEREST", label: "Pinterest", icon: "Pinterest" },
-];
 
 export const CONTENT_STATUS_LABELS: Record<ContentStatus, string> = {
   DRAFT: "Draft",
@@ -39,3 +30,5 @@ export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
   REJECTED: "bg-red-100 text-red-800",
   SCHEDULED: "bg-blue-100 text-blue-800",
 };
+
+export { PLATFORM_DISPLAY as PLATFORMS };

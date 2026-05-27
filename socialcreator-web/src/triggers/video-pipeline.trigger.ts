@@ -9,12 +9,13 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { transcribeVideo } from "@/lib/deepgram";
 import { generateContent } from "@/lib/llm";
 import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
-import { buildSystemPrompt, buildGenerationPrompt } from "@/lib/prompts";
+import { prisma } from "@/lib/prisma";
+import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.
@@ -45,7 +46,7 @@ export const videoPipelineJob = client.defineJob({
         end: z.number(),
         reason: z.string(),
         hook: z.string(),
-      })
+      }),
     ),
     clipsCreated: z.number(),
     contentsGenerated: z.number(),
@@ -90,7 +91,7 @@ export const videoPipelineJob = client.defineJob({
       await io.logger.info("Identifying segments...");
       const result = await generateContent(
         "Tu es un expert en création de contenu viral pour les réseaux sociaux.",
-        `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`
+        `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`,
       );
 
       const segments = (result as any).segments as Array<{
@@ -113,11 +114,7 @@ export const videoPipelineJob = client.defineJob({
 
       for (const segment of segments) {
         try {
-          await createMuxClip(
-            videoAsset.uploadUrl,
-            segment.start,
-            segment.end
-          );
+          await createMuxClip(videoAsset.uploadUrl, segment.start, segment.end);
           clipsCreated++;
         } catch (error) {
           await io.logger.error("Failed to create clip", { segment, error });
@@ -155,7 +152,7 @@ export const videoPipelineJob = client.defineJob({
           try {
             const userPrompt = buildGenerationPrompt({
               brief: `${segment.hook}\n\nContexte: ${segment.reason}`,
-              platform: platform as any
+              platform: platform as any,
             });
 
             const contentResult = await generateContent(systemPrompt, userPrompt);
@@ -163,7 +160,9 @@ export const videoPipelineJob = client.defineJob({
             await prisma.generatedContent.create({
               data: {
                 profileId,
-                platform: platform as Parameters<typeof buildSystemPrompt>[0] extends never ? never : Parameters<typeof buildGenerationPrompt>[0]["platform"],
+                platform: platform as Parameters<typeof buildSystemPrompt>[0] extends never
+                  ? never
+                  : Parameters<typeof buildGenerationPrompt>[0]["platform"],
                 textContent: contentResult.textContent,
                 hashtags: contentResult.hashtags || [],
                 mediaUrls: [],

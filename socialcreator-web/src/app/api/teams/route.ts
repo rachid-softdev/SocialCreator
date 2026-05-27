@@ -9,9 +9,9 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 
 const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
@@ -35,10 +35,7 @@ export async function GET(request: Request) {
     // Get teams where user is owner or member
     const teams = await prisma.team.findMany({
       where: {
-        OR: [
-          { ownerId: userId },
-          { members: { some: { userId } } },
-        ],
+        OR: [{ ownerId: userId }, { members: { some: { userId } } }],
       },
       include: {
         owner: {
@@ -61,10 +58,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ teams });
   } catch (error) {
     console.error("Error fetching teams:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -82,10 +76,7 @@ export async function POST(request: Request) {
     const validation = createTeamSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { name } = validation.data;
@@ -120,9 +111,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ team }, { status: 201 });
   } catch (error) {
     console.error("Error creating team:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -12,13 +12,13 @@
  * 7. Update GeneratedContent: status → PUBLISHED, postId, publishedAt
  */
 
+import { hashContent } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getValidAccessToken } from "@/lib/tokens";
 import { canPublish } from "@/lib/publish-guard";
 import { getPublisher } from "@/lib/publishers";
-import { hashContent } from "@socialcreator/utils";
+import { getValidAccessToken } from "@/lib/tokens";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -56,17 +56,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (content.status !== "APPROVED") {
       return NextResponse.json(
         { error: `Cannot publish: content status is ${content.status}, must be APPROVED` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 3. Check daily cap
     const capCheck = await canPublish(content.profileId, content.platform);
     if (!capCheck.canPublish) {
-      return NextResponse.json(
-        { error: capCheck.reason },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: capCheck.reason }, { status: 429 });
     }
 
     // 4. Get connected account
@@ -82,17 +79,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!account || !account.isActive) {
       return NextResponse.json(
         { error: `No active connected account for ${content.platform}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Get valid access token (auto-refresh if expired)
     const accessToken = await getValidAccessToken(account.id);
     if (!accessToken) {
-      return NextResponse.json(
-        { error: "Failed to get valid access token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Failed to get valid access token" }, { status: 400 });
     }
 
     // 5. Publish via platform publisher
@@ -107,7 +101,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         accountId: account.accountId,
         accessToken,
         refreshToken: account.refreshToken || undefined,
-      }
+      },
     );
 
     // 6. Create immutable PublishLog
@@ -153,14 +147,11 @@ export async function POST(request: Request, { params }: RouteParams) {
           success: false,
           error: result.error || "Publication failed",
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
   } catch (error) {
     console.error("Error publishing content:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

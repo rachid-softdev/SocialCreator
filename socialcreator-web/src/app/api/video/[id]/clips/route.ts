@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
+import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
+import { prisma } from "@/lib/prisma";
 
 const clipsSchema = z.object({
   segments: z.array(
@@ -11,14 +11,11 @@ const clipsSchema = z.object({
       end: z.number(),
       reason: z.string().optional(),
       hook: z.string().optional(),
-    })
+    }),
   ),
 });
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
 
@@ -52,7 +49,7 @@ export async function POST(
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,7 +61,7 @@ export async function POST(
       const { assetId, playbackId } = await createMuxClip(
         videoAsset.uploadUrl,
         segment.start,
-        segment.end
+        segment.end,
       );
 
       clips.push({
@@ -86,10 +83,7 @@ export async function POST(
     return NextResponse.json({ clips });
   } catch (error) {
     console.error("Error creating clips:", error);
-    return NextResponse.json(
-      { error: "Clip creation failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Clip creation failed" }, { status: 500 });
   }
 }
 

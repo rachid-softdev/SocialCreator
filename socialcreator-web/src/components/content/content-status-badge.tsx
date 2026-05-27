@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import type { ContentStatus } from "@prisma/client";
-import { CONTENT_STATUS_LABELS, CONTENT_STATUS_COLORS } from "@socialcreator/types/profile";
+import { CONTENT_STATUS_COLORS, CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
 
 interface ContentStatusBadgeProps {
   status: ContentStatus;
@@ -15,7 +15,7 @@ export function ContentStatusBadge({ status, className }: ContentStatusBadgeProp
       className={cn(
         "inline-flex items-center px-2.5 py-1 rounded-full text-caption font-medium",
         CONTENT_STATUS_COLORS[status],
-        className
+        className,
       )}
     >
       {CONTENT_STATUS_LABELS[status]}

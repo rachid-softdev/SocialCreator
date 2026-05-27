@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { CreditCard, ExternalLink, Calendar } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
-import { getPlanData, type PlanKey } from "@/lib/stripe"
+import { Button } from "@socialcreator/ui/button";
+import { Calendar, CreditCard, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { getPlanData, type PlanKey } from "@/lib/stripe";
 
 interface SubscriptionStatusProps {
-  plan?: PlanKey
-  status?: string
-  renewalDate?: Date
-  profilesUsed?: number
-  profilesMax?: number
-  onManagePortal?: () => void
+  plan?: PlanKey;
+  status?: string;
+  renewalDate?: Date;
+  profilesUsed?: number;
+  profilesMax?: number;
+  onManagePortal?: () => void;
 }
 
 export function SubscriptionStatus({
@@ -22,29 +22,29 @@ export function SubscriptionStatus({
   profilesMax = 1,
   onManagePortal,
 }: SubscriptionStatusProps) {
-  const planData = getPlanData(plan)
+  const planData = getPlanData(plan);
 
   const statusColors: Record<string, string> = {
     active: "bg-semantic-success/10 text-semantic-success",
     trialing: "bg-gradient-mint/30 text-semantic-success",
     past_due: "bg-gradient-peach/30 text-semantic-error",
     canceled: "bg-surface-strong text-muted",
-  }
+  };
 
   const statusLabels: Record<string, string> = {
     active: "Active",
     trialing: "Trialing",
     past_due: "Past Due",
     canceled: "Canceled",
-  }
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
   return (
     <div className="rounded-xl border border-hairline bg-surface-card p-6">
@@ -124,5 +124,5 @@ export function SubscriptionStatus({
         </Button>
       )}
     </div>
-  )
+  );
 }

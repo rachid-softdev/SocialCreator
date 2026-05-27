@@ -1,11 +1,11 @@
 /**
  * Toast Hook
  * Easy-to-use toast notifications throughout the application
- * 
+ *
  * Usage:
  * import { useToast } from "@/hooks/use-toast";
  * const { success, error, info, warning } = useToast();
- * 
+ *
  * success("Profile created successfully!");
  * error("Failed to save changes");
  */
@@ -84,7 +84,7 @@ export function toastPromise<T>(
     loading: string;
     success: string;
     error: string;
-  }
+  },
 ): Promise<T> {
   return sonnerToast.promise(promise, {
     loading: messages.loading,
@@ -101,12 +101,15 @@ export function handleApiError(error: unknown, fallbackMessage = "An error occur
 
   if (error instanceof Response) {
     // Try to parse error response
-    error.json().then((data: { error?: string; message?: string }) => {
-      message = data.error || data.message || fallbackMessage;
-      sonnerToast.error("Error", { description: message });
-    }).catch(() => {
-      sonnerToast.error("Error", { description: message });
-    });
+    error
+      .json()
+      .then((data: { error?: string; message?: string }) => {
+        message = data.error || data.message || fallbackMessage;
+        sonnerToast.error("Error", { description: message });
+      })
+      .catch(() => {
+        sonnerToast.error("Error", { description: message });
+      });
   } else if (error instanceof Error) {
     message = error.message || fallbackMessage;
     sonnerToast.error("Error", { description: message });

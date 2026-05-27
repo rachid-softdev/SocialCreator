@@ -2,7 +2,7 @@
  * LinkedIn publisher via LinkedIn API v2
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToLinkedIn(
   content: {
@@ -13,7 +13,7 @@ export async function publishToLinkedIn(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   try {
     const postData = {

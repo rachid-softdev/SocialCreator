@@ -1,22 +1,26 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 
 const createAgentSchema = z.object({
   profileId: z.string().min(1, "Profile ID is required"),
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   type: z.enum(["TEXT_POST", "VIDEO_CLIP", "CROSS_POST"]),
-  platforms: z.array(z.enum([
-    "TIKTOK",
-    "INSTAGRAM",
-    "YOUTUBE",
-    "FACEBOOK",
-    "X",
-    "LINKEDIN",
-    "THREADS",
-    "PINTEREST",
-  ])).min(1, "At least one platform is required"),
+  platforms: z
+    .array(
+      z.enum([
+        "TIKTOK",
+        "INSTAGRAM",
+        "YOUTUBE",
+        "FACEBOOK",
+        "X",
+        "LINKEDIN",
+        "THREADS",
+        "PINTEREST",
+      ]),
+    )
+    .min(1, "At least one platform is required"),
   scheduleCron: z.string().optional(),
   autoPublish: z.boolean().optional(),
   maxPerDay: z.number().int().min(1).max(10).optional(),
@@ -29,10 +33,7 @@ export async function GET(request: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -78,23 +79,20 @@ export async function GET(request: Request) {
             successRate: totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0,
           },
         };
-      })
+      }),
     );
 
     return NextResponse.json(
       { agents: agentsWithStats },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
         },
-      }
+      },
     );
   } catch (error) {
     console.error("Error fetching agents:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -104,10 +102,7 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -116,7 +111,7 @@ export async function POST(request: Request) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -129,10 +124,7 @@ export async function POST(request: Request) {
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { error: "Profile not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     const agent = await prisma.agent.create({
@@ -156,9 +148,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ agent }, { status: 201 });
   } catch (error) {
     console.error("Error creating agent:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

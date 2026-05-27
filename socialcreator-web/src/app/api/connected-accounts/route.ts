@@ -4,11 +4,11 @@
  * POST /api/connected-accounts - Initiate OAuth flow for a new account
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import type { Platform } from "@prisma/client";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { buildAuthUrl } from "@/lib/oauth/auth-url";
-import { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 interface ConnectedAccountResponse {
   id: string;
@@ -31,20 +31,14 @@ export async function GET(request: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get("profileId");
 
     if (!profileId) {
-      return NextResponse.json(
-        { error: "profileId is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "profileId is required" }, { status: 400 });
     }
 
     // Verify profile ownership
@@ -56,10 +50,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { error: "Profile not found or access denied" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Profile not found or access denied" }, { status: 404 });
     }
 
     // Get connected accounts
@@ -87,10 +78,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching connected accounts:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch connected accounts" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch connected accounts" }, { status: 500 });
   }
 }
 
@@ -104,20 +92,14 @@ export async function POST(request: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { profileId, platform } = body;
 
     if (!profileId || !platform) {
-      return NextResponse.json(
-        { error: "profileId and platform are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "profileId and platform are required" }, { status: 400 });
     }
 
     // Verify profile ownership
@@ -129,10 +111,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { error: "Profile not found or access denied" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Profile not found or access denied" }, { status: 404 });
     }
 
     // Check if account is already connected
@@ -148,7 +127,7 @@ export async function POST(request: NextRequest) {
     if (existingAccount) {
       return NextResponse.json(
         { error: "This platform is already connected to this profile" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -166,10 +145,7 @@ export async function POST(request: NextRequest) {
     ];
 
     if (!supportedPlatforms.includes(platform)) {
-      return NextResponse.json(
-        { error: "Unsupported platform" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Unsupported platform" }, { status: 400 });
     }
 
     const redirectUrl = buildAuthUrl(platform as any, profileId);
@@ -177,9 +153,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ redirectUrl });
   } catch (error) {
     console.error("Error initiating OAuth flow:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate OAuth flow" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate OAuth flow" }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
 
 interface PlatformBadgeProps {
   platform: string;
@@ -17,7 +17,7 @@ export function PlatformBadge({ platform, className, size = "md" }: PlatformBadg
       className={cn(
         "inline-flex items-center gap-1 rounded-full bg-surface-strong text-ink",
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-caption",
-        className
+        className,
       )}
     >
       <span>{platformInfo?.icon}</span>

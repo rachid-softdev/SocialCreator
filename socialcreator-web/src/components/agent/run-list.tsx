@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight, RefreshCw, Eye, Trash2 } from "lucide-react";
-import { cn } from "@socialcreator/utils";
-import { RunStatusBadge } from "./run-status-badge";
 import type { AgentRunWithRelations } from "@socialcreator/types/agent";
-import { formatDateTime } from "@socialcreator/utils";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { ChevronLeft, ChevronRight, Eye, RefreshCw, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { RunStatusBadge } from "./run-status-badge";
 
 interface RunListProps {
   runs: (AgentRunWithRelations & { _count?: { generatedContents: number } })[];
@@ -63,7 +62,7 @@ export function RunList({ runs, agentId, profileId, pagination, onRerun }: RunLi
                 run.startedAt && run.finishedAt
                   ? Math.round(
                       (new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) /
-                        1000
+                        1000,
                     )
                   : null;
 
@@ -87,9 +86,7 @@ export function RunList({ runs, agentId, profileId, pagination, onRerun }: RunLi
                   </td>
                   <td className="px-4 py-4">
                     <p className="text-body-sm text-body">{formatDateTime(run.createdAt)}</p>
-                    {duration !== null && (
-                      <p className="text-caption text-muted">{duration}s</p>
-                    )}
+                    {duration !== null && <p className="text-caption text-muted">{duration}s</p>}
                   </td>
                   <td className="px-4 py-4">
                     <span className="text-body-sm text-ink">

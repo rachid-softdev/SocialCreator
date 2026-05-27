@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@socialcreator/ui/button"
-import { BadgePill } from "@socialcreator/ui/badge-pill"
-import { Plus, Trash2, GripVertical, Tag, X } from "lucide-react"
+import { BadgePill } from "@socialcreator/ui/badge-pill";
+import { Button } from "@socialcreator/ui/button";
+import { GripVertical, Plus, Tag, Trash2, X } from "lucide-react";
+import { useState } from "react";
 
 interface ContentExample {
-  id: string
-  content: string
-  platform?: string
-  tags: string[]
+  id: string;
+  content: string;
+  platform?: string;
+  tags: string[];
 }
 
 interface ContentBankEditorProps {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
 }
 
 export function ContentBankEditor({
@@ -25,69 +25,72 @@ export function ContentBankEditor({
 }: ContentBankEditorProps) {
   const [examples, setExamples] = useState<ContentExample[]>(() => {
     // Parser la valeur existante
-    if (!value) return []
+    if (!value) return [];
     try {
-      return JSON.parse(value)
+      return JSON.parse(value);
     } catch {
       // Si pas JSON, convertir l'ancien format texte en exemples
-      return value.split("\n\n").filter(Boolean).map((text, i) => ({
-        id: `legacy-${i}`,
-        content: text,
-        tags: [],
-      }))
+      return value
+        .split("\n\n")
+        .filter(Boolean)
+        .map((text, i) => ({
+          id: `legacy-${i}`,
+          content: text,
+          tags: [],
+        }));
     }
-  })
+  });
 
-  const [newExample, setNewExample] = useState("")
-  const [newTag, setNewTag] = useState("")
+  const [newExample, setNewExample] = useState("");
+  const [newTag, setNewTag] = useState("");
 
   const addExample = () => {
-    if (!newExample.trim()) return
+    if (!newExample.trim()) return;
 
     const example: ContentExample = {
       id: `example-${Date.now()}`,
       content: newExample.trim(),
       tags: [],
-    }
+    };
 
-    const updatedExamples = [...examples, example]
-    setExamples(updatedExamples)
-    onChange(JSON.stringify(updatedExamples))
-    setNewExample("")
-  }
+    const updatedExamples = [...examples, example];
+    setExamples(updatedExamples);
+    onChange(JSON.stringify(updatedExamples));
+    setNewExample("");
+  };
 
   const removeExample = (id: string) => {
-    const updatedExamples = examples.filter(e => e.id !== id)
-    setExamples(updatedExamples)
-    onChange(JSON.stringify(updatedExamples))
-  }
+    const updatedExamples = examples.filter((e) => e.id !== id);
+    setExamples(updatedExamples);
+    onChange(JSON.stringify(updatedExamples));
+  };
 
   const addTagToExample = (exampleId: string) => {
-    if (!newTag.trim()) return
+    if (!newTag.trim()) return;
 
-    const updatedExamples = examples.map(e => {
+    const updatedExamples = examples.map((e) => {
       if (e.id === exampleId && !e.tags.includes(newTag.trim())) {
-        return { ...e, tags: [...e.tags, newTag.trim()] }
+        return { ...e, tags: [...e.tags, newTag.trim()] };
       }
-      return e
-    })
+      return e;
+    });
 
-    setExamples(updatedExamples)
-    onChange(JSON.stringify(updatedExamples))
-    setNewTag("")
-  }
+    setExamples(updatedExamples);
+    onChange(JSON.stringify(updatedExamples));
+    setNewTag("");
+  };
 
   const removeTagFromExample = (exampleId: string, tag: string) => {
-    const updatedExamples = examples.map(e => {
+    const updatedExamples = examples.map((e) => {
       if (e.id === exampleId) {
-        return { ...e, tags: e.tags.filter(t => t !== tag) }
+        return { ...e, tags: e.tags.filter((t) => t !== tag) };
       }
-      return e
-    })
+      return e;
+    });
 
-    setExamples(updatedExamples)
-    onChange(JSON.stringify(updatedExamples))
-  }
+    setExamples(updatedExamples);
+    onChange(JSON.stringify(updatedExamples));
+  };
 
   return (
     <div className="space-y-4">
@@ -121,14 +124,9 @@ export function ContentBankEditor({
       {/* Examples list */}
       {examples.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-caption-uppercase text-muted font-medium">
-            Your Examples
-          </h4>
+          <h4 className="text-caption-uppercase text-muted font-medium">Your Examples</h4>
           {examples.map((example) => (
-            <div
-              key={example.id}
-              className="rounded-lg border border-hairline bg-surface-card p-4"
-            >
+            <div key={example.id} className="rounded-lg border border-hairline bg-surface-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center text-muted-soft">
                   <GripVertical className="w-4 h-4 cursor-move mr-2" />
@@ -164,8 +162,8 @@ export function ContentBankEditor({
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            e.preventDefault()
-                            addTagToExample(example.id)
+                            e.preventDefault();
+                            addTagToExample(example.id);
                           }
                         }}
                         placeholder="Add tag..."
@@ -197,5 +195,5 @@ export function ContentBankEditor({
         </ul>
       </div>
     </div>
-  )
+  );
 }

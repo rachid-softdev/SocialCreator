@@ -1,17 +1,17 @@
-import Stripe from "stripe"
-import { prisma } from "@/lib/prisma"
+import Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
 
-let stripeInstance: Stripe | null = null
+let stripeInstance: Stripe | null = null;
 
 export function getStripe(): Stripe {
-  if (stripeInstance) return stripeInstance
+  if (stripeInstance) return stripeInstance;
   if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY is not set")
+    throw new Error("STRIPE_SECRET_KEY is not set");
   }
   stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2025-02-24.acacia" as any,
-  })
-  return stripeInstance
+  });
+  return stripeInstance;
 }
 
 // ============================================
@@ -63,8 +63,8 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
 
     const activePrices: Record<PaidPlanKey, number> = {
       starter: 5000, // fallback
-      pro: 7000,     // fallback
-      team: 11000,   // fallback
+      pro: 7000, // fallback
+      team: 11000, // fallback
     };
 
     for (const price of prices.data) {
@@ -146,7 +146,13 @@ export const PLANS = {
     profiles: 2,
     addOnPrice: 2000,
     addOnProfiles: 1,
-    features: ["2 profiles", "AI content generation", "Advanced scheduling", "Video clipping", "Priority support"],
+    features: [
+      "2 profiles",
+      "AI content generation",
+      "Advanced scheduling",
+      "Video clipping",
+      "Priority support",
+    ],
   },
   team: {
     name: "Team",
@@ -154,12 +160,19 @@ export const PLANS = {
     profiles: 4,
     addOnPrice: 2000,
     addOnProfiles: 1,
-    features: ["4 profiles", "AI content generation", "Advanced scheduling", "Video clipping", "Team collaboration", "Dedicated support"],
+    features: [
+      "4 profiles",
+      "AI content generation",
+      "Advanced scheduling",
+      "Video clipping",
+      "Team collaboration",
+      "Dedicated support",
+    ],
   },
-} as const
+} as const;
 
-export type PlanKey = keyof typeof PLANS | "free"
-export type PaidPlanKey = keyof typeof PLANS
+export type PlanKey = keyof typeof PLANS | "free";
+export type PaidPlanKey = keyof typeof PLANS;
 
 /**
  * Get plan data - uses dynamic prices if available
@@ -185,24 +198,24 @@ export async function getPlanDataWithDynamicPrice(plan: PlanKey): Promise<{
 }
 
 export function getPlanData(plan: PlanKey) {
-  if (plan === "free") return null
-  return PLANS[plan]
+  if (plan === "free") return null;
+  return PLANS[plan];
 }
 
 export async function createCheckoutSession(
   userId: string,
   email: string,
   plan: PlanKey,
-  additionalProfiles: number = 0
+  additionalProfiles: number = 0,
 ): Promise<{ sessionId: string; url: string }> {
   // Free plan doesn't need a checkout session
   if (plan === "free") {
     throw new Error("Free plan does not require checkout");
   }
 
-  const stripe = getStripe()
-  const planData = PLANS[plan as Exclude<PlanKey, "free">]
-  const dynamicPrice = await getPlanPrice(plan as PaidPlanKey)
+  const stripe = getStripe();
+  const planData = PLANS[plan as Exclude<PlanKey, "free">];
+  const dynamicPrice = await getPlanPrice(plan as PaidPlanKey);
 
   const lineItems = [
     {
@@ -214,7 +227,7 @@ export async function createCheckoutSession(
       },
       quantity: 1,
     },
-  ]
+  ];
 
   if (additionalProfiles > 0) {
     lineItems.push({
@@ -225,7 +238,7 @@ export async function createCheckoutSession(
         recurring: { interval: "month" as const },
       },
       quantity: 1,
-    })
+    });
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -236,18 +249,18 @@ export async function createCheckoutSession(
     success_url: `${process.env.AUTH_URL || "http://localhost:3000"}/settings/billing?success=true`,
     cancel_url: `${process.env.AUTH_URL || "http://localhost:3000"}/pricing?canceled=true`,
     metadata: { userId, plan, additionalProfiles: additionalProfiles.toString() },
-  })
+  });
 
-  return { sessionId: session.id, url: session.url! }
+  return { sessionId: session.id, url: session.url! };
 }
 
 export async function createBillingPortal(customerId: string): Promise<string> {
-  const stripe = getStripe()
+  const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: `${process.env.AUTH_URL || "http://localhost:3000"}/settings/billing`,
-  })
-  return session.url
+  });
+  return session.url;
 }
 
 /**
@@ -258,44 +271,44 @@ export async function createBillingPortal(customerId: string): Promise<string> {
  * - STRIPE_PRICE_TEAM
  */
 function getStripePriceToPlan(): Record<string, PlanKey> {
-  const mapping: Record<string, PlanKey> = {}
+  const mapping: Record<string, PlanKey> = {};
 
   if (process.env.STRIPE_PRICE_STARTER) {
-    mapping[process.env.STRIPE_PRICE_STARTER] = "starter"
+    mapping[process.env.STRIPE_PRICE_STARTER] = "starter";
   }
   if (process.env.STRIPE_PRICE_PRO) {
-    mapping[process.env.STRIPE_PRICE_PRO] = "pro"
+    mapping[process.env.STRIPE_PRICE_PRO] = "pro";
   }
   if (process.env.STRIPE_PRICE_TEAM) {
-    mapping[process.env.STRIPE_PRICE_TEAM] = "team"
+    mapping[process.env.STRIPE_PRICE_TEAM] = "team";
   }
 
-  return mapping
+  return mapping;
 }
 
 // Fallback: Mapping par prix (unit_amount en cents)
 function inferPlanFromPrice(unitAmount: number): PlanKey | null {
-  if (unitAmount === PLANS.starter.price) return "starter"
-  if (unitAmount === PLANS.pro.price) return "pro"
-  if (unitAmount === PLANS.team.price) return "team"
-  return null
+  if (unitAmount === PLANS.starter.price) return "starter";
+  if (unitAmount === PLANS.pro.price) return "pro";
+  if (unitAmount === PLANS.team.price) return "team";
+  return null;
 }
 
 export type PlanDetails = {
-  plan: PlanKey | null
-  status: string | null
-  renewalDate: Date | null
-  customerId: string | null
-  cancelAtPeriodEnd: boolean
-  profiles: number
-  features: string[]
-}
+  plan: PlanKey | null;
+  status: string | null;
+  renewalDate: Date | null;
+  customerId: string | null;
+  cancelAtPeriodEnd: boolean;
+  profiles: number;
+  features: string[];
+};
 
 export async function getPlanDetails(userId: string): Promise<PlanDetails> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { stripeSubscriptionId: true, stripeSubscriptionStatus: true, stripeCustomerId: true },
-  })
+  });
 
   if (!user?.stripeSubscriptionId || !user?.stripeCustomerId) {
     return {
@@ -306,47 +319,47 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
       cancelAtPeriodEnd: false,
       profiles: 1,
       features: [],
-    }
+    };
   }
 
   // Récupérer la subscription depuis Stripe pour avoir les détails complets
-  const stripe = getStripe()
-  let plan: PlanKey | null = null
-  let renewalDate: Date | null = null
-  let cancelAtPeriodEnd = false
+  const stripe = getStripe();
+  let plan: PlanKey | null = null;
+  let renewalDate: Date | null = null;
+  let cancelAtPeriodEnd = false;
 
   try {
-    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId)
-    
+    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+
     // Vérifier si la subscription va être annulée
-    cancelAtPeriodEnd = subscription.cancel_at_period_end
-    
+    cancelAtPeriodEnd = subscription.cancel_at_period_end;
+
     // Date de renouvellement (fin de la période actuelle)
-    renewalDate = new Date(subscription.current_period_end * 1000)
-    
+    renewalDate = new Date(subscription.current_period_end * 1000);
+
     // Récupérer le price ID du premier item
-    const priceId = subscription.items.data[0]?.price.id
-    const unitAmount = subscription.items.data[0]?.price.unit_amount
+    const priceId = subscription.items.data[0]?.price.id;
+    const unitAmount = subscription.items.data[0]?.price.unit_amount;
 
     // Get mapping from env vars
-    const priceToPlan = getStripePriceToPlan()
+    const priceToPlan = getStripePriceToPlan();
 
     // Essayer d'abord le mapping direct par price ID
     if (priceId && priceToPlan[priceId]) {
-      plan = priceToPlan[priceId]
+      plan = priceToPlan[priceId];
     } else if (unitAmount) {
       // Fallback: inferrer le plan depuis le prix
-      plan = inferPlanFromPrice(unitAmount)
+      plan = inferPlanFromPrice(unitAmount);
     }
-    
+
     // Si encore null, utiliser le status comme indice (pas idéal mais mieux que starter hardcodé)
     if (!plan && user.stripeSubscriptionStatus === "active") {
       // Pour les abonnements actifs sans correspondance, retourne null
       // plutôt que de hardcoder "starter"
-      plan = null
+      plan = null;
     }
   } catch (error) {
-    console.error("Failed to fetch Stripe subscription:", error)
+    console.error("Failed to fetch Stripe subscription:", error);
     // En cas d'erreur, on retourne les info de base
   }
 
@@ -354,8 +367,14 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
     free: ["1 profile", "Basic scheduling"],
     starter: ["1 profile", "AI content generation", "Basic analytics"],
     pro: ["2 profiles", "AI content generation", "Advanced analytics", "Priority support"],
-    team: ["4 profiles", "AI content generation", "Advanced analytics", "Priority support", "Team collaboration"],
-  } as const satisfies Partial<Record<PlanKey, string[]>>
+    team: [
+      "4 profiles",
+      "AI content generation",
+      "Advanced analytics",
+      "Priority support",
+      "Team collaboration",
+    ],
+  } as const satisfies Partial<Record<PlanKey, string[]>>;
 
   return {
     plan,
@@ -363,24 +382,25 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
     renewalDate,
     customerId: user.stripeCustomerId,
     cancelAtPeriodEnd,
-    profiles: plan && plan !== "free" ? (PLANS[plan as Exclude<PlanKey, "free">].profiles as number) : 1,
+    profiles:
+      plan && plan !== "free" ? (PLANS[plan as Exclude<PlanKey, "free">].profiles as number) : 1,
     features: plan && plan !== "free" ? planFeatures[plan as Exclude<PlanKey, "free">] : [],
-  }
+  };
 }
 
 export async function getInvoices(userId: string): Promise<Stripe.Invoice[]> {
-  const stripe = getStripe()
+  const stripe = getStripe();
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { stripeCustomerId: true },
-  })
+  });
 
-  if (!user?.stripeCustomerId) return []
+  if (!user?.stripeCustomerId) return [];
 
   const invoices = await stripe.invoices.list({
     customer: user.stripeCustomerId,
     limit: 10,
-  })
+  });
 
-  return invoices.data
+  return invoices.data;
 }

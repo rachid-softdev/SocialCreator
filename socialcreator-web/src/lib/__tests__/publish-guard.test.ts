@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { startOfDayUTC, hashContent } from "../utils";
+import { hashContent, startOfDayUTC } from "../utils";
 
 describe("publish-guard utilities", () => {
   describe("startOfDayUTC", () => {
@@ -25,7 +25,7 @@ describe("publish-guard utilities", () => {
   });
 
   describe("hashContent", () => {
-    it("should produce SHA-256 hash", () => {
+    it("should produce a hex-encoded hash", () => {
       const hash = hashContent("test content");
       expect(hash).toMatch(/^[a-f0-9]{64}$/);
     });

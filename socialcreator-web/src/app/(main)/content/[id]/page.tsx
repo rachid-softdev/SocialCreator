@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect, notFound } from "next/navigation";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { formatDateTime } from "@socialcreator/utils";
+import { Check, Send, X } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import { ContentDetailClient } from "@/app/(main)/content/[id]/content-detail-client";
+import { ApprovalPanel } from "@/components/content/approval-panel";
+import { ContentEditor } from "@/components/content/content-editor";
 import { ContentStatusBadge } from "@/components/content/content-status-badge";
 import { PlatformBadge } from "@/components/content/platform-badge";
-import { ContentEditor } from "@/components/content/content-editor";
-import { ApprovalPanel } from "@/components/content/approval-panel";
-import { formatDateTime } from "@socialcreator/utils";
-import { Check, X, Send } from "lucide-react";
-import { ContentDetailClient } from "@/app/(main)/content/[id]/content-detail-client";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface PageProps {
   params: Promise<{ id: string }>;

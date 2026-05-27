@@ -1,14 +1,13 @@
+import { PLATFORMS } from "@socialcreator/types/profile";
+import { BadgePill } from "@socialcreator/ui/badge-pill";
+import { formatDate } from "@socialcreator/utils";
+import { Bot, FileText, Link2, Users } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { BadgePill } from "@socialcreator/ui/badge-pill";
-import { Users, Bot, FileText, Link2 } from "lucide-react";
-import { PLATFORMS } from "@socialcreator/types/profile";
-import { formatDate } from "@socialcreator/utils";
 
 interface ProfileDetailPageProps {
   params: Promise<{ profileId: string }>;
@@ -49,21 +48,19 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
     notFound();
   }
 
-  const approvalRate = profile._count.generatedContents > 0
-    ? Math.round(
-        ((profile._count.generatedContents - profile.generatedContents.filter(c => c.status === "REJECTED").length) /
-        profile._count.generatedContents) * 100
-      )
-    : 0;
+  const approvalRate =
+    profile._count.generatedContents > 0
+      ? Math.round(
+          ((profile._count.generatedContents -
+            profile.generatedContents.filter((c) => c.status === "REJECTED").length) /
+            profile._count.generatedContents) *
+            100,
+        )
+      : 0;
 
   return (
     <div className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: "Profiles", href: "/profiles" },
-          { label: profile.name },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Profiles", href: "/profiles" }, { label: profile.name }]} />
 
       <PageHeader
         title={profile.name}
@@ -85,7 +82,7 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
           {/* Basic Info Card */}
           <div className="bg-surface-card border border-hairline rounded-xl p-6">
             <h2 className="text-title-sm text-ink mb-4">Overview</h2>
-            
+
             {/* Platforms */}
             {profile.platforms.length > 0 && (
               <div className="mb-6">
@@ -123,7 +120,9 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
 
             {/* Status */}
             <div className="mt-6 pt-6 border-t border-hairline">
-              <span className={`px-3 py-1 rounded-pill text-caption ${profile.isActive ? "bg-semantic-success/10 text-semantic-success" : "bg-muted-soft/20 text-muted"}`}>
+              <span
+                className={`px-3 py-1 rounded-pill text-caption ${profile.isActive ? "bg-semantic-success/10 text-semantic-success" : "bg-muted-soft/20 text-muted"}`}
+              >
                 {profile.isActive ? "Active" : "Inactive"}
               </span>
             </div>
@@ -135,12 +134,17 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
               <h2 className="text-title-sm text-ink mb-4">Recent Content</h2>
               <div className="space-y-3">
                 {profile.generatedContents.map((content) => (
-                  <div key={content.id} className="flex items-center justify-between py-2 border-b border-hairline-soft last:border-0">
+                  <div
+                    key={content.id}
+                    className="flex items-center justify-between py-2 border-b border-hairline-soft last:border-0"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-caption text-muted">
-                        {PLATFORMS.find(p => p.value === content.platform)?.label}
+                        {PLATFORMS.find((p) => p.value === content.platform)?.label}
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-caption ${content.status === "PUBLISHED" ? "bg-semantic-success/10 text-semantic-success" : "bg-muted-soft/20 text-muted"}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded text-caption ${content.status === "PUBLISHED" ? "bg-semantic-success/10 text-semantic-success" : "bg-muted-soft/20 text-muted"}`}
+                      >
                         {content.status}
                       </span>
                     </div>
@@ -171,7 +175,9 @@ export default async function ProfileDetailPage({ params }: ProfileDetailPagePro
                   <FileText className="w-4 h-4" />
                   Contents
                 </div>
-                <span className="text-body-strong text-ink">{profile._count.generatedContents}</span>
+                <span className="text-body-strong text-ink">
+                  {profile._count.generatedContents}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <Link

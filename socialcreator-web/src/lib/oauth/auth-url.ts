@@ -2,7 +2,7 @@
  * OAuth URL builder - generates authorization URLs with proper state handling
  */
 
-import { OAuthProvider, getRedirectUri, OAUTH_PROVIDERS } from "./providers";
+import { getRedirectUri, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
 interface AuthState {
   platform: string;
@@ -46,10 +46,7 @@ export function parseState(state: string): AuthState | null {
  * Build the OAuth authorization URL for a given platform and profile
  * Includes all required parameters: client_id, redirect_uri, scope, response_type, state
  */
-export function buildAuthUrl(
-  platform: OAuthProvider,
-  profileId: string
-): string {
+export function buildAuthUrl(platform: OAuthProvider, profileId: string): string {
   const config = OAUTH_PROVIDERS[platform];
   const redirectUri = getRedirectUri(platform);
 
@@ -84,7 +81,7 @@ export function buildAuthUrl(
 export function buildAuthUrlWithParams(
   platform: OAuthProvider,
   profileId: string,
-  additionalParams?: Record<string, string>
+  additionalParams?: Record<string, string>,
 ): string {
   let url = buildAuthUrl(platform, profileId);
 

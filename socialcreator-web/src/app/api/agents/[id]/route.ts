@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 
 const updateAgentSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   type: z.enum(["TEXT_POST", "VIDEO_CLIP", "CROSS_POST"]).optional(),
-  platforms: z.array(z.enum([
-    "TIKTOK",
-    "INSTAGRAM",
-    "YOUTUBE",
-    "FACEBOOK",
-    "X",
-    "LINKEDIN",
-    "THREADS",
-    "PINTEREST",
-  ])).min(1).optional(),
+  platforms: z
+    .array(
+      z.enum([
+        "TIKTOK",
+        "INSTAGRAM",
+        "YOUTUBE",
+        "FACEBOOK",
+        "X",
+        "LINKEDIN",
+        "THREADS",
+        "PINTEREST",
+      ]),
+    )
+    .min(1)
+    .optional(),
   scheduleCron: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
   autoPublish: z.boolean().optional(),
@@ -54,20 +59,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const agent = await getAgentOr404(id, session.user.id);
 
     if (!agent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     // Calculate stats
@@ -89,10 +88,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error fetching agent:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -102,20 +98,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const existingAgent = await getAgentOr404(id, session.user.id);
 
     if (!existingAgent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -124,7 +114,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -143,10 +133,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ agent });
   } catch (error) {
     console.error("Error updating agent:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -156,20 +143,14 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const existingAgent = await getAgentOr404(id, session.user.id);
 
     if (!existingAgent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     // Cascade delete - Prisma handles this via onDelete: Cascade
@@ -185,9 +166,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting agent:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

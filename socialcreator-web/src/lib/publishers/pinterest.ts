@@ -3,7 +3,7 @@
  * Supports creating pins, boards, and publishing
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
 
@@ -25,9 +25,7 @@ interface PinterestPinOptions {
 /**
  * Get user's boards from Pinterest
  */
-export async function getPinterestBoards(
-  accessToken: string
-): Promise<PinterestBoard[]> {
+export async function getPinterestBoards(accessToken: string): Promise<PinterestBoard[]> {
   try {
     const response = await fetch(`${PINTEREST_API_BASE}/boards`, {
       headers: {
@@ -63,7 +61,7 @@ export async function publishToPinterest(
   account: {
     accountId: string; // This should be a board ID for pins
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   // Pinterest requires an image for pins
   if (content.mediaUrls.length === 0) {
@@ -106,7 +104,7 @@ export async function publishToPinterest(
 
       if (!response.ok) {
         const errorData = await response.json();
-        
+
         // Handle specific error cases
         if (errorData.code === 5) {
           return {
@@ -114,7 +112,7 @@ export async function publishToPinterest(
             error: "Invalid board ID. Please reconnect your Pinterest account.",
           };
         }
-        
+
         if (errorData.code === 2) {
           return {
             success: false,
@@ -168,7 +166,7 @@ export async function publishToPinterest(
 export async function createPinterestBoard(
   name: string,
   description: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<{ success: boolean; boardId?: string; error?: string }> {
   try {
     const response = await fetch(`${PINTEREST_API_BASE}/boards`, {
@@ -207,9 +205,7 @@ export async function createPinterestBoard(
 /**
  * Get user's Pinterest profile
  */
-export async function getPinterestProfile(
-  accessToken: string
-): Promise<{
+export async function getPinterestProfile(accessToken: string): Promise<{
   id: string;
   username: string;
   full_name: string;

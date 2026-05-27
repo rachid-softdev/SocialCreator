@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { cn } from "@socialcreator/utils";
-import { PLATFORMS } from "@socialcreator/types/profile";
 import type { AgentType, Platform } from "@prisma/client";
-import { AGENT_TYPE_LABELS, AGENT_TYPE_DESCRIPTIONS } from "@socialcreator/types/agent";
-import { Bot, Type, Video, RefreshCw } from "lucide-react";
+import { AGENT_TYPE_DESCRIPTIONS, AGENT_TYPE_LABELS } from "@socialcreator/types/agent";
+import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { Bot, RefreshCw, Type, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface AgentFormProps {
   profileId: string;
@@ -36,8 +36,8 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
-    type: initialData?.type || "TEXT_POST" as AgentType,
-    platforms: initialData?.platforms || [] as Platform[],
+    type: initialData?.type || ("TEXT_POST" as AgentType),
+    platforms: initialData?.platforms || ([] as Platform[]),
     scheduleCron: initialData?.scheduleCron || "",
     autoPublish: initialData?.autoPublish || false,
     maxPerDay: initialData?.maxPerDay || 2,
@@ -108,7 +108,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
               <div
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-button",
-                  step >= s ? "bg-primary text-on-primary" : "bg-surface-strong text-muted"
+                  step >= s ? "bg-primary text-on-primary" : "bg-surface-strong text-muted",
                 )}
               >
                 {s}
@@ -149,7 +149,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
                     "p-4 rounded-xl border-2 text-left transition-all",
                     formData.type === value
                       ? "border-primary bg-primary/5"
-                      : "border-hairline hover:border-hairline-strong"
+                      : "border-hairline hover:border-hairline-strong",
                   )}
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -182,7 +182,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
                     "inline-flex items-center gap-2 px-4 py-2 rounded-pill border transition-all",
                     formData.platforms.includes(value as Platform)
                       ? "bg-primary text-on-primary border-primary"
-                      : "bg-surface-card border-hairline hover:border-hairline-strong text-ink"
+                      : "bg-surface-card border-hairline hover:border-hairline-strong text-ink",
                   )}
                 >
                   <span>{icon}</span>
@@ -214,23 +214,19 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
           <div className="flex items-center justify-between p-4 rounded-xl bg-surface-strong">
             <div>
               <p className="text-body-strong text-ink">Auto-publish</p>
-              <p className="text-caption text-muted">
-                Automatically approve generated content
-              </p>
+              <p className="text-caption text-muted">Automatically approve generated content</p>
             </div>
             <button
-              onClick={() =>
-                setFormData((prev) => ({ ...prev, autoPublish: !prev.autoPublish }))
-              }
+              onClick={() => setFormData((prev) => ({ ...prev, autoPublish: !prev.autoPublish }))}
               className={cn(
                 "w-12 h-6 rounded-full transition-colors relative",
-                formData.autoPublish ? "bg-primary" : "bg-muted-soft"
+                formData.autoPublish ? "bg-primary" : "bg-muted-soft",
               )}
             >
               <span
                 className={cn(
                   "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                  formData.autoPublish ? "left-7" : "left-1"
+                  formData.autoPublish ? "left-7" : "left-1",
                 )}
               />
             </button>

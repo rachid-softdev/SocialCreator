@@ -1,13 +1,13 @@
 /**
  * Development Scheduler Script
- * 
+ *
  * This script simulates scheduled tasks in development mode.
  * It runs alongside the Next.js dev server to test scheduling functionality.
- * 
+ *
  * Usage:
  *   npm run dev:scheduler    - Run scheduler only
  *   npm run dev:all         - Run Next.js + scheduler together
- * 
+ *
  * Features:
  * - Scheduled content publishing
  * - Token refresh checks
@@ -44,10 +44,10 @@ const tasks: ScheduledTask[] = [
 
 async function publishScheduledContent() {
   console.log("[Scheduler] Checking for scheduled content to publish...");
-  
+
   try {
     const now = new Date();
-    
+
     // Find content that is scheduled to be published
     const contentToPublish = await prisma.generatedContent.findMany({
       where: {
@@ -75,10 +75,10 @@ async function publishScheduledContent() {
     for (const content of contentToPublish) {
       try {
         console.log(`[Scheduler] Publishing content: ${content.id}`);
-        
+
         // Find active connected account for this platform
         const connectedAccount = content.profile.connectedAccounts.find(
-          ca => ca.platform === content.platform && ca.isActive
+          (ca) => ca.platform === content.platform && ca.isActive,
         );
 
         if (!connectedAccount) {
@@ -93,15 +93,17 @@ async function publishScheduledContent() {
 
         // In production, this would call the appropriate publisher
         // For dev, we just simulate successful publishing
-        console.log(`[Scheduler] Would publish to ${content.platform}: ${content.textContent.substring(0, 50)}...`);
+        console.log(
+          `[Scheduler] Would publish to ${content.platform}: ${content.textContent.substring(0, 50)}...`,
+        );
 
         // Simulate publishing delay
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Update status to PUBLISHED
         await prisma.generatedContent.update({
           where: { id: content.id },
-          data: { 
+          data: {
             status: "PUBLISHED" as ContentStatus,
             publishedAt: new Date(),
           },
@@ -110,7 +112,7 @@ async function publishScheduledContent() {
         console.log(`[Scheduler] Successfully published content: ${content.id}`);
       } catch (error) {
         console.error(`[Scheduler] Failed to publish content ${content.id}:`, error);
-        
+
         // Mark as failed
         await prisma.generatedContent.update({
           where: { id: content.id },
@@ -125,11 +127,11 @@ async function publishScheduledContent() {
 
 async function checkTokenExpiration() {
   console.log("[Scheduler] Checking for tokens needing refresh...");
-  
+
   try {
     // Find profiles with tokens expiring within 5 minutes
     const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000);
-    
+
     const connectedAccountsWithExpiringTokens = await prisma.connectedAccount.findMany({
       where: {
         expiresAt: {
@@ -152,12 +154,16 @@ async function checkTokenExpiration() {
       return;
     }
 
-    console.log(`[Scheduler] Found ${connectedAccountsWithExpiringTokens.length} account(s) with expiring tokens.`);
-    
+    console.log(
+      `[Scheduler] Found ${connectedAccountsWithExpiringTokens.length} account(s) with expiring tokens.`,
+    );
+
     // In production, this would trigger the OAuth middleware refresh
     // For dev, just log the accounts
     for (const account of connectedAccountsWithExpiringTokens) {
-      console.log(`[Scheduler] Token expiring soon for account ${account.id} (profile: ${account.profileId}, platform: ${account.platform})`);
+      console.log(
+        `[Scheduler] Token expiring soon for account ${account.id} (profile: ${account.profileId}, platform: ${account.platform})`,
+      );
     }
   } catch (error) {
     console.error("[Scheduler] Error in checkTokenExpiration:", error);
@@ -166,7 +172,7 @@ async function checkTokenExpiration() {
 
 async function processPendingMedia() {
   console.log("[Scheduler] Checking for pending media processing...");
-  
+
   try {
     // Find media assets that are still uploading
     const pendingMedia = await prisma.videoAsset.findMany({
@@ -184,7 +190,7 @@ async function processPendingMedia() {
     }
 
     console.log(`[Scheduler] Found ${pendingMedia.length} media asset(s) pending.`);
-    
+
     for (const media of pendingMedia) {
       console.log(`[Scheduler] Would process media: ${media.id} for profile ${media.profileId}`);
       // In production, this would check Mux status and update accordingly
@@ -211,7 +217,7 @@ async function main() {
   console.log("=".repeat(60));
   console.log(`Running ${tasks.length} scheduled tasks...`);
   console.log("");
-  
+
   // Validate cron expressions
   for (const task of tasks) {
     try {
@@ -222,37 +228,37 @@ async function main() {
       process.exit(1);
     }
   }
-  
+
   console.log("");
   console.log("Scheduler started. Press Ctrl+C to stop.");
   console.log("");
-  
+
   // Run each task according to its schedule
   // For development, we'll run all tasks every minute to make testing easier
   const interval = setInterval(async () => {
     console.log(`\n[${new Date().toISOString()}] Running scheduled tasks...`);
-    
+
     // Run all tasks in sequence
     for (const task of tasks) {
       await runTask(task);
     }
-    
+
     console.log(`[${new Date().toISOString()}] All tasks completed`);
   }, 60000); // Run every minute in dev mode
-  
+
   // Handle graceful shutdown
   process.on("SIGINT", () => {
     console.log("\n\nShutting down scheduler...");
     clearInterval(interval);
     process.exit(0);
   });
-  
+
   process.on("SIGTERM", () => {
     console.log("\n\nShutting down scheduler...");
     clearInterval(interval);
     process.exit(0);
   });
-  
+
   // Run once on startup
   console.log("Initial run...");
   for (const task of tasks) {

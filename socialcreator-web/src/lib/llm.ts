@@ -10,7 +10,7 @@ export interface GenerationResult {
 
 export async function generateContent(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
 ): Promise<GenerationResult> {
   const msg = await claude.messages.create({
     model: "claude-sonnet-4-20250514",
@@ -25,7 +25,10 @@ export async function generateContent(
   // Parse JSON response
   try {
     // Remove markdown code blocks if present
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const cleaned = text
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
     return JSON.parse(cleaned);
   } catch {
     // Fallback: extract JSON from text

@@ -3,8 +3,8 @@
  * Handles encryption/decryption of OAuth tokens for secure storage
  */
 
-import { encryptToken, decryptToken } from "@/lib/crypto";
 import type { Platform } from "@prisma/client";
+import { decryptToken, encryptToken } from "@/lib/crypto";
 
 /**
  * Encrypted token data structure
@@ -34,7 +34,7 @@ export interface DecryptedTokens {
 export function encryptOAuthTokens(
   accessToken: string,
   refreshToken?: string | null,
-  expiresAt?: Date | null
+  expiresAt?: Date | null,
 ): EncryptedTokens {
   return {
     accessToken: encryptToken(accessToken),
@@ -53,7 +53,7 @@ export function encryptOAuthTokens(
 export function decryptOAuthTokens(
   encryptedAccess: string,
   encryptedRefresh?: string | null,
-  expiresAt?: Date | null
+  expiresAt?: Date | null,
 ): DecryptedTokens {
   return {
     accessToken: decryptToken(encryptedAccess),
@@ -70,7 +70,7 @@ export function decryptOAuthTokens(
  */
 export function isTokenExpiring(
   expiresAt: Date | null | undefined,
-  bufferMinutes: number = 5
+  bufferMinutes: number = 5,
 ): boolean {
   if (!expiresAt) {
     return false; // No expiration set, assume valid
@@ -101,7 +101,7 @@ export function calculateTokenExpiration(expiresIn: number): Date {
 export function prepareAccountForStorage(
   accessToken: string,
   refreshToken?: string | null,
-  expiresIn?: number | null
+  expiresIn?: number | null,
 ): {
   accessToken: string;
   refreshToken: string | null;
@@ -121,17 +121,15 @@ export function prepareAccountForStorage(
  * @param storedData - Raw data from database
  * @returns Decrypted tokens and metadata
  */
-export function prepareAccountFromStorage(
-  storedData: {
-    accessToken: string;
-    refreshToken?: string | null;
-    expiresAt?: Date | null;
-  }
-): DecryptedTokens {
+export function prepareAccountFromStorage(storedData: {
+  accessToken: string;
+  refreshToken?: string | null;
+  expiresAt?: Date | null;
+}): DecryptedTokens {
   return decryptOAuthTokens(
     storedData.accessToken,
     storedData.refreshToken || null,
-    storedData.expiresAt || null
+    storedData.expiresAt || null,
   );
 }
 

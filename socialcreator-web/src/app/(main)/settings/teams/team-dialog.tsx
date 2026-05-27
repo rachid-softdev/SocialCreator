@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@socialcreator/ui/button";
 import {
   Dialog,
@@ -14,6 +11,9 @@ import {
   DialogTrigger,
 } from "@socialcreator/ui/dialog";
 import { TextInput } from "@socialcreator/ui/text-input";
+import { Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function TeamDialog() {
   const router = useRouter();
@@ -73,7 +73,8 @@ export function TeamDialog() {
         <DialogHeader>
           <DialogTitle>Create a new team</DialogTitle>
           <DialogDescription>
-            Teams let you collaborate with others. You can share profiles and manage access together.
+            Teams let you collaborate with others. You can share profiles and manage access
+            together.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,11 +94,7 @@ export function TeamDialog() {
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-            >
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

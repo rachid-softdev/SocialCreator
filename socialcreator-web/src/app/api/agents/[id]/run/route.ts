@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 
 const createRunSchema = z.object({
   brief: z.string().min(10, "Brief must be at least 10 characters").max(5000),
@@ -17,10 +17,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -34,16 +31,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
 
     if (!agent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     if (!agent.isActive) {
       return NextResponse.json(
         { error: "Agent is not active. Please enable it first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +47,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -94,16 +88,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       // Don't fail the request - the run is created and can be retried
     }
 
-    return NextResponse.json(
-      { runId: run.id, status: run.status },
-      { status: 201 }
-    );
+    return NextResponse.json({ runId: run.id, status: run.status }, { status: 201 });
   } catch (error) {
     console.error("Error creating agent run:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -113,10 +101,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -130,10 +115,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
 
     if (!agent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     const [runs, total] = await Promise.all([
@@ -160,9 +142,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error fetching agent runs:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

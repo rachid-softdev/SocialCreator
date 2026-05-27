@@ -5,17 +5,21 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams, useParams, useRouter } from "next/navigation";
-import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
+import type { ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
-import { AccountList, getUnconnectedPlatforms, getAllPlatforms } from "@/components/connected-accounts/account-list";
+import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import {
+  AccountList,
+  getAllPlatforms,
+  getUnconnectedPlatforms,
+} from "@/components/connected-accounts/account-list";
 import { ConnectModal } from "@/components/connected-accounts/connect-modal";
 import { DisconnectModal } from "@/components/connected-accounts/disconnect-modal";
 import { PlatformIcon } from "@/components/connected-accounts/platform-icon";
-import { Plus, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface ConnectedAccountResponse {
   id: string;
@@ -75,7 +79,7 @@ export default function ConnectedAccountsPage() {
           isActive: acc.isActive,
           createdAt: new Date(acc.createdAt),
           updatedAt: new Date(acc.createdAt),
-        }))
+        })),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -158,10 +162,7 @@ export default function ConnectedAccountsPage() {
         description="Gérez vos comptes sociaux connectés pour la publication automatique"
         actions={
           unconnectedPlatforms.length > 0 && (
-            <Button
-              onClick={() => setIsConnectModalOpen(true)}
-              className="gap-2"
-            >
+            <Button onClick={() => setIsConnectModalOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
               Connecter un compte
             </Button>
@@ -203,9 +204,7 @@ export default function ConnectedAccountsPage() {
       {/* Empty State - All platforms connected */}
       {!isLoading && accounts.length > 0 && unconnectedPlatforms.length === 0 && (
         <div className="mt-8 text-center py-8">
-          <p className="text-muted-foreground">
-            Tous les comptes sociaux sont connectés !
-          </p>
+          <p className="text-muted-foreground">Tous les comptes sociaux sont connectés !</p>
         </div>
       )}
 

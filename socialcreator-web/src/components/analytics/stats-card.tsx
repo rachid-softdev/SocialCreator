@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
-import { cn } from "@socialcreator/utils"
+import { cn } from "@socialcreator/utils";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 interface StatsCardProps {
-  label: string
-  value: string | number
-  trend?: number
-  icon?: React.ComponentType<{ className?: string }>
+  label: string;
+  value: string | number;
+  trend?: number;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export function StatsCard({ label, value, trend, icon: Icon }: StatsCardProps) {
-  const isPositive = trend !== undefined && trend > 0
-  const isNegative = trend !== undefined && trend < 0
-  const isFlat = trend === 0
+  const isPositive = trend !== undefined && trend > 0;
+  const isNegative = trend !== undefined && trend < 0;
+  const isFlat = trend === 0;
 
   const trendColors = {
     positive: "text-semantic-success",
     negative: "text-semantic-error",
     flat: "text-muted",
-  }
+  };
 
-  const TrendIcon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus
+  const TrendIcon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
 
   return (
     <div className="rounded-xl border border-hairline bg-surface-card p-4">
@@ -35,7 +35,12 @@ export function StatsCard({ label, value, trend, icon: Icon }: StatsCardProps) {
       </div>
 
       {trend !== undefined && (
-        <div className={cn("flex items-center gap-1 mt-2 text-body-sm", trendColors[isPositive ? "positive" : isNegative ? "negative" : "flat"])}>
+        <div
+          className={cn(
+            "flex items-center gap-1 mt-2 text-body-sm",
+            trendColors[isPositive ? "positive" : isNegative ? "negative" : "flat"],
+          )}
+        >
           <TrendIcon className="w-4 h-4" />
           <span>
             {isPositive ? "+" : ""}
@@ -45,5 +50,5 @@ export function StatsCard({ label, value, trend, icon: Icon }: StatsCardProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

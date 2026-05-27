@@ -3,7 +3,7 @@
  * Renders platform-specific icons with brand colors
  */
 
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
 
 interface PlatformIconProps {
@@ -81,7 +81,7 @@ export function PlatformIcon({ platform, className, size = "md" }: PlatformIconP
         "flex items-center justify-center rounded-lg text-white",
         platformColors[platform],
         sizeClasses[size],
-        className
+        className,
       )}
     >
       {platformIcons[platform]}

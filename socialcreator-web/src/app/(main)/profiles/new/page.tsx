@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { ProfileForm } from "@/components/profile/profile-form";
 import type { ProfileFormData } from "@socialcreator/types/profile";
+import { useRouter } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
+import { ProfileForm } from "@/components/profile/profile-form";
 
 export default function NewProfilePage() {
   const router = useRouter();
@@ -27,12 +27,7 @@ export default function NewProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Breadcrumb
-        items={[
-          { label: "Profiles", href: "/profiles" },
-          { label: "New Profile" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Profiles", href: "/profiles" }, { label: "New Profile" }]} />
 
       <PageHeader
         title="Create Profile"

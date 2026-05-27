@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, EB_Garamond } from "next/font/google";
+import { EB_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ToastLayoutWrapper } from "@/components/toast-layout-wrapper";
 
@@ -32,17 +32,11 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`antialiased ${inter.variable} ${ebGaramond.variable} ${playfair.variable}`}>
-        <ToastLayoutWrapper>
-          {children}
-        </ToastLayoutWrapper>
+        <ToastLayoutWrapper>{children}</ToastLayoutWrapper>
       </body>
     </html>
   );

@@ -41,7 +41,10 @@ const config: Config = {
         sans: ["Inter", "sans-serif"],
       },
       fontSize: {
-        "display-mega": ["64px", { lineHeight: "1.05", letterSpacing: "-1.92px", fontWeight: "400" }],
+        "display-mega": [
+          "64px",
+          { lineHeight: "1.05", letterSpacing: "-1.92px", fontWeight: "400" },
+        ],
         "display-xl": ["48px", { lineHeight: "1.08", letterSpacing: "-0.96px", fontWeight: "400" }],
         "display-lg": ["36px", { lineHeight: "1.17", letterSpacing: "-0.36px", fontWeight: "400" }],
         "display-md": ["32px", { lineHeight: "1.13", letterSpacing: "-0.32px", fontWeight: "400" }],
@@ -52,7 +55,10 @@ const config: Config = {
         "body-strong": ["16px", { lineHeight: "1.5", letterSpacing: "0.16px", fontWeight: "500" }],
         "body-sm": ["15px", { lineHeight: "1.47", letterSpacing: "0.15px", fontWeight: "400" }],
         caption: ["14px", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "400" }],
-        "caption-uppercase": ["12px", { lineHeight: "1.4", letterSpacing: "0.96px", fontWeight: "600" }],
+        "caption-uppercase": [
+          "12px",
+          { lineHeight: "1.4", letterSpacing: "0.96px", fontWeight: "600" },
+        ],
         button: ["15px", { lineHeight: "1.0", letterSpacing: "0", fontWeight: "500" }],
         "nav-link": ["15px", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "500" }],
       },

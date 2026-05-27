@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 interface BreadcrumbItem {
   label: string;
@@ -21,10 +21,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         <div key={index} className="flex items-center gap-2">
           {index > 0 && <ChevronRight className="w-4 h-4" />}
           {item.href ? (
-            <Link
-              href={item.href}
-              className="hover:text-ink transition-colors"
-            >
+            <Link href={item.href} className="hover:text-ink transition-colors">
               {item.label}
             </Link>
           ) : (

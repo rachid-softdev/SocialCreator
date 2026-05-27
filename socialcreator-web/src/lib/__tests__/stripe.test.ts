@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { PLANS, getPlanData, type PlanKey } from "../stripe";
+import { getPlanData, PLANS, type PlanKey } from "../stripe";
 
 describe("stripe", () => {
   describe("PLANS", () => {

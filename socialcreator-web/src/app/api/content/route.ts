@@ -1,7 +1,7 @@
+import { contentFilterSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { contentFilterSchema } from "@socialcreator/types";
 import { isValidUuid } from "@/lib/sanitize";
 
 // GET /api/content?profileId=xxx&status=DRAFT&page=1
@@ -10,10 +10,7 @@ export async function GET(request: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -31,20 +28,14 @@ export async function GET(request: Request) {
     const validation = contentFilterSchema.safeParse(rawFilters);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { profileId, status, platform, page, pageSize } = validation.data;
 
     // Validate profileId if provided
     if (profileId && !isValidUuid(profileId)) {
-      return NextResponse.json(
-        { error: "Invalid profile ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
     }
 
     // Build where clause
@@ -97,15 +88,12 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
         },
-      }
+      },
     );
   } catch (error) {
     console.error("Error fetching content:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

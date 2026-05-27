@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { generateContent } from "@/lib/llm";
+import { prisma } from "@/lib/prisma";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.
@@ -12,10 +12,7 @@ Réponds EXACTEMENT en JSON avec ce format:
 ]
 Ne réponds que le JSON, rien d'autre.`;
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
 
@@ -46,14 +43,14 @@ export async function POST(
     if (!videoAsset.transcript) {
       return NextResponse.json(
         { error: "Transcript not available. Run transcription first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Identify segments via Claude
     const result = await generateContent(
       "Tu es un expert en création de contenu viral pour les réseaux sociaux.",
-      `${SEGMENT_PROMPT}\n\nTranscript:\n${videoAsset.transcript}`
+      `${SEGMENT_PROMPT}\n\nTranscript:\n${videoAsset.transcript}`,
     );
 
     // Parse segments from the response (which is in textContent as JSON)
@@ -74,7 +71,7 @@ export async function POST(
       console.error("Failed to parse segments:", parseError);
       return NextResponse.json(
         { error: "Failed to parse segments from AI response" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -90,10 +87,7 @@ export async function POST(
     return NextResponse.json({ segments });
   } catch (error) {
     console.error("Error identifying segments:", error);
-    return NextResponse.json(
-      { error: "Segment identification failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Segment identification failed" }, { status: 500 });
   }
 }
 

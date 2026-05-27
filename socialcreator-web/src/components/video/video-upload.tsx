@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { cn } from "@socialcreator/utils";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface VideoUploadProps {
   profileId: string;
@@ -20,74 +20,77 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const [videoAssetId, setVideoAssetId] = useState<string | null>(null);
 
-  const handleFileSelect = useCallback(async (file: File) => {
-    // Validate file type
-    const validTypes = ["video/mp4", "video/quicktime", "video/webm"];
-    if (!validTypes.includes(file.type)) {
-      setError("Invalid file type. Please upload MP4, MOV, or WebM.");
-      return;
-    }
-
-    // Validate file size (500MB max)
-    const maxSize = 500 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError("File too large. Maximum size is 500MB.");
-      return;
-    }
-
-    setState("uploading");
-    setError(null);
-    setProgress(0);
-
-    try {
-      // Simulate upload progress for better UX
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90));
-      }, 300);
-
-      // Get presigned URL from backend
-      const response = await fetch("/api/video/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get upload URL");
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      // Validate file type
+      const validTypes = ["video/mp4", "video/quicktime", "video/webm"];
+      if (!validTypes.includes(file.type)) {
+        setError("Invalid file type. Please upload MP4, MOV, or WebM.");
+        return;
       }
 
-      const { uploadUrl: presignedUrl, videoAssetId: assetId } = await response.json();
-      setVideoAssetId(assetId);
-
-      // Upload to UploadThing
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error("Upload failed");
+      // Validate file size (500MB max)
+      const maxSize = 500 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError("File too large. Maximum size is 500MB.");
+        return;
       }
 
-      clearInterval(progressInterval);
-      setProgress(100);
+      setState("uploading");
+      setError(null);
+      setProgress(0);
 
-      setState("processing");
-      setUploadUrl(presignedUrl);
-      setThumbnailUrl(presignedUrl);
+      try {
+        // Simulate upload progress for better UX
+        const progressInterval = setInterval(() => {
+          setProgress((prev) => Math.min(prev + 10, 90));
+        }, 300);
 
-      // Notify parent
-      onUploadComplete(assetId, presignedUrl);
+        // Get presigned URL from backend
+        const response = await fetch("/api/video/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profileId }),
+        });
 
-      // Small delay for processing state
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setState("uploaded");
-    } catch (err) {
-      setState("error");
-      setError(err instanceof Error ? err.message : "Upload failed");
-    }
-  }, [profileId, onUploadComplete]);
+        if (!response.ok) {
+          throw new Error("Failed to get upload URL");
+        }
+
+        const { uploadUrl: presignedUrl, videoAssetId: assetId } = await response.json();
+        setVideoAssetId(assetId);
+
+        // Upload to UploadThing
+        const uploadResponse = await fetch(presignedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Upload failed");
+        }
+
+        clearInterval(progressInterval);
+        setProgress(100);
+
+        setState("processing");
+        setUploadUrl(presignedUrl);
+        setThumbnailUrl(presignedUrl);
+
+        // Notify parent
+        onUploadComplete(assetId, presignedUrl);
+
+        // Small delay for processing state
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setState("uploaded");
+      } catch (err) {
+        setState("error");
+        setError(err instanceof Error ? err.message : "Upload failed");
+      }
+    },
+    [profileId, onUploadComplete],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -95,7 +98,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
       const file = e.dataTransfer.files[0];
       if (file) handleFileSelect(file);
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -107,7 +110,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
       const file = e.target.files?.[0];
       if (file) handleFileSelect(file);
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   return (
@@ -122,7 +125,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
           state === "uploading" && "border-gradient-mint bg-gradient-mint/5",
           state === "processing" && "border-gradient-lavender bg-gradient-lavender/5",
           state === "uploaded" && "border-gradient-mint bg-gradient-mint/5",
-          state === "error" && "border-semantic-error bg-semantic-error/5"
+          state === "error" && "border-semantic-error bg-semantic-error/5",
         )}
       >
         {state === "idle" && (

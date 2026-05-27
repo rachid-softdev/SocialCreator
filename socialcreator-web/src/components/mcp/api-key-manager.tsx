@@ -1,48 +1,50 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Copy, Trash2, Plus, AlertTriangle, Check } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
+import { Button } from "@socialcreator/ui/button";
+import { AlertTriangle, Check, Copy, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface ApiKey {
-  id: string
-  name: string
-  prefix: string
-  lastUsed?: string | null
-  createdAt: string
-  revokedAt?: string | null
+  id: string;
+  name: string;
+  prefix: string;
+  lastUsed?: string | null;
+  createdAt: string;
+  revokedAt?: string | null;
 }
 
 interface ApiKeyManagerProps {
-  initialKeys?: ApiKey[]
-  onCreate?: (name: string) => Promise<{ id: string; name: string; prefix: string; apiKey: string }>
-  onRevoke?: (id: string) => Promise<void>
+  initialKeys?: ApiKey[];
+  onCreate?: (
+    name: string,
+  ) => Promise<{ id: string; name: string; prefix: string; apiKey: string }>;
+  onRevoke?: (id: string) => Promise<void>;
 }
 
-export function ApiKeyManager({
-  initialKeys = [],
-  onCreate,
-  onRevoke,
-}: ApiKeyManagerProps) {
-  const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
-  const [isCreating, setIsCreating] = useState(false)
-  const [newKeyName, setNewKeyName] = useState("")
-  const [createdKey, setCreatedKey] = useState<{ name: string; prefix: string; apiKey: string } | null>(null)
-  const [revokingId, setRevokingId] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyManagerProps) {
+  const [keys, setKeys] = useState<ApiKey[]>(initialKeys);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [createdKey, setCreatedKey] = useState<{
+    name: string;
+    prefix: string;
+    apiKey: string;
+  } | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
-    if (!newKeyName.trim() || !onCreate) return
+    if (!newKeyName.trim() || !onCreate) return;
 
-    setIsCreating(true)
+    setIsCreating(true);
     try {
-      const result = await onCreate(newKeyName.trim())
+      const result = await onCreate(newKeyName.trim());
       setCreatedKey({
         name: result.name,
         prefix: result.prefix,
         apiKey: result.apiKey,
-      })
-      setNewKeyName("")
+      });
+      setNewKeyName("");
       // Add to list after creation (will refresh)
       setKeys((prev) => [
         ...prev,
@@ -52,48 +54,51 @@ export function ApiKeyManager({
           prefix: result.prefix,
           createdAt: new Date().toISOString(),
         },
-      ])
+      ]);
     } catch (error) {
-      console.error("Failed to create key:", error)
+      console.error("Failed to create key:", error);
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   const handleRevoke = async (id: string) => {
-    if (!onCreate || !confirm("Are you sure you want to revoke this API key? It will stop working immediately.")) {
-      return
+    if (
+      !onCreate ||
+      !confirm("Are you sure you want to revoke this API key? It will stop working immediately.")
+    ) {
+      return;
     }
 
-    setRevokingId(id)
+    setRevokingId(id);
     try {
-      await onRevoke?.(id)
+      await onRevoke?.(id);
       setKeys((prev) =>
-        prev.map((k) => (k.id === id ? { ...k, revokedAt: new Date().toISOString() } : k))
-      )
+        prev.map((k) => (k.id === id ? { ...k, revokedAt: new Date().toISOString() } : k)),
+      );
     } catch (error) {
-      console.error("Failed to revoke key:", error)
+      console.error("Failed to revoke key:", error);
     } finally {
-      setRevokingId(null)
+      setRevokingId(null);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const formatDate = (dateStr: string) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    }).format(new Date(dateStr))
-  }
+    }).format(new Date(dateStr));
+  };
 
-  const activeKeys = keys.filter((k) => !k.revokedAt)
-  const revokedKeys = keys.filter((k) => k.revokedAt)
+  const activeKeys = keys.filter((k) => !k.revokedAt);
+  const revokedKeys = keys.filter((k) => k.revokedAt);
 
   return (
     <div className="space-y-6">
@@ -120,9 +125,7 @@ export function ApiKeyManager({
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-semantic-error flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-title-sm font-medium mb-1">
-                API Key created - save it now!
-              </h4>
+              <h4 className="text-title-sm font-medium mb-1">API Key created - save it now!</h4>
               <p className="text-body-sm text-muted mb-3">
                 This key will only be shown once. Copy it now and store it securely.
               </p>
@@ -172,9 +175,7 @@ export function ApiKeyManager({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-body-sm text-muted">
-                  Created {formatDate(key.createdAt)}
-                </span>
+                <span className="text-body-sm text-muted">Created {formatDate(key.createdAt)}</span>
 
                 <Button
                   variant="ghost"
@@ -209,9 +210,7 @@ export function ApiKeyManager({
                 <p className="text-body-sm text-muted font-mono">{key.prefix}...</p>
               </div>
 
-              <span className="text-body-sm text-muted">
-                Revoked {formatDate(key.revokedAt!)}
-              </span>
+              <span className="text-body-sm text-muted">Revoked {formatDate(key.revokedAt!)}</span>
             </div>
           ))}
         </div>
@@ -244,5 +243,5 @@ export function ApiKeyManager({
         </Button>
       )}
     </div>
-  )
+  );
 }

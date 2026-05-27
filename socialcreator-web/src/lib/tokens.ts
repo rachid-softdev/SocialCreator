@@ -2,24 +2,22 @@
  * Token management utilities - handles token decryption, validation, and refresh
  */
 
-import { prisma } from "./prisma";
+import type { ConnectedAccount } from "@prisma/client";
 import { decryptToken, encryptToken } from "./crypto";
 import {
-  refreshAccessToken,
-  TokenResponse,
   isTokenExpired,
-  OAuthProvider,
+  type OAuthProvider,
+  refreshAccessToken,
+  type TokenResponse,
 } from "./oauth";
-import { ConnectedAccount } from "@prisma/client";
+import { prisma } from "./prisma";
 
 /**
  * Get a valid access token for a connected account
  * Automatically refreshes the token if it's expired or about to expire
  * Returns the decrypted access token or null if refresh fails
  */
-export async function getValidAccessToken(
-  accountId: string
-): Promise<string | null> {
+export async function getValidAccessToken(accountId: string): Promise<string | null> {
   const account = await prisma.connectedAccount.findUnique({
     where: { id: accountId },
   });
@@ -43,17 +41,14 @@ export async function getValidAccessToken(
     if (account.refreshToken) {
       try {
         const refreshToken = decryptToken(account.refreshToken);
-        const newTokens = await refreshAccessToken(
-          account.platform as OAuthProvider,
-          refreshToken
-        );
+        const newTokens = await refreshAccessToken(account.platform as OAuthProvider, refreshToken);
 
         // Update the account with new tokens
         await updateAccountToken(
           accountId,
           newTokens.access_token,
           newTokens.refresh_token,
-          newTokens.expires_in
+          newTokens.expires_in,
         );
 
         return newTokens.access_token;
@@ -76,7 +71,7 @@ export async function updateAccountToken(
   accountId: string,
   accessToken: string,
   refreshToken?: string,
-  expiresIn?: number
+  expiresIn?: number,
 ): Promise<void> {
   const updateData: any = {
     accessToken: encryptToken(accessToken),
@@ -108,20 +103,16 @@ export async function createConnectedAccount(
     accountId: string;
     accountName: string;
     accountAvatarUrl: string | null;
-  }
+  },
 ): Promise<ConnectedAccount> {
-  const expiresAt = tokens.expires_in
-    ? new Date(Date.now() + tokens.expires_in * 1000)
-    : null;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null;
 
   return await prisma.connectedAccount.create({
     data: {
       profileId,
       platform: platform as any,
       accessToken: encryptToken(tokens.access_token),
-      refreshToken: tokens.refresh_token
-        ? encryptToken(tokens.refresh_token)
-        : null,
+      refreshToken: tokens.refresh_token ? encryptToken(tokens.refresh_token) : null,
       expiresAt,
       accountId: accountInfo.accountId,
       accountName: accountInfo.accountName,
@@ -141,19 +132,15 @@ export async function updateConnectedAccount(
     accountId: string;
     accountName: string;
     accountAvatarUrl: string | null;
-  }
+  },
 ): Promise<ConnectedAccount> {
-  const expiresAt = tokens.expires_in
-    ? new Date(Date.now() + tokens.expires_in * 1000)
-    : undefined;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined;
 
   return await prisma.connectedAccount.update({
     where: { id: accountId },
     data: {
       accessToken: encryptToken(tokens.access_token),
-      refreshToken: tokens.refresh_token
-        ? encryptToken(tokens.refresh_token)
-        : undefined,
+      refreshToken: tokens.refresh_token ? encryptToken(tokens.refresh_token) : undefined,
       expiresAt,
       accountId: accountInfo.accountId,
       accountName: accountInfo.accountName,
@@ -180,11 +167,13 @@ export async function isAccountValid(accountId: string): Promise<boolean> {
     if (account.refreshToken) {
       try {
         const refreshToken = decryptToken(account.refreshToken);
-        const newTokens = await refreshAccessToken(
-          account.platform as OAuthProvider,
-          refreshToken
+        const newTokens = await refreshAccessToken(account.platform as OAuthProvider, refreshToken);
+        await updateAccountToken(
+          accountId,
+          newTokens.access_token,
+          newTokens.refresh_token,
+          newTokens.expires_in,
         );
-        await updateAccountToken(accountId, newTokens.access_token, newTokens.refresh_token, newTokens.expires_in);
         return true;
       } catch {
         // Refresh failed, account is invalid

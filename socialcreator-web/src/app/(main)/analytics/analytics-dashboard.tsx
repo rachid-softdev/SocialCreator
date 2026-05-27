@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
-import { PublishStats } from "@/components/dashboard/publish-stats";
-import { PlatformBadge } from "@/components/content/platform-badge";
-import { ContentStatusBadge } from "@/components/content/content-status-badge";
+import type { Platform } from "@prisma/client";
 import { formatDateTime } from "@socialcreator/utils";
-import { Platform } from "@prisma/client";
-import { TrendingUp, Calendar, BarChart3 } from "lucide-react";
+import { BarChart3, Calendar, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { ContentStatusBadge } from "@/components/content/content-status-badge";
+import { PlatformBadge } from "@/components/content/platform-badge";
+import { PublishStats } from "@/components/dashboard/publish-stats";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface AnalyticsDashboardProps {
   profiles: { id: string; name: string }[];
@@ -79,29 +79,28 @@ export function AnalyticsDashboard({
   // Calculate stats
   const totalPosts = publishLogs.filter((l) => l.success).length;
   const totalFailed = publishLogs.filter((l) => !l.success).length;
-  const successRate = totalPosts + totalFailed > 0
-    ? Math.round((totalPosts / (totalPosts + totalFailed)) * 100)
-    : 0;
+  const successRate =
+    totalPosts + totalFailed > 0 ? Math.round((totalPosts / (totalPosts + totalFailed)) * 100) : 0;
 
   // Platform breakdown
-  const platformStats = publishLogs.reduce((acc, log) => {
-    if (!acc[log.platform]) {
-      acc[log.platform] = { success: 0, failed: 0 };
-    }
-    if (log.success) {
-      acc[log.platform].success++;
-    } else {
-      acc[log.platform].failed++;
-    }
-    return acc;
-  }, {} as Record<string, { success: number; failed: number }>);
+  const platformStats = publishLogs.reduce(
+    (acc, log) => {
+      if (!acc[log.platform]) {
+        acc[log.platform] = { success: 0, failed: 0 };
+      }
+      if (log.success) {
+        acc[log.platform].success++;
+      } else {
+        acc[log.platform].failed++;
+      }
+      return acc;
+    },
+    {} as Record<string, { success: number; failed: number }>,
+  );
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Analytics"
-        description="Track your content performance"
-      />
+      <PageHeader title="Analytics" description="Track your content performance" />
 
       {/* Profile Selector */}
       {profiles.length > 1 && (
@@ -146,9 +145,7 @@ export function AnalyticsDashboard({
               <p className="text-display-sm text-ink">{successRate}%</p>
             </div>
           </div>
-          <p className="text-caption text-muted">
-            {totalFailed > 0 && `${totalFailed} failed`}
-          </p>
+          <p className="text-caption text-muted">{totalFailed > 0 && `${totalFailed} failed`}</p>
         </div>
 
         <div className="bg-surface-card rounded-xl border border-hairline p-6">
@@ -158,9 +155,7 @@ export function AnalyticsDashboard({
             </div>
             <div>
               <p className="text-caption text-muted">Platforms</p>
-              <p className="text-display-sm text-ink">
-                {Object.keys(platformStats).length}
-              </p>
+              <p className="text-display-sm text-ink">{Object.keys(platformStats).length}</p>
             </div>
           </div>
           <p className="text-caption text-muted">Active this month</p>
@@ -175,10 +170,7 @@ export function AnalyticsDashboard({
         <h3 className="text-title-sm text-ink mb-6">Platform Breakdown</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(platformStats).map(([platform, stats]) => (
-            <div
-              key={platform}
-              className="p-4 bg-surface-soft rounded-lg space-y-2"
-            >
+            <div key={platform} className="p-4 bg-surface-soft rounded-lg space-y-2">
               <PlatformBadge platform={platform} />
               <div className="flex items-center justify-between">
                 <span className="text-caption text-muted">Success</span>
@@ -188,9 +180,7 @@ export function AnalyticsDashboard({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-caption text-muted">Failed</span>
-                <span className="text-body-sm text-semantic-error font-medium">
-                  {stats.failed}
-                </span>
+                <span className="text-body-sm text-semantic-error font-medium">{stats.failed}</span>
               </div>
             </div>
           ))}
@@ -210,18 +200,10 @@ export function AnalyticsDashboard({
           <table className="w-full">
             <thead>
               <tr className="border-b border-hairline">
-                <th className="text-left text-caption text-muted py-3 px-4">
-                  Platform
-                </th>
-                <th className="text-left text-caption text-muted py-3 px-4">
-                  Content
-                </th>
-                <th className="text-left text-caption text-muted py-3 px-4">
-                  Status
-                </th>
-                <th className="text-left text-caption text-muted py-3 px-4">
-                  Date
-                </th>
+                <th className="text-left text-caption text-muted py-3 px-4">Platform</th>
+                <th className="text-left text-caption text-muted py-3 px-4">Content</th>
+                <th className="text-left text-caption text-muted py-3 px-4">Status</th>
+                <th className="text-left text-caption text-muted py-3 px-4">Date</th>
               </tr>
             </thead>
             <tbody>
@@ -231,18 +213,14 @@ export function AnalyticsDashboard({
                     <PlatformBadge platform={content.platform} size="sm" />
                   </td>
                   <td className="py-3 px-4">
-                    <p className="text-body-sm text-ink truncate max-w-xs">
-                      {content.textContent}
-                    </p>
+                    <p className="text-body-sm text-ink truncate max-w-xs">{content.textContent}</p>
                   </td>
                   <td className="py-3 px-4">
                     <ContentStatusBadge status={content.status as any} />
                   </td>
                   <td className="py-3 px-4">
                     <span className="text-body-sm text-muted">
-                      {content.publishedAt
-                        ? formatDateTime(content.publishedAt)
-                        : "-"}
+                      {content.publishedAt ? formatDateTime(content.publishedAt) : "-"}
                     </span>
                   </td>
                 </tr>

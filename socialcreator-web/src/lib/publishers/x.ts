@@ -2,7 +2,7 @@
  * X (Twitter) publisher via Twitter API v2
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToX(
   content: {
@@ -13,7 +13,7 @@ export async function publishToX(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   try {
     const tweet: Record<string, unknown> = {
@@ -22,17 +22,14 @@ export async function publishToX(
 
     if (content.mediaUrls.length > 0) {
       // Upload media first via v1.1 media upload
-      const mediaResponse = await fetch(
-        "https://upload.twitter.com/1.1/media/upload.json",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${account.accessToken}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: `media_url=${encodeURIComponent(content.mediaUrls[0])}`,
-        }
-      );
+      const mediaResponse = await fetch("https://upload.twitter.com/1.1/media/upload.json", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${account.accessToken}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `media_url=${encodeURIComponent(content.mediaUrls[0])}`,
+      });
       const mediaData = await mediaResponse.json();
       if (mediaData.media_id_string) {
         tweet["media"] = { media_ids: [mediaData.media_id_string] };

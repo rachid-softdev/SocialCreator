@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { cn } from "@socialcreator/utils";
+import { useCallback, useState } from "react";
 
 interface Word {
   word: string;
@@ -40,7 +40,7 @@ export function TranscriptViewer({
         onSeek(time);
       }
     },
-    [onSeek]
+    [onSeek],
   );
 
   // Group words by approximate 5-second windows for display
@@ -88,7 +88,7 @@ export function TranscriptViewer({
                       "hover:text-gradient-mint hover:bg-gradient-mint/10 px-0.5 py-0.5 -mx-0.5 rounded",
                       hoveredTime !== null &&
                         Math.abs(hoveredTime - w.start) < 0.5 &&
-                        "bg-gradient-mint/20"
+                        "bg-gradient-mint/20",
                     )}
                     onMouseEnter={() => handleWordHover(w.start)}
                     onMouseLeave={() => setHoveredTime(null)}

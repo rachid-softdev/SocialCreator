@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Team, TeamMember, Profile } from "@prisma/client";
-import { Users, Settings, Trash2, MoreHorizontal, Crown, Shield, Edit, X } from "lucide-react";
-import { Button } from "@socialcreator/ui/button";
+import type { Profile, Team, TeamMember } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
+import { Button } from "@socialcreator/ui/button";
+import { Crown, Edit, MoreHorizontal, Settings, Shield, Trash2, Users, X } from "lucide-react";
+import { useState } from "react";
 
 interface TeamWithRelations extends Team {
   owner: {
@@ -52,9 +52,7 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
       <div className="text-center py-12 border border-dashed rounded-lg">
         <Users className="w-12 h-12 mx-auto text-muted mb-4" />
         <h3 className="text-title-sm mb-2">No teams yet</h3>
-        <p className="text-body-sm text-muted mb-4">
-          Create a team to collaborate with others
-        </p>
+        <p className="text-body-sm text-muted mb-4">Create a team to collaborate with others</p>
       </div>
     );
   }
@@ -72,7 +70,7 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
   const isUserOwner = (team: TeamWithRelations) => team.ownerId === currentUserId;
   const isUserAdmin = (team: TeamWithRelations) =>
     team.members.some(
-      (m) => m.userId === currentUserId && (m.role === "OWNER" || m.role === "ADMIN")
+      (m) => m.userId === currentUserId && (m.role === "OWNER" || m.role === "ADMIN"),
     );
 
   return (
@@ -104,11 +102,7 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
                   Owner
                 </Badge>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleTeam(team.id)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => toggleTeam(team.id)}>
                 {openTeams.has(team.id) ? "Hide" : "View"} details
               </Button>
               {(isUserOwner(team) || isUserAdmin(team)) && (
@@ -117,7 +111,12 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
                     <Settings className="w-4 h-4" />
                   </Button>
                   {isUserOwner(team) && (
-                    <Button variant="ghost" size="sm" className="px-2 text-red-500" title="Delete team">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="px-2 text-red-500"
+                      title="Delete team"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
@@ -152,10 +151,7 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
                   <h4 className="text-caption uppercase text-muted mb-2">Members</h4>
                   <div className="space-y-2">
                     {team.members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center justify-between"
-                      >
+                      <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {member.user.image ? (
                             <img
@@ -170,10 +166,7 @@ export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps
                             {member.user.name || member.user.email}
                           </span>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={roleColors[member.role]}
-                        >
+                        <Badge variant="outline" className={roleColors[member.role]}>
                           {member.role === "ADMIN" && <Shield className="w-3 h-3 mr-1" />}
                           {member.role === "EDITOR" && <Edit className="w-3 h-3 mr-1" />}
                           {roleLabels[member.role]}

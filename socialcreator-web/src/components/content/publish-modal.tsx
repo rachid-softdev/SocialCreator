@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@socialcreator/utils";
+import { AlertCircle, CheckCircle, ExternalLink, Loader2, X } from "lucide-react";
+import { useState } from "react";
 import { PlatformBadge } from "./platform-badge";
-import { X, CheckCircle, AlertCircle, ExternalLink, Loader2 } from "lucide-react";
 
 interface PublishModalProps {
   contentId: string;
@@ -149,8 +149,7 @@ export function PublishModal({
               <AlertCircle className="w-4 h-4" />
               <span>
                 {capStatus.max - capStatus.count} publication
-                {capStatus.max - capStatus.count !== 1 ? "s" : ""} remaining
-                today
+                {capStatus.max - capStatus.count !== 1 ? "s" : ""} remaining today
               </span>
             </div>
           )}

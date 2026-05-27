@@ -12,12 +12,13 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
+import { hashContent } from "@socialcreator/utils";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getValidAccessToken } from "@/lib/tokens";
 import { checkDailyCap } from "@/lib/publish-guard";
 import { getPublisher } from "@/lib/publishers";
-import { hashContent } from "@socialcreator/utils";
+import { getValidAccessToken } from "@/lib/tokens";
 
 // Payload schema for publish job
 const PublishPayloadSchema = z.object({
@@ -58,16 +59,12 @@ export const publishJob = client.defineJob({
     await io.logger.info("Starting content publish job", { contentId });
 
     // Fetch content
-    const content = await io.runTask(
-      "fetch-content",
-      { timeout: "30s" },
-      async () => {
-        return await prisma.generatedContent.findUnique({
-          where: { id: contentId },
-          include: { profile: true },
-        });
-      }
-    );
+    const content = await io.runTask("fetch-content", { timeout: "30s" }, async () => {
+      return await prisma.generatedContent.findUnique({
+        where: { id: contentId },
+        include: { profile: true },
+      });
+    });
 
     if (!content) {
       throw new Error(`Content not found: ${contentId}`);
@@ -92,33 +89,25 @@ export const publishJob = client.defineJob({
     }
 
     // Get connected account
-    const account = await io.runTask(
-      "fetch-account",
-      { timeout: "10s" },
-      async () => {
-        return await prisma.connectedAccount.findUnique({
-          where: {
-            profileId_platform: {
-              profileId,
-              platform: content.platform,
-            },
+    const account = await io.runTask("fetch-account", { timeout: "10s" }, async () => {
+      return await prisma.connectedAccount.findUnique({
+        where: {
+          profileId_platform: {
+            profileId,
+            platform: content.platform,
           },
-        });
-      }
-    );
+        },
+      });
+    });
 
     if (!account || !account.isActive) {
       throw new Error(`No active account for ${content.platform}`);
     }
 
     // Get valid access token
-    const accessToken = await io.runTask(
-      "get-token",
-      { timeout: "30s" },
-      async () => {
-        return await getValidAccessToken(account.id);
-      }
-    );
+    const accessToken = await io.runTask("get-token", { timeout: "30s" }, async () => {
+      return await getValidAccessToken(account.id);
+    });
 
     if (!accessToken) {
       throw new Error("Failed to get access token");
@@ -126,24 +115,20 @@ export const publishJob = client.defineJob({
 
     // Publish
     const publisher = getPublisher(content.platform);
-    const result = await io.runTask(
-      "publish",
-      { timeout: "2m" },
-      async () => {
-        return await publisher.publish(
-          {
-            textContent: content.textContent,
-            mediaUrls: content.mediaUrls,
-            hashtags: content.hashtags,
-          },
-          {
-            accountId: account.accountId,
-            accessToken,
-            refreshToken: account.refreshToken || undefined,
-          }
-        );
-      }
-    );
+    const result = await io.runTask("publish", { timeout: "2m" }, async () => {
+      return await publisher.publish(
+        {
+          textContent: content.textContent,
+          mediaUrls: content.mediaUrls,
+          hashtags: content.hashtags,
+        },
+        {
+          accountId: account.accountId,
+          accessToken,
+          refreshToken: account.refreshToken || undefined,
+        },
+      );
+    });
 
     // Create PublishLog (immutable)
     await io.runTask("create-log", { timeout: "10s" }, async () => {

@@ -2,28 +2,30 @@
   "name": "@socialcreator/types",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     },
     "./agent": {
-      "import": "./dist/agent.js",
-      "types": "./dist/agent.d.ts"
+      "import": "./dist/agent.mjs",
+      "types": "./dist/agent.d.mts"
     },
     "./profile": {
-      "import": "./dist/profile.js",
-      "types": "./dist/profile.d.ts"
+      "import": "./dist/profile.mjs",
+      "types": "./dist/profile.d.mts"
     },
     "./blog": {
-      "import": "./dist/blog.js",
-      "types": "./dist/blog.d.ts"
+      "import": "./dist/blog.mjs",
+      "types": "./dist/blog.d.mts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

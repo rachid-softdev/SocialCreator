@@ -5,7 +5,7 @@
 
 "use client";
 
-import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
+import type { ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
 import { AccountCard, AccountCardSkeleton } from "./account-card";
 import { PlatformIcon } from "./platform-icon";
 
@@ -108,24 +108,13 @@ export function PlatformBadge({ platform }: { platform: Platform }) {
  * Get all available platforms
  */
 export function getAllPlatforms(): Platform[] {
-  return [
-    "INSTAGRAM",
-    "TIKTOK",
-    "LINKEDIN",
-    "X",
-    "YOUTUBE",
-    "FACEBOOK",
-    "PINTEREST",
-    "THREADS",
-  ];
+  return ["INSTAGRAM", "TIKTOK", "LINKEDIN", "X", "YOUTUBE", "FACEBOOK", "PINTEREST", "THREADS"];
 }
 
 /**
  * Get platforms that are not yet connected
  */
-export function getUnconnectedPlatforms(
-  accounts: ConnectedAccountType[]
-): Platform[] {
+export function getUnconnectedPlatforms(accounts: ConnectedAccountType[]): Platform[] {
   const connectedPlatforms = new Set(accounts.map((a) => a.platform));
   return getAllPlatforms().filter((p) => !connectedPlatforms.has(p));
 }

@@ -1,64 +1,64 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Check } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
-import { getPlanData, type PlanKey, type PaidPlanKey } from "@/lib/stripe"
+import { Button } from "@socialcreator/ui/button";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getPlanData, type PaidPlanKey, type PlanKey } from "@/lib/stripe";
 
 interface PricingTableProps {
-  onSelectPlan?: (plan: PlanKey) => void
-  currentPlan?: PlanKey
+  onSelectPlan?: (plan: PlanKey) => void;
+  currentPlan?: PlanKey;
 }
 
 interface PlanWithPrice {
-  name: string
-  price: number
-  profiles: number
-  addOnPrice: number
-  addOnProfiles: number
-  features: string[]
+  name: string;
+  price: number;
+  profiles: number;
+  addOnPrice: number;
+  addOnProfiles: number;
+  features: string[];
 }
 
 export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [planPrices, setPlanPrices] = useState<Record<PaidPlanKey, number>>({
     starter: 5000,
     pro: 7000,
     team: 11000,
-  })
+  });
 
   useEffect(() => {
     // Fetch dynamic prices from Stripe API
     async function fetchPrices() {
       try {
-        const { fetchActivePrices } = await import("@/lib/stripe")
-        const prices = await fetchActivePrices()
-        setPlanPrices(prices)
+        const { fetchActivePrices } = await import("@/lib/stripe");
+        const prices = await fetchActivePrices();
+        setPlanPrices(prices);
       } catch (error) {
-        console.error("Failed to fetch prices:", error)
+        console.error("Failed to fetch prices:", error);
         // Fallback to static prices on error
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchPrices()
-  }, [])
+    fetchPrices();
+  }, []);
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
-    }).format(priceInCents / 100)
-  }
+    }).format(priceInCents / 100);
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {(["starter", "pro", "team"] as PaidPlanKey[]).map((planKey) => {
-        const plan = getPlanData(planKey)!
-        const price = planPrices[planKey]
-        const isCurrent = currentPlan === planKey
-        const isPro = planKey === "pro"
+        const plan = getPlanData(planKey)!;
+        const price = planPrices[planKey];
+        const isCurrent = currentPlan === planKey;
+        const isPro = planKey === "pro";
 
         return (
           <div
@@ -90,7 +90,9 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
             <ul className="space-y-3 mb-6 flex-1">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex items-start gap-2">
-                  <Check className={`w-5 h-5 flex-shrink-0 ${isPro ? "text-on-dark" : "text-semantic-success"}`} />
+                  <Check
+                    className={`w-5 h-5 flex-shrink-0 ${isPro ? "text-on-dark" : "text-semantic-success"}`}
+                  />
                   <span className="text-body-sm">{feature}</span>
                 </li>
               ))}
@@ -105,8 +107,8 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
               {isCurrent ? "Current Plan" : "Select Plan"}
             </Button>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

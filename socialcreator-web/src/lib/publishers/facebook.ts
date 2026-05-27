@@ -2,7 +2,7 @@
  * Facebook publisher via Meta Graph API
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToFacebook(
   content: {
@@ -13,7 +13,7 @@ export async function publishToFacebook(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   try {
     const message = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
@@ -26,14 +26,11 @@ export async function publishToFacebook(
       body["link"] = content.mediaUrls[0];
     }
 
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`https://graph.facebook.com/v18.0/${account.accountId}/feed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 

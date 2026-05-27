@@ -1,9 +1,12 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
-import { formatDate } from "@socialcreator/utils";
-import type { GeneratedContent, Platform, ContentStatus } from "@prisma/client";
-import { CONTENT_STATUS_LABELS, CONTENT_STATUS_COLORS, PLATFORMS } from "@socialcreator/types/profile";
+import type { ContentStatus, GeneratedContent, Platform } from "@prisma/client";
+import {
+  CONTENT_STATUS_COLORS,
+  CONTENT_STATUS_LABELS,
+  PLATFORMS,
+} from "@socialcreator/types/profile";
+import { cn, formatDate } from "@socialcreator/utils";
 
 interface RecentContentProps {
   contents?: Array<GeneratedContent & { profileName?: string }>;
@@ -28,7 +31,9 @@ export function RecentContent({ contents }: RecentContentProps) {
     return (
       <div className="bg-surface-card border border-hairline rounded-xl p-6">
         <h3 className="text-title-sm text-ink mb-4">Recent Content</h3>
-        <p className="text-body-sm text-muted">No content yet. Create your first profile to get started.</p>
+        <p className="text-body-sm text-muted">
+          No content yet. Create your first profile to get started.
+        </p>
       </div>
     );
   }
@@ -48,14 +53,16 @@ export function RecentContent({ contents }: RecentContentProps) {
                 <span
                   className={cn(
                     "px-2 py-0.5 rounded text-caption",
-                    CONTENT_STATUS_COLORS[content.status]
+                    CONTENT_STATUS_COLORS[content.status],
                   )}
                 >
                   {CONTENT_STATUS_LABELS[content.status]}
                 </span>
               </div>
               <p className="text-body-sm text-muted truncate">
-                {content.profileName && <span className="text-muted-soft">{content.profileName} · </span>}
+                {content.profileName && (
+                  <span className="text-muted-soft">{content.profileName} · </span>
+                )}
                 {content.textContent ? content.textContent.substring(0, 60) + "..." : "No content"}
               </p>
             </div>

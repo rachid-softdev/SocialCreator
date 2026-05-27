@@ -2,7 +2,7 @@
  * Instagram publisher via Meta Graph API
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToInstagram(
   content: {
@@ -13,7 +13,7 @@ export async function publishToInstagram(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   try {
     const caption = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
@@ -30,7 +30,7 @@ export async function publishToInstagram(
             caption,
             access_token: account.accessToken,
           }),
-        }
+        },
       );
       const mediaData = await mediaResponse.json();
       if (mediaData.error) throw new Error(mediaData.error.message);
@@ -45,7 +45,7 @@ export async function publishToInstagram(
             creation_id: mediaData.id,
             access_token: account.accessToken,
           }),
-        }
+        },
       );
       const publishData = await containerResponse.json();
       if (publishData.error) throw new Error(publishData.error.message);
@@ -53,17 +53,14 @@ export async function publishToInstagram(
       return { success: true, postId: publishData.id };
     } else {
       // Text-only post via Pages API
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: caption,
-            access_token: account.accessToken,
-          }),
-        }
-      );
+      const response = await fetch(`https://graph.facebook.com/v18.0/${account.accountId}/feed`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: caption,
+          access_token: account.accessToken,
+        }),
+      });
       const data = await response.json();
       if (data.error) throw new Error(data.error.message);
       return { success: true, postId: data.id };

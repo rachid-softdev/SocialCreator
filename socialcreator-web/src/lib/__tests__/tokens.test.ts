@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { encryptToken, decryptToken, hashString, maskString, generateSecureToken } from "../crypto";
+import { decryptToken, encryptToken, generateSecureToken, hashString, maskString } from "../crypto";
 
 describe("crypto utilities", () => {
   describe("encryptToken", () => {
@@ -53,7 +53,7 @@ describe("crypto utilities", () => {
         " spaces around ",
       ];
 
-      tokens.forEach(token => {
+      tokens.forEach((token) => {
         const encrypted = encryptToken(token);
         const decrypted = decryptToken(encrypted);
         expect(decrypted).toBe(token);

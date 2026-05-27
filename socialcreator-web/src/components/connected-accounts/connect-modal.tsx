@@ -5,10 +5,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
-import { Platform } from "@prisma/client";
-import { PlatformIcon, getPlatformName } from "./platform-icon";
-import { getAllPlatforms, getUnconnectedPlatforms } from "./account-list";
+import type { Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
 import {
   Dialog,
@@ -18,6 +15,9 @@ import {
   DialogTitle,
 } from "@socialcreator/ui/dialog";
 import { Loader2, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
+import { getAllPlatforms, getUnconnectedPlatforms } from "./account-list";
+import { getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface ConnectModalProps {
   isOpen: boolean;
@@ -36,9 +36,7 @@ export function ConnectModal({
 }: ConnectModalProps) {
   const [isConnecting, setIsConnecting] = useState<Platform | null>(null);
 
-  const unconnectedPlatforms = getUnconnectedPlatforms(
-    accounts as any[]
-  );
+  const unconnectedPlatforms = getUnconnectedPlatforms(accounts as any[]);
 
   const handleConnect = useCallback(
     async (platform: Platform) => {
@@ -47,7 +45,7 @@ export function ConnectModal({
       try {
         // Get the OAuth redirect URL from our API
         const response = await fetch(
-          `/api/connected-accounts/redirect/${platform.toLowerCase()}?profileId=${profileId}`
+          `/api/connected-accounts/redirect/${platform.toLowerCase()}?profileId=${profileId}`,
         );
 
         if (!response.ok) {
@@ -66,7 +64,7 @@ export function ConnectModal({
         const popup = window.open(
           redirectUrl,
           `oauth-${platform}`,
-          `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+          `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`,
         );
 
         // Listen for the popup to close and check for success
@@ -88,13 +86,11 @@ export function ConnectModal({
         setIsConnecting(null);
         // You could show a toast error here
         alert(
-          error instanceof Error
-            ? error.message
-            : "Failed to connect account. Please try again."
+          error instanceof Error ? error.message : "Failed to connect account. Please try again.",
         );
       }
     },
-    [profileId, onConnected, onClose]
+    [profileId, onConnected, onClose],
   );
 
   return (
@@ -109,9 +105,7 @@ export function ConnectModal({
 
         {unconnectedPlatforms.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-muted-foreground">
-              Tous les comptes sont déjà connectés !
-            </p>
+            <p className="text-muted-foreground">Tous les comptes sont déjà connectés !</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 mt-4">
@@ -125,9 +119,7 @@ export function ConnectModal({
               >
                 <PlatformIcon platform={platform} size="md" />
                 <span className="font-medium">{getPlatformName(platform)}</span>
-                {isConnecting === platform && (
-                  <Loader2 className="w-4 h-4 animate-spin ml-auto" />
-                )}
+                {isConnecting === platform && <Loader2 className="w-4 h-4 animate-spin ml-auto" />}
               </Button>
             ))}
           </div>
@@ -135,8 +127,8 @@ export function ConnectModal({
 
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground text-center">
-            Vous serez redirigé vers la plateforme pour autoriser la connexion.
-            Assurez-vous deallow popups pour le processus d&apos;authentification.
+            Vous serez redirigé vers la plateforme pour autoriser la connexion. Assurez-vous deallow
+            popups pour le processus d&apos;authentification.
           </p>
         </div>
       </DialogContent>

@@ -19,13 +19,11 @@ export async function GET(request: Request) {
       select: { id: true },
     });
 
-    const pids = profileIds.map(p => p.id);
+    const pids = profileIds.map((p) => p.id);
 
     const videos = await prisma.videoAsset.findMany({
       where: {
-        profileId: profileId
-          ? profileId
-          : { in: pids }
+        profileId: profileId ? profileId : { in: pids },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -33,10 +31,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ videos });
   } catch (error) {
     console.error("Error fetching videos:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

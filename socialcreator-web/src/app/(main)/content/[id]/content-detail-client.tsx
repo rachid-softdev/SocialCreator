@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { formatDateTime } from "@socialcreator/utils";
+import { ArrowLeft, Check, ExternalLink, Send, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { useState } from "react";
+import { ContentEditor } from "@/components/content/content-editor";
 import { ContentStatusBadge } from "@/components/content/content-status-badge";
 import { PlatformBadge } from "@/components/content/platform-badge";
-import { ContentEditor } from "@/components/content/content-editor";
 import { PublishButton } from "@/components/content/publish-button";
-import { formatDateTime } from "@socialcreator/utils";
-import { Check, X, Send, ArrowLeft, ExternalLink } from "lucide-react";
-import Link from "next/link";
-import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 
 interface ContentDetailClientProps {
   content: GeneratedContentWithRelations;
@@ -137,18 +137,13 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
             </div>
 
             <div className="prose prose-sm max-w-none">
-              <p className="text-body-md text-ink whitespace-pre-wrap">
-                {content.textContent}
-              </p>
+              <p className="text-body-md text-ink whitespace-pre-wrap">{content.textContent}</p>
             </div>
 
             {content.hashtags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-hairline">
                 {content.hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 rounded-pill bg-surface-strong text-caption"
-                  >
+                  <span key={tag} className="px-3 py-1 rounded-pill bg-surface-strong text-caption">
                     #{tag}
                   </span>
                 ))}
@@ -196,9 +191,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
                 Published
               </div>
               {content.postId && (
-                <div className="text-body-sm text-muted">
-                  Post ID: {content.postId}
-                </div>
+                <div className="text-body-sm text-muted">Post ID: {content.postId}</div>
               )}
             </div>
           )}

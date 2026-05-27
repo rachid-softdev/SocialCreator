@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Play, Copy, Check, AlertCircle } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
+import { Button } from "@socialcreator/ui/button";
+import { AlertCircle, Check, Copy, Play } from "lucide-react";
+import { useState } from "react";
 
 interface McpTesterProps {
-  baseUrl?: string
-  apiKey?: string
+  baseUrl?: string;
+  apiKey?: string;
 }
 
 export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps) {
@@ -19,19 +19,19 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
         params: {},
       },
       null,
-      2
-    )
-  )
-  const [response, setResponse] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
+      2,
+    ),
+  );
+  const [response, setResponse] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleSend = async () => {
-    setIsLoading(true)
-    setResponse("")
+    setIsLoading(true);
+    setResponse("");
 
     try {
-      const parsed = JSON.parse(requestBody)
+      const parsed = JSON.parse(requestBody);
       const result = await fetch(baseUrl, {
         method: "POST",
         headers: {
@@ -39,28 +39,28 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
           Authorization: apiKey ? `Bearer ${apiKey}` : "",
         },
         body: JSON.stringify(parsed),
-      })
+      });
 
-      const data = await result.json()
-      setResponse(JSON.stringify(data, null, 2))
+      const data = await result.json();
+      setResponse(JSON.stringify(data, null, 2));
     } catch (error) {
       setResponse(
         JSON.stringify(
           { error: error instanceof Error ? error.message : "Request failed" },
           null,
-          2
-        )
-      )
+          2,
+        ),
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const copyResponse = () => {
-    navigator.clipboard.writeText(response)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(response);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const exampleRequests = [
     {
@@ -118,7 +118,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
         },
       },
     },
-  ]
+  ];
 
   return (
     <div className="space-y-4">
@@ -126,9 +126,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
         {exampleRequests.map((example) => (
           <button
             key={example.name}
-            onClick={() =>
-              setRequestBody(JSON.stringify(example.body, null, 2))
-            }
+            onClick={() => setRequestBody(JSON.stringify(example.body, null, 2))}
             className="px-2 py-1 text-caption bg-surface-strong rounded hover:bg-hairline transition-colors text-left"
           >
             {example.name}
@@ -152,12 +150,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
             <label className="block text-caption font-medium">Response</label>
 
             {response && (
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={copied ? Check : Copy}
-                onClick={copyResponse}
-              >
+              <Button variant="ghost" size="sm" icon={copied ? Check : Copy} onClick={copyResponse}>
                 {copied ? "Copied!" : "Copy"}
               </Button>
             )}
@@ -199,5 +192,5 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
         {isLoading ? "Sending..." : "Send Request"}
       </Button>
     </div>
-  )
+  );
 }

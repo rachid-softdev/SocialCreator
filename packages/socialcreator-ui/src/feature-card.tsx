@@ -10,7 +10,12 @@ interface FeatureCardProps {
 
 export function FeatureCard({ children, className }: FeatureCardProps) {
   return (
-    <div className={cn("rounded-xl border border-hairline bg-surface-card p-lg transition-shadow hover:shadow-card-hover", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-hairline bg-surface-card p-lg transition-shadow hover:shadow-card-hover",
+        className,
+      )}
+    >
       {children}
     </div>
   );

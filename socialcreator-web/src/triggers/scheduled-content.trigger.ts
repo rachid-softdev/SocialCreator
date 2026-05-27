@@ -7,10 +7,11 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { publishContent } from "@/lib/publishers";
 import { recordPublish } from "@/lib/publish-guard";
+import { publishContent } from "@/lib/publishers";
 
 // Cron trigger: runs every minute
 export const scheduledPublisherJob = client.defineJob({
@@ -49,7 +50,7 @@ export const scheduledPublisherJob = client.defineJob({
           },
           take: 50, // Process up to 50 at a time
         });
-      }
+      },
     );
 
     let published = 0;
@@ -58,7 +59,7 @@ export const scheduledPublisherJob = client.defineJob({
     for (const content of scheduledContent) {
       try {
         const account = content.profile.connectedAccounts.find(
-          (a: any) => a.platform === content.platform
+          (a: any) => a.platform === content.platform,
         );
 
         if (!account) {
@@ -80,46 +81,38 @@ export const scheduledPublisherJob = client.defineJob({
           {
             accountId: account.accountId,
             accessToken: account.accessToken,
-          }
+          },
         );
 
         if (result.success) {
-          await io.runTask(
-            "mark-content-published",
-            { timeout: "10s" },
-            async () => {
-              await prisma.generatedContent.update({
-                where: { id: content.id },
-                data: {
-                  status: "PUBLISHED",
-                  postId: result.postId,
-                  publishedAt: new Date(),
-                  scheduledPublishAt: null,
-                },
-              });
+          await io.runTask("mark-content-published", { timeout: "10s" }, async () => {
+            await prisma.generatedContent.update({
+              where: { id: content.id },
+              data: {
+                status: "PUBLISHED",
+                postId: result.postId,
+                publishedAt: new Date(),
+                scheduledPublishAt: null,
+              },
+            });
 
-              // Record the publish for cap counting
-              await recordPublish(content.profileId, content.platform);
-            }
-          );
+            // Record the publish for cap counting
+            await recordPublish(content.profileId, content.platform);
+          });
           published++;
           await io.logger.info("Published scheduled content", {
             contentId: content.id,
             postId: result.postId,
           });
         } else {
-          await io.runTask(
-            "mark-content-failed",
-            { timeout: "10s" },
-            async () => {
-              await prisma.generatedContent.update({
-                where: { id: content.id },
-                data: {
-                  status: "FAILED",
-                },
-              });
-            }
-          );
+          await io.runTask("mark-content-failed", { timeout: "10s" }, async () => {
+            await prisma.generatedContent.update({
+              where: { id: content.id },
+              data: {
+                status: "FAILED",
+              },
+            });
+          });
           failed++;
           await io.logger.error("Failed to publish scheduled content", {
             contentId: content.id,

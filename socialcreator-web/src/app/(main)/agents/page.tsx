@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AllAgentsClient } from "@/components/agent/all-agents-client";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function AllAgentsPage() {
   const session = await auth();
@@ -56,7 +56,7 @@ export default async function AllAgentsPage() {
           successRate: totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0,
         },
       };
-    })
+    }),
   );
 
   return <AllAgentsClient initialAgents={agentsWithStats} profiles={profiles} />;

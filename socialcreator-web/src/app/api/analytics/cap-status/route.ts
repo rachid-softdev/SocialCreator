@@ -19,17 +19,14 @@ export async function GET(request: Request) {
     const profileId = searchParams.get("profileId");
 
     if (!profileId) {
-      return NextResponse.json(
-        { error: "Missing profileId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing profileId" }, { status: 400 });
     }
 
     // Verify user owns this profile
     const profile = await import("@/lib/prisma").then((m) =>
       m.prisma.profile.findFirst({
         where: { id: profileId, userId: session.user?.id },
-      })
+      }),
     );
 
     if (!profile) {
@@ -41,9 +38,6 @@ export async function GET(request: Request) {
     return NextResponse.json(capStatus);
   } catch (error) {
     console.error("Error getting cap status:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

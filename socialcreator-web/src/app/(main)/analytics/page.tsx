@@ -1,9 +1,9 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { AnalyticsDashboard } from "./analytics-dashboard";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getProfileCapStatus } from "@/lib/publish-guard";
+import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
   const session = await auth();
@@ -22,14 +22,9 @@ export default async function AnalyticsPage() {
   if (profiles.length === 0) {
     return (
       <div className="space-y-8">
-        <PageHeader
-          title="Analytics"
-          description="Track your content performance"
-        />
+        <PageHeader title="Analytics" description="Track your content performance" />
         <div className="text-center py-12">
-          <p className="text-body-sm text-muted">
-            Create a profile to start tracking analytics
-          </p>
+          <p className="text-body-sm text-muted">Create a profile to start tracking analytics</p>
         </div>
       </div>
     );

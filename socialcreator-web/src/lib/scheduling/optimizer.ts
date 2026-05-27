@@ -1,51 +1,51 @@
 /**
  * Smart Scheduling Optimizer
- * 
+ *
  * Analyse les performances historiques pour déterminer les meilleurs
  * moments de publication sur chaque plateforme
- * 
+ *
  * Fonctionnalités:
  * - Analyse des performances par heure/jour
  * - Recommandation des meilleurs créneaux
  * - Adaptation aux patterns d'engagement
  */
 
-import { prisma } from "@/lib/prisma"
-import { Platform } from "@prisma/client"
+import type { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 interface EngagementData {
-  hour: number
-  dayOfWeek: number
-  impressions: number
-  engagements: number
-  clicks: number
-  postCount: number
+  hour: number;
+  dayOfWeek: number;
+  impressions: number;
+  engagements: number;
+  clicks: number;
+  postCount: number;
 }
 
 interface OptimalTime {
-  hour: number
-  dayOfWeek: number
-  score: number // 0-100
-  reason: string
+  hour: number;
+  dayOfWeek: number;
+  score: number; // 0-100
+  reason: string;
 }
 
 interface PlatformSchedule {
-  platform: Platform
-  optimalTimes: OptimalTime[]
-  worstTimes: OptimalTime[]
-  averageEngagement: number
+  platform: Platform;
+  optimalTimes: OptimalTime[];
+  worstTimes: OptimalTime[];
+  averageEngagement: number;
 }
 
 /**
  * Analyse les performances pour un profile et ses plateformes
  */
 export async function analyzeProfilePerformance(profileId: string): Promise<{
-  profileId: string
-  schedules: PlatformSchedule[]
+  profileId: string;
+  schedules: PlatformSchedule[];
 }> {
   // Récupérer les données d'analytics des 30 derniers jours
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 30)
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
 
   const analytics = await prisma.analytics.findMany({
     where: {
@@ -53,16 +53,16 @@ export async function analyzeProfilePerformance(profileId: string): Promise<{
       date: { gte: startDate },
     },
     orderBy: { date: "asc" },
-  })
+  });
 
   // Grouper par plateforme
-  const platformData = new Map<Platform, EngagementData[]>()
+  const platformData = new Map<Platform, EngagementData[]>();
 
   for (const entry of analytics) {
     if (!platformData.has(entry.platform)) {
-      platformData.set(entry.platform, [])
+      platformData.set(entry.platform, []);
     }
-    const dayOfWeek = new Date(entry.date).getDay()
+    const dayOfWeek = new Date(entry.date).getDay();
     platformData.get(entry.platform)!.push({
       hour: 12, // Pour l'instant on n'a pas l'heure exacte
       dayOfWeek,
@@ -70,27 +70,24 @@ export async function analyzeProfilePerformance(profileId: string): Promise<{
       engagements: entry.engagements,
       clicks: entry.clicks,
       postCount: 1,
-    })
+    });
   }
 
   // Calculer les scores pour chaque plateforme
-  const schedules: PlatformSchedule[] = []
+  const schedules: PlatformSchedule[] = [];
 
   for (const [platform, data] of platformData) {
-    const schedule = calculateOptimalTimes(platform, data)
-    schedules.push(schedule)
+    const schedule = calculateOptimalTimes(platform, data);
+    schedules.push(schedule);
   }
 
-  return { profileId, schedules }
+  return { profileId, schedules };
 }
 
 /**
  * Calcule les meilleurs moments basé sur les données
  */
-function calculateOptimalTimes(
-  platform: Platform,
-  data: EngagementData[]
-): PlatformSchedule {
+function calculateOptimalTimes(platform: Platform, data: EngagementData[]): PlatformSchedule {
   // Données par défaut basées sur les best practices générales
   const defaultOptimalTimes: Record<Platform, OptimalTime[]> = {
     INSTAGRAM: [
@@ -133,7 +130,7 @@ function calculateOptimalTimes(
       { hour: 22, dayOfWeek: 3, score: 80, reason: "Evening browsing" },
       { hour: 10, dayOfWeek: 6, score: 75, reason: "Weekend morning" },
     ],
-  }
+  };
 
   // Si pas assez de données, utiliser les默认值
   if (data.length < 5) {
@@ -142,12 +139,12 @@ function calculateOptimalTimes(
       optimalTimes: defaultOptimalTimes[platform] || [],
       worstTimes: [],
       averageEngagement: 0,
-    }
+    };
   }
 
   // Calculer les métriques agrégées
-  const totalEngagement = data.reduce((sum, d) => sum + d.engagements, 0)
-  const averageEngagement = totalEngagement / data.length
+  const totalEngagement = data.reduce((sum, d) => sum + d.engagements, 0);
+  const averageEngagement = totalEngagement / data.length;
 
   // Pour l'instant, retourner les默认值 avec ajustement basé sur les données réelles
   // Une version complète utiliserait les données pour affiner les scores
@@ -159,7 +156,7 @@ function calculateOptimalTimes(
       { hour: 4, dayOfWeek: 0, score: 10, reason: "Low engagement" },
     ],
     averageEngagement,
-  }
+  };
 }
 
 /**
@@ -167,10 +164,10 @@ function calculateOptimalTimes(
  */
 export async function getNextOptimalSlot(
   profileId: string,
-  platform: Platform
+  platform: Platform,
 ): Promise<{
-  nextSlot: Date
-  reason: string
+  nextSlot: Date;
+  reason: string;
 }> {
   // Récupérer les scheduled agents pour ce profile
   const agents = await prisma.agent.findMany({
@@ -179,35 +176,35 @@ export async function getNextOptimalSlot(
       platforms: { has: platform },
       isActive: true,
     },
-  })
+  });
 
   if (agents.length === 0) {
     // Pas d'agent, utiliser les heuristiques par défaut
-    return getDefaultNextSlot(platform)
+    return getDefaultNextSlot(platform);
   }
 
   // Pour l'instant, retourner un slot dans les prochaines heures
   // Une version complète analyserait les run history pour optimiser
-  const now = new Date()
-  const nextSlot = new Date(now)
-  nextSlot.setHours(now.getHours() + 2, 0, 0, 0)
+  const now = new Date();
+  const nextSlot = new Date(now);
+  nextSlot.setHours(now.getHours() + 2, 0, 0, 0);
 
   return {
     nextSlot,
     reason: "Based on platform best practices",
-  }
+  };
 }
 
 /**
  * Retourne le prochain slot par défaut basé sur les best practices
  */
 function getDefaultNextSlot(platform: Platform): {
-  nextSlot: Date
-  reason: string
+  nextSlot: Date;
+  reason: string;
 } {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const hour = now.getHours()
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const hour = now.getHours();
 
   // Heuristiques par plateforme
   const heuristics: Record<Platform, { targetHour: number; fallbackHour: number }> = {
@@ -219,57 +216,53 @@ function getDefaultNextSlot(platform: Platform): {
     FACEBOOK: { targetHour: 13, fallbackHour: 11 },
     THREADS: { targetHour: 18, fallbackHour: 12 },
     PINTEREST: { targetHour: 20, fallbackHour: 10 },
-  }
+  };
 
-  const { targetHour, fallbackHour } = heuristics[platform] || { targetHour: 12, fallbackHour: 18 }
+  const { targetHour, fallbackHour } = heuristics[platform] || { targetHour: 12, fallbackHour: 18 };
 
   // Trouver le prochain créneau approprié
-  const nextSlot = new Date(now)
-  
+  const nextSlot = new Date(now);
+
   if (hour < targetHour) {
-    nextSlot.setHours(targetHour, 0, 0, 0)
+    nextSlot.setHours(targetHour, 0, 0, 0);
   } else {
     // Après targetHour, chercher demain
-    nextSlot.setDate(nextSlot.getDate() + 1)
-    nextSlot.setHours(fallbackHour, 0, 0, 0)
+    nextSlot.setDate(nextSlot.getDate() + 1);
+    nextSlot.setHours(fallbackHour, 0, 0, 0);
   }
 
   return {
     nextSlot,
     reason: `Best time for ${platform} based on historical engagement patterns`,
-  }
+  };
 }
 
 /**
  * Convertit un optimal time en Date
  */
 export function optimalTimeToDate(optimalTime: OptimalTime): Date {
-  const now = new Date()
-  const result = new Date(now)
-  
-  result.setDate(result.getDate() + ((optimalTime.dayOfWeek - now.getDay() + 7) % 7))
-  result.setHours(optimalTime.hour, 0, 0, 0)
-  
+  const now = new Date();
+  const result = new Date(now);
+
+  result.setDate(result.getDate() + ((optimalTime.dayOfWeek - now.getDay() + 7) % 7));
+  result.setHours(optimalTime.hour, 0, 0, 0);
+
   // Si le créneau est passé aujourd'hui, aller à la semaine prochaine
   if (result < now) {
-    result.setDate(result.getDate() + 7)
+    result.setDate(result.getDate() + 7);
   }
-  
-  return result
+
+  return result;
 }
 
 /**
  * Formate un optimal time pour l'affichage
  */
 export function formatOptimalTime(optimalTime: OptimalTime): string {
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  const hours = optimalTime.hour
-  
-  const timeStr = hours < 12 
-    ? `${hours}AM` 
-    : hours === 12 
-      ? "12PM" 
-      : `${hours - 12}PM`
-  
-  return `${days[optimalTime.dayOfWeek]} at ${timeStr}`
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const hours = optimalTime.hour;
+
+  const timeStr = hours < 12 ? `${hours}AM` : hours === 12 ? "12PM" : `${hours - 12}PM`;
+
+  return `${days[optimalTime.dayOfWeek]} at ${timeStr}`;
 }

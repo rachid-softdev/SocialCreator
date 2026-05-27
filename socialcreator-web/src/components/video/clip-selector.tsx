@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Image from "next/image";
 import { cn } from "@socialcreator/utils";
+import { Check, Clock, Play, X } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";
-import { Play, Check, X, Clock } from "lucide-react";
 
 interface Segment {
   start: number;
@@ -104,9 +104,7 @@ export function ClipSelector({
       <div className="grid gap-4 md:grid-cols-2">
         {segments.map((segment, index) => {
           const isSelected = selectedIds.has(index);
-          const thumbnailUrl = playbackId
-            ? getMuxThumbnailUrl(playbackId, segment.start)
-            : null;
+          const thumbnailUrl = playbackId ? getMuxThumbnailUrl(playbackId, segment.start) : null;
 
           return (
             <div
@@ -115,7 +113,7 @@ export function ClipSelector({
                 "relative bg-surface-card rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer",
                 isSelected
                   ? "border-gradient-mint shadow-soft"
-                  : "border-hairline hover:border-hairline-strong"
+                  : "border-hairline hover:border-hairline-strong",
               )}
               onClick={() => toggleSegment(index)}
             >
@@ -153,7 +151,7 @@ export function ClipSelector({
                     "absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200",
                     isSelected
                       ? "bg-gradient-mint text-ink"
-                      : "bg-surface-card/80 border border-hairline"
+                      : "bg-surface-card/80 border border-hairline",
                   )}
                 >
                   {isSelected && <Check className="w-4 h-4" />}
@@ -163,14 +161,10 @@ export function ClipSelector({
               {/* Info */}
               <div className="p-4">
                 {/* Hook */}
-                <p className="text-body-strong text-ink line-clamp-1">
-                  {segment.hook}
-                </p>
+                <p className="text-body-strong text-ink line-clamp-1">{segment.hook}</p>
 
                 {/* Reason */}
-                <p className="text-caption text-muted mt-1 line-clamp-2">
-                  {segment.reason}
-                </p>
+                <p className="text-caption text-muted mt-1 line-clamp-2">{segment.reason}</p>
 
                 {/* Duration */}
                 <div className="mt-3 flex items-center gap-2">
@@ -192,10 +186,12 @@ export function ClipSelector({
           className={cn(
             "px-6 py-2.5 rounded-pill bg-primary text-on-primary font-medium text-button transition-all duration-200",
             "hover:bg-primary-active focus:ring-2 focus:ring-offset-2 focus:ring-primary",
-            (selectedIds.size === 0 || isGenerating) && "opacity-50 cursor-not-allowed"
+            (selectedIds.size === 0 || isGenerating) && "opacity-50 cursor-not-allowed",
           )}
         >
-          {isGenerating ? "Generating..." : `Generate content for ${selectedIds.size} clip${selectedIds.size !== 1 ? "s" : ""}`}
+          {isGenerating
+            ? "Generating..."
+            : `Generate content for ${selectedIds.size} clip${selectedIds.size !== 1 ? "s" : ""}`}
         </button>
       </div>
     </div>

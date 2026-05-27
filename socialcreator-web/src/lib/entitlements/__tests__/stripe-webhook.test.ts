@@ -3,15 +3,15 @@
  * Tests for idempotency, signature verification, and event handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import Stripe from "stripe"
+import Stripe from "stripe";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Stripe
 const mockStripe = {
   webhooks: {
     constructEvent: vi.fn(),
   },
-}
+};
 
 // Mock prisma
 const mockPrisma = {
@@ -30,15 +30,15 @@ const mockPrisma = {
   user: {
     findFirst: vi.fn(),
   },
-}
+};
 
 vi.mock("@/lib/stripe", () => ({
   getStripe: () => mockStripe,
-}))
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: mockPrisma,
-}))
+}));
 
 vi.mock("@/lib/entitlements/cache", () => ({
   cacheService: {
@@ -46,12 +46,12 @@ vi.mock("@/lib/entitlements/cache", () => ({
     publishInvalidation: vi.fn().mockResolvedValue(undefined),
   },
   getEntitlementsCacheKey: (orgId: string) => `entitlements:${orgId}`,
-}))
+}));
 
 describe("Stripe Webhook Handler", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   // ============================================
   // Test 1: Webhook signature invalid → rejection
@@ -59,20 +59,20 @@ describe("Stripe Webhook Handler", () => {
 
   describe("signature verification", () => {
     it("should reject request with invalid signature", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       mockStripe.webhooks.constructEvent.mockImplementation(() => {
-        throw new Error("Invalid signature")
-      })
+        throw new Error("Invalid signature");
+      });
 
-      const result = await handleStripeWebhook("{}", "invalid-signature")
+      const result = await handleStripeWebhook("{}", "invalid-signature");
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("Invalid signature")
-    })
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid signature");
+    });
 
     it("should accept request with valid signature", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_test_123",
@@ -90,21 +90,21 @@ describe("Stripe Webhook Handler", () => {
             cancel_at_period_end: false,
           },
         },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null) // Not processed
-      mockPrisma.webhookEvent.create.mockResolvedValue({})
-      mockPrisma.organization.findUnique.mockResolvedValue(null)
-      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-1" })
-      mockPrisma.organization.create.mockResolvedValue({ id: "org-1" })
-      mockPrisma.subscription.upsert.mockResolvedValue({})
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
+      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null); // Not processed
+      mockPrisma.webhookEvent.create.mockResolvedValue({});
+      mockPrisma.organization.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-1" });
+      mockPrisma.organization.create.mockResolvedValue({ id: "org-1" });
+      mockPrisma.subscription.upsert.mockResolvedValue({});
 
-      const result = await handleStripeWebhook("{}", "valid-signature")
+      const result = await handleStripeWebhook("{}", "valid-signature");
 
-      expect(result.success).toBe(true)
-    })
-  })
+      expect(result.success).toBe(true);
+    });
+  });
 
   // ============================================
   // Test 2: Webhook idempotency (same event 2x)
@@ -112,51 +112,51 @@ describe("Stripe Webhook Handler", () => {
 
   describe("idempotency", () => {
     it("should skip already processed events", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_test_duplicate",
         type: "customer.subscription.updated",
         data: { object: { id: "sub_123", customer: "cus_123", status: "active" } },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
 
       // Event already processed
       mockPrisma.webhookEvent.findUnique.mockResolvedValue({
         eventId: "evt_test_duplicate",
         type: "customer.subscription.updated",
         processedAt: new Date(),
-      })
+      });
 
-      const result = await handleStripeWebhook("{}", "valid-signature")
+      const result = await handleStripeWebhook("{}", "valid-signature");
 
       // Should return success but not process
-      expect(result.success).toBe(true)
-      expect(mockPrisma.subscription.upsert).not.toHaveBeenCalled()
-    })
+      expect(result.success).toBe(true);
+      expect(mockPrisma.subscription.upsert).not.toHaveBeenCalled();
+    });
 
     it("should process new events", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_test_new",
         type: "customer.subscription.created",
         data: { object: { id: "sub_123", customer: "cus_123", status: "active" } },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null)
-      mockPrisma.webhookEvent.create.mockResolvedValue({})
-      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" })
-      mockPrisma.subscription.upsert.mockResolvedValue({})
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
+      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null);
+      mockPrisma.webhookEvent.create.mockResolvedValue({});
+      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" });
+      mockPrisma.subscription.upsert.mockResolvedValue({});
 
-      const result = await handleStripeWebhook("{}", "valid-signature")
+      const result = await handleStripeWebhook("{}", "valid-signature");
 
-      expect(result.success).toBe(true)
-      expect(mockPrisma.subscription.upsert).toHaveBeenCalled()
-    })
-  })
+      expect(result.success).toBe(true);
+      expect(mockPrisma.subscription.upsert).toHaveBeenCalled();
+    });
+  });
 
   // ============================================
   // Event handlers
@@ -164,7 +164,7 @@ describe("Stripe Webhook Handler", () => {
 
   describe("event handlers", () => {
     it("should handle customer.subscription.created", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_created",
@@ -180,24 +180,24 @@ describe("Stripe Webhook Handler", () => {
             cancel_at_period_end: false,
           },
         },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null)
-      mockPrisma.webhookEvent.create.mockResolvedValue({})
-      mockPrisma.organization.findUnique.mockResolvedValue(null)
-      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-1" })
-      mockPrisma.organization.create.mockResolvedValue({ id: "org-1" })
-      mockPrisma.subscription.upsert.mockResolvedValue({})
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
+      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null);
+      mockPrisma.webhookEvent.create.mockResolvedValue({});
+      mockPrisma.organization.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-1" });
+      mockPrisma.organization.create.mockResolvedValue({ id: "org-1" });
+      mockPrisma.subscription.upsert.mockResolvedValue({});
 
-      const result = await handleStripeWebhook("{}", "valid")
+      const result = await handleStripeWebhook("{}", "valid");
 
-      expect(result.eventType).toBe("customer.subscription.created")
-      expect(result.success).toBe(true)
-    })
+      expect(result.eventType).toBe("customer.subscription.created");
+      expect(result.success).toBe(true);
+    });
 
     it("should handle invoice.payment_succeeded", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_paid",
@@ -211,26 +211,26 @@ describe("Stripe Webhook Handler", () => {
             period_end: Math.floor(Date.now() / 1000) + 86400,
           },
         },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null)
-      mockPrisma.webhookEvent.create.mockResolvedValue({})
-      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" })
-      mockPrisma.subscription.update.mockResolvedValue({})
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
+      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null);
+      mockPrisma.webhookEvent.create.mockResolvedValue({});
+      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" });
+      mockPrisma.subscription.update.mockResolvedValue({});
 
-      const result = await handleStripeWebhook("{}", "valid")
+      const result = await handleStripeWebhook("{}", "valid");
 
-      expect(result.eventType).toBe("invoice.payment_succeeded")
+      expect(result.eventType).toBe("invoice.payment_succeeded");
       expect(mockPrisma.subscription.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ status: "ACTIVE" }),
-        })
-      )
-    })
+        }),
+      );
+    });
 
     it("should handle invoice.payment_failed", async () => {
-      const { handleStripeWebhook } = await import("../stripe-webhook")
+      const { handleStripeWebhook } = await import("../stripe-webhook");
 
       const mockEvent = {
         id: "evt_failed",
@@ -241,22 +241,22 @@ describe("Stripe Webhook Handler", () => {
             customer: "cus_123",
           },
         },
-      }
+      };
 
-      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null)
-      mockPrisma.webhookEvent.create.mockResolvedValue({})
-      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" })
-      mockPrisma.subscription.update.mockResolvedValue({})
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
+      mockPrisma.webhookEvent.findUnique.mockResolvedValue(null);
+      mockPrisma.webhookEvent.create.mockResolvedValue({});
+      mockPrisma.organization.findUnique.mockResolvedValue({ id: "org-1" });
+      mockPrisma.subscription.update.mockResolvedValue({});
 
-      const result = await handleStripeWebhook("{}", "valid")
+      const result = await handleStripeWebhook("{}", "valid");
 
-      expect(result.eventType).toBe("invoice.payment_failed")
+      expect(result.eventType).toBe("invoice.payment_failed");
       expect(mockPrisma.subscription.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ status: "PAST_DUE" }),
-        })
-      )
-    })
-  })
-})
+        }),
+      );
+    });
+  });
+});

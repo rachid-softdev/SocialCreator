@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { LayoutGrid, List, Filter, X } from "lucide-react";
-import { cn } from "@socialcreator/utils";
-import { ContentCard } from "./content-card";
-import { PlatformBadge } from "./platform-badge";
-import { ContentStatusBadge } from "./content-status-badge";
-import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import type { ContentStatus, Platform } from "@prisma/client";
-import { CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
-import { PLATFORMS } from "@socialcreator/types/profile";
+import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { CONTENT_STATUS_LABELS, PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { Filter, LayoutGrid, List, X } from "lucide-react";
+import { useState } from "react";
+import { ContentCard } from "./content-card";
+import { ContentStatusBadge } from "./content-status-badge";
+import { PlatformBadge } from "./platform-badge";
 
 interface ContentListProps {
   contents: GeneratedContentWithRelations[];
@@ -67,7 +66,7 @@ export function ContentList({
                 "px-3 py-1.5 rounded-pill text-caption transition-colors",
                 !statusFilter
                   ? "bg-primary text-on-primary"
-                  : "bg-surface-strong text-muted hover:text-ink"
+                  : "bg-surface-strong text-muted hover:text-ink",
               )}
             >
               All
@@ -80,7 +79,7 @@ export function ContentList({
                   "px-3 py-1.5 rounded-pill text-caption transition-colors",
                   statusFilter === status
                     ? "bg-primary text-on-primary"
-                    : "bg-surface-strong text-muted hover:text-ink"
+                    : "bg-surface-strong text-muted hover:text-ink",
                 )}
               >
                 {CONTENT_STATUS_LABELS[status]}
@@ -94,7 +93,7 @@ export function ContentList({
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-2 rounded-lg transition-colors",
-                viewMode === "grid" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink"
+                viewMode === "grid" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink",
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -103,7 +102,7 @@ export function ContentList({
               onClick={() => setViewMode("list")}
               className={cn(
                 "p-2 rounded-lg transition-colors",
-                viewMode === "list" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink"
+                viewMode === "list" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink",
               )}
             >
               <List className="w-4 h-4" />
@@ -158,21 +157,22 @@ export function ContentList({
       ) : (
         <div className="space-y-3">
           {filteredContents.map((content) => (
-            <div
-              key={content.id}
-              className="bg-surface-card border border-hairline rounded-xl p-4"
-            >
+            <div key={content.id} className="bg-surface-card border border-hairline rounded-xl p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <PlatformBadge platform={content.platform} size="sm" />
                   <ContentStatusBadge status={content.status} />
                 </div>
-                <span className="text-caption text-muted">{content.createdAt.toLocaleDateString()}</span>
+                <span className="text-caption text-muted">
+                  {content.createdAt.toLocaleDateString()}
+                </span>
               </div>
               <p className="text-body-sm text-body mt-3 line-clamp-2">{content.textContent}</p>
               <div className="flex items-center gap-2 mt-3">
                 {content.hashtags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-caption text-muted">#{tag}</span>
+                  <span key={tag} className="text-caption text-muted">
+                    #{tag}
+                  </span>
                 ))}
               </div>
             </div>

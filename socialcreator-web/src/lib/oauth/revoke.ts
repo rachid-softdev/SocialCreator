@@ -2,16 +2,13 @@
  * OAuth token revocation - revokes access tokens on platforms that support it
  */
 
-import { OAuthProvider, getProviderCredentials } from "./providers";
+import { getProviderCredentials, type OAuthProvider } from "./providers";
 
 /**
  * Revoke an access token on the respective platform
  * Not all platforms support token revocation
  */
-export async function revokeToken(
-  platform: OAuthProvider,
-  accessToken: string
-): Promise<boolean> {
+export async function revokeToken(platform: OAuthProvider, accessToken: string): Promise<boolean> {
   try {
     const p = platform as string;
     switch (p) {
@@ -84,7 +81,7 @@ async function revokeTwitterToken(accessToken: string): Promise<boolean> {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        `${credentials.clientId}:${credentials.clientSecret}`
+        `${credentials.clientId}:${credentials.clientSecret}`,
       ).toString("base64")}`,
     },
     body: `token=${accessToken}`,
@@ -122,7 +119,7 @@ async function revokePinterestToken(accessToken: string): Promise<boolean> {
  */
 export async function revokeRefreshToken(
   platform: OAuthProvider,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<boolean> {
   // Most platforms don't have a separate refresh token revocation
   // The access token revocation should suffice

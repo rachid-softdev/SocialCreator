@@ -1,16 +1,16 @@
 /**
  * Admin API for Feature Flags & Entitlements
  * Single route handler for multiple admin operations
- * 
+ *
  * GET /api/admin/entitlements?resource=plans|features|overrides
  * POST /api/admin/entitlements (create override)
  */
 
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getEntitlementRepository } from "@/lib/entitlements/repository"
-import type { OverrideInput } from "@/lib/entitlements/types"
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin"
+import { NextResponse } from "next/server";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
+import { getEntitlementRepository } from "@/lib/entitlements/repository";
+import type { OverrideInput } from "@/lib/entitlements/types";
+import { prisma } from "@/lib/prisma";
 
 const ALLOWED_SORT_FIELDS = ["key", "name", "sortOrder", "createdAt", "isActive"] as const;
 const ALLOWED_SORT_ORDERS = ["asc", "desc"] as const;
@@ -18,17 +18,17 @@ const ALLOWED_SORT_ORDERS = ["asc", "desc"] as const;
 export async function GET(request: Request) {
   try {
     await requireAdmin();
-    const url = new URL(request.url)
-    const resource = url.searchParams.get("resource") || "plans"
+    const url = new URL(request.url);
+    const resource = url.searchParams.get("resource") || "plans";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1") || 1);
     const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "20") || 20));
-    const sort = url.searchParams.get("sort") || "sortOrder:asc"
-    let [sortField, sortOrder] = sort.split(":")
+    const sort = url.searchParams.get("sort") || "sortOrder:asc";
+    let [sortField, sortOrder] = sort.split(":");
 
-    if (!ALLOWED_SORT_FIELDS.includes(sortField as typeof ALLOWED_SORT_FIELDS[number])) {
+    if (!ALLOWED_SORT_FIELDS.includes(sortField as (typeof ALLOWED_SORT_FIELDS)[number])) {
       sortField = "sortOrder";
     }
-    if (!ALLOWED_SORT_ORDERS.includes(sortOrder as typeof ALLOWED_SORT_ORDERS[number])) {
+    if (!ALLOWED_SORT_ORDERS.includes(sortOrder as (typeof ALLOWED_SORT_ORDERS)[number])) {
       sortOrder = "asc";
     }
 
@@ -41,12 +41,12 @@ export async function GET(request: Request) {
             take: limit,
           }),
           prisma.plan.count(),
-        ])
+        ]);
 
         return NextResponse.json({
           data: plans,
           pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-        })
+        });
       }
 
       case "features": {
@@ -57,21 +57,21 @@ export async function GET(request: Request) {
             take: limit,
           }),
           prisma.feature.count(),
-        ])
+        ]);
 
         return NextResponse.json({
           data: features,
           pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-        })
+        });
       }
 
       case "overrides": {
-        const scope = url.searchParams.get("scope")
-        const scopeId = url.searchParams.get("scopeId")
+        const scope = url.searchParams.get("scope");
+        const scopeId = url.searchParams.get("scopeId");
 
-        const where: Record<string, string> = {}
-        if (scope) where.scope = scope
-        if (scopeId) where.scopeId = scopeId
+        const where: Record<string, string> = {};
+        if (scope) where.scope = scope;
+        if (scopeId) where.scopeId = scopeId;
 
         const [overrides, total] = await Promise.all([
           prisma.entitlementOverride.findMany({
@@ -81,41 +81,41 @@ export async function GET(request: Request) {
             orderBy: { createdAt: "desc" },
           }),
           prisma.entitlementOverride.count({ where }),
-        ])
+        ]);
 
         return NextResponse.json({
           data: overrides,
           pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-        })
+        });
       }
 
       default:
-        return NextResponse.json({ error: "Invalid resource" }, { status: 400 })
+        return NextResponse.json({ error: "Invalid resource" }, { status: 400 });
     }
   } catch (error) {
-    console.error("[Admin Entitlements] GET error:", error)
+    console.error("[Admin Entitlements] GET error:", error);
     if (error instanceof AuthError) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
     await requireAdmin();
-    const body = await request.json()
-    const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = body
+    const body = await request.json();
+    const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = body;
 
     if (!scope || !scopeId || !featureKey || !reason) {
       return NextResponse.json(
         { error: "Missing required fields: scope, scopeId, featureKey, reason" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     const VALID_SCOPES = ["ORG", "USER"] as const;
-    if (!VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number])) {
+    if (!VALID_SCOPES.includes(scope as (typeof VALID_SCOPES)[number])) {
       return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
     }
 
@@ -127,17 +127,17 @@ export async function POST(request: Request) {
       limitValue: limitValue ?? null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       reason,
-    }
+    };
 
-    const repo = getEntitlementRepository()
-    await repo.createOverride(input)
+    const repo = getEntitlementRepository();
+    await repo.createOverride(input);
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[Admin Entitlements] POST error:", error)
+    console.error("[Admin Entitlements] POST error:", error);
     if (error instanceof AuthError) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

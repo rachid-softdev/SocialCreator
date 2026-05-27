@@ -4,9 +4,9 @@
  * and automatically refreshes them if needed (optimized approach)
  */
 
-import { prisma } from "@/lib/prisma";
-import { refreshAccessToken, isTokenExpired, calculateExpiresAt } from "./token-exchange";
 import type { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { calculateExpiresAt, isTokenExpired, refreshAccessToken } from "./token-exchange";
 
 /**
  * Get a valid access token for a profile, refreshing if needed
@@ -17,10 +17,7 @@ import type { Platform } from "@prisma/client";
  * @returns The valid access token string
  * @throws Error if token cannot be obtained or profile doesn't exist
  */
-export async function getValidAccessToken(
-  profileId: string,
-  platform: Platform
-): Promise<string> {
+export async function getValidAccessToken(profileId: string, platform: Platform): Promise<string> {
   const connectedAccount = await prisma.connectedAccount.findUnique({
     where: {
       profileId_platform: {
@@ -46,7 +43,7 @@ export async function getValidAccessToken(
 
   // Get the refresh token
   const refreshToken = connectedAccount.refreshToken;
-  
+
   if (!refreshToken) {
     // No refresh token available - use the access token as-is
     if (!connectedAccount.accessToken) {
@@ -67,19 +64,19 @@ export async function getValidAccessToken(
   }
 
   // Token is expired or about to expire - refresh it
-  console.log(`[OAuth Middleware] Refreshing token for profile ${profileId} (platform: ${platform})`);
+  console.log(
+    `[OAuth Middleware] Refreshing token for profile ${profileId} (platform: ${platform})`,
+  );
 
   try {
     const newTokens = await refreshAccessToken(platform, refreshToken);
-    
+
     // Calculate new expiration
-    const expiresAt = newTokens.expires_in 
-      ? calculateExpiresAt(newTokens.expires_in)
-      : null;
+    const expiresAt = newTokens.expires_in ? calculateExpiresAt(newTokens.expires_in) : null;
 
     // Update the connected account with new tokens
     await prisma.connectedAccount.update({
-      where: { 
+      where: {
         profileId_platform: {
           profileId,
           platform,
@@ -97,7 +94,9 @@ export async function getValidAccessToken(
     return newTokens.access_token;
   } catch (error) {
     console.error(`[OAuth Middleware] Failed to refresh token for profile ${profileId}:`, error);
-    throw new Error(`Failed to refresh token for profile ${profileId}: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to refresh token for profile ${profileId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -111,7 +110,7 @@ export async function getValidAccessToken(
  */
 export async function batchRefreshTokens(
   profileIds: string[],
-  platform: Platform
+  platform: Platform,
 ): Promise<Map<string, boolean>> {
   const results = new Map<string, boolean>();
 
@@ -140,7 +139,7 @@ export async function batchRefreshTokens(
  */
 export async function getProfilesNeedingRefresh(platform: Platform): Promise<string[]> {
   const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000);
-  
+
   const profilesWithExpiringTokens = await prisma.connectedAccount.findMany({
     where: {
       platform,
@@ -157,5 +156,5 @@ export async function getProfilesNeedingRefresh(platform: Platform): Promise<str
     },
   });
 
-  return profilesWithExpiringTokens.map(ca => ca.profileId);
+  return profilesWithExpiringTokens.map((ca) => ca.profileId);
 }

@@ -1,15 +1,19 @@
-import { notFound } from "next/navigation";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { ArrowLeft, ArrowRight, Calendar, Clock, Tag } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { PostHeader } from "@/components/blog/post-header";
-import { PostContent } from "@/components/blog/post-content";
+import { notFound } from "next/navigation";
 import { PostCard } from "@/components/blog/post-card";
+import { PostContent } from "@/components/blog/post-content";
+import { PostHeader } from "@/components/blog/post-header";
 import { ReadingProgress } from "@/components/blog/reading-progress";
-import { getPostBySlug, getRelatedPosts, generateStaticParams as getStaticParams } from "@/lib/blog";
+import {
+  getPostBySlug,
+  getRelatedPosts,
+  generateStaticParams as getStaticParams,
+} from "@/lib/blog";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -101,10 +105,7 @@ export default async function BlogPostPage({ params }: Props) {
             <span className="font-display text-title-md text-ink">SocialCreator</span>
           </Link>
           <nav className="flex items-center gap-6">
-            <Link
-              href="/blog"
-              className="text-body-sm font-medium text-primary"
-            >
+            <Link href="/blog" className="text-body-sm font-medium text-primary">
               Blog
             </Link>
             <Link
@@ -157,9 +158,7 @@ export default async function BlogPostPage({ params }: Props) {
       {relatedPosts.length > 0 && (
         <section className="bg-surface-card border-t border-hairline py-12 md:py-16">
           <div className="max-w-content mx-auto px-6">
-            <h2 className="font-display text-display-md text-ink mb-8">
-              Articles Similaires
-            </h2>
+            <h2 className="font-display text-display-md text-ink mb-8">Articles Similaires</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((p) => (
                 <PostCard key={p.slug} post={p} />
@@ -189,8 +188,8 @@ export default async function BlogPostPage({ params }: Props) {
             Tu as aimé cet article ?
           </h2>
           <p className="text-body-lg text-on-dark-soft mb-8 max-w-xl mx-auto">
-            Découvre comment SocialCreator peut t&apos;aider à créer du contenu similaire
-            pour tes réseaux sociaux, automatiquement.
+            Découvre comment SocialCreator peut t&apos;aider à créer du contenu similaire pour tes
+            réseaux sociaux, automatiquement.
           </p>
           <Link
             href="/login"
@@ -220,7 +219,10 @@ export default async function BlogPostPage({ params }: Props) {
             <Link href="/blog" className="text-caption text-body-strong">
               Blog
             </Link>
-            <Link href="/login" className="text-caption text-muted hover:text-ink transition-colors">
+            <Link
+              href="/login"
+              className="text-caption text-muted hover:text-ink transition-colors"
+            >
               Connexion
             </Link>
           </nav>

@@ -1,11 +1,10 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
-import { RunStatusBadge } from "./run-status-badge";
-import { PlatformBadge } from "@/components/content/platform-badge";
 import type { AgentRunWithRelations } from "@socialcreator/types/agent";
-import { formatDateTime } from "@socialcreator/utils";
-import { CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
+import { PlatformBadge } from "@/components/content/platform-badge";
+import { RunStatusBadge } from "./run-status-badge";
 
 interface RunDetailProps {
   run: AgentRunWithRelations & {
@@ -29,7 +28,9 @@ export function RunDetail({ run }: RunDetailProps) {
     <div className="space-y-6">
       {/* Status Header */}
       <div className={cn("flex items-center gap-4 p-6 rounded-xl", config.bg)}>
-        <StatusIcon className={cn("w-8 h-8", config.color, run.status === "RUNNING" && "animate-spin")} />
+        <StatusIcon
+          className={cn("w-8 h-8", config.color, run.status === "RUNNING" && "animate-spin")}
+        />
         <div>
           <div className="flex items-center gap-3">
             <h3 className="text-title-md text-ink">Run #{run.id.slice(-6)}</h3>
@@ -66,7 +67,7 @@ export function RunDetail({ run }: RunDetailProps) {
               <div
                 className={cn(
                   "w-2 h-2 rounded-full",
-                  run.status === "SUCCESS" ? "bg-semantic-success" : "bg-semantic-error"
+                  run.status === "SUCCESS" ? "bg-semantic-success" : "bg-semantic-error",
                 )}
               />
               <div>

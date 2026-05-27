@@ -8,11 +8,11 @@
  * - to: ISO date string (optional, defaults to now)
  */
 
+import type { Platform } from "@prisma/client";
+import { startOfDayUTC } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { startOfDayUTC } from "@socialcreator/utils";
-import { Platform } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
@@ -28,10 +28,7 @@ export async function GET(request: Request) {
     const toParam = searchParams.get("to");
 
     if (!profileId) {
-      return NextResponse.json(
-        { error: "Missing profileId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing profileId" }, { status: 400 });
     }
 
     // Verify user owns this profile
@@ -45,7 +42,9 @@ export async function GET(request: Request) {
 
     // Default date range: last 30 days
     const to = toParam ? new Date(toParam) : new Date();
-    const from = fromParam ? new Date(fromParam) : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const from = fromParam
+      ? new Date(fromParam)
+      : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Fetch PublishLogs in range
     const publishLogs = await prisma.publishLog.findMany({
@@ -72,7 +71,10 @@ export async function GET(request: Request) {
     });
 
     // Aggregate daily data
-    const dailyMap = new Map<string, { date: string; count: number; success: number; failed: number }>();
+    const dailyMap = new Map<
+      string,
+      { date: string; count: number; success: number; failed: number }
+    >();
 
     publishLogs.forEach((log) => {
       const dateStr = log.publishedAt.toISOString().split("T")[0];
@@ -89,16 +91,27 @@ export async function GET(request: Request) {
     const daily = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     // Aggregate platform breakdown
-    const platformMap = new Map<Platform, { posts: number; impressions: number; engagements: number }>();
+    const platformMap = new Map<
+      Platform,
+      { posts: number; impressions: number; engagements: number }
+    >();
 
     publishLogs.forEach((log) => {
-      const existing = platformMap.get(log.platform) || { posts: 0, impressions: 0, engagements: 0 };
+      const existing = platformMap.get(log.platform) || {
+        posts: 0,
+        impressions: 0,
+        engagements: 0,
+      };
       existing.posts++;
       platformMap.set(log.platform, existing);
     });
 
     analytics.forEach((record) => {
-      const existing = platformMap.get(record.platform) || { posts: 0, impressions: 0, engagements: 0 };
+      const existing = platformMap.get(record.platform) || {
+        posts: 0,
+        impressions: 0,
+        engagements: 0,
+      };
       existing.impressions += record.impressions;
       existing.engagements += record.engagements;
       platformMap.set(record.platform, existing);
@@ -127,15 +140,12 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
-      }
+      },
     );
   } catch (error) {
     console.error("Error fetching analytics:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

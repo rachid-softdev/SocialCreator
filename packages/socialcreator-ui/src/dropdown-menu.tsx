@@ -6,7 +6,11 @@ import type { ReactNode } from "react";
 export const DropdownMenu = DropdownMenuPrimitive.Root;
 export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
-export function DropdownMenuContent({ children, className, ...props }: DropdownMenuPrimitive.DropdownMenuContentProps) {
+export function DropdownMenuContent({
+  children,
+  className,
+  ...props
+}: DropdownMenuPrimitive.DropdownMenuContentProps) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -19,7 +23,11 @@ export function DropdownMenuContent({ children, className, ...props }: DropdownM
   );
 }
 
-export function DropdownMenuItem({ children, className, ...props }: DropdownMenuPrimitive.DropdownMenuItemProps) {
+export function DropdownMenuItem({
+  children,
+  className,
+  ...props
+}: DropdownMenuPrimitive.DropdownMenuItemProps) {
   return (
     <DropdownMenuPrimitive.Item
       className={`relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-body-sm outline-none transition-colors focus:bg-surface-strong focus:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${className ?? ""}`}

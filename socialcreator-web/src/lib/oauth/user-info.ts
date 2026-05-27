@@ -2,7 +2,7 @@
  * OAuth user info - retrieves user profile information from each platform
  */
 
-import { OAuthProvider } from "./providers";
+import type { OAuthProvider } from "./providers";
 
 export interface UserInfo {
   accountId: string;
@@ -14,10 +14,7 @@ export interface UserInfo {
  * Get user info from a platform using an access token
  * Each platform has its own API endpoint and response format
  */
-export async function getUserInfo(
-  platform: OAuthProvider,
-  accessToken: string
-): Promise<UserInfo> {
+export async function getUserInfo(platform: OAuthProvider, accessToken: string): Promise<UserInfo> {
   const userInfoUrl = getUserInfoUrl(platform);
   const headers = getUserInfoHeaders(platform, accessToken);
 
@@ -111,13 +108,14 @@ function normalizeUserInfo(platform: OAuthProvider, data: any): UserInfo {
         accountAvatarUrl: data.data?.profile_image_url || null,
       };
 
-    case "YOUTUBE":
+    case "YOUTUBE": {
       const channel = data.items?.[0];
       return {
         accountId: channel?.id,
         accountName: channel?.snippet?.title,
         accountAvatarUrl: channel?.snippet?.thumbnails?.default?.url || null,
       };
+    }
 
     case "PINTEREST":
       return {
@@ -151,7 +149,7 @@ export async function getInstagramAccountId(accessToken: string): Promise<string
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      }
+      },
     );
 
     if (!pagesResponse.ok) {

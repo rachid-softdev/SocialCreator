@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Bot, Play, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@socialcreator/utils";
-import { RunStatusBadge } from "./run-status-badge";
-import type { AgentWithRelations, AgentType } from "@socialcreator/types/agent";
+import type { AgentType, AgentWithRelations } from "@socialcreator/types/agent";
 import { AGENT_TYPE_LABELS } from "@socialcreator/types/agent";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { Bot, MoreVertical, Pencil, Play, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import { PlatformBadge } from "@/components/content/platform-badge";
-import { formatDateTime } from "@socialcreator/utils";
+import { RunStatusBadge } from "./run-status-badge";
 
 interface AgentCardProps {
   agent: AgentWithRelations & {
@@ -48,7 +47,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
             <span
               className={cn(
                 "inline-block px-2 py-0.5 rounded text-xs font-medium",
-                TYPE_COLORS[agent.type]
+                TYPE_COLORS[agent.type],
               )}
             >
               {AGENT_TYPE_LABELS[agent.type]}
@@ -89,9 +88,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
               <span className="text-caption text-muted">Last run</span>
               <RunStatusBadge status={lastRun.status} showPulse={false} />
             </div>
-            <p className="text-caption text-body mt-1">
-              {formatDateTime(lastRun.createdAt)}
-            </p>
+            <p className="text-caption text-body mt-1">{formatDateTime(lastRun.createdAt)}</p>
           </div>
         )}
       </Link>

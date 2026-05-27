@@ -8,9 +8,9 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -67,10 +67,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ members });
   } catch (error) {
     console.error("Error fetching team members:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -94,10 +91,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validation = inviteSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { email, role } = validation.data;
@@ -112,7 +106,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       // For now, return an error
       return NextResponse.json(
         { error: "User not found. They must create an account first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -127,10 +121,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
 
     if (existingMember) {
-      return NextResponse.json(
-        { error: "User is already a member of this team" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User is already a member of this team" }, { status: 400 });
     }
 
     // Add member
@@ -151,17 +142,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {
     console.error("Error inviting team member:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // DELETE /api/teams/[teamId]/members/[memberId]
 export async function DELETE(
   request: Request,
-  { params }: RouteParams & { params: Promise<{ memberId: string }> }
+  { params }: RouteParams & { params: Promise<{ memberId: string }> },
 ) {
   try {
     const session = await auth();
@@ -188,18 +176,12 @@ export async function DELETE(
 
     // Can't remove the owner
     if (member.role === "OWNER") {
-      return NextResponse.json(
-        { error: "Cannot remove the team owner" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cannot remove the team owner" }, { status: 400 });
     }
 
     // Only owner can remove admins
     if (member.role === "ADMIN" && team.ownerId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Only the team owner can remove admins" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Only the team owner can remove admins" }, { status: 403 });
     }
 
     await prisma.teamMember.delete({
@@ -209,17 +191,14 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error removing team member:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // PUT /api/teams/[teamId]/members/[memberId] - Update role
 export async function PUT(
   request: Request,
-  { params }: RouteParams & { params: Promise<{ memberId: string }> }
+  { params }: RouteParams & { params: Promise<{ memberId: string }> },
 ) {
   try {
     const session = await auth();
@@ -239,7 +218,7 @@ export async function PUT(
     if (team.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: "Only the team owner can change member roles" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -247,10 +226,7 @@ export async function PUT(
     const validation = updateRoleSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const member = await prisma.teamMember.findUnique({
@@ -262,10 +238,7 @@ export async function PUT(
     }
 
     if (member.role === "OWNER") {
-      return NextResponse.json(
-        { error: "Cannot change the owner role" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cannot change the owner role" }, { status: 400 });
     }
 
     const updatedMember = await prisma.teamMember.update({
@@ -281,9 +254,6 @@ export async function PUT(
     return NextResponse.json({ member: updatedMember });
   } catch (error) {
     console.error("Error updating member role:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

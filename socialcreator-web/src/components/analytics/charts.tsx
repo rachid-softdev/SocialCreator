@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
 import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
 // Color palette matching ElevenLabs design
 const COLORS = {
@@ -23,10 +23,10 @@ const COLORS = {
   peach: "#f4c5a8",
   lavender: "#c8b8e0",
   sky: "#a8c8e8",
-}
+};
 
 interface ImpressionsChartProps {
-  data: { date: string; impressions: number }[]
+  data: { date: string; impressions: number }[];
 }
 
 export function ImpressionsChart({ data }: ImpressionsChartProps) {
@@ -39,10 +39,7 @@ export function ImpressionsChart({ data }: ImpressionsChartProps) {
           tick={{ fontSize: 12, fill: "#777169" }}
           tickLine={{ stroke: "#e7e5e4" }}
         />
-        <YAxis
-          tick={{ fontSize: 12, fill: "#777169" }}
-          tickLine={{ stroke: "#e7e5e4" }}
-        />
+        <YAxis tick={{ fontSize: 12, fill: "#777169" }} tickLine={{ stroke: "#e7e5e4" }} />
         <Tooltip
           contentStyle={{
             backgroundColor: "#ffffff",
@@ -60,11 +57,11 @@ export function ImpressionsChart({ data }: ImpressionsChartProps) {
         />
       </LineChart>
     </ResponsiveContainer>
-  )
+  );
 }
 
 interface PlatformBreakdownProps {
-  data: { platform: string; impressions: number; engagements: number }[]
+  data: { platform: string; impressions: number; engagements: number }[];
 }
 
 export function PlatformBreakdown({ data }: PlatformBreakdownProps) {
@@ -77,10 +74,7 @@ export function PlatformBreakdown({ data }: PlatformBreakdownProps) {
           tick={{ fontSize: 12, fill: "#777169" }}
           tickLine={{ stroke: "#e7e5e4" }}
         />
-        <YAxis
-          tick={{ fontSize: 12, fill: "#777169" }}
-          tickLine={{ stroke: "#e7e5e4" }}
-        />
+        <YAxis tick={{ fontSize: 12, fill: "#777169" }} tickLine={{ stroke: "#e7e5e4" }} />
         <Tooltip
           contentStyle={{
             backgroundColor: "#ffffff",
@@ -93,15 +87,15 @@ export function PlatformBreakdown({ data }: PlatformBreakdownProps) {
         <Bar dataKey="engagements" name="Engagements" fill={COLORS.mint} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
-  )
+  );
 }
 
 interface EngagementPieProps {
-  data: { name: string; value: number }[]
+  data: { name: string; value: number }[];
 }
 
 export function EngagementPie({ data }: EngagementPieProps) {
-  const PIE_COLORS = [COLORS.primary, COLORS.mint, COLORS.peach, COLORS.lavender, COLORS.sky]
+  const PIE_COLORS = [COLORS.primary, COLORS.mint, COLORS.peach, COLORS.lavender, COLORS.sky];
 
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -129,5 +123,5 @@ export function EngagementPie({ data }: EngagementPieProps) {
         />
       </PieChart>
     </ResponsiveContainer>
-  )
+  );
 }

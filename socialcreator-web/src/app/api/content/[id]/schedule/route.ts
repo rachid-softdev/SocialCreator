@@ -4,9 +4,9 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { canPublish } from "@/lib/publish-guard";
 
 const scheduleSchema = z.object({
@@ -50,7 +50,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     if (!["DRAFT", "APPROVED"].includes(existingContent.status)) {
       return NextResponse.json(
         { error: "Only DRAFT or APPROVED content can be scheduled" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,10 +58,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const validation = scheduleSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { scheduledPublishAt, scheduledTimezone } = validation.data;
@@ -69,16 +66,13 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     // Can't schedule in the past
     if (publishDate <= new Date()) {
-      return NextResponse.json(
-        { error: "Cannot schedule in the past" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cannot schedule in the past" }, { status: 400 });
     }
 
     // Check if publishing would be allowed at the scheduled time
     const { canPublish: canPublishNow, reason } = await canPublish(
       existingContent.profileId,
-      existingContent.platform
+      existingContent.platform,
     );
 
     // We allow scheduling even if cap is reached now, as it might be cleared by then
@@ -108,10 +102,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error scheduling content:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -133,10 +124,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     if (existingContent.status !== "SCHEDULED") {
-      return NextResponse.json(
-        { error: "Content is not scheduled" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Content is not scheduled" }, { status: 400 });
     }
 
     const updatedContent = await prisma.generatedContent.update({
@@ -156,9 +144,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ content: updatedContent });
   } catch (error) {
     console.error("Error canceling schedule:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

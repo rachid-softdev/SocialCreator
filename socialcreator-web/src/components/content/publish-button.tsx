@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@socialcreator/utils";
-import { Send, Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2, Send } from "lucide-react";
+import { useState } from "react";
 import { PlatformBadge } from "./platform-badge";
 import { PublishModal } from "./publish-modal";
 
@@ -43,7 +43,7 @@ export function PublishButton({
   const fetchCapStatus = async () => {
     try {
       const response = await fetch(
-        `/api/content/${contentId}/cap-status?profileId=${profileId}&platform=${platform}`
+        `/api/content/${contentId}/cap-status?profileId=${profileId}&platform=${platform}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -106,14 +106,10 @@ export function PublishButton({
           "inline-flex items-center gap-2 px-6 py-2 rounded-pill text-button transition-colors",
           "bg-semantic-success text-white hover:bg-semantic-success/90",
           "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-semantic-success",
-          isLoading && "opacity-50 cursor-wait"
+          isLoading && "opacity-50 cursor-wait",
         )}
       >
-        {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Send className="w-4 h-4" />
-        )}
+        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         Publish Now
         {capStatus && (
           <span className="text-xs opacity-80">

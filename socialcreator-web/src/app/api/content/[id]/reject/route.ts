@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 
 const rejectContentSchema = z.object({
@@ -29,27 +29,18 @@ export async function POST(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const content = await getContentOr404(id, session.user.id);
 
     if (!content) {
-      return NextResponse.json(
-        { error: "Content not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Content not found" }, { status: 404 });
     }
 
     if (content.status !== "DRAFT") {
-      return NextResponse.json(
-        { error: "Only draft content can be rejected" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Only draft content can be rejected" }, { status: 400 });
     }
 
     const body = await request.json();
@@ -58,7 +49,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,9 +84,6 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error rejecting content:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

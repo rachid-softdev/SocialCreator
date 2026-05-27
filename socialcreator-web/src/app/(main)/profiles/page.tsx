@@ -1,12 +1,11 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { EmptyState } from "@socialcreator/ui/empty-state";
+import { Plus, Users } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileCard } from "@/components/profile/profile-card";
-import { EmptyState } from "@socialcreator/ui/empty-state";
-import { Users } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function ProfilesPage() {
   const session = await auth();

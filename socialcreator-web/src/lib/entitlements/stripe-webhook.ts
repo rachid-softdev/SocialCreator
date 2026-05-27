@@ -3,17 +3,17 @@
  * Handles subscription events with idempotency, transactions, and cache invalidation
  */
 
-import Stripe from "stripe"
-import { prisma } from "@/lib/prisma"
-import { getStripe } from "@/lib/stripe"
-import { cacheService, getEntitlementsCacheKey } from "./cache"
-import { getFeatureGateService } from "./service"
-import type { SubscriptionStatus } from "./types"
+import type Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
+import { getStripe } from "@/lib/stripe";
+import { cacheService, getEntitlementsCacheKey } from "./cache";
+import { getFeatureGateService } from "./service";
+import type { SubscriptionStatus } from "./types";
 
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
+const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 if (!WEBHOOK_SECRET) {
-  console.warn("[Entitlements] STRIPE_WEBHOOK_SECRET not set - webhook handler will not work")
+  console.warn("[Entitlements] STRIPE_WEBHOOK_SECRET not set - webhook handler will not work");
 }
 
 // ============================================
@@ -21,10 +21,10 @@ if (!WEBHOOK_SECRET) {
 // ============================================
 
 export interface WebhookHandlerResult {
-  success: boolean
-  error?: string
-  orgId?: string
-  eventType?: string
+  success: boolean;
+  error?: string;
+  orgId?: string;
+  eventType?: string;
 }
 
 // ============================================
@@ -37,40 +37,40 @@ export interface WebhookHandlerResult {
  */
 export async function handleStripeWebhook(
   payload: string,
-  signature: string
+  signature: string,
 ): Promise<WebhookHandlerResult> {
-  const stripe = getStripe()
+  const stripe = getStripe();
 
   // Verify signature
-  let event: Stripe.Event
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(payload, signature, WEBHOOK_SECRET!);
   } catch (err) {
-    console.error("[Entitlements] Webhook signature verification failed:", err)
-    return { success: false, error: "Invalid signature" }
+    console.error("[Entitlements] Webhook signature verification failed:", err);
+    return { success: false, error: "Invalid signature" };
   }
 
   // Check idempotency - skip if already processed
-  const alreadyProcessed = await checkIdempotency(event.id)
+  const alreadyProcessed = await checkIdempotency(event.id);
   if (alreadyProcessed) {
-    console.log(`[Entitlements] Event ${event.id} already processed, skipping`)
-    return { success: true, eventType: event.type }
+    console.log(`[Entitlements] Event ${event.id} already processed, skipping`);
+    return { success: true, eventType: event.type };
   }
 
   // Process event
   try {
-    const result = await processEvent(event)
+    const result = await processEvent(event);
 
     // Mark as processed (idempotency)
-    await markEventProcessed(event.id, event.type)
+    await markEventProcessed(event.id, event.type);
 
-    return result
+    return result;
   } catch (error) {
-    console.error("[Entitlements] Webhook processing failed:", error)
+    console.error("[Entitlements] Webhook processing failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-    }
+    };
   }
 }
 
@@ -79,27 +79,27 @@ export async function handleStripeWebhook(
 // ============================================
 
 async function processEvent(event: Stripe.Event): Promise<WebhookHandlerResult> {
-  const featureGate = getFeatureGateService()
+  const featureGate = getFeatureGateService();
 
   switch (event.type) {
     case "customer.subscription.created":
-      return await handleSubscriptionCreated(event.data.object as Stripe.Subscription)
+      return await handleSubscriptionCreated(event.data.object as Stripe.Subscription);
 
     case "customer.subscription.updated":
-      return await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
+      return await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
 
     case "customer.subscription.deleted":
-      return await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+      return await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
 
     case "invoice.payment_succeeded":
-      return await handlePaymentSucceeded(event.data.object as Stripe.Invoice)
+      return await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
 
     case "invoice.payment_failed":
-      return await handlePaymentFailed(event.data.object as Stripe.Invoice)
+      return await handlePaymentFailed(event.data.object as Stripe.Invoice);
 
     default:
-      console.log(`[Entitlements] Unhandled event type: ${event.type}`)
-      return { success: true, eventType: event.type }
+      console.log(`[Entitlements] Unhandled event type: ${event.type}`);
+      return { success: true, eventType: event.type };
   }
 }
 
@@ -107,24 +107,26 @@ async function processEvent(event: Stripe.Event): Promise<WebhookHandlerResult> 
 // Event Handlers
 // ============================================
 
-async function handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<WebhookHandlerResult> {
-  const customerId = subscription.customer as string
-  const subId = subscription.id
+async function handleSubscriptionCreated(
+  subscription: Stripe.Subscription,
+): Promise<WebhookHandlerResult> {
+  const customerId = subscription.customer as string;
+  const subId = subscription.id;
 
   // Find org by customer ID
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
-  })
+  });
 
   if (!org) {
     // Try to find by legacy User table
     const user = await prisma.user.findFirst({
       where: { stripeCustomerId: customerId },
-    })
+    });
 
     if (!user) {
-      console.warn(`[Entitlements] No org found for customer ${customerId}`)
-      return { success: false, error: "Organization not found" }
+      console.warn(`[Entitlements] No org found for customer ${customerId}`);
+      return { success: false, error: "Organization not found" };
     }
 
     // Create organization for user if doesn't exist
@@ -133,55 +135,59 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription): Pro
         name: `Org for user ${user.id}`,
         stripeCustomerId: customerId,
       },
-    })
+    });
 
-    await createOrUpdateSubscription(orgData.id, subscription)
-    return { success: true, orgId: orgData.id, eventType: "customer.subscription.created" }
+    await createOrUpdateSubscription(orgData.id, subscription);
+    return { success: true, orgId: orgData.id, eventType: "customer.subscription.created" };
   }
 
-  await createOrUpdateSubscription(org.id, subscription)
+  await createOrUpdateSubscription(org.id, subscription);
 
   // Invalidate cache
-  await cacheService.invalidate(getEntitlementsCacheKey(org.id))
-  await cacheService.publishInvalidation(org.id)
+  await cacheService.invalidate(getEntitlementsCacheKey(org.id));
+  await cacheService.publishInvalidation(org.id);
 
-  return { success: true, orgId: org.id, eventType: "customer.subscription.created" }
+  return { success: true, orgId: org.id, eventType: "customer.subscription.created" };
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<WebhookHandlerResult> {
-  const customerId = subscription.customer as string
-  const subId = subscription.id
+async function handleSubscriptionUpdated(
+  subscription: Stripe.Subscription,
+): Promise<WebhookHandlerResult> {
+  const customerId = subscription.customer as string;
+  const subId = subscription.id;
 
   // Find org
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
-  })
+  });
 
   if (!org) {
-    console.warn(`[Entitlements] No org found for customer ${customerId}`)
-    return { success: false, error: "Organization not found" }
+    console.warn(`[Entitlements] No org found for customer ${customerId}`);
+    return { success: false, error: "Organization not found" };
   }
 
-  await createOrUpdateSubscription(org.id, subscription)
+  await createOrUpdateSubscription(org.id, subscription);
 
   // Invalidate cache
-  await cacheService.invalidate(getEntitlementsCacheKey(org.id))
-  await cacheService.publishInvalidation(org.id)
+  await cacheService.invalidate(getEntitlementsCacheKey(org.id));
+  await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Subscription ${subId} updated for org ${org.id}`)
-  return { success: true, orgId: org.id, eventType: "customer.subscription.updated" }
+  console.log(`[Entitlements] Subscription ${subId} updated for org ${org.id}`);
+  return { success: true, orgId: org.id, eventType: "customer.subscription.updated" };
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<WebhookHandlerResult> {
-  const customerId = subscription.customer as string
+async function handleSubscriptionDeleted(
+  subscription: Stripe.Subscription,
+): Promise<WebhookHandlerResult> {
+  const customerId = subscription.customer as string;
 
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
-  })
+  });
 
   if (!org) {
-    console.warn(`[Entitlements] No org found for customer ${customerId}`)
-    return { success: false, error: "Organization not found" }
+    console.warn(`[Entitlements] No org found for customer ${customerId}`);
+    return { success: false, error: "Organization not found" };
   }
 
   // Set subscription to canceled (or create free tier)
@@ -196,31 +202,31 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
       status: "CANCELED",
       planKey: "free",
     },
-  })
+  });
 
   // Invalidate cache
-  await cacheService.invalidate(getEntitlementsCacheKey(org.id))
-  await cacheService.publishInvalidation(org.id)
+  await cacheService.invalidate(getEntitlementsCacheKey(org.id));
+  await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Subscription deleted for org ${org.id}`)
-  return { success: true, orgId: org.id, eventType: "customer.subscription.deleted" }
+  console.log(`[Entitlements] Subscription deleted for org ${org.id}`);
+  return { success: true, orgId: org.id, eventType: "customer.subscription.deleted" };
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<WebhookHandlerResult> {
-  const customerId = invoice.customer as string
-  const subscriptionId = invoice.subscription as string
+  const customerId = invoice.customer as string;
+  const subscriptionId = invoice.subscription as string;
 
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
-  })
+  });
 
   if (!org) {
-    return { success: false, error: "Organization not found" }
+    return { success: false, error: "Organization not found" };
   }
 
   // Update current period dates
-  const periodStart = new Date(invoice.period_start * 1000)
-  const periodEnd = new Date(invoice.period_end * 1000)
+  const periodStart = new Date(invoice.period_start * 1000);
+  const periodEnd = new Date(invoice.period_end * 1000);
 
   await prisma.subscription.update({
     where: { orgId: org.id },
@@ -229,21 +235,21 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<WebhookH
       currentPeriodEnd: periodEnd,
       status: "ACTIVE", // Payment succeeded = active
     },
-  })
+  });
 
-  console.log(`[Entitlements] Payment succeeded for org ${org.id}`)
-  return { success: true, orgId: org.id, eventType: "invoice.payment_succeeded" }
+  console.log(`[Entitlements] Payment succeeded for org ${org.id}`);
+  return { success: true, orgId: org.id, eventType: "invoice.payment_succeeded" };
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<WebhookHandlerResult> {
-  const customerId = invoice.customer as string
+  const customerId = invoice.customer as string;
 
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
-  })
+  });
 
   if (!org) {
-    return { success: false, error: "Organization not found" }
+    return { success: false, error: "Organization not found" };
   }
 
   await prisma.subscription.update({
@@ -251,14 +257,14 @@ async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<WebhookHand
     data: {
       status: "PAST_DUE",
     },
-  })
+  });
 
   // Invalidate cache
-  await cacheService.invalidate(getEntitlementsCacheKey(org.id))
-  await cacheService.publishInvalidation(org.id)
+  await cacheService.invalidate(getEntitlementsCacheKey(org.id));
+  await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Payment failed for org ${org.id}`)
-  return { success: true, orgId: org.id, eventType: "invoice.payment_failed" }
+  console.log(`[Entitlements] Payment failed for org ${org.id}`);
+  return { success: true, orgId: org.id, eventType: "invoice.payment_failed" };
 }
 
 // ============================================
@@ -266,10 +272,10 @@ async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<WebhookHand
 // ============================================
 
 async function createOrUpdateSubscription(orgId: string, subscription: Stripe.Subscription) {
-  const status = mapStripeStatus(subscription.status)
-  const planKey = await inferPlanKey(subscription)
-  const periodStart = new Date(subscription.current_period_start * 1000)
-  const periodEnd = new Date(subscription.current_period_end * 1000)
+  const status = mapStripeStatus(subscription.status);
+  const planKey = await inferPlanKey(subscription);
+  const periodStart = new Date(subscription.current_period_start * 1000);
+  const periodEnd = new Date(subscription.current_period_end * 1000);
 
   await prisma.subscription.upsert({
     where: { orgId },
@@ -290,51 +296,51 @@ async function createOrUpdateSubscription(orgId: string, subscription: Stripe.Su
       currentPeriodEnd: periodEnd,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
-  })
+  });
 }
 
 function mapStripeStatus(stripeStatus: string): SubscriptionStatus {
   switch (stripeStatus) {
     case "active":
-      return "ACTIVE"
+      return "ACTIVE";
     case "trialing":
-      return "TRIALING"
+      return "TRIALING";
     case "past_due":
-      return "PAST_DUE"
+      return "PAST_DUE";
     case "canceled":
-      return "CANCELED"
+      return "CANCELED";
     case "unpaid":
-      return "UNPAID"
+      return "UNPAID";
     default:
-      return "ACTIVE"
+      return "ACTIVE";
   }
 }
 
 async function inferPlanKey(subscription: Stripe.Subscription): Promise<string> {
-  const priceId = subscription.items.data[0]?.price.id
+  const priceId = subscription.items.data[0]?.price.id;
 
   // Try to match via environment variables
   if (process.env.STRIPE_PRICE_STARTER && priceId === process.env.STRIPE_PRICE_STARTER) {
-    return "starter"
+    return "starter";
   }
   if (process.env.STRIPE_PRICE_PRO && priceId === process.env.STRIPE_PRICE_PRO) {
-    return "pro"
+    return "pro";
   }
   if (process.env.STRIPE_PRICE_TEAM && priceId === process.env.STRIPE_PRICE_TEAM) {
-    return "team"
+    return "team";
   }
 
   // Fallback: try to infer from price amount
-  const unitAmount = subscription.items.data[0]?.price.unit_amount
+  const unitAmount = subscription.items.data[0]?.price.unit_amount;
   if (unitAmount) {
     // These should match the Plan model values
-    if (unitAmount === 5000) return "starter"
-    if (unitAmount === 7000) return "pro"
-    if (unitAmount === 11000) return "team"
+    if (unitAmount === 5000) return "starter";
+    if (unitAmount === 7000) return "pro";
+    if (unitAmount === 11000) return "team";
   }
 
   // Default to free if can't determine
-  return "free"
+  return "free";
 }
 
 // ============================================
@@ -344,8 +350,8 @@ async function inferPlanKey(subscription: Stripe.Subscription): Promise<string> 
 async function checkIdempotency(eventId: string): Promise<boolean> {
   const existing = await prisma.webhookEvent.findUnique({
     where: { eventId },
-  })
-  return !!existing
+  });
+  return !!existing;
 }
 
 async function markEventProcessed(eventId: string, eventType: string): Promise<void> {
@@ -354,7 +360,7 @@ async function markEventProcessed(eventId: string, eventType: string): Promise<v
       eventId,
       type: eventType,
     },
-  })
+  });
 }
 
-export default handleStripeWebhook
+export default handleStripeWebhook;

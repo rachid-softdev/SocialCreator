@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 
-import { buildSystemPrompt, buildGenerationPrompt } from "../prompts";
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
+import { buildGenerationPrompt, buildSystemPrompt } from "../prompts";
 
 describe("agent-runner utilities", () => {
   describe("buildSystemPrompt", () => {
@@ -46,7 +46,14 @@ describe("agent-runner utilities", () => {
   describe("buildGenerationPrompt", () => {
     it("should include brief for each platform", () => {
       const platforms: Platform[] = [
-        "INSTAGRAM", "TIKTOK", "LINKEDIN", "YOUTUBE", "X", "FACEBOOK", "THREADS", "PINTEREST"
+        "INSTAGRAM",
+        "TIKTOK",
+        "LINKEDIN",
+        "YOUTUBE",
+        "X",
+        "FACEBOOK",
+        "THREADS",
+        "PINTEREST",
       ];
 
       for (const platform of platforms) {

@@ -3,7 +3,7 @@
  * AES-256 encryption for sensitive data (OAuth tokens, API keys)
  */
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import AES from "crypto-js/aes";
 import Utf8 from "crypto-js/enc-utf8";
 import SHA256 from "crypto-js/sha256";
@@ -12,8 +12,16 @@ const SECRET = process.env.ENCRYPTION_KEY;
 if (!SECRET) {
   throw new Error(
     "ENCRYPTION_KEY environment variable is required. " +
-    "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+      "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
   );
+}
+
+/**
+ * Derive a 256-bit AES key from the ENCRYPTION_KEY secret
+ * Uses SHA-256 to get a consistent 32-byte hex key
+ */
+function deriveKey(): string {
+  return createHash("sha256").update(SECRET).digest("hex");
 }
 
 /**
@@ -25,7 +33,7 @@ export function encryptToken(token: string): string {
   if (!token || typeof token !== "string") {
     throw new Error("Invalid token provided for encryption");
   }
-  return AES.encrypt(token, SECRET).toString();
+  return AES.encrypt(token, deriveKey()).toString();
 }
 
 /**
@@ -38,7 +46,7 @@ export function decryptToken(encrypted: string): string {
     throw new Error("Invalid encrypted string provided for decryption");
   }
 
-  const bytes = AES.decrypt(encrypted, SECRET);
+  const bytes = AES.decrypt(encrypted, deriveKey());
   const decrypted = bytes.toString(Utf8);
 
   if (!decrypted) {
@@ -57,7 +65,7 @@ export function encryptObject(obj: object): string {
   if (!obj || typeof obj !== "object") {
     throw new Error("Invalid object provided for encryption");
   }
-  return AES.encrypt(JSON.stringify(obj), SECRET).toString();
+  return AES.encrypt(JSON.stringify(obj), deriveKey()).toString();
 }
 
 /**
@@ -70,7 +78,7 @@ export function decryptObject<T>(encrypted: string): T {
     throw new Error("Invalid encrypted string provided for decryption");
   }
 
-  const bytes = AES.decrypt(encrypted, SECRET);
+  const bytes = AES.decrypt(encrypted, deriveKey());
   const decrypted = bytes.toString(Utf8);
 
   if (!decrypted) {

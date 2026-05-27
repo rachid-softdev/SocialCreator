@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Image from "next/image";
+import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
+import { Download, MoreVertical, Play, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";
-import { Play, Trash2, Download, MoreVertical } from "lucide-react";
-import { Platform } from "@prisma/client";
 
 interface Clip {
   assetId: string;
@@ -58,12 +58,7 @@ function formatDuration(start: number, end: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function ClipsList({
-  clips,
-  onPreview,
-  onDelete,
-  className,
-}: ClipsListProps) {
+export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListProps) {
   const [hoveredClip, setHoveredClip] = useState<string | null>(null);
 
   if (clips.length === 0) {
@@ -89,23 +84,18 @@ export function ClipsList({
             onMouseLeave={() => setHoveredClip(null)}
             className={cn(
               "bg-surface-card rounded-xl overflow-hidden border border-hairline transition-all duration-200",
-              hoveredClip === clip.assetId && "shadow-soft"
+              hoveredClip === clip.assetId && "shadow-soft",
             )}
           >
             {/* Thumbnail */}
             <div className="relative aspect-video bg-surface-strong group">
-              <Image
-                src={thumbnailUrl}
-                alt={`Clip ${index + 1}`}
-                fill
-                className="object-cover"
-              />
+              <Image src={thumbnailUrl} alt={`Clip ${index + 1}`} fill className="object-cover" />
 
               {/* Play overlay */}
               <div
                 className={cn(
                   "absolute inset-0 flex items-center justify-center bg-ink/40 transition-opacity",
-                  hoveredClip === clip.assetId ? "opacity-100" : "opacity-0"
+                  hoveredClip === clip.assetId ? "opacity-100" : "opacity-0",
                 )}
               >
                 <button
@@ -122,7 +112,12 @@ export function ClipsList({
               </div>
 
               {/* Status badge */}
-              <div className={cn("absolute top-2 left-2 px-2 py-1 rounded-pill text-caption-uppercase text-xs font-semibold", statusColor)}>
+              <div
+                className={cn(
+                  "absolute top-2 left-2 px-2 py-1 rounded-pill text-caption-uppercase text-xs font-semibold",
+                  statusColor,
+                )}
+              >
                 {statusLabel}
               </div>
 
@@ -130,7 +125,7 @@ export function ClipsList({
               <div
                 className={cn(
                   "absolute top-2 right-2 transition-opacity",
-                  hoveredClip === clip.assetId ? "opacity-100" : "opacity-0"
+                  hoveredClip === clip.assetId ? "opacity-100" : "opacity-0",
                 )}
               >
                 <button className="w-8 h-8 rounded-full bg-surface-card/90 flex items-center justify-center hover:bg-surface-card transition-colors">
@@ -142,14 +137,10 @@ export function ClipsList({
             {/* Info */}
             <div className="p-4">
               {/* Hook */}
-              <p className="text-body-sm text-ink font-medium line-clamp-1">
-                {clip.segment.hook}
-              </p>
+              <p className="text-body-sm text-ink font-medium line-clamp-1">{clip.segment.hook}</p>
 
               {/* Reason */}
-              <p className="text-caption text-muted mt-1 line-clamp-2">
-                {clip.segment.reason}
-              </p>
+              <p className="text-caption text-muted mt-1 line-clamp-2">{clip.segment.reason}</p>
 
               {/* Actions */}
               <div className="mt-4 flex items-center justify-between">

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { cn } from "@socialcreator/utils";
+import type { Platform } from "@prisma/client";
+import type { ProfileFormData } from "@socialcreator/types/profile";
+import { PLATFORMS } from "@socialcreator/types/profile";
 import { TextInput } from "@socialcreator/ui/text-input";
+import { cn } from "@socialcreator/utils";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BrandVoiceEditor } from "./brand-voice-editor";
 import { ContentBankEditor } from "./content-bank-editor";
-import type { Platform } from "@prisma/client";
-import { PLATFORMS } from "@socialcreator/types/profile";
-import type { ProfileFormData } from "@socialcreator/types/profile";
 
 interface ProfileFormProps {
   initialData?: ProfileFormData & { id?: string };
@@ -119,7 +119,7 @@ export function ProfileForm({ initialData, onSubmit, isLoading = false }: Profil
                 "inline-flex items-center gap-2 px-4 py-2 rounded-pill border text-body-sm transition-all",
                 formData.platforms?.includes(platform.value)
                   ? "bg-ink text-on-primary border-ink"
-                  : "bg-surface-card text-muted border-hairline-strong hover:border-ink"
+                  : "bg-surface-card text-muted border-hairline-strong hover:border-ink",
               )}
             >
               <span>{platform.icon}</span>
@@ -144,7 +144,7 @@ export function ProfileForm({ initialData, onSubmit, isLoading = false }: Profil
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-pill bg-primary text-on-primary font-medium text-button",
             "hover:bg-primary-active transition-colors",
-            "disabled:opacity-50 disabled:cursor-not-allowed"
+            "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
         >
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}

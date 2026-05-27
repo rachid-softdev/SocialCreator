@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { analyticsIngestSchema } from "@socialcreator/types";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { analyticsIngestSchema } from "@socialcreator/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,12 +16,11 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { platform, profileId, date, impressions, engagements, clicks, followers } =
-      parsed.data;
+    const { platform, profileId, date, impressions, engagements, clicks, followers } = parsed.data;
 
     const profile = await prisma.profile.findFirst({
       where: { id: profileId, userId: session.user.id },
@@ -54,9 +53,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(analytics, { status: 201 });
   } catch (error) {
     console.error("Analytics ingest error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

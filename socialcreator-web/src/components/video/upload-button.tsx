@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useRef } from "react";
 import { cn } from "@socialcreator/utils";
 import { Upload } from "lucide-react";
+import { useCallback, useRef } from "react";
 
 interface UploadButtonProps {
   onFileSelect: (file: File) => void;
@@ -32,7 +32,7 @@ export function UploadButton({
       // Reset input so same file can be selected again
       e.target.value = "";
     },
-    [onFileSelect]
+    [onFileSelect],
   );
 
   return (
@@ -43,7 +43,7 @@ export function UploadButton({
         className={cn(
           "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-pill bg-primary text-on-primary font-medium text-button transition-all duration-200",
           "hover:bg-primary-active focus:ring-2 focus:ring-offset-2 focus:ring-primary",
-          disabled && "opacity-50 cursor-not-allowed"
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       >
         <Upload className="w-4 h-4" />

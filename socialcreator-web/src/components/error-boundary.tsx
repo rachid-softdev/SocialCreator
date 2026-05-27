@@ -1,7 +1,7 @@
 /**
  * Global Error Boundary Component
  * Catches React errors and displays a user-friendly error page
- * 
+ *
  * Usage: Place in src/app/(main)/layout.tsx as:
  * <ErrorBoundary>
  *   <Component />
@@ -10,9 +10,9 @@
 
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@socialcreator/ui/button";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { useEffect } from "react";
 
 interface ErrorProps {
   error: Error & {
@@ -61,33 +61,21 @@ export default function Error({ error, reset }: ErrorProps) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
       <div className="text-6xl">{getErrorIcon()}</div>
-      
+
       <div className="text-center space-y-2">
-        <h2 className="font-display text-display-md text-ink">
-          {getErrorTitle()}
-        </h2>
-        <p className="text-body-md text-body max-w-md">
-          {getErrorMessage()}
-        </p>
-        {error.digest && (
-          <p className="text-caption text-muted">
-            Error ID: {error.digest}
-          </p>
-        )}
+        <h2 className="font-display text-display-md text-ink">{getErrorTitle()}</h2>
+        <p className="text-body-md text-body max-w-md">{getErrorMessage()}</p>
+        {error.digest && <p className="text-caption text-muted">Error ID: {error.digest}</p>}
       </div>
 
       <div className="flex gap-4">
-        <Button
-          onClick={() => reset()}
-          variant="primary"
-          className="flex items-center gap-2"
-        >
+        <Button onClick={() => reset()} variant="primary" className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4" />
           Try Again
         </Button>
-        
+
         <Button
-          onClick={() => window.location.href = "/dashboard"}
+          onClick={() => (window.location.href = "/dashboard")}
           variant="outline"
           className="flex items-center gap-2"
         >
@@ -119,15 +107,13 @@ export function NotFoundError() {
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
       <div className="text-6xl">🔍</div>
       <div className="text-center space-y-2">
-        <h2 className="font-display text-display-md text-ink">
-          Page Not Found
-        </h2>
+        <h2 className="font-display text-display-md text-ink">Page Not Found</h2>
         <p className="text-body-md text-body max-w-md">
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
       </div>
       <Button
-        onClick={() => window.location.href = "/dashboard"}
+        onClick={() => (window.location.href = "/dashboard")}
         variant="primary"
         className="flex items-center gap-2"
       >
@@ -146,24 +132,16 @@ export function SessionExpiredError() {
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
       <div className="text-6xl">🔐</div>
       <div className="text-center space-y-2">
-        <h2 className="font-display text-display-md text-ink">
-          Session Expired
-        </h2>
+        <h2 className="font-display text-display-md text-ink">Session Expired</h2>
         <p className="text-body-md text-body max-w-md">
           Your session has expired. Please sign in again to continue.
         </p>
       </div>
       <div className="flex gap-4">
-        <Button
-          onClick={() => window.location.href = "/login"}
-          variant="primary"
-        >
+        <Button onClick={() => (window.location.href = "/login")} variant="primary">
           Sign In
         </Button>
-        <Button
-          onClick={() => window.location.href = "/register"}
-          variant="outline"
-        >
+        <Button onClick={() => (window.location.href = "/register")} variant="outline">
           Create Account
         </Button>
       </div>
