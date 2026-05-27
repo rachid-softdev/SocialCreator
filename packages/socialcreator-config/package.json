@@ -4,7 +4,9 @@
   "private": true,
   "exports": {
     "./tsconfig.base.json": "./tsconfig.base.json",
-    "./tailwind": "./tailwind"
+    "./tailwind": "./tailwind",
+    "./tailwind/postcss.js": "./tailwind/postcss.js",
+    "./tailwind/tailwind.config.ts": "./tailwind/tailwind.config.ts"
   },
   "files": [
     "tsconfig.base.json",

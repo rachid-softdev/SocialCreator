@@ -10,9 +10,11 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getEntitlementRepository } from "@/lib/entitlements/repository"
 import type { OverrideInput } from "@/lib/entitlements/types"
+import { requireAdmin, AuthError } from "@/lib/auth/require-admin"
 
 export async function GET(request: Request) {
   try {
+    await requireAdmin();
     const url = new URL(request.url)
     const resource = url.searchParams.get("resource") || "plans"
     const page = parseInt(url.searchParams.get("page") || "1")
@@ -82,12 +84,16 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     console.error("[Admin Entitlements] GET error:", error)
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
     const body = await request.json()
     const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = body
 
@@ -114,6 +120,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[Admin Entitlements] POST error:", error)
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
