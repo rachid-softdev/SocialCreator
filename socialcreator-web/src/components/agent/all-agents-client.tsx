@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { AgentList } from "@/components/agent/agent-list";
-import { Plus, Bot } from "lucide-react";
-import Link from "next/link";
 import type { AgentWithRelations } from "@socialcreator/types/agent";
+import { Bot, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AgentList } from "@/components/agent/agent-list";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface AllAgentsClientProps {
   initialAgents: AgentWithRelations[];

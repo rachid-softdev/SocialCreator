@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createBillingPortal } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { createBillingPortal } from "@/lib/stripe";
 
 export async function POST() {
   const session = await auth();

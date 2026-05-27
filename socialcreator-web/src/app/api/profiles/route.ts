@@ -1,7 +1,7 @@
+import { createProfileSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createProfileSchema } from "@socialcreator/types";
 import { checkProfileQuota } from "@/lib/quota-guard";
 
 // checkProfileQuota imported from quota-guard

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft, Loader2 } from "lucide-react";
-import { cn } from "@socialcreator/utils";
-import { ProgressStepper } from "@socialcreator/ui/progress-stepper";
-import { VideoUpload } from "@/components/video/video-upload";
-import { TranscriptViewer } from "@/components/video/transcript-viewer";
-import { ClipSelector } from "@/components/video/clip-selector";
-import { MuxPlayer } from "@/components/video/mux-player";
-import { ClipsList } from "@/components/video/clips-list";
-import { VideoTimeline } from "@/components/video/video-timeline";
+import type { Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
-import { Platform } from "@prisma/client";
+import { ProgressStepper } from "@socialcreator/ui/progress-stepper";
+import { cn } from "@socialcreator/utils";
+import { ChevronLeft, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { ClipSelector } from "@/components/video/clip-selector";
+import { ClipsList } from "@/components/video/clips-list";
+import { MuxPlayer } from "@/components/video/mux-player";
+import { TranscriptViewer } from "@/components/video/transcript-viewer";
+import { VideoTimeline } from "@/components/video/video-timeline";
+import { VideoUpload } from "@/components/video/video-upload";
 
 interface VideoAsset {
   id: string;

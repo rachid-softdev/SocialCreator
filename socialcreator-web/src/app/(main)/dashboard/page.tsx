@@ -1,11 +1,11 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
-import { PageHeader } from "@/components/layout/page-header";
-import { StatsGrid } from "@/components/dashboard/stats-grid";
-import { RecentContent } from "@/components/dashboard/recent-content";
 import { ActiveAgents } from "@/components/dashboard/active-agents";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { RecentContent } from "@/components/dashboard/recent-content";
+import { StatsGrid } from "@/components/dashboard/stats-grid";
+import { PageHeader } from "@/components/layout/page-header";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function DashboardPage() {
   const session = await auth();

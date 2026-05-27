@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { GradientOrb } from "@socialcreator/ui/gradient-orb";
 import { FeatureCard } from "@socialcreator/ui/feature-card";
+import { GradientOrb } from "@socialcreator/ui/gradient-orb";
 import { NavTop } from "@socialcreator/ui/nav-top";
+import Link from "next/link";
 
 export default function Home() {
   const navLinks = [

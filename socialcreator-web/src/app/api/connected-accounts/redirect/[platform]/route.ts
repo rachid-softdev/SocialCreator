@@ -4,11 +4,11 @@
  * GET /api/connected-accounts/redirect/[platform]?profileId=xxx
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import type { Platform } from "@prisma/client";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { buildAuthUrl } from "@/lib/oauth/auth-url";
-import { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
   params: Promise<{ platform: string }>;

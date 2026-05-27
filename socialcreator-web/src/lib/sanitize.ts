@@ -47,7 +47,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T, depth 
 
   for (const [key, value] of Object.entries(obj)) {
     // Sanitize key
-    const sanitizedKey = key.replace(/[<>\"'&]/g, "").slice(0, 255);
+    const sanitizedKey = key.replace(/[<>"'&]/g, "").slice(0, 255);
     sanitized[sanitizedKey] = sanitizeValue(value, depth);
   }
 

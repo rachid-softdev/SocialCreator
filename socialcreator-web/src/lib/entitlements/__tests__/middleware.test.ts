@@ -2,7 +2,7 @@
  * Feature Flags & Entitlements - Middleware Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock service
 const mockService = {

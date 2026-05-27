@@ -1,5 +1,5 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
 import { Prisma } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // vi.mock factories are hoisted, so we use vi.hoisted for shared references
 const { mockRequireAdmin, MockAuthError } = vi.hoisted(() => {
@@ -36,9 +36,9 @@ vi.mock("bcryptjs", () => ({
   default: { hash: vi.fn(), compare: vi.fn() },
 }));
 
-import { GET, POST } from "../route";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { GET, POST } from "../route";
 
 function createRequest(body: unknown): Request {
   return new Request("http://localhost:3000/api/admin/users", {

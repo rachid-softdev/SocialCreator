@@ -4,9 +4,9 @@
  * and automatically refreshes them if needed (optimized approach)
  */
 
-import { prisma } from "@/lib/prisma";
-import { refreshAccessToken, isTokenExpired, calculateExpiresAt } from "./token-exchange";
 import type { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { calculateExpiresAt, isTokenExpired, refreshAccessToken } from "./token-exchange";
 
 /**
  * Get a valid access token for a profile, refreshing if needed

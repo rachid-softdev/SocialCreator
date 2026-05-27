@@ -1,9 +1,9 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { AnalyticsDashboard } from "./analytics-dashboard";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getProfileCapStatus } from "@/lib/publish-guard";
+import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
   const session = await auth();

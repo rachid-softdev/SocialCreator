@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { cn } from "@socialcreator/utils";
-import { PLATFORMS } from "@socialcreator/types/profile";
 import type { Platform } from "@prisma/client";
 import { PLATFORM_CONSTRAINTS } from "@socialcreator/types/agent";
-import { Instagram, Twitter, Linkedin, Youtube, Facebook, MessageCircle, Pin } from "lucide-react";
+import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { Facebook, Instagram, Linkedin, MessageCircle, Pin, Twitter, Youtube } from "lucide-react";
+import { useState } from "react";
 
 interface PlatformPreviewProps {
   platform: Platform;

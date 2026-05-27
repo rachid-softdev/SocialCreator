@@ -5,9 +5,10 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { decryptToken, encryptToken } from "@/lib/crypto";
+import { prisma } from "@/lib/prisma";
 
 export const tokenRefreshJob = client.defineJob({
   id: "token-refresh",

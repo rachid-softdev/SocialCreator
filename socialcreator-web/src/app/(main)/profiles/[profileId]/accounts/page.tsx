@@ -5,21 +5,21 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams, useParams, useRouter } from "next/navigation";
-import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
+import type { ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
+import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import {
   AccountList,
-  getUnconnectedPlatforms,
   getAllPlatforms,
+  getUnconnectedPlatforms,
 } from "@/components/connected-accounts/account-list";
 import { ConnectModal } from "@/components/connected-accounts/connect-modal";
 import { DisconnectModal } from "@/components/connected-accounts/disconnect-modal";
 import { PlatformIcon } from "@/components/connected-accounts/platform-icon";
-import { Plus, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface ConnectedAccountResponse {
   id: string;

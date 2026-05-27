@@ -1,13 +1,13 @@
-import { notFound } from "next/navigation";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { ArrowLeft, ArrowRight, Calendar, Clock, Tag } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { PostHeader } from "@/components/blog/post-header";
-import { PostContent } from "@/components/blog/post-content";
+import { notFound } from "next/navigation";
 import { PostCard } from "@/components/blog/post-card";
+import { PostContent } from "@/components/blog/post-content";
+import { PostHeader } from "@/components/blog/post-header";
 import { ReadingProgress } from "@/components/blog/reading-progress";
 import {
   getPostBySlug,

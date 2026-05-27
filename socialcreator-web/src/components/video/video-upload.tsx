@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { cn } from "@socialcreator/utils";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface VideoUploadProps {
   profileId: string;

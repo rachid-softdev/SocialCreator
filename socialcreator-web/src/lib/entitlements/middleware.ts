@@ -4,8 +4,11 @@
  * No if(plan === "PRO") in endpoints - use these instead
  */
 
-import { getFeatureGateService } from "./service";
-import { createFeatureNotAvailableError, createLimitReachedError } from "./service";
+import {
+  createFeatureNotAvailableError,
+  createLimitReachedError,
+  getFeatureGateService,
+} from "./service";
 import type { EntitlementError } from "./types";
 
 export interface MiddlewareContext {

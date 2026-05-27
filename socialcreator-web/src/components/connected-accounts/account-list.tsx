@@ -5,7 +5,7 @@
 
 "use client";
 
-import { Platform, ConnectedAccount as ConnectedAccountType } from "@prisma/client";
+import type { ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
 import { AccountCard, AccountCardSkeleton } from "./account-card";
 import { PlatformIcon } from "./platform-icon";
 

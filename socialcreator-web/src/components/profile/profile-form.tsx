@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { cn } from "@socialcreator/utils";
+import type { Platform } from "@prisma/client";
+import type { ProfileFormData } from "@socialcreator/types/profile";
+import { PLATFORMS } from "@socialcreator/types/profile";
 import { TextInput } from "@socialcreator/ui/text-input";
+import { cn } from "@socialcreator/utils";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BrandVoiceEditor } from "./brand-voice-editor";
 import { ContentBankEditor } from "./content-bank-editor";
-import type { Platform } from "@prisma/client";
-import { PLATFORMS } from "@socialcreator/types/profile";
-import type { ProfileFormData } from "@socialcreator/types/profile";
 
 interface ProfileFormProps {
   initialData?: ProfileFormData & { id?: string };

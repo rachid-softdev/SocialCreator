@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { X, Check, AlertTriangle } from "lucide-react";
-import { cn } from "@socialcreator/utils";
-import { PlatformBadge } from "./platform-badge";
-import { ContentStatusBadge } from "./content-status-badge";
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { cn } from "@socialcreator/utils";
+import { AlertTriangle, Check, X } from "lucide-react";
+import { useState } from "react";
+import { ContentStatusBadge } from "./content-status-badge";
+import { PlatformBadge } from "./platform-badge";
 
 interface ApprovalPanelProps {
   content: GeneratedContentWithRelations | null;

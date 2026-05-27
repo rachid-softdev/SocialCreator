@@ -13,8 +13,8 @@
  * Note: TikTok et X ont des APIs d'insights limitées ou payantes
  */
 
+import type { Platform } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { Platform } from "@prisma/client";
 import { getValidAccessToken } from "@/lib/tokens";
 
 // Configuration des plateformes

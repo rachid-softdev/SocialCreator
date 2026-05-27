@@ -1,8 +1,8 @@
+import { Menu } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Menu } from "lucide-react";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

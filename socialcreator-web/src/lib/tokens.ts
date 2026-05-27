@@ -2,10 +2,15 @@
  * Token management utilities - handles token decryption, validation, and refresh
  */
 
-import { prisma } from "./prisma";
+import type { ConnectedAccount } from "@prisma/client";
 import { decryptToken, encryptToken } from "./crypto";
-import { refreshAccessToken, TokenResponse, isTokenExpired, OAuthProvider } from "./oauth";
-import { ConnectedAccount } from "@prisma/client";
+import {
+  isTokenExpired,
+  type OAuthProvider,
+  refreshAccessToken,
+  type TokenResponse,
+} from "./oauth";
+import { prisma } from "./prisma";
 
 /**
  * Get a valid access token for a connected account

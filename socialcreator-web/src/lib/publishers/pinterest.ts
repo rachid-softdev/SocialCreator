@@ -3,7 +3,7 @@
  * Supports creating pins, boards, and publishing
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
 

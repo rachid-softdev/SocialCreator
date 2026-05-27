@@ -1,11 +1,11 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import Image from "next/image";
+import type { Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import type { Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface PostContentProps {
   content: string;
@@ -41,7 +41,7 @@ export function PostContent({ content }: PostContentProps) {
       <ol className="list-decimal list-inside space-y-2 mb-4 text-body">{children}</ol>
     ),
     li: ({ children, ...props }) => {
-      // @ts-ignore - ordered prop may not exist in all versions
+      // @ts-expect-error - ordered prop may not exist in all versions
       const ordered = props.ordered as boolean | undefined;
       return (
         <li className={`text-body leading-relaxed ${ordered ? "" : "flex items-start gap-3"}`}>

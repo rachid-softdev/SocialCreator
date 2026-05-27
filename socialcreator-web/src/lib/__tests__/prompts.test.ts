@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 
-import { PLATFORM_PROMPTS, buildSystemPrompt, buildGenerationPrompt } from "../prompts";
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
+import { buildGenerationPrompt, buildSystemPrompt, PLATFORM_PROMPTS } from "../prompts";
 
 describe("prompts", () => {
   describe("PLATFORM_PROMPTS", () => {

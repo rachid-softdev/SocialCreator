@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted for shared references in hoisted mock factories
 const { mockRequireAdmin, MockAuthError } = vi.hoisted(() => {
@@ -48,10 +48,10 @@ vi.mock("@/lib/entitlements/service", () => ({
   })),
 }));
 
-import { GET as EntitlementsGET, POST as EntitlementsPOST } from "../route";
-import { DELETE as OverrideDELETE } from "../overrides/[id]/route";
-import { GET as DowngradeGET } from "../orgs/[orgId]/downgrade/route";
 import { POST as CacheInvalidatePOST } from "../cache/invalidate/[orgId]/route";
+import { GET as DowngradeGET } from "../orgs/[orgId]/downgrade/route";
+import { DELETE as OverrideDELETE } from "../overrides/[id]/route";
+import { GET as EntitlementsGET, POST as EntitlementsPOST } from "../route";
 
 /**
  * NOTE: The entitlement routes now properly propagate AuthError via

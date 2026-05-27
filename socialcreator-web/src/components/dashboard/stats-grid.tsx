@@ -1,7 +1,7 @@
 "use client";
 
-import { Users, Bot, FileText, TrendingUp } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { Bot, FileText, TrendingUp, Users } from "lucide-react";
 
 interface StatsGridProps {
   stats?: {

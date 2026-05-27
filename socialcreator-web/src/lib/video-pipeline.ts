@@ -1,9 +1,9 @@
+import type { Platform } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { transcribeVideo } from "./deepgram";
-import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "./mux";
 import { generateContent } from "./llm";
-import { buildSystemPrompt, buildGenerationPrompt } from "./prompts";
-import { Platform } from "@prisma/client";
+import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "./mux";
+import { buildGenerationPrompt, buildSystemPrompt } from "./prompts";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo avec timestamps.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.

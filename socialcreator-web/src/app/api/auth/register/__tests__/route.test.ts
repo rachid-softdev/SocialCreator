@@ -1,6 +1,6 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
 vi.mock("@/lib/prisma", () => ({
@@ -22,9 +22,9 @@ vi.mock("@/lib/rate-limit-redis", () => ({
   withRateLimit: vi.fn((_req: any) => null),
 }));
 
-import { POST } from "../route";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { POST } from "../route";
 
 function createRequest(body: unknown): NextRequest {
   return new NextRequest("http://localhost:3000/api/auth/register", {

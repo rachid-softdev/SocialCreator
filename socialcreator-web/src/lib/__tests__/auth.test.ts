@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Note: The auth.ts callbacks (jwt and session) are tested through the NextAuth initialization.
 // Full callback testing requires a complex NextAuth mock setup that is currently blocked by

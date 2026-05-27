@@ -2,7 +2,7 @@
  * OAuth token exchange - exchanges authorization codes for access tokens
  */
 
-import { OAuthProvider, getProviderCredentials } from "./providers";
+import { getProviderCredentials, type OAuthProvider } from "./providers";
 
 export interface TokenResponse {
   access_token: string;

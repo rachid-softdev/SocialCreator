@@ -5,9 +5,9 @@
  * Uses Redis for scalable cap counting with fallback to database
  */
 
-import { prisma } from "@/lib/prisma";
-import { startOfDayUTC } from "@socialcreator/utils";
 import { Platform } from "@prisma/client";
+import { startOfDayUTC } from "@socialcreator/utils";
+import { prisma } from "@/lib/prisma";
 import { getRedis } from "./rate-limit-redis";
 
 export interface CapStatus {

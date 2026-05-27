@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
+import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
+import { prisma } from "@/lib/prisma";
 
 const clipsSchema = z.object({
   segments: z.array(

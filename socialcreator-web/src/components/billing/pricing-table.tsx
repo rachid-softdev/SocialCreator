@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
 import { Button } from "@socialcreator/ui/button";
-import { getPlanData, type PlanKey, type PaidPlanKey } from "@/lib/stripe";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getPlanData, type PaidPlanKey, type PlanKey } from "@/lib/stripe";
 
 interface PricingTableProps {
   onSelectPlan?: (plan: PlanKey) => void;

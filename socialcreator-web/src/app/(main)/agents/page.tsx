@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AllAgentsClient } from "@/components/agent/all-agents-client";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function AllAgentsPage() {
   const session = await auth();

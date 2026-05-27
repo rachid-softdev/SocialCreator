@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanData, getInvoices, type PlanKey } from "@/lib/stripe";
+import { getInvoices, getPlanData, type PlanKey } from "@/lib/stripe";
 import { ClientBillingPage } from "./client-billing-page";
 
 export default async function BillingSettingsPage() {

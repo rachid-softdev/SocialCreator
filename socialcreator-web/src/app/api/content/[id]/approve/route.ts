@@ -1,9 +1,9 @@
+import { approveContentSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { approveContentSchema } from "@socialcreator/types";
-import { isValidUuid } from "@/lib/sanitize";
 import { withRateLimit } from "@/lib/rate-limit-redis";
+import { isValidUuid } from "@/lib/sanitize";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

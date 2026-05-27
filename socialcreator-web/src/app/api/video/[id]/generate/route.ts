@@ -1,10 +1,10 @@
+import type { Platform } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { generateContent } from "@/lib/llm";
-import { buildSystemPrompt, buildGenerationPrompt } from "@/lib/prompts";
-import { Platform } from "@prisma/client";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
+import { generateContent } from "@/lib/llm";
+import { prisma } from "@/lib/prisma";
+import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
 const generateSchema = z.object({
   platforms: z.array(

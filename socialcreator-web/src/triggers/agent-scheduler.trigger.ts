@@ -8,10 +8,11 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
+import parser from "cron-parser";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enqueueAgentRun } from "@/lib/trigger-client";
-import parser from "cron-parser";
 
 // Payload schema for scheduler job
 const SchedulerPayloadSchema = z.object({

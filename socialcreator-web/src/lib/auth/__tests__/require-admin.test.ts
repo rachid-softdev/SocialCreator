@@ -1,12 +1,12 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the auth module before importing
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
 }));
 
-import { requireAdmin, AuthError } from "../require-admin";
 import { auth } from "@/lib/auth";
+import { AuthError, requireAdmin } from "../require-admin";
 
 describe("requireAdmin", () => {
   beforeEach(() => {

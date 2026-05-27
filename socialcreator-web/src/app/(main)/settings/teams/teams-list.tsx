@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Team, TeamMember, Profile } from "@prisma/client";
-import { Users, Settings, Trash2, MoreHorizontal, Crown, Shield, Edit, X } from "lucide-react";
-import { Button } from "@socialcreator/ui/button";
+import type { Profile, Team, TeamMember } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
+import { Button } from "@socialcreator/ui/button";
+import { Crown, Edit, MoreHorizontal, Settings, Shield, Trash2, Users, X } from "lucide-react";
+import { useState } from "react";
 
 interface TeamWithRelations extends Team {
   owner: {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Play, Copy, Check, AlertCircle } from "lucide-react";
 import { Button } from "@socialcreator/ui/button";
+import { AlertCircle, Check, Copy, Play } from "lucide-react";
+import { useState } from "react";
 
 interface McpTesterProps {
   baseUrl?: string;

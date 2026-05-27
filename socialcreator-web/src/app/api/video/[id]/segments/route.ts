@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { generateContent } from "@/lib/llm";
+import { prisma } from "@/lib/prisma";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.

@@ -3,8 +3,8 @@
  * Handles encryption/decryption of OAuth tokens for secure storage
  */
 
-import { encryptToken, decryptToken } from "@/lib/crypto";
 import type { Platform } from "@prisma/client";
+import { decryptToken, encryptToken } from "@/lib/crypto";
 
 /**
  * Encrypted token data structure

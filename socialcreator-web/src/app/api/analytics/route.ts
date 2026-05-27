@@ -8,11 +8,11 @@
  * - to: ISO date string (optional, defaults to now)
  */
 
+import type { Platform } from "@prisma/client";
+import { startOfDayUTC } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { startOfDayUTC } from "@socialcreator/utils";
-import { Platform } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {

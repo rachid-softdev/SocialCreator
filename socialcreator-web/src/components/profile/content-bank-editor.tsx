@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@socialcreator/ui/button";
 import { BadgePill } from "@socialcreator/ui/badge-pill";
-import { Plus, Trash2, GripVertical, Tag, X } from "lucide-react";
+import { Button } from "@socialcreator/ui/button";
+import { GripVertical, Plus, Tag, Trash2, X } from "lucide-react";
+import { useState } from "react";
 
 interface ContentExample {
   id: string;

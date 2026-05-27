@@ -4,8 +4,8 @@
  */
 
 import { NextResponse } from "next/server";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

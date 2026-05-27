@@ -4,11 +4,11 @@
  * Refreshes the access token for a connected account
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { type OAuthProvider, refreshAccessToken } from "@/lib/oauth";
 import { prisma } from "@/lib/prisma";
 import { getValidAccessToken, updateAccountToken } from "@/lib/tokens";
-import { refreshAccessToken, OAuthProvider } from "@/lib/oauth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

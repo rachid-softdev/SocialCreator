@@ -6,8 +6,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TeamsList } from "./teams-list";
 import { TeamDialog } from "./team-dialog";
+import { TeamsList } from "./teams-list";
 
 export default async function TeamsPage() {
   const session = await auth();

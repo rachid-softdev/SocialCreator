@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CGUConsentForm } from "@/components/auth/cgu-consent-form";
+import { auth } from "@/lib/auth";
 
 export default async function CGUPage() {
   const session = await auth();

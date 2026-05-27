@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 
-import { buildSystemPrompt, buildGenerationPrompt } from "../prompts";
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
+import { buildGenerationPrompt, buildSystemPrompt } from "../prompts";
 
 describe("agent-runner utilities", () => {
   describe("buildSystemPrompt", () => {

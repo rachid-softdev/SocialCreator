@@ -1,7 +1,7 @@
+import { contentFilterSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { contentFilterSchema } from "@socialcreator/types";
 import { isValidUuid } from "@/lib/sanitize";
 
 // GET /api/content?profileId=xxx&status=DRAFT&page=1

@@ -4,8 +4,8 @@
  */
 
 import { NextResponse } from "next/server";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getFeatureGateService } from "@/lib/entitlements/service";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
 
 export async function POST(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   try {

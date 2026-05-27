@@ -1,21 +1,21 @@
 "use client";
 
-import Link from "next/link";
+import { cn } from "@socialcreator/utils";
+import {
+  BarChart3,
+  Bot,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import {
-  LayoutDashboard,
-  Users,
-  Bot,
-  FileText,
-  BarChart3,
-  Settings,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react";
-import { cn } from "@socialcreator/utils";
 
 interface SidebarProps {
   user?: {

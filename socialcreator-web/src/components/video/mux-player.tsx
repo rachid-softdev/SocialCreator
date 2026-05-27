@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
 import { cn } from "@socialcreator/utils";
+import { useCallback, useEffect, useRef } from "react";
 import { getMuxStreamUrl } from "@/lib/mux";
 
 interface MuxPlayerProps {

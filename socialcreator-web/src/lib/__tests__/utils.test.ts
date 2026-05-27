@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { startOfDayUTC, hashContent, formatDate, truncateText, slugify } from "../utils";
+import { formatDate, hashContent, slugify, startOfDayUTC, truncateText } from "../utils";
 
 describe("utils", () => {
   describe("startOfDayUTC", () => {

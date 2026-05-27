@@ -7,10 +7,11 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { publishContent } from "@/lib/publishers";
 import { recordPublish } from "@/lib/publish-guard";
+import { publishContent } from "@/lib/publishers";
 
 // Cron trigger: runs every minute
 export const scheduledPublisherJob = client.defineJob({

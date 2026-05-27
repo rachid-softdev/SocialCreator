@@ -4,8 +4,8 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type { DowngradeStrategy, DowngradePreview, FeatureConfig } from "./types";
 import { getEntitlementRepository } from "./repository";
+import type { DowngradePreview, DowngradeStrategy, FeatureConfig } from "./types";
 
 interface PlanFeatureWithStrategy {
   featureKey: string;
@@ -81,7 +81,7 @@ export class DowngradeService {
         let reason = "";
 
         switch (strategy) {
-          case "graceful":
+          case "graceful": {
             const periodEnd = subscription.currentPeriodEnd;
             if (periodEnd && periodEnd > new Date()) {
               reason = `Access retained until ${periodEnd.toISOString().split("T")[0]}`;
@@ -89,6 +89,7 @@ export class DowngradeService {
               reason = "Access will be removed immediately (period ended)";
             }
             break;
+          }
 
           case "immediate":
             reason = "Access removed immediately";

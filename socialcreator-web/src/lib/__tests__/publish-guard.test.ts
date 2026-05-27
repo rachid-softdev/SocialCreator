@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { startOfDayUTC, hashContent } from "../utils";
+import { hashContent, startOfDayUTC } from "../utils";
 
 describe("publish-guard utilities", () => {
   describe("startOfDayUTC", () => {

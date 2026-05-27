@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { cn } from "@socialcreator/utils";
-import { PLATFORMS } from "@socialcreator/types/profile";
 import type { AgentType, Platform } from "@prisma/client";
-import { AGENT_TYPE_LABELS, AGENT_TYPE_DESCRIPTIONS } from "@socialcreator/types/agent";
-import { Bot, Type, Video, RefreshCw } from "lucide-react";
+import { AGENT_TYPE_DESCRIPTIONS, AGENT_TYPE_LABELS } from "@socialcreator/types/agent";
+import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { Bot, RefreshCw, Type, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface AgentFormProps {
   profileId: string;

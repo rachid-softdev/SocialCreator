@@ -4,20 +4,20 @@
  * No if(plan === "PRO") in endpoints - everything goes through here
  */
 
+import { getStripe } from "@/lib/stripe";
+import { cacheService, getEntitlementsCacheKey } from "./cache";
+import { getEntitlementRepository } from "./repository";
 import type {
-  EntitlementValue,
-  DebugTrace,
   ConsumeResult,
-  EntitlementMap,
+  DebugTrace,
   EntitlementError,
+  EntitlementMap,
+  EntitlementValue,
+  ExperimentConfig,
   FeatureType,
   ResolutionSource,
-  ExperimentConfig,
   SubscriptionStatus,
 } from "./types";
-import { getEntitlementRepository } from "./repository";
-import { cacheService, getEntitlementsCacheKey } from "./cache";
-import { getStripe } from "@/lib/stripe";
 
 // Simple hash function for A/B testing (murmurhash-like)
 function murmurhash(key: string): number {

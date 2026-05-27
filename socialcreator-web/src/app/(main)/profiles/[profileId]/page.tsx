@@ -1,14 +1,13 @@
+import { PLATFORMS } from "@socialcreator/types/profile";
+import { BadgePill } from "@socialcreator/ui/badge-pill";
+import { formatDate } from "@socialcreator/utils";
+import { Bot, FileText, Link2, Users } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { BadgePill } from "@socialcreator/ui/badge-pill";
-import { Users, Bot, FileText, Link2 } from "lucide-react";
-import { PLATFORMS } from "@socialcreator/types/profile";
-import { formatDate } from "@socialcreator/utils";
 
 interface ProfileDetailPageProps {
   params: Promise<{ profileId: string }>;

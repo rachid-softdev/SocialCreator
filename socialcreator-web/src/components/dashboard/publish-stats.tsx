@@ -1,9 +1,9 @@
 "use client";
 
+import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
-import { Platform } from "@prisma/client";
-import { getPlatformName } from "@/components/connected-accounts/platform-icon";
 import { AlertCircle, TrendingUp } from "lucide-react";
+import { getPlatformName } from "@/components/connected-accounts/platform-icon";
 
 interface PublishStatsProps {
   stats: Array<{

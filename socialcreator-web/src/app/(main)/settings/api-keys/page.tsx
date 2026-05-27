@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ApiKeyManager } from "@/components/mcp/api-key-manager";
 import { McpTester } from "@/components/mcp/mcp-tester";
 

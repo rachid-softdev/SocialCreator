@@ -3,15 +3,15 @@
  * Comprehensive test suite covering all 14 required test cases
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeatureGateService } from "../service";
 import type {
-  IEntitlementRepository,
-  FeatureDefinition,
-  SubscriptionStatus,
-  ExperimentConfig,
   EntitlementValue,
+  ExperimentConfig,
+  FeatureDefinition,
+  IEntitlementRepository,
   PlanFeatureConfig,
+  SubscriptionStatus,
 } from "../types";
 
 // ============================================

@@ -4,8 +4,8 @@
  */
 
 import { NextResponse } from "next/server";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getDowngradeService } from "@/lib/entitlements/downgrade";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
 
 export async function GET(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   try {

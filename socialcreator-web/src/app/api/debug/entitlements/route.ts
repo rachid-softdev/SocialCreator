@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getFeatureGateService } from "@/lib/entitlements/service";
 
 export async function GET(request: Request) {

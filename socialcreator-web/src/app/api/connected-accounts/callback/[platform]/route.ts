@@ -4,17 +4,17 @@
  * GET /api/connected-accounts/callback/[platform]?code=xxx&state=yyy
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import type { Platform } from "@prisma/client";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   exchangeCodeForToken,
-  getUserInfo,
-  parseState,
-  OAuthProvider,
   getRedirectUri,
+  getUserInfo,
+  type OAuthProvider,
+  parseState,
 } from "@/lib/oauth";
+import { prisma } from "@/lib/prisma";
 import { createConnectedAccount, updateConnectedAccount } from "@/lib/tokens";
-import { Platform } from "@prisma/client";
 
 interface RouteParams {
   params: Promise<{ platform: string }>;

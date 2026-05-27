@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Image from "next/image";
+import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
+import { Download, MoreVertical, Play, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";
-import { Play, Trash2, Download, MoreVertical } from "lucide-react";
-import { Platform } from "@prisma/client";
 
 interface Clip {
   assetId: string;

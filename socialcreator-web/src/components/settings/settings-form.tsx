@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { User, Key, CreditCard, AlertTriangle } from "lucide-react";
 import { Button } from "@socialcreator/ui/button";
+import { AlertTriangle, CreditCard, Key, User } from "lucide-react";
+import { useState } from "react";
 
 interface SettingsFormProps {
   onSave?: (data: { name: string; email: string }) => Promise<void>;

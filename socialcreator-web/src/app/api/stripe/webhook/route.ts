@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import Stripe from "stripe";
-import { getStripe, PLANS } from "@/lib/stripe";
+import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { getStripe, PLANS } from "@/lib/stripe";
 
 export async function POST(request: Request) {
   const body = await request.text();

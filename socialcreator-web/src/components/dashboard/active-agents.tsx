@@ -1,10 +1,9 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
-import { formatDateTime } from "@socialcreator/utils";
 import type { Agent, AgentType, Platform } from "@prisma/client";
-import { Bot, Play } from "lucide-react";
 import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { Bot, Play } from "lucide-react";
 
 interface ActiveAgentsProps {
   agents?: Array<Agent & { profileName?: string; lastRun?: { startedAt: Date | null } }>;

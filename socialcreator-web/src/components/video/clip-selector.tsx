@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Image from "next/image";
 import { cn } from "@socialcreator/utils";
+import { Check, Clock, Play, X } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";
-import { Play, Check, X, Clock } from "lucide-react";
 
 interface Segment {
   start: number;

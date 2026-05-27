@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma";
-import { buildSystemPrompt, buildGenerationPrompt } from "@/lib/prompts";
+import type { Platform } from "@prisma/client";
 import { generateContent } from "@/lib/llm";
-import { Platform } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
 interface TriggerAgentRunParams {
   agentId: string;

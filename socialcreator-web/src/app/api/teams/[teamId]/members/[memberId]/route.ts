@@ -6,10 +6,10 @@
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canModifyMemberRole, canRemoveMember } from "@/lib/team-permissions";
-import { z } from "zod";
 
 const updateRoleSchema = z.object({
   role: z.enum(["ADMIN", "EDITOR", "VIEWER"]),

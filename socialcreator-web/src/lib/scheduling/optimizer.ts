@@ -10,8 +10,8 @@
  * - Adaptation aux patterns d'engagement
  */
 
+import type { Platform } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { Platform } from "@prisma/client";
 
 interface EngagementData {
   hour: number;

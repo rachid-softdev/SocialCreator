@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 interface PlatformData {
   platform: string;

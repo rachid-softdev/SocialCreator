@@ -6,8 +6,8 @@
  */
 
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
 // Ownership result types

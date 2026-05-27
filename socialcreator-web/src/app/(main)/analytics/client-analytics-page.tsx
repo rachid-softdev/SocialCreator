@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Eye, Heart, MousePointerClick, TrendingUp } from "lucide-react";
 import dynamic from "next/dynamic";
-import { Eye, MousePointerClick, Heart, TrendingUp } from "lucide-react";
-import { StatsCard } from "@/components/analytics/stats-card";
-import { PlatformTable } from "@/components/analytics/platform-table";
+import { useState } from "react";
 import { DateRangePicker } from "@/components/analytics/date-range-picker";
+import { PlatformTable } from "@/components/analytics/platform-table";
+import { StatsCard } from "@/components/analytics/stats-card";
 
 // Lazy load Recharts - only load when charts are in viewport
 const ImpressionsChart = dynamic(

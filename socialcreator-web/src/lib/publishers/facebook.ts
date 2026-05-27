@@ -2,7 +2,7 @@
  * Facebook publisher via Meta Graph API
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToFacebook(
   content: {

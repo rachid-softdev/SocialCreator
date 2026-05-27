@@ -1,4 +1,4 @@
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
 
 export const PLATFORM_PROMPTS: Record<Platform, string> = {
   INSTAGRAM: `Tu crées du contenu pour Instagram. Ton : visuel, émotionnel, inspirant. Max 2200 chars. 3-5 hashtags pertinents. Commence par un hook accrocheur. Structure: hook → contenu → CTA subtil.`,

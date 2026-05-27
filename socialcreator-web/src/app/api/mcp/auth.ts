@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export interface McpAuthResult {
   userId: string;

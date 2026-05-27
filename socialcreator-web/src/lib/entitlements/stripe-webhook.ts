@@ -3,7 +3,7 @@
  * Handles subscription events with idempotency, transactions, and cache invalidation
  */
 
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { cacheService, getEntitlementsCacheKey } from "./cache";

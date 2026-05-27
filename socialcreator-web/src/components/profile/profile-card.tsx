@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@socialcreator/utils";
-import type { Profile, Platform } from "@prisma/client";
+import type { Platform, Profile } from "@prisma/client";
 import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface ProfileCardProps {
   profile: Profile & {

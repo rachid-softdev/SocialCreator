@@ -2,7 +2,7 @@
  * X (Twitter) publisher via Twitter API v2
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToX(
   content: {

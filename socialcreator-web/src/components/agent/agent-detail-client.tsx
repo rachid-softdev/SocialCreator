@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { AgentForm } from "@/components/agent/agent-form";
-import { RunList } from "@/components/agent/run-list";
-import { PlatformBadge } from "@/components/content/platform-badge";
-import { RunStatusBadge } from "@/components/agent/run-status-badge";
-import { ContentList } from "@/components/content/content-list";
-import { AgentRunModal } from "./agent-run-modal";
 import type { AgentWithRelations } from "@socialcreator/types/agent";
 import { AGENT_TYPE_LABELS } from "@socialcreator/types/agent";
-import { formatDateTime } from "@socialcreator/utils";
-import { Bot, Play, Settings, BarChart3, FileText, RefreshCw } from "lucide-react";
-import { cn } from "@socialcreator/utils";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { BarChart3, Bot, FileText, Play, RefreshCw, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AgentForm } from "@/components/agent/agent-form";
+import { RunList } from "@/components/agent/run-list";
+import { RunStatusBadge } from "@/components/agent/run-status-badge";
+import { ContentList } from "@/components/content/content-list";
+import { PlatformBadge } from "@/components/content/platform-badge";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
+import { AgentRunModal } from "./agent-run-modal";
 
 interface AgentDetailClientProps {
   agent: AgentWithRelations & {

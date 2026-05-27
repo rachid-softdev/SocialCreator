@@ -2,7 +2,7 @@
  * OAuth token revocation - revokes access tokens on platforms that support it
  */
 
-import { OAuthProvider, getProviderCredentials } from "./providers";
+import { getProviderCredentials, type OAuthProvider } from "./providers";
 
 /**
  * Revoke an access token on the respective platform

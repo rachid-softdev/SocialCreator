@@ -4,11 +4,11 @@
  * DELETE /api/connected-accounts/[id] - Disconnect and remove a connected account
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { decryptToken } from "@/lib/crypto";
 import { revokeToken } from "@/lib/oauth/revoke";
+import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

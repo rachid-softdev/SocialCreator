@@ -3,7 +3,7 @@
  * Supports video uploads, text-only posts, and retry logic
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
 
@@ -51,7 +51,7 @@ async function retryWithBackoff<T>(
           lastError.message.includes("timeout");
 
         if (shouldRetry) {
-          const delay = baseDelay * Math.pow(2, attempt - 1);
+          const delay = baseDelay * 2 ** (attempt - 1);
           console.log(`TikTok retry ${attempt}/${maxRetries} after ${delay}ms`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;

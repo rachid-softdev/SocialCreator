@@ -3,10 +3,10 @@
  * Get the current cap status for a profile/platform
  */
 
+import type { Platform } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkDailyCap } from "@/lib/publish-guard";
-import { Platform } from "@prisma/client";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

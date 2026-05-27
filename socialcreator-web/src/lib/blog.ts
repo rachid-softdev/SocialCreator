@@ -1,6 +1,6 @@
+import type { BlogPost, BlogPostsData } from "@socialcreator/types/blog";
 import fs from "fs";
 import path from "path";
-import type { BlogPostsData, BlogPost } from "@socialcreator/types/blog";
 
 const postsFilePath = path.join(process.cwd(), "src/content/blog/posts.json");
 

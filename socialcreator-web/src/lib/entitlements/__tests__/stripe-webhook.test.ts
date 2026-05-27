@@ -3,8 +3,8 @@
  * Tests for idempotency, signature verification, and event handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Stripe from "stripe";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Stripe
 const mockStripe = {

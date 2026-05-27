@@ -1,11 +1,10 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
-import { RunStatusBadge } from "./run-status-badge";
-import { PlatformBadge } from "@/components/content/platform-badge";
 import type { AgentRunWithRelations } from "@socialcreator/types/agent";
-import { formatDateTime } from "@socialcreator/utils";
-import { CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { cn, formatDateTime } from "@socialcreator/utils";
+import { CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
+import { PlatformBadge } from "@/components/content/platform-badge";
+import { RunStatusBadge } from "./run-status-badge";
 
 interface RunDetailProps {
   run: AgentRunWithRelations & {

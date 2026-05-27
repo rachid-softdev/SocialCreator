@@ -3,15 +3,14 @@
  * User settings and preferences
  */
 
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { Button } from "@socialcreator/ui/button";
+import { Bell, CreditCard, HelpCircle, Link2, Shield, User } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { User, CreditCard, Bell, Shield, Link2, HelpCircle } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();

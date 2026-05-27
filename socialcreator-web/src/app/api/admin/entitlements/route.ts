@@ -7,10 +7,10 @@
  */
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import type { OverrideInput } from "@/lib/entitlements/types";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
+import { prisma } from "@/lib/prisma";
 
 const ALLOWED_SORT_FIELDS = ["key", "name", "sortOrder", "createdAt", "isActive"] as const;
 const ALLOWED_SORT_ORDERS = ["asc", "desc"] as const;

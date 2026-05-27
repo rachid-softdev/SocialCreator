@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import { PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
 
 interface PlatformBadgeProps {
   platform: string;

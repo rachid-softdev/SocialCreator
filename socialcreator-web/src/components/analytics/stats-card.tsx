@@ -1,7 +1,7 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 interface StatsCardProps {
   label: string;

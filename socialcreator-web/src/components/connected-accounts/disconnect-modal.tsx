@@ -5,9 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
-import { Platform } from "@prisma/client";
-import { PlatformIcon, getPlatformName } from "./platform-icon";
+import type { Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
 import {
   Dialog,
@@ -18,6 +16,8 @@ import {
   DialogTitle,
 } from "@socialcreator/ui/dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface DisconnectModalProps {
   isOpen: boolean;

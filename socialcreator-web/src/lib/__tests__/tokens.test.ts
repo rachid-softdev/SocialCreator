@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { encryptToken, decryptToken, hashString, maskString, generateSecureToken } from "../crypto";
+import { decryptToken, encryptToken, generateSecureToken, hashString, maskString } from "../crypto";
 
 describe("crypto utilities", () => {
   describe("encryptToken", () => {

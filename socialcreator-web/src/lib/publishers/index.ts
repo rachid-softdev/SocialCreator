@@ -3,15 +3,15 @@
  * Each platform has its own publisher implementation
  */
 
-import { Platform } from "@prisma/client";
-import { publishToInstagram } from "./instagram";
-import { publishToTikTok } from "./tiktok";
-import { publishToYouTube } from "./youtube";
+import type { Platform } from "@prisma/client";
 import { publishToFacebook } from "./facebook";
-import { publishToX } from "./x";
+import { publishToInstagram } from "./instagram";
 import { publishToLinkedIn } from "./linkedin";
-import { publishToThreads } from "./threads";
 import { publishToPinterest } from "./pinterest";
+import { publishToThreads } from "./threads";
+import { publishToTikTok } from "./tiktok";
+import { publishToX } from "./x";
+import { publishToYouTube } from "./youtube";
 
 export interface PublishResult {
   success: boolean;
@@ -81,14 +81,14 @@ export async function publishContent(
 
 // Export individual publishers for direct use
 export {
-  publishToInstagram,
-  publishToTikTok,
-  publishToYouTube,
   publishToFacebook,
-  publishToX,
+  publishToInstagram,
   publishToLinkedIn,
-  publishToThreads,
   publishToPinterest,
+  publishToThreads,
+  publishToTikTok,
+  publishToX,
+  publishToYouTube,
 };
 
 // Stub implementations for factory pattern

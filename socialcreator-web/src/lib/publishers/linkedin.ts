@@ -2,7 +2,7 @@
  * LinkedIn publisher via LinkedIn API v2
  */
 
-import { PublishResult } from "./index";
+import type { PublishResult } from "./index";
 
 export async function publishToLinkedIn(
   content: {

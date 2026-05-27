@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, EB_Garamond } from "next/font/google";
+import { EB_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ToastLayoutWrapper } from "@/components/toast-layout-wrapper";
 

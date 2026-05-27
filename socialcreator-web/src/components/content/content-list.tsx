@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { LayoutGrid, List, Filter, X } from "lucide-react";
-import { cn } from "@socialcreator/utils";
-import { ContentCard } from "./content-card";
-import { PlatformBadge } from "./platform-badge";
-import { ContentStatusBadge } from "./content-status-badge";
-import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import type { ContentStatus, Platform } from "@prisma/client";
-import { CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
-import { PLATFORMS } from "@socialcreator/types/profile";
+import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
+import { CONTENT_STATUS_LABELS, PLATFORMS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
+import { Filter, LayoutGrid, List, X } from "lucide-react";
+import { useState } from "react";
+import { ContentCard } from "./content-card";
+import { ContentStatusBadge } from "./content-status-badge";
+import { PlatformBadge } from "./platform-badge";
 
 interface ContentListProps {
   contents: GeneratedContentWithRelations[];

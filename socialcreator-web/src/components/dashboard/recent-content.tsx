@@ -1,13 +1,12 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
-import { formatDate } from "@socialcreator/utils";
-import type { GeneratedContent, Platform, ContentStatus } from "@prisma/client";
+import type { ContentStatus, GeneratedContent, Platform } from "@prisma/client";
 import {
-  CONTENT_STATUS_LABELS,
   CONTENT_STATUS_COLORS,
+  CONTENT_STATUS_LABELS,
   PLATFORMS,
 } from "@socialcreator/types/profile";
+import { cn, formatDate } from "@socialcreator/utils";
 
 interface RecentContentProps {
   contents?: Array<GeneratedContent & { profileName?: string }>;

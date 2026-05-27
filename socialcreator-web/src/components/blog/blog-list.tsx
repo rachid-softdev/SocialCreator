@@ -1,9 +1,9 @@
 "use client";
 
+import type { BlogPost } from "@socialcreator/types/blog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { PostCard } from "./post-card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { BlogPost } from "@socialcreator/types/blog";
 
 interface BlogListProps {
   posts: BlogPost[];

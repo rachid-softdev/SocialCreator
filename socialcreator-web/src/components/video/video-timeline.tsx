@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
 import { cn } from "@socialcreator/utils";
+import { useCallback } from "react";
 
 interface Word {
   word: string;

@@ -3,8 +3,8 @@
  * Checks user permissions for actions on teams and profiles
  */
 
+import type { TeamRole } from "@prisma/client";
 import { prisma } from "./prisma";
-import { TeamRole } from "@prisma/client";
 
 export interface PermissionCheck {
   can: boolean;

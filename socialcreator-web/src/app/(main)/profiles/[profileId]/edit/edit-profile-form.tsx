@@ -1,12 +1,12 @@
 "use client";
 
+import type { ProfileFormData } from "@socialcreator/types/profile";
+import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
-import { PageHeader } from "@/components/layout/page-header";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
-import type { ProfileFormData } from "@socialcreator/types/profile";
 
 interface EditProfileFormProps {
   profile: {

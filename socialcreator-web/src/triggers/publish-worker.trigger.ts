@@ -12,12 +12,13 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
+import { hashContent } from "@socialcreator/utils";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getValidAccessToken } from "@/lib/tokens";
 import { checkDailyCap } from "@/lib/publish-guard";
 import { getPublisher } from "@/lib/publishers";
-import { hashContent } from "@socialcreator/utils";
+import { getValidAccessToken } from "@/lib/tokens";
 
 // Payload schema for publish job
 const PublishPayloadSchema = z.object({

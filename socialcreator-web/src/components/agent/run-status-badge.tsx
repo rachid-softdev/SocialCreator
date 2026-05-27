@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import type { RunStatus } from "@socialcreator/types/agent";
-import { RUN_STATUS_LABELS, RUN_STATUS_COLORS } from "@socialcreator/types/agent";
+import { RUN_STATUS_COLORS, RUN_STATUS_LABELS } from "@socialcreator/types/agent";
+import { cn } from "@socialcreator/utils";
 
 interface RunStatusBadgeProps {
   status: RunStatus;

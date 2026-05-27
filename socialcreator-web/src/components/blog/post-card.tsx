@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
+import type { BlogPost } from "@socialcreator/types/blog";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Clock, Calendar } from "lucide-react";
-import type { BlogPost } from "@socialcreator/types/blog";
+import { Calendar, Clock } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 interface PostCardProps {
   post: BlogPost;

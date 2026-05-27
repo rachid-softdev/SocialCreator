@@ -3,7 +3,7 @@
  * Renders platform-specific icons with brand colors
  */
 
-import { Platform } from "@prisma/client";
+import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
 
 interface PlatformIconProps {

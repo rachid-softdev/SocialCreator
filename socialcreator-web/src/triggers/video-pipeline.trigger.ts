@@ -9,12 +9,13 @@ import { client } from "@/lib/trigger";
 
 // Mock triggerHttpPayload - will be replaced with actual implementation
 const triggerHttpPayload = (config: any) => config;
+
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { transcribeVideo } from "@/lib/deepgram";
 import { generateContent } from "@/lib/llm";
 import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
-import { buildSystemPrompt, buildGenerationPrompt } from "@/lib/prompts";
+import { prisma } from "@/lib/prisma";
+import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.

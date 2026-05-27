@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { encryptToken, decryptToken } from "../crypto";
+import { decryptToken, encryptToken } from "../crypto";
 
 describe("crypto", () => {
   const TEST_SECRET = "test-encryption-key-for-testing";

@@ -1,8 +1,8 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
+import { getApiKeyPrefix, hashApiKey } from "@/app/api/mcp/auth";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hashApiKey, getApiKeyPrefix } from "@/app/api/mcp/auth";
-import crypto from "crypto";
 
 export async function GET() {
   const session = await auth();

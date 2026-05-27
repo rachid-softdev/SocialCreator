@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { AgentsClient } from "@/components/agent/agents-client";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface PageProps {
   params: Promise<{ profileId: string }>;

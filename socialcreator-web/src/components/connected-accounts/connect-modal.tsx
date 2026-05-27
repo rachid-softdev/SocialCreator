@@ -5,10 +5,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
-import { Platform } from "@prisma/client";
-import { PlatformIcon, getPlatformName } from "./platform-icon";
-import { getAllPlatforms, getUnconnectedPlatforms } from "./account-list";
+import type { Platform } from "@prisma/client";
 import { Button } from "@socialcreator/ui/button";
 import {
   Dialog,
@@ -18,6 +15,9 @@ import {
   DialogTitle,
 } from "@socialcreator/ui/dialog";
 import { Loader2, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
+import { getAllPlatforms, getUnconnectedPlatforms } from "./account-list";
+import { getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface ConnectModalProps {
   isOpen: boolean;

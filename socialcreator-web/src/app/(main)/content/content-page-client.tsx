@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, memo } from "react";
-import { PageHeader } from "@/components/layout/page-header";
-import { ContentList } from "@/components/content/content-list";
-import { ApprovalPanel } from "@/components/content/approval-panel";
+import type { ContentStatus } from "@prisma/client";
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
-import type { ContentStatus } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
+import { memo, useState } from "react";
+import { ApprovalPanel } from "@/components/content/approval-panel";
+import { ContentList } from "@/components/content/content-list";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface ContentPageClientProps {
   initialContents: GeneratedContentWithRelations[];

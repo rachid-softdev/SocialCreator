@@ -2,7 +2,7 @@
  * OAuth user info - retrieves user profile information from each platform
  */
 
-import { OAuthProvider } from "./providers";
+import type { OAuthProvider } from "./providers";
 
 export interface UserInfo {
   accountId: string;
@@ -108,13 +108,14 @@ function normalizeUserInfo(platform: OAuthProvider, data: any): UserInfo {
         accountAvatarUrl: data.data?.profile_image_url || null,
       };
 
-    case "YOUTUBE":
+    case "YOUTUBE": {
       const channel = data.items?.[0];
       return {
         accountId: channel?.id,
         accountName: channel?.snippet?.title,
         accountAvatarUrl: channel?.snippet?.thumbnails?.default?.url || null,
       };
+    }
 
     case "PINTEREST":
       return {

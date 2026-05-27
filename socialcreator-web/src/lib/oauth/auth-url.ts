@@ -2,7 +2,7 @@
  * OAuth URL builder - generates authorization URLs with proper state handling
  */
 
-import { OAuthProvider, getRedirectUri, OAUTH_PROVIDERS } from "./providers";
+import { getRedirectUri, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
 interface AuthState {
   platform: string;

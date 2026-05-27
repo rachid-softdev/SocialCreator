@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import type { ContentStatus } from "@prisma/client";
-import { CONTENT_STATUS_LABELS, CONTENT_STATUS_COLORS } from "@socialcreator/types/profile";
+import { CONTENT_STATUS_COLORS, CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
+import { cn } from "@socialcreator/utils";
 
 interface ContentStatusBadgeProps {
   status: ContentStatus;

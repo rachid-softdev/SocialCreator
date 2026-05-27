@@ -1,9 +1,9 @@
 "use client";
 
+import type { AgentWithRelations } from "@socialcreator/types/agent";
 import { Bot, Plus } from "lucide-react";
 import Link from "next/link";
 import { AgentCard } from "./agent-card";
-import type { AgentWithRelations } from "@socialcreator/types/agent";
 
 interface AgentListProps {
   agents: (AgentWithRelations & { stats: { totalRuns: number; successRate: number } })[];

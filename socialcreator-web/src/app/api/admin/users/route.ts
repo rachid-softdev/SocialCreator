@@ -1,9 +1,9 @@
+import { Prisma } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { requireAdmin, AuthError } from "@/lib/auth/require-admin";
 
 const VALID_ROLES = ["USER", "ADMIN"] as const;
 
