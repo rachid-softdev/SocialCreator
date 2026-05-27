@@ -49,6 +49,9 @@ prisma*.db-journal
 # Husky
 .husky/
 
+# Turbo
+.turbo/
+
 # Biome ignore
 .biome/
 
