@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { SubscriptionStatus } from "@/components/billing/subscription-status"
-import { formatDate } from "@socialcreator/utils"
-import { getPlanData, type PlanKey } from "@/lib/stripe"
-import type Stripe from "stripe"
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { SubscriptionStatus } from "@/components/billing/subscription-status";
+import { formatDate } from "@socialcreator/utils";
+import { getPlanData, type PlanKey } from "@/lib/stripe";
+import type Stripe from "stripe";
 
 interface ClientBillingPageProps {
-  currentPlan: PlanKey
-  status?: string | null
-  renewalDate: Date
-  profileCount: number
-  planData: Record<string, unknown> | null
-  invoices: Stripe.Invoice[]
+  currentPlan: PlanKey;
+  status?: string | null;
+  renewalDate: Date;
+  profileCount: number;
+  planData: Record<string, unknown> | null;
+  invoices: Stripe.Invoice[];
 }
 
 export function ClientBillingPage({
@@ -24,30 +24,30 @@ export function ClientBillingPage({
   planData,
   invoices,
 }: ClientBillingPageProps) {
-  const router = useRouter()
-  const [isLoadingPortal, setIsLoadingPortal] = useState(false)
+  const router = useRouter();
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 
   const handleManagePortal = async () => {
-    setIsLoadingPortal(true)
+    setIsLoadingPortal(true);
     try {
       const response = await fetch("/api/stripe/portal", {
         method: "POST",
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.url) {
-        router.push(data.url)
+        router.push(data.url);
       } else if (data.error) {
-        alert(data.error)
+        alert(data.error);
       }
     } catch (error) {
-      console.error("Failed to open portal:", error)
-      alert("Failed to open billing portal")
+      console.error("Failed to open portal:", error);
+      alert("Failed to open billing portal");
     } finally {
-      setIsLoadingPortal(false)
+      setIsLoadingPortal(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-content mx-auto px-6 py-section">
@@ -99,9 +99,7 @@ export function ClientBillingPage({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-hairline bg-surface-strong">
-                  <th className="px-4 py-3 text-left text-caption font-medium text-muted">
-                    Date
-                  </th>
+                  <th className="px-4 py-3 text-left text-caption font-medium text-muted">Date</th>
                   <th className="px-4 py-3 text-left text-caption font-medium text-muted">
                     Amount
                   </th>
@@ -135,8 +133,8 @@ export function ClientBillingPage({
                           invoice.status === "paid"
                             ? "bg-semantic-success/10 text-semantic-success"
                             : invoice.status === "open"
-                            ? "bg-gradient-peach/30 text-semantic-error"
-                            : "bg-surface-strong text-muted"
+                              ? "bg-gradient-peach/30 text-semantic-error"
+                              : "bg-surface-strong text-muted"
                         }`}
                       >
                         {invoice.status}
@@ -176,5 +174,5 @@ export function ClientBillingPage({
         </div>
       )}
     </div>
-  )
+  );
 }

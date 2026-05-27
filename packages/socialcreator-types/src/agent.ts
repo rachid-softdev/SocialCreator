@@ -1,4 +1,12 @@
-import type { Agent, AgentRun, GeneratedContent, AgentType, RunStatus, ContentStatus, Platform } from "@prisma/client";
+import type {
+  Agent,
+  AgentRun,
+  GeneratedContent,
+  AgentType,
+  RunStatus,
+  ContentStatus,
+} from "@prisma/client";
+import type { Platform } from "./platforms";
 
 export type { Agent, AgentRun, GeneratedContent, AgentType, RunStatus, ContentStatus, Platform };
 
@@ -90,13 +98,4 @@ export const RUN_STATUS_COLORS: Record<RunStatus, string> = {
   CANCELLED: "bg-gray-100 text-gray-600",
 };
 
-export const PLATFORM_CONSTRAINTS: Record<Platform, { maxChars: number; maxHashtags: number; supportsVideo: boolean; supportsImages: boolean }> = {
-  INSTAGRAM: { maxChars: 2200, maxHashtags: 30, supportsVideo: true, supportsImages: true },
-  TIKTOK: { maxChars: 150, maxHashtags: 10, supportsVideo: true, supportsImages: false },
-  LINKEDIN: { maxChars: 3000, maxHashtags: 5, supportsVideo: true, supportsImages: true },
-  YOUTUBE: { maxChars: 5000, maxHashtags: 15, supportsVideo: true, supportsImages: false },
-  X: { maxChars: 280, maxHashtags: 3, supportsVideo: true, supportsImages: true },
-  FACEBOOK: { maxChars: 63206, maxHashtags: 10, supportsVideo: true, supportsImages: true },
-  THREADS: { maxChars: 500, maxHashtags: 10, supportsVideo: true, supportsImages: true },
-  PINTEREST: { maxChars: 500, maxHashtags: 20, supportsVideo: false, supportsImages: true },
-};
+export { PLATFORM_CONSTRAINTS } from "./platforms";

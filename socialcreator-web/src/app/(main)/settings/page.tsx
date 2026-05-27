@@ -25,9 +25,7 @@ export default async function SettingsPage() {
     where: { userId: session.user.id },
   });
 
-  const breadcrumbItems = [
-    { label: "Paramètres" },
-  ];
+  const breadcrumbItems = [{ label: "Paramètres" }];
 
   const settingsSections = [
     {
@@ -77,10 +75,7 @@ export default async function SettingsPage() {
     <div className="container max-w-4xl">
       <Breadcrumb items={breadcrumbItems} />
 
-      <PageHeader
-        title="Paramètres"
-        description="Gérez vos préférences et votre compte"
-      />
+      <PageHeader title="Paramètres" description="Gérez vos préférences et votre compte" />
 
       <div className="mt-8 space-y-4">
         {settingsSections.map((section) => {
@@ -98,13 +93,9 @@ export default async function SettingsPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-title-sm text-ink">{section.title}</h3>
-                  <p className="text-body-sm text-muted mt-0.5">
-                    {section.description}
-                  </p>
+                  <p className="text-body-sm text-muted mt-0.5">{section.description}</p>
                 </div>
-                <span className="text-caption text-muted-soft">
-                  Bientôt disponible
-                </span>
+                <span className="text-caption text-muted-soft">Bientôt disponible</span>
               </div>
             );
           }
@@ -119,12 +110,8 @@ export default async function SettingsPage() {
                 <Icon className="w-5 h-5 text-ink" />
               </div>
               <div className="flex-1">
-                <h3 className="text-title-sm text-ink group-hover:text-ink">
-                  {section.title}
-                </h3>
-                <p className="text-body-sm text-muted mt-0.5">
-                  {section.description}
-                </p>
+                <h3 className="text-title-sm text-ink group-hover:text-ink">{section.title}</h3>
+                <p className="text-body-sm text-muted mt-0.5">{section.description}</p>
               </div>
               <svg
                 className="w-5 h-5 text-muted-soft group-hover:text-muted transition-colors"

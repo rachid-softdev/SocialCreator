@@ -64,7 +64,7 @@ export default async function RunDetailPage({ params }: PageProps) {
   let duration: number | null = null;
   if (run.startedAt && run.finishedAt) {
     duration = Math.round(
-      (new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) / 1000
+      (new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) / 1000,
     );
   }
 
@@ -83,9 +83,7 @@ export default async function RunDetailPage({ params }: PageProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-display-sm text-ink">Run Details</h1>
-          <p className="text-body-sm text-muted mt-1">
-            {formatDateTime(run.createdAt)}
-          </p>
+          <p className="text-body-sm text-muted mt-1">{formatDateTime(run.createdAt)}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link

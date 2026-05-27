@@ -32,7 +32,9 @@ export function ActiveAgents({ agents }: ActiveAgentsProps) {
     return (
       <div className="bg-surface-card border border-hairline rounded-xl p-6">
         <h3 className="text-title-sm text-ink mb-4">Active Agents</h3>
-        <p className="text-body-sm text-muted">No active agents. Create a profile and add an agent to get started.</p>
+        <p className="text-body-sm text-muted">
+          No active agents. Create a profile and add an agent to get started.
+        </p>
       </div>
     );
   }
@@ -57,7 +59,9 @@ export function ActiveAgents({ agents }: ActiveAgentsProps) {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   {getPlatformIcons(agent.platforms).map((icon, idx) => (
-                    <span key={idx} className="text-sm">{icon}</span>
+                    <span key={idx} className="text-sm">
+                      {icon}
+                    </span>
                   ))}
                 </div>
                 {agent.lastRun?.startedAt && (

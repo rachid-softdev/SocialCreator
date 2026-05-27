@@ -7,14 +7,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import {
-  getValidAccessToken,
-  updateAccountToken,
-} from "@/lib/tokens";
-import {
-  refreshAccessToken,
-  OAuthProvider,
-} from "@/lib/oauth";
+import { getValidAccessToken, updateAccountToken } from "@/lib/tokens";
+import { refreshAccessToken, OAuthProvider } from "@/lib/oauth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -30,10 +24,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Verify account ownership
@@ -45,43 +36,31 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!account) {
-      return NextResponse.json(
-        { error: "Connected account not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Connected account not found" }, { status: 404 });
     }
 
     if (account.profile.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Get the current refresh token
     const { decryptToken } = await import("@/lib/crypto");
 
     if (!account.refreshToken) {
-      return NextResponse.json(
-        { error: "No refresh token available" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No refresh token available" }, { status: 400 });
     }
 
     const refreshToken = decryptToken(account.refreshToken);
 
     // Refresh the token
-    const newTokens = await refreshAccessToken(
-      account.platform as OAuthProvider,
-      refreshToken
-    );
+    const newTokens = await refreshAccessToken(account.platform as OAuthProvider, refreshToken);
 
     // Update the account with new tokens
     await updateAccountToken(
       id,
       newTokens.access_token,
       newTokens.refresh_token,
-      newTokens.expires_in
+      newTokens.expires_in,
     );
 
     return NextResponse.json({
@@ -92,9 +71,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error refreshing token:", error);
-    return NextResponse.json(
-      { error: "Failed to refresh token" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to refresh token" }, { status: 500 });
   }
 }

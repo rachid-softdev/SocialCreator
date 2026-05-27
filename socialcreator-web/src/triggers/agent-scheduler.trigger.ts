@@ -38,27 +38,23 @@ export const agentSchedulerJob = client.defineJob({
     await io.logger.info("Starting agent scheduler check");
 
     // Fetch all active agents with scheduleCron
-    const agents = await io.runTask(
-      "fetch-scheduled-agents",
-      { timeout: "30s" },
-      async () => {
-        return await prisma.agent.findMany({
-          where: {
-            isActive: true,
-            scheduleCron: { not: null },
+    const agents = await io.runTask("fetch-scheduled-agents", { timeout: "30s" }, async () => {
+      return await prisma.agent.findMany({
+        where: {
+          isActive: true,
+          scheduleCron: { not: null },
+        },
+        include: {
+          profile: {
+            select: { id: true, name: true, userId: true },
           },
-          include: {
-            profile: {
-              select: { id: true, name: true, userId: true },
-            },
-            runs: {
-              orderBy: { createdAt: "desc" },
-              take: 1,
-            },
+          runs: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
           },
-        });
-      }
-    );
+        },
+      });
+    });
 
     let runsTriggered = 0;
 
@@ -98,17 +94,14 @@ export const agentSchedulerJob = client.defineJob({
         }
 
         if (shouldRun && agent.platforms.length > 0) {
-        await io.logger.info("Triggering agent run", {
-          agentId: agent.id,
-          agentName: agent.name,
-        });
+          await io.logger.info("Triggering agent run", {
+            agentId: agent.id,
+            agentName: agent.name,
+          });
 
-        try {
-          // Create a new run
-          const run = await io.runTask(
-            "create-run",
-            { timeout: "10s" },
-            async () => {
+          try {
+            // Create a new run
+            const run = await io.runTask("create-run", { timeout: "10s" }, async () => {
               return await prisma.agentRun.create({
                 data: {
                   agentId: agent.id,
@@ -116,24 +109,23 @@ export const agentSchedulerJob = client.defineJob({
                   status: "PENDING",
                 },
               });
-            }
-          );
+            });
 
-          // Enqueue the run
-          await enqueueAgentRun({
-            agentId: agent.id,
-            runId: run.id,
-            userId: agent.profile.userId,
-            profileId: agent.profile.id,
-          });
+            // Enqueue the run
+            await enqueueAgentRun({
+              agentId: agent.id,
+              runId: run.id,
+              userId: agent.profile.userId,
+              profileId: agent.profile.id,
+            });
 
-          runsTriggered++;
-        } catch (error) {
-          await io.logger.error("Failed to trigger agent run", {
-            agentId: agent.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
+            runsTriggered++;
+          } catch (error) {
+            await io.logger.error("Failed to trigger agent run", {
+              agentId: agent.id,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
         }
       } catch (error) {
         await io.logger.warn("Invalid cron expression for agent", {
@@ -168,17 +160,14 @@ export async function triggerSchedulerCheck(): Promise<void> {
     return;
   }
 
-  const response = await fetch(
-    `${apiUrl}/v1/jobs/agent-scheduler/trigger`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({}),
-    }
-  );
+  const response = await fetch(`${apiUrl}/v1/jobs/agent-scheduler/trigger`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({}),
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to trigger scheduler: ${response.statusText}`);

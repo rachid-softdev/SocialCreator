@@ -38,22 +38,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (error) {
       console.error("OAuth error:", error, errorDescription);
       return NextResponse.redirect(
-        new URL(`/profiles?error=oauth_error&message=${encodeURIComponent(errorDescription || error)}`)
+        new URL(
+          `/profiles?error=oauth_error&message=${encodeURIComponent(errorDescription || error)}`,
+        ),
       );
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(
-        new URL("/profiles?error=missing_params")
-      );
+      return NextResponse.redirect(new URL("/profiles?error=missing_params"));
     }
 
     // Parse and validate the state parameter (CSRF protection)
     const stateData = parseState(state);
     if (!stateData) {
-      return NextResponse.redirect(
-        new URL("/profiles?error=invalid_state")
-      );
+      return NextResponse.redirect(new URL("/profiles?error=invalid_state"));
     }
 
     const { profileId } = stateData;
@@ -65,9 +63,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!profile) {
-      return NextResponse.redirect(
-        new URL("/profiles?error=profile_not_found")
-      );
+      return NextResponse.redirect(new URL("/profiles?error=profile_not_found"));
     }
 
     // Get the redirect URI for this platform
@@ -76,25 +72,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Exchange code for tokens
     let tokenResponse;
     try {
-      tokenResponse = await exchangeCodeForToken(
-        platformUpper as OAuthProvider,
-        code,
-        redirectUri
-      );
+      tokenResponse = await exchangeCodeForToken(platformUpper as OAuthProvider, code, redirectUri);
     } catch (tokenError) {
       console.error("Token exchange error:", tokenError);
       return NextResponse.redirect(
-        new URL(`/profiles/${profileId}/accounts?error=token_exchange_failed`)
+        new URL(`/profiles/${profileId}/accounts?error=token_exchange_failed`),
       );
     }
 
     // Get user info from the platform
     let userInfo;
     try {
-      userInfo = await getUserInfo(
-        platformUpper as OAuthProvider,
-        tokenResponse.access_token
-      );
+      userInfo = await getUserInfo(platformUpper as OAuthProvider, tokenResponse.access_token);
     } catch (userInfoError) {
       console.error("User info error:", userInfoError);
       // Continue with available info, use fallback values
@@ -117,25 +106,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (existingAccount) {
       // Update existing account with new tokens
-      await updateConnectedAccount(
-        existingAccount.id,
-        tokenResponse,
-        userInfo
-      );
+      await updateConnectedAccount(existingAccount.id, tokenResponse, userInfo);
     } else {
       // Create new connected account
-      await createConnectedAccount(
-        profileId,
-        platformUpper,
-        tokenResponse,
-        userInfo
-      );
+      await createConnectedAccount(profileId, platformUpper, tokenResponse, userInfo);
     }
 
     // Redirect to the accounts page with success
-    return NextResponse.redirect(
-      new URL(`/profiles/${profileId}/accounts?connected=success`)
-    );
+    return NextResponse.redirect(new URL(`/profiles/${profileId}/accounts?connected=success`));
   } catch (error) {
     console.error("OAuth callback error:", error);
     // Try to extract profileId from state for redirect
@@ -146,7 +124,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const stateData = parseState(state);
         if (stateData?.profileId) {
           return NextResponse.redirect(
-            new URL(`/profiles/${stateData.profileId}/accounts?error=callback_failed`)
+            new URL(`/profiles/${stateData.profileId}/accounts?error=callback_failed`),
           );
         }
       }
@@ -154,8 +132,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // Ignore parsing errors
     }
 
-    return NextResponse.redirect(
-      new URL("/profiles?error=callback_failed")
-    );
+    return NextResponse.redirect(new URL("/profiles?error=callback_failed"));
   }
 }

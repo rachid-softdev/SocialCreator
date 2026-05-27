@@ -78,15 +78,13 @@ export function ScheduleConfig({
           <div
             className={cn(
               "w-10 h-10 rounded-lg flex items-center justify-center",
-              isActive && isEnabled
-                ? "bg-semantic-success/10"
-                : "bg-surface-strong"
+              isActive && isEnabled ? "bg-semantic-success/10" : "bg-surface-strong",
             )}
           >
             <Clock
               className={cn(
                 "w-5 h-5",
-                isActive && isEnabled ? "text-semantic-success" : "text-muted"
+                isActive && isEnabled ? "text-semantic-success" : "text-muted",
               )}
             />
           </div>
@@ -104,13 +102,13 @@ export function ScheduleConfig({
           className={cn(
             "relative w-12 h-6 rounded-full transition-colors",
             isEnabled ? "bg-semantic-success" : "bg-surface-strong",
-            isSaving && "opacity-50"
+            isSaving && "opacity-50",
           )}
         >
           <span
             className={cn(
               "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow-sm",
-              isEnabled ? "translate-x-7" : "translate-x-1"
+              isEnabled ? "translate-x-7" : "translate-x-1",
             )}
           />
         </button>
@@ -120,9 +118,7 @@ export function ScheduleConfig({
       {isEnabled && (
         <div className="space-y-4">
           <div>
-            <label className="block text-caption text-muted mb-2">
-              Cron Expression
-            </label>
+            <label className="block text-caption text-muted mb-2">Cron Expression</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -134,7 +130,7 @@ export function ScheduleConfig({
                   !isValidSchedule
                     ? "border-semantic-error bg-semantic-error/5"
                     : "border-hairline bg-surface-card",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  "focus:outline-none focus:ring-2 focus:ring-primary/20",
                 )}
               />
               <Button
@@ -158,10 +154,7 @@ export function ScheduleConfig({
                 <>
                   <Play className="w-4 h-4 text-semantic-success" />
                   <span className="text-caption text-muted">
-                    Next run:{" "}
-                    <span className="text-ink font-medium">
-                      {formatNextRun(nextRun)}
-                    </span>
+                    Next run: <span className="text-ink font-medium">{formatNextRun(nextRun)}</span>
                   </span>
                 </>
               ) : (
@@ -211,7 +204,7 @@ export function ScheduleConfig({
                   "px-3 py-1.5 rounded-pill text-caption border transition-colors",
                   schedule === preset.value
                     ? "border-primary bg-primary/5 text-primary"
-                    : "border-hairline text-muted hover:border-primary hover:text-primary"
+                    : "border-hairline text-muted hover:border-primary hover:text-primary",
                 )}
               >
                 {preset.label}

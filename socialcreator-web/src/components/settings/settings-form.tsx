@@ -1,50 +1,52 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { User, Key, CreditCard, AlertTriangle } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
+import { useState } from "react";
+import { User, Key, CreditCard, AlertTriangle } from "lucide-react";
+import { Button } from "@socialcreator/ui/button";
 
 interface SettingsFormProps {
-  onSave?: (data: { name: string; email: string }) => Promise<void>
-  onDeleteAccount?: () => Promise<void>
+  onSave?: (data: { name: string; email: string }) => Promise<void>;
+  onDeleteAccount?: () => Promise<void>;
 }
 
 export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
-  const [activeTab, setActiveTab] = useState<"general" | "api-keys" | "billing" | "account">("general")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [activeTab, setActiveTab] = useState<"general" | "api-keys" | "billing" | "account">(
+    "general",
+  );
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const tabs = [
     { key: "general" as const, label: "General", icon: User },
     { key: "api-keys" as const, label: "API Keys", icon: Key },
     { key: "billing" as const, label: "Billing", icon: CreditCard },
     { key: "account" as const, label: "Account", icon: AlertTriangle },
-  ]
+  ];
 
   const handleSave = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      await onSave?.({ name, email })
+      await onSave?.({ name, email });
     } catch (error) {
-      console.error("Save error:", error)
+      console.error("Save error:", error);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      await onDeleteAccount?.()
+      await onDeleteAccount?.();
     } catch (error) {
-      console.error("Delete error:", error)
+      console.error("Delete error:", error);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="rounded-xl border border-hairline bg-surface-card overflow-hidden">
@@ -140,12 +142,10 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-semantic-error flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-body-sm font-medium text-semantic-error">
-                    Delete account
-                  </h4>
+                  <h4 className="text-body-sm font-medium text-semantic-error">Delete account</h4>
                   <p className="text-body-sm text-muted mt-1">
-                    This action is irreversible. All your data, profiles, and content
-                    will be permanently deleted.
+                    This action is irreversible. All your data, profiles, and content will be
+                    permanently deleted.
                   </p>
 
                   {!showDeleteConfirm ? (
@@ -183,5 +183,5 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

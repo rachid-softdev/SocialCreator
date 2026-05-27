@@ -39,10 +39,7 @@ export async function GET(request: Request) {
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
     if (!profileId) {
-      return NextResponse.json(
-        { error: "profileId is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "profileId is required" }, { status: 400 });
     }
 
     // Verify user owns this profile
@@ -79,10 +76,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error fetching media:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -99,10 +93,7 @@ export async function POST(request: Request) {
     const validation = uploadMediaSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { profileId, type, url, filename, mimeType, size, width, height, duration } =
@@ -134,9 +125,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ media }, { status: 201 });
   } catch (error) {
     console.error("Error uploading media:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

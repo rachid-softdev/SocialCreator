@@ -13,7 +13,13 @@ interface AgentRunModalProps {
   onSuccess?: () => void;
 }
 
-export function AgentRunModal({ isOpen, onClose, agentId, agentName, onSuccess }: AgentRunModalProps) {
+export function AgentRunModal({
+  isOpen,
+  onClose,
+  agentId,
+  agentName,
+  onSuccess,
+}: AgentRunModalProps) {
   const router = useRouter();
   const [brief, setBrief] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,10 +77,7 @@ export function AgentRunModal({ isOpen, onClose, agentId, agentName, onSuccess }
               <h2 className="text-title-md text-ink">Run Agent</h2>
               <p className="text-caption text-muted mt-1">{agentName}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-surface-strong text-muted"
-            >
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-strong text-muted">
               <X className="w-5 h-5" />
             </button>
           </div>

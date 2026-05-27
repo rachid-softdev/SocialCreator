@@ -50,15 +50,13 @@ export default async function ContentPage() {
     _count: true,
   });
 
-  const statMap = stats.reduce((acc, s) => {
-    acc[s.status] = s._count;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return (
-    <ContentPageClient
-      initialContents={typedContents}
-      stats={statMap}
-    />
+  const statMap = stats.reduce(
+    (acc, s) => {
+      acc[s.status] = s._count;
+      return acc;
+    },
+    {} as Record<string, number>,
   );
+
+  return <ContentPageClient initialContents={typedContents} stats={statMap} />;
 }

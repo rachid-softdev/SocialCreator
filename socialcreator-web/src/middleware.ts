@@ -3,15 +3,7 @@ import { auth } from "@/lib/auth";
 export default auth;
 
 export function isProtectedRoute(pathname: string): boolean {
-  const publicRoutes = [
-    "/login",
-    "/register",
-    "/verify",
-    "/api/auth",
-    "/_next",
-    "/public",
-    "/",
-  ];
+  const publicRoutes = ["/login", "/register", "/verify", "/api/auth", "/_next", "/public", "/"];
 
   // Allow /onboarding/cgu even without auth
   if (pathname === "/onboarding/cgu") {

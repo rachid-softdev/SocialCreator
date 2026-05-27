@@ -46,7 +46,14 @@ describe("agent-runner utilities", () => {
   describe("buildGenerationPrompt", () => {
     it("should include brief for each platform", () => {
       const platforms: Platform[] = [
-        "INSTAGRAM", "TIKTOK", "LINKEDIN", "YOUTUBE", "X", "FACEBOOK", "THREADS", "PINTEREST"
+        "INSTAGRAM",
+        "TIKTOK",
+        "LINKEDIN",
+        "YOUTUBE",
+        "X",
+        "FACEBOOK",
+        "THREADS",
+        "PINTEREST",
       ];
 
       for (const platform of platforms) {

@@ -18,14 +18,23 @@ export function NavTop({ links = [], cta }: NavTopProps) {
       {links.length > 0 && (
         <div className="hidden items-center gap-lg md:flex">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-nav-link text-ink transition-colors hover:text-body">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-nav-link text-ink transition-colors hover:text-body"
+            >
               {link.label}
             </Link>
           ))}
         </div>
       )}
       {cta && (
-        <Link href={cta.href} className={cn("flex h-10 items-center rounded-pill bg-primary px-xl py-0 text-button text-on-primary transition-colors hover:bg-primary-active")}>
+        <Link
+          href={cta.href}
+          className={cn(
+            "flex h-10 items-center rounded-pill bg-primary px-xl py-0 text-button text-on-primary transition-colors hover:bg-primary-active",
+          )}
+        >
           {cta.label}
         </Link>
       )}

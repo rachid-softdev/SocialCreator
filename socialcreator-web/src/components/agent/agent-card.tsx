@@ -48,7 +48,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
             <span
               className={cn(
                 "inline-block px-2 py-0.5 rounded text-xs font-medium",
-                TYPE_COLORS[agent.type]
+                TYPE_COLORS[agent.type],
               )}
             >
               {AGENT_TYPE_LABELS[agent.type]}
@@ -89,9 +89,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
               <span className="text-caption text-muted">Last run</span>
               <RunStatusBadge status={lastRun.status} showPulse={false} />
             </div>
-            <p className="text-caption text-body mt-1">
-              {formatDateTime(lastRun.createdAt)}
-            </p>
+            <p className="text-caption text-body mt-1">{formatDateTime(lastRun.createdAt)}</p>
           </div>
         )}
       </Link>

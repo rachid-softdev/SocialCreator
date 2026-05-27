@@ -26,7 +26,7 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
   }
 
   return (
-    <EditProfileForm 
+    <EditProfileForm
       profile={{
         id: profile.id,
         name: profile.name,

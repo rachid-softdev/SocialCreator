@@ -7,19 +7,13 @@ export async function PUT(request: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
 
     if (!body.accepted) {
-      return NextResponse.json(
-        { error: "Terms must be accepted" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
     }
 
     const user = await prisma.user.update({
@@ -33,9 +27,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error accepting CGU:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

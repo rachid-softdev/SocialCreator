@@ -136,7 +136,7 @@ describe("Entitlement routes - admin guard", () => {
       mockRequireAdmin.mockRejectedValue(new MockAuthError("Non authentifié", 401));
 
       const req = new Request(
-        "http://localhost:3000/api/admin/entitlements/orgs/org-1/downgrade?targetPlan=starter"
+        "http://localhost:3000/api/admin/entitlements/orgs/org-1/downgrade?targetPlan=starter",
       );
       const params = Promise.resolve({ orgId: "org-1" });
       await DowngradeGET(req, { params });
@@ -151,7 +151,7 @@ describe("Entitlement routes - admin guard", () => {
 
       const req = new Request(
         "http://localhost:3000/api/admin/entitlements/cache/invalidate/org-1",
-        { method: "POST" }
+        { method: "POST" },
       );
       const params = Promise.resolve({ orgId: "org-1" });
       await CacheInvalidatePOST(req, { params });

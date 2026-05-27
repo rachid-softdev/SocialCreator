@@ -54,14 +54,14 @@ export default function AllVideosPage() {
         const response = await fetch("/api/profiles", { signal });
         // Ignore if request was aborted
         if (signal.aborted) return;
-        
+
         if (response.ok) {
           const { profiles } = await response.json();
           setProfiles(profiles);
         }
       } catch (error) {
         // Ignore abort errors - they are expected when component unmounts
-        if (error instanceof DOMException && error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
         console.error("Failed to fetch profiles:", error);
@@ -78,9 +78,9 @@ export default function AllVideosPage() {
   const fetchVideos = useCallback(() => {
     const controller = new AbortController();
     const signal = controller.signal;
-    
+
     setIsLoading(true);
-    
+
     const fetchVideosAsync = async () => {
       try {
         // Fetch videos from all profiles (in a real app, you'd have a dedicated endpoint)
@@ -91,13 +91,13 @@ export default function AllVideosPage() {
         });
 
         const results = await Promise.all(videosPromises);
-        
+
         if (!signal.aborted) {
           const allVideos = results.flat();
           setVideos(allVideos);
         }
       } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
         console.error("Failed to fetch videos:", error);
@@ -181,7 +181,7 @@ export default function AllVideosPage() {
                       "px-3 py-1.5 rounded-pill text-caption transition-colors",
                       statusFilter === filter.value
                         ? "bg-gradient-mint text-ink"
-                        : "text-muted hover:text-ink hover:bg-surface-strong"
+                        : "text-muted hover:text-ink hover:bg-surface-strong",
                     )}
                   >
                     {filter.label}
@@ -196,9 +196,7 @@ export default function AllVideosPage() {
                 onClick={() => setViewMode("grid")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
-                  viewMode === "grid"
-                    ? "bg-surface-strong text-ink"
-                    : "text-muted hover:text-ink"
+                  viewMode === "grid" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink",
                 )}
               >
                 <Grid className="w-4 h-4" />
@@ -207,9 +205,7 @@ export default function AllVideosPage() {
                 onClick={() => setViewMode("list")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
-                  viewMode === "list"
-                    ? "bg-surface-strong text-ink"
-                    : "text-muted hover:text-ink"
+                  viewMode === "list" ? "bg-surface-strong text-ink" : "text-muted hover:text-ink",
                 )}
               >
                 <List className="w-4 h-4" />
@@ -224,10 +220,7 @@ export default function AllVideosPage() {
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="aspect-video bg-surface-strong rounded-xl animate-pulse"
-              />
+              <div key={i} className="aspect-video bg-surface-strong rounded-xl animate-pulse" />
             ))}
           </div>
         ) : filteredVideos.length === 0 ? (
@@ -265,7 +258,7 @@ export default function AllVideosPage() {
                 status={video.status}
                 createdAt={video.createdAt}
                 onClick={() =>
-                  window.location.href = `/profiles/${video.profileId}/video?id=${video.id}`
+                  (window.location.href = `/profiles/${video.profileId}/video?id=${video.id}`)
                 }
               />
             ))}
@@ -322,7 +315,7 @@ export default function AllVideosPage() {
                   <div
                     className={cn(
                       "px-2 py-1 rounded-pill text-caption-uppercase text-xs font-semibold",
-                      STATUS_COLORS[video.status] || STATUS_COLORS.UPLOADING
+                      STATUS_COLORS[video.status] || STATUS_COLORS.UPLOADING,
                     )}
                   >
                     {STATUS_LABELS[video.status] || video.status}

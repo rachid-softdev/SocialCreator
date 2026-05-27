@@ -56,7 +56,7 @@ export default async function AllAgentsPage() {
           successRate: totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0,
         },
       };
-    })
+    }),
   );
 
   return <AllAgentsClient initialAgents={agentsWithStats} profiles={profiles} />;

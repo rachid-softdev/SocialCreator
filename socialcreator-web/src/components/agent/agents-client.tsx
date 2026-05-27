@@ -45,12 +45,7 @@ export function AgentsClient({ profileId, initialAgents }: AgentsClientProps) {
 
   return (
     <div className="space-y-8">
-      <Breadcrumb
-        items={[
-          { label: "Profiles", href: "/profiles" },
-          { label: "Agents" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Profiles", href: "/profiles" }, { label: "Agents" }]} />
 
       <PageHeader
         title="AI Agents"

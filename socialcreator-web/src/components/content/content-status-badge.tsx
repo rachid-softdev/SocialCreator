@@ -15,7 +15,7 @@ export function ContentStatusBadge({ status, className }: ContentStatusBadgeProp
       className={cn(
         "inline-flex items-center px-2.5 py-1 rounded-full text-caption font-medium",
         CONTENT_STATUS_COLORS[status],
-        className
+        className,
       )}
     >
       {CONTENT_STATUS_LABELS[status]}

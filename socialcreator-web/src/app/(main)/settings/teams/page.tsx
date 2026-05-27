@@ -19,10 +19,7 @@ export default async function TeamsPage() {
   // Get teams where user is owner or member
   const teams = await prisma.team.findMany({
     where: {
-      OR: [
-        { ownerId: session.user.id },
-        { members: { some: { userId: session.user.id } } },
-      ],
+      OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
     },
     include: {
       owner: {
@@ -52,18 +49,12 @@ export default async function TeamsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-title-lg">Teams</h1>
-          <p className="text-body-sm text-muted mt-1">
-            Collaborate with your team members
-          </p>
+          <p className="text-body-sm text-muted mt-1">Collaborate with your team members</p>
         </div>
         <TeamDialog />
       </div>
 
-      <TeamsList
-        teams={teams}
-        currentUserId={session.user.id}
-        profileCount={userProfileCount}
-      />
+      <TeamsList teams={teams} currentUserId={session.user.id} profileCount={userProfileCount} />
     </div>
   );
 }

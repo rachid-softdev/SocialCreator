@@ -1,68 +1,68 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import dynamic from "next/dynamic"
-import { Eye, MousePointerClick, Heart, TrendingUp } from "lucide-react"
-import { StatsCard } from "@/components/analytics/stats-card"
-import { PlatformTable } from "@/components/analytics/platform-table"
-import { DateRangePicker } from "@/components/analytics/date-range-picker"
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { Eye, MousePointerClick, Heart, TrendingUp } from "lucide-react";
+import { StatsCard } from "@/components/analytics/stats-card";
+import { PlatformTable } from "@/components/analytics/platform-table";
+import { DateRangePicker } from "@/components/analytics/date-range-picker";
 
 // Lazy load Recharts - only load when charts are in viewport
 const ImpressionsChart = dynamic(
   () => import("@/components/analytics/charts").then((mod) => mod.ImpressionsChart),
-  { 
+  {
     ssr: true,
-    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
-  }
-)
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />,
+  },
+);
 
 const PlatformBreakdown = dynamic(
   () => import("@/components/analytics/charts").then((mod) => mod.PlatformBreakdown),
-  { 
+  {
     ssr: true,
-    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
-  }
-)
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />,
+  },
+);
 
 const EngagementPie = dynamic(
   () => import("@/components/analytics/charts").then((mod) => mod.EngagementPie),
-  { 
+  {
     ssr: true,
-    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />
-  }
-)
+    loading: () => <div className="h-[300px] animate-pulse bg-surface-soft rounded-lg" />,
+  },
+);
 
 interface Profile {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface ChartData {
-  date: string
-  impressions: number
+  date: string;
+  impressions: number;
 }
 
 interface PlatformBreakdownData {
-  platform: string
-  impressions: number
-  engagements: number
+  platform: string;
+  impressions: number;
+  engagements: number;
 }
 
 interface EngagementType {
-  name: string
-  value: number
+  name: string;
+  value: number;
 }
 
 interface ClientAnalyticsPageProps {
-  totalImpressions: number
-  totalEngagements: number
-  totalClicks: number
-  growthRate: number
-  publishCount: number
-  chartData: ChartData[]
-  platformBreakdown: PlatformBreakdownData[]
-  engagementTypes: EngagementType[]
-  profiles: Profile[]
+  totalImpressions: number;
+  totalEngagements: number;
+  totalClicks: number;
+  growthRate: number;
+  publishCount: number;
+  chartData: ChartData[];
+  platformBreakdown: PlatformBreakdownData[];
+  engagementTypes: EngagementType[];
+  profiles: Profile[];
 }
 
 export function ClientAnalyticsPage({
@@ -76,16 +76,16 @@ export function ClientAnalyticsPage({
   engagementTypes,
   profiles,
 }: ClientAnalyticsPageProps) {
-  const [selectedRange, setSelectedRange] = useState<"7d" | "30d" | "90d">("30d")
-  const [selectedProfile, setSelectedProfile] = useState<string>("all")
+  const [selectedRange, setSelectedRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [selectedProfile, setSelectedProfile] = useState<string>("all");
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
-    if (num >= 1000) return (num / 1000).toFixed(1) + "K"
-    return num.toString()
-  }
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return num.toString();
+  };
 
-  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0"
+  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0";
 
   return (
     <div className="max-w-content mx-auto px-6 py-section">
@@ -139,12 +139,7 @@ export function ClientAnalyticsPage({
           trend={undefined}
           icon={MousePointerClick}
         />
-        <StatsCard
-          label="CTR"
-          value={`${ctr}%`}
-          trend={undefined}
-          icon={TrendingUp}
-        />
+        <StatsCard label="CTR" value={`${ctr}%`} trend={undefined} icon={TrendingUp} />
       </div>
 
       {/* Charts */}
@@ -238,5 +233,5 @@ export function ClientAnalyticsPage({
         )}
       </div>
     </div>
-  )
+  );
 }

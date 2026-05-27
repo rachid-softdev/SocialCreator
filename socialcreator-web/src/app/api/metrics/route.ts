@@ -8,9 +8,6 @@ export async function GET() {
       headers: { "Content-Type": register.contentType },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Failed to collect metrics" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to collect metrics" }, { status: 500 });
   }
 }

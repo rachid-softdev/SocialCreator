@@ -53,9 +53,7 @@ export function VideoTimeline({
   if (words.length > 0 && totalDuration > 0) {
     const windowSize = 5;
     for (let t = 0; t < totalDuration; t += windowSize) {
-      const wordsInWindow = words.filter(
-        (w) => w.start >= t && w.start < t + windowSize
-      ).length;
+      const wordsInWindow = words.filter((w) => w.start >= t && w.start < t + windowSize).length;
       intensityMap.set(t, wordsInWindow / windowSize);
     }
   }
@@ -73,7 +71,7 @@ export function VideoTimeline({
 
       onSeek(seekTime);
     },
-    [onSeek, totalDuration]
+    [onSeek, totalDuration],
   );
 
   return (

@@ -7,24 +7,19 @@ import { Platform } from "@prisma/client";
 import { z } from "zod";
 
 const generateSchema = z.object({
-  platforms: z.array(z.enum([
-    "TIKTOK",
-    "INSTAGRAM",
-    "YOUTUBE",
-    "FACEBOOK",
-    "X",
-    "LINKEDIN",
-    "THREADS",
-    "PINTEREST",
-  ])),
-  clipSegments: z.array(
-    z.object({
-      start: z.number(),
-      end: z.number(),
-      reason: z.string(),
-      hook: z.string(),
-    })
-  ).optional(),
+  platforms: z.array(
+    z.enum(["TIKTOK", "INSTAGRAM", "YOUTUBE", "FACEBOOK", "X", "LINKEDIN", "THREADS", "PINTEREST"]),
+  ),
+  clipSegments: z
+    .array(
+      z.object({
+        start: z.number(),
+        end: z.number(),
+        reason: z.string(),
+        hook: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 interface GeneratedContent {
@@ -33,10 +28,7 @@ interface GeneratedContent {
   hashtags: string[];
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
 
@@ -56,9 +48,9 @@ export async function POST(
     }
 
     // Verify ownership through profile
-    const profile = await prisma.profile.findFirst({
+    const profile = (await prisma.profile.findFirst({
       where: { id: videoAsset.profileId, userId: session.user.id },
-    }) as any;
+    })) as any;
 
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -70,24 +62,27 @@ export async function POST(
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { platforms, clipSegments } = validationResult.data;
 
     // Get segments from asset or use provided ones
-    const segments = clipSegments || (videoAsset.segments as Array<{
-      start: number;
-      end: number;
-      reason: string;
-      hook: string;
-    }>) || [];
+    const segments =
+      clipSegments ||
+      (videoAsset.segments as Array<{
+        start: number;
+        end: number;
+        reason: string;
+        hook: string;
+      }>) ||
+      [];
 
     if (segments.length === 0) {
       return NextResponse.json(
         { error: "No segments available. Identify segments first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -133,10 +128,7 @@ export async function POST(
     return NextResponse.json({ contents });
   } catch (error) {
     console.error("Error generating content:", error);
-    return NextResponse.json(
-      { error: "Content generation failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Content generation failed" }, { status: 500 });
   }
 }
 

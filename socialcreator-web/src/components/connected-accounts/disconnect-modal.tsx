@@ -67,26 +67,19 @@ export function DisconnectModal({
           <PlatformIcon platform={platform} size="md" />
           <div>
             <p className="font-medium text-foreground">{accountName}</p>
-            <p className="text-sm text-muted-foreground">
-              {getPlatformName(platform)}
-            </p>
+            <p className="text-sm text-muted-foreground">{getPlatformName(platform)}</p>
           </div>
         </div>
 
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-4">
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            <strong>Attention :</strong> Cela arrêtera toute publication sur ce
-            compte. Vous devrez reconnecter le compte pour reprendre la
-            publication automatique.
+            <strong>Attention :</strong> Cela arrêtera toute publication sur ce compte. Vous devrez
+            reconnecter le compte pour reprendre la publication automatique.
           </p>
         </div>
 
         <DialogFooter className="mt-6 gap-2">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading || isConfirming}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isLoading || isConfirming}>
             Annuler
           </Button>
           <Button

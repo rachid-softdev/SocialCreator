@@ -8,7 +8,9 @@ import { execSync } from "child_process";
 const env = process.argv[2] || "development";
 const isProduction = env === "prod" || env === "production";
 
-console.log(`🚀 Pushing ${isProduction ? "production" : "development"} environment variables to Vercel...`);
+console.log(
+  `🚀 Pushing ${isProduction ? "production" : "development"} environment variables to Vercel...`,
+);
 
 try {
   execSync(`npx vercel env pull .env.${isProduction ? "production" : "development"} --yes`, {

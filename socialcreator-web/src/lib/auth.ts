@@ -37,10 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
+        const isValid = await bcrypt.compare(credentials.password as string, user.password);
 
         if (!isValid) {
           return null;
@@ -60,8 +57,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.cguAccepted = user.cguAccepted ?? false;
-        token.role = user.role ?? 'USER';
-        token.roles = user.roles ?? [user.role ?? 'USER'];
+        token.role = user.role ?? "USER";
+        token.roles = user.roles ?? [user.role ?? "USER"];
       }
 
       // Fetch roles from DB on token refresh (subsequent requests)
@@ -76,7 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.roles = dbUser.userRoles.map((ur) => ur.role);
           }
         } catch (error) {
-          console.error('[Auth] Failed to fetch user roles on token refresh:', error);
+          console.error("[Auth] Failed to fetch user roles on token refresh:", error);
         }
       }
 

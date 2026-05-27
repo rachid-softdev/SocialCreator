@@ -31,7 +31,7 @@ export interface Publisher {
       accountId: string;
       accessToken: string;
       refreshToken?: string;
-    }
+    },
   ): Promise<PublishResult>;
 }
 
@@ -73,7 +73,7 @@ export async function publishContent(
     accountId: string;
     accessToken: string;
     refreshToken?: string;
-  }
+  },
 ): Promise<PublishResult> {
   const publisher = getPublisher(platform);
   return publisher.publish(content, account);

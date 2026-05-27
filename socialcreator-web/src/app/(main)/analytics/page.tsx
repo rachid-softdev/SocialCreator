@@ -22,14 +22,9 @@ export default async function AnalyticsPage() {
   if (profiles.length === 0) {
     return (
       <div className="space-y-8">
-        <PageHeader
-          title="Analytics"
-          description="Track your content performance"
-        />
+        <PageHeader title="Analytics" description="Track your content performance" />
         <div className="text-center py-12">
-          <p className="text-body-sm text-muted">
-            Create a profile to start tracking analytics
-          </p>
+          <p className="text-body-sm text-muted">Create a profile to start tracking analytics</p>
         </div>
       </div>
     );

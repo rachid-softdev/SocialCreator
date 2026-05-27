@@ -30,7 +30,7 @@ function getCapKey(profileId: string, platform: Platform): string {
 async function getMaxPerDay(
   profileId: string,
   platform: Platform,
-  maxOverride?: number
+  maxOverride?: number,
 ): Promise<number> {
   const agents = await prisma.agent.findMany({
     where: {
@@ -52,7 +52,7 @@ async function getMaxPerDay(
 export async function checkDailyCap(
   profileId: string,
   platform: Platform,
-  maxOverride?: number
+  maxOverride?: number,
 ): Promise<CapStatus> {
   const max = await getMaxPerDay(profileId, platform, maxOverride);
   const redis = getRedis();
@@ -91,10 +91,7 @@ export async function checkDailyCap(
 /**
  * Record a successful publish (increment cap counter)
  */
-export async function recordPublish(
-  profileId: string,
-  platform: Platform
-): Promise<void> {
+export async function recordPublish(profileId: string, platform: Platform): Promise<void> {
   const redis = getRedis();
 
   if (redis) {
@@ -120,7 +117,7 @@ export async function recordPublish(
  */
 export async function canPublish(
   profileId: string,
-  platform: Platform
+  platform: Platform,
 ): Promise<{ canPublish: boolean; reason?: string }> {
   const { allowed, count, max } = await checkDailyCap(profileId, platform);
 
@@ -161,7 +158,7 @@ export async function getProfileCapStatus(profileId: string): Promise<
     platforms.map(async (platform) => {
       const { allowed, count, max } = await checkDailyCap(profileId, platform);
       return { platform, count, max, allowed };
-    })
+    }),
   );
 
   return results.filter((r) => r.max > 0);

@@ -22,7 +22,10 @@ export function Footer({ columns = [] }: FooterProps) {
               <ul className="space-y-xs">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-body-sm text-body transition-colors hover:text-ink">
+                    <Link
+                      href={link.href}
+                      className="text-body-sm text-body transition-colors hover:text-ink"
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -32,7 +35,9 @@ export function Footer({ columns = [] }: FooterProps) {
           ))}
         </div>
         <div className="mt-xl border-t border-hairline pt-lg">
-          <p className="text-caption text-muted">© {new Date().getFullYear()} SocialCreator. All rights reserved.</p>
+          <p className="text-caption text-muted">
+            © {new Date().getFullYear()} SocialCreator. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

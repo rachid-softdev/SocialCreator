@@ -26,20 +26,14 @@ export async function POST(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
 
     // Validate content ID
     if (!isValidUuid(id)) {
-      return NextResponse.json(
-        { error: "Invalid content ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid content ID" }, { status: 400 });
     }
 
     // Parse and validate request body
@@ -47,26 +41,17 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validation = approveContentSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const content = await getContentOr404(id, session.user.id);
 
     if (!content) {
-      return NextResponse.json(
-        { error: "Content not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Content not found" }, { status: 404 });
     }
 
     if (content.status !== "DRAFT") {
-      return NextResponse.json(
-        { error: "Only draft content can be approved" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Only draft content can be approved" }, { status: 400 });
     }
 
     const updatedContent = await prisma.generatedContent.update({
@@ -90,9 +75,6 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ content: updatedContent });
   } catch (error) {
     console.error("Error approving content:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

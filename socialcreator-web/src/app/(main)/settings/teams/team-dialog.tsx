@@ -73,7 +73,8 @@ export function TeamDialog() {
         <DialogHeader>
           <DialogTitle>Create a new team</DialogTitle>
           <DialogDescription>
-            Teams let you collaborate with others. You can share profiles and manage access together.
+            Teams let you collaborate with others. You can share profiles and manage access
+            together.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,11 +94,7 @@ export function TeamDialog() {
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-            >
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

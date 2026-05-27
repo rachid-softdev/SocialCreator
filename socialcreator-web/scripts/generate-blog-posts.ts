@@ -41,23 +41,28 @@ const TOPICS = [
 const AUTHORS = [
   {
     name: "Équipe SocialCreator",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=SC&backgroundColor=292524&textColor=ffffff",
+    avatar:
+      "https://api.dicebear.com/7.x/initials/svg?seed=SC&backgroundColor=292524&textColor=ffffff",
   },
   {
     name: "Marie Dubois",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=MD&backgroundColor=292524&textColor=ffffff",
+    avatar:
+      "https://api.dicebear.com/7.x/initials/svg?seed=MD&backgroundColor=292524&textColor=ffffff",
   },
   {
     name: "Thomas Martin",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=TM&backgroundColor=292524&textColor=ffffff",
+    avatar:
+      "https://api.dicebear.com/7.x/initials/svg?seed=TM&backgroundColor=292524&textColor=ffffff",
   },
   {
     name: "Sophie Bernard",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=SB&backgroundColor=292524&textColor=ffffff",
+    avatar:
+      "https://api.dicebear.com/7.x/initials/svg?seed=SB&backgroundColor=292524&textColor=ffffff",
   },
   {
     name: "Alexandre Petit",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=AP&backgroundColor=292524&textColor=ffffff",
+    avatar:
+      "https://api.dicebear.com/7.x/initials/svg?seed=AP&backgroundColor=292524&textColor=ffffff",
   },
 ];
 
@@ -76,7 +81,7 @@ function extractWords(text: string): Set<string> {
       .toLowerCase()
       .replace(/[^\w\s]/g, " ")
       .split(/\s+/)
-      .filter((w) => w.length > 3)
+      .filter((w) => w.length > 3),
   );
 }
 
@@ -104,7 +109,7 @@ async function generatePost(
   client: Anthropic,
   type: "short" | "long",
   existingTitles: string[],
-  topic: string
+  topic: string,
 ): Promise<{
   slug: string;
   title: string;
@@ -196,11 +201,14 @@ Renvoie UNIQUEMENT le JSON, sans texte avant ou après. Pas de backticks, pas de
 
       // Select random cover image based on topic
       const coverImages = {
-        default: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1200&h=630&fit=crop",
+        default:
+          "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1200&h=630&fit=crop",
         strategy: "https://images.unsplash.com/photo-1560472354-b33ff850c0ef?w=1200&h=630&fit=crop",
         ia: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=630&fit=crop",
-        growth: "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=1200&h=630&fit=crop",
-        productivity: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1200&h=630&fit=crop",
+        growth:
+          "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=1200&h=630&fit=crop",
+        productivity:
+          "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1200&h=630&fit=crop",
       };
 
       let coverImage = coverImages.default;

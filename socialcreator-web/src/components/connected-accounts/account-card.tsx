@@ -53,18 +53,23 @@ export function AccountCard({
           {/* Account Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground truncate">
-                {account.accountName}
-              </h3>
+              <h3 className="font-semibold text-foreground truncate">{account.accountName}</h3>
               {/* Status Badge */}
               <Badge
                 variant={account.isActive ? "default" : "secondary"}
-                className={account.isActive ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"}
+                className={
+                  account.isActive
+                    ? "bg-green-500/10 text-green-500"
+                    : "bg-muted text-muted-foreground"
+                }
               >
                 {account.isActive ? "Actif" : "Inactif"}
               </Badge>
               {isExpired && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                <Badge
+                  variant="outline"
+                  className="bg-amber-500/10 text-amber-500 border-amber-500/20"
+                >
                   Expiré
                 </Badge>
               )}

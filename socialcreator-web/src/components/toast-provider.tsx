@@ -1,7 +1,7 @@
 /**
  * Toast Notification Provider
  * Wraps the application with Sonner for toast notifications
- * 
+ *
  * Usage: Add <ToastProvider /> to your root layout
  */
 

@@ -1,74 +1,74 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { ApiKeyManager } from "@/components/mcp/api-key-manager"
-import { McpTester } from "@/components/mcp/mcp-tester"
+import { useState, useEffect } from "react";
+import { ApiKeyManager } from "@/components/mcp/api-key-manager";
+import { McpTester } from "@/components/mcp/mcp-tester";
 
 interface ApiKey {
-  id: string
-  name: string
-  prefix: string
-  lastUsed?: string | null
-  createdAt: string
-  revokedAt?: string | null
+  id: string;
+  name: string;
+  prefix: string;
+  lastUsed?: string | null;
+  createdAt: string;
+  revokedAt?: string | null;
 }
 
 export default function ApiKeysPage() {
-  const [keys, setKeys] = useState<ApiKey[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [apiKey, setApiKey] = useState("")
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiKey, setApiKey] = useState("");
 
   useEffect(() => {
-    fetchKeys()
+    fetchKeys();
 
     // Check for API key in URL query params (from creation flow)
-    const params = new URLSearchParams(window.location.search)
-    const newKey = params.get("apiKey")
+    const params = new URLSearchParams(window.location.search);
+    const newKey = params.get("apiKey");
     if (newKey) {
-      setApiKey(newKey)
+      setApiKey(newKey);
       // Clean URL
-      window.history.replaceState({}, "", "/settings/api-keys")
+      window.history.replaceState({}, "", "/settings/api-keys");
     }
-  }, [])
+  }, []);
 
   const fetchKeys = async () => {
     try {
-      const response = await fetch("/api/api-keys")
-      const data = await response.json()
-      setKeys(data.keys || [])
+      const response = await fetch("/api/api-keys");
+      const data = await response.json();
+      setKeys(data.keys || []);
     } catch (error) {
-      console.error("Failed to fetch keys:", error)
+      console.error("Failed to fetch keys:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCreate = async (name: string) => {
     const response = await fetch("/api/api-keys", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
-    })
+    });
 
     if (!response.ok) {
-      throw new Error("Failed to create API key")
+      throw new Error("Failed to create API key");
     }
 
-    const data = await response.json()
-    return data
-  }
+    const data = await response.json();
+    return data;
+  };
 
   const handleRevoke = async (id: string) => {
     const response = await fetch(`/api/api-keys/${id}`, {
       method: "DELETE",
-    })
+    });
 
     if (!response.ok) {
-      throw new Error("Failed to revoke API key")
+      throw new Error("Failed to revoke API key");
     }
 
-    await fetchKeys()
-  }
+    await fetchKeys();
+  };
 
   return (
     <div className="max-w-content mx-auto px-6 py-section">
@@ -87,11 +87,7 @@ export default function ApiKeysPage() {
               <div className="h-24 bg-surface-strong rounded-xl" />
             </div>
           ) : (
-            <ApiKeyManager
-              initialKeys={keys}
-              onCreate={handleCreate}
-              onRevoke={handleRevoke}
-            />
+            <ApiKeyManager initialKeys={keys} onCreate={handleCreate} onRevoke={handleRevoke} />
           )}
         </div>
 
@@ -113,7 +109,7 @@ export default function ApiKeysPage() {
           <h3 className="text-body-sm font-medium mb-3">Using cURL</h3>
 
           <pre className="bg-surface-dark text-on-dark rounded-lg p-4 overflow-x-auto text-body-sm font-mono">
-{`# List profiles
+            {`# List profiles
 curl -X POST https://socialcreator.com/api/mcp \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -125,7 +121,7 @@ curl -X POST https://socialcreator.com/api/mcp \\
           <h3 className="text-body-sm font-medium mb-3">Using JavaScript</h3>
 
           <pre className="bg-surface-dark text-on-dark rounded-lg p-4 overflow-x-auto text-body-sm font-mono">
-{`const response = await fetch('/api/mcp', {
+            {`const response = await fetch('/api/mcp', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -156,5 +152,5 @@ console.log(data.result)`}
         </div>
       </div>
     </div>
-  )
+  );
 }

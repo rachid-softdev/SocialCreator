@@ -77,7 +77,9 @@ export function VideoCardSkeleton() {
 export function ContentListSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="space-y-3">
-      {[...Array(count)].map((_, i) => <ContentCardSkeleton key={i} />)}
+      {[...Array(count)].map((_, i) => (
+        <ContentCardSkeleton key={i} />
+      ))}
     </div>
   );
 }
@@ -85,7 +87,9 @@ export function ContentListSkeleton({ count = 5 }: { count?: number }) {
 export function ProfileListSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...Array(count)].map((_, i) => <ProfileCardSkeleton key={i} />)}
+      {[...Array(count)].map((_, i) => (
+        <ProfileCardSkeleton key={i} />
+      ))}
     </div>
   );
 }
@@ -93,7 +97,9 @@ export function ProfileListSkeleton({ count = 6 }: { count?: number }) {
 export function AgentListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {[...Array(count)].map((_, i) => <AgentCardSkeleton key={i} />)}
+      {[...Array(count)].map((_, i) => (
+        <AgentCardSkeleton key={i} />
+      ))}
     </div>
   );
 }
@@ -125,7 +131,11 @@ export function ChartSkeleton() {
       </div>
       <div className="h-64 flex items-end gap-2">
         {[...Array(12)].map((_, i) => (
-          <div key={i} className="flex-1 rounded-t animate-pulse bg-hairline" style={{ height: `${Math.floor(Math.random() * 60 + 20)}%` }} />
+          <div
+            key={i}
+            className="flex-1 rounded-t animate-pulse bg-hairline"
+            style={{ height: `${Math.floor(Math.random() * 60 + 20)}%` }}
+          />
         ))}
       </div>
     </div>
@@ -135,7 +145,14 @@ export function ChartSkeleton() {
 export function FormSkeleton() {
   return (
     <div className="space-y-6">
-      {[{ h: 4, w: 24 }, { h: 10, w: "full" }, { h: 4, w: 24 }, { h: 10, w: "full" }, { h: 4, w: 24 }, { h: 24, w: "full" }].map((s, i) => (
+      {[
+        { h: 4, w: 24 },
+        { h: 10, w: "full" },
+        { h: 4, w: 24 },
+        { h: 10, w: "full" },
+        { h: 4, w: 24 },
+        { h: 24, w: "full" },
+      ].map((s, i) => (
         <div key={i} className="space-y-2">
           <Skeleton className={`h-${s.h} w-${s.w}`} />
         </div>
@@ -153,12 +170,16 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
     <div className="rounded-xl border border-hairline bg-surface-card overflow-hidden">
       <div className="border-b border-hairline">
         <div className="flex p-4 gap-4">
-          {[...Array(columns)].map((_, i) => <Skeleton key={i} className="h-4 flex-1" />)}
+          {[...Array(columns)].map((_, i) => (
+            <Skeleton key={i} className="h-4 flex-1" />
+          ))}
         </div>
       </div>
       {[...Array(rows)].map((_, rowIndex) => (
         <div key={rowIndex} className="flex p-4 gap-4 border-b border-hairline-soft">
-          {[...Array(columns)].map((_, colIndex) => <Skeleton key={colIndex} className="h-4 flex-1" />)}
+          {[...Array(columns)].map((_, colIndex) => (
+            <Skeleton key={colIndex} className="h-4 flex-1" />
+          ))}
         </div>
       ))}
     </div>
@@ -183,7 +204,14 @@ export function SidebarSkeleton() {
 
 export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const sizeClasses = { sm: "h-4 w-4", md: "h-8 w-8", lg: "h-12 w-12" };
-  return <div className={cn("animate-spin rounded-full border-2 border-hairline border-t-primary", sizeClasses[size])} />;
+  return (
+    <div
+      className={cn(
+        "animate-spin rounded-full border-2 border-hairline border-t-primary",
+        sizeClasses[size],
+      )}
+    />
+  );
 }
 
 export function PageLoadingSkeleton() {

@@ -43,7 +43,11 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this profile? This action cannot be undone and will remove all associated agents and content.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this profile? This action cannot be undone and will remove all associated agents and content.",
+      )
+    ) {
       return;
     }
 
@@ -75,13 +79,10 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
         ]}
       />
 
-      <PageHeader
-        title="Edit Profile"
-        description="Update your profile settings"
-      />
+      <PageHeader title="Edit Profile" description="Update your profile settings" />
 
       <div className="bg-surface-card border border-hairline rounded-xl p-6">
-        <ProfileForm 
+        <ProfileForm
           initialData={{
             id: profile.id,
             name: profile.name,
@@ -98,14 +99,19 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
       <div className="bg-surface-card border border-hairline rounded-xl p-6">
         <h2 className="text-title-sm text-semantic-error mb-2">Danger Zone</h2>
         <p className="text-body-sm text-muted mb-4">
-          Deleting this profile will remove all associated agents, content, and connected accounts. This action cannot be undone.
+          Deleting this profile will remove all associated agents, content, and connected accounts.
+          This action cannot be undone.
         </p>
         <button
           onClick={handleDelete}
           disabled={isDeleting}
           className="flex items-center gap-2 px-4 py-2 rounded-pill border border-semantic-error text-semantic-error text-body-strong hover:bg-semantic-error/10 transition-colors disabled:opacity-50"
         >
-          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          {isDeleting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
           Delete Profile
         </button>
       </div>

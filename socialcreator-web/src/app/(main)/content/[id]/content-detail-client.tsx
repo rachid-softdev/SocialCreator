@@ -137,18 +137,13 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
             </div>
 
             <div className="prose prose-sm max-w-none">
-              <p className="text-body-md text-ink whitespace-pre-wrap">
-                {content.textContent}
-              </p>
+              <p className="text-body-md text-ink whitespace-pre-wrap">{content.textContent}</p>
             </div>
 
             {content.hashtags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-hairline">
                 {content.hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 rounded-pill bg-surface-strong text-caption"
-                  >
+                  <span key={tag} className="px-3 py-1 rounded-pill bg-surface-strong text-caption">
                     #{tag}
                   </span>
                 ))}
@@ -196,9 +191,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
                 Published
               </div>
               {content.postId && (
-                <div className="text-body-sm text-muted">
-                  Post ID: {content.postId}
-                </div>
+                <div className="text-body-sm text-muted">Post ID: {content.postId}</div>
               )}
             </div>
           )}

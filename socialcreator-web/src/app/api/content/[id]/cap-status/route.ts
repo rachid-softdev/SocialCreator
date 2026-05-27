@@ -27,17 +27,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     const platform = searchParams.get("platform") as Platform;
 
     if (!profileId || !platform) {
-      return NextResponse.json(
-        { error: "Missing profileId or platform" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing profileId or platform" }, { status: 400 });
     }
 
     // Verify user owns this profile
     const profile = await import("@/lib/prisma").then((m) =>
       m.prisma.profile.findFirst({
         where: { id: profileId, userId: session.user!.id },
-      })
+      }),
     );
 
     if (!profile) {
@@ -49,9 +46,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json(capStatus);
   } catch (error) {
     console.error("Error getting cap status:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -43,21 +43,33 @@ export function ProgressStepper({ steps, currentStep, className = "" }: Progress
         return (
           <React.Fragment key={step.id}>
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-lg transition-all duration-300 ${circleClasses[status]}`}>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-lg transition-all duration-300 ${circleClasses[status]}`}
+              >
                 {status === "completed" ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
                   <span>{step.icon}</span>
                 )}
               </div>
-              <span className={`mt-2 text-caption text-center max-w-[80px] ${status === "active" ? "text-body-strong font-medium" : "text-muted"}`}>
+              <span
+                className={`mt-2 text-caption text-center max-w-[80px] ${status === "active" ? "text-body-strong font-medium" : "text-muted"}`}
+              >
                 {step.label}
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 mb-6 transition-all duration-500 ${lineClasses[index < currentStep ? "completed" : "pending"]}`} />
+              <div
+                className={`flex-1 h-0.5 mx-2 mb-6 transition-all duration-500 ${lineClasses[index < currentStep ? "completed" : "pending"]}`}
+              />
             )}
           </React.Fragment>
         );

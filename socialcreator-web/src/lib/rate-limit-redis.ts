@@ -1,7 +1,7 @@
 /**
  * Rate Limiting with Upstash Redis
  * Production-ready rate limiting with persistence
- * 
+ *
  * Install: npm install @upstash/redis @upstash/ratelimit
  * Configure: Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to .env.local
  */
@@ -45,7 +45,7 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   "/api/stripe/portal": { limit: 5, window: "60s" },
 
   // Default for other API endpoints
-  "default": { limit: 100, window: "60s" },
+  default: { limit: 100, window: "60s" },
 };
 
 // ============================================
@@ -83,10 +83,7 @@ if (typeof setInterval !== "undefined") {
 /**
  * Check rate limit using in-memory store (fallback)
  */
-function checkRateLimitInMemory(
-  identifier: string,
-  path: string
-): RateLimitResult {
+function checkRateLimitInMemory(identifier: string, path: string): RateLimitResult {
   const config = getConfigForPath(path);
   const limit = config?.limit ?? 100;
   const windowSeconds = config ? parseWindowToSeconds(config.window) : 60;
@@ -133,10 +130,14 @@ function parseWindowToSeconds(window: string): number {
   const unit = match[2];
 
   switch (unit) {
-    case "s": return value;
-    case "m": return value * 60;
-    case "h": return value * 3600;
-    default: return 60;
+    case "s":
+      return value;
+    case "m":
+      return value * 60;
+    case "h":
+      return value * 3600;
+    default:
+      return 60;
   }
 }
 
@@ -156,7 +157,7 @@ export function initRedis(): Redis | null {
 
   if (!url || !token) {
     console.warn(
-      "Upstash Redis not configured. Using in-memory fallback. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment for production."
+      "Upstash Redis not configured. Using in-memory fallback. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment for production.",
     );
     return null;
   }
@@ -270,7 +271,7 @@ export interface RateLimitResult {
  */
 export async function checkRateLimit(
   request: Request,
-  identifier: string
+  identifier: string,
 ): Promise<RateLimitResult> {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -346,7 +347,7 @@ export function getIdentifier(request: Request, userId?: string, apiKey?: string
 /**
  * Create rate limiting middleware for API routes
  * Usage in API route:
- * 
+ *
  * export async function POST(request: Request) {
  *   const rateLimitResponse = await withRateLimit(request, { userId: session?.user?.id });
  *   if (rateLimitResponse) return rateLimitResponse;
@@ -361,7 +362,7 @@ export interface RateLimitOptions {
 
 export async function withRateLimit(
   request: Request,
-  options: RateLimitOptions = {}
+  options: RateLimitOptions = {},
 ): Promise<Response | null> {
   const identifier = getIdentifier(request, options.userId, options.apiKey);
   const result = await checkRateLimit(request, identifier);
@@ -381,7 +382,7 @@ export async function withRateLimit(
           "X-RateLimit-Reset": result.reset.toString(),
           "Retry-After": Math.ceil((result.reset - Date.now()) / 1000).toString(),
         },
-      }
+      },
     );
   }
 
@@ -397,7 +398,7 @@ export async function withRateLimit(
  */
 export async function getRateLimitStatus(
   identifier: string,
-  path: string
+  path: string,
 ): Promise<{ limit: number; remaining: number; reset: number } | null> {
   const limiter = getRateLimiter(path);
   if (!limiter) return null;

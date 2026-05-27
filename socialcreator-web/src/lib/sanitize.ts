@@ -16,12 +16,12 @@ const MAX_DEPTH = 10;
  * - Escape HTML entities
  */
 export function sanitizeString(input: string): string {
-  if (typeof input !== 'string') {
-    return '';
+  if (typeof input !== "string") {
+    return "";
   }
 
   return input
-    .replace(/\0/g, '') // Remove null bytes
+    .replace(/\0/g, "") // Remove null bytes
     .slice(0, MAX_STRING_LENGTH)
     .trim();
 }
@@ -30,29 +30,24 @@ export function sanitizeString(input: string): string {
  * Sanitize an object recursively
  * Handles nested objects and arrays
  */
-export function sanitizeObject<T extends Record<string, unknown>>(
-  obj: T,
-  depth = 0
-): T {
+export function sanitizeObject<T extends Record<string, unknown>>(obj: T, depth = 0): T {
   if (depth > MAX_DEPTH) {
-    throw new Error('Maximum object depth exceeded');
+    throw new Error("Maximum object depth exceeded");
   }
 
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
   if (Array.isArray(obj)) {
-    return obj
-      .slice(0, MAX_ARRAY_LENGTH)
-      .map((item) => sanitizeValue(item, depth)) as unknown as T;
+    return obj.slice(0, MAX_ARRAY_LENGTH).map((item) => sanitizeValue(item, depth)) as unknown as T;
   }
 
   const sanitized: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     // Sanitize key
-    const sanitizedKey = key.replace(/[<>\"'&]/g, '').slice(0, 255);
+    const sanitizedKey = key.replace(/[<>\"'&]/g, "").slice(0, 255);
     sanitized[sanitizedKey] = sanitizeValue(value, depth);
   }
 
@@ -67,19 +62,19 @@ function sanitizeValue(value: unknown, depth: number): unknown {
     return value;
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     return sanitizeString(value);
   }
 
-  if (typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "number" || typeof value === "boolean") {
     return value;
   }
 
   if (Array.isArray(value)) {
-    return value.map(item => sanitizeValue(item, depth + 1));
+    return value.map((item) => sanitizeValue(item, depth + 1));
   }
 
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     return sanitizeObject(value as Record<string, unknown>, depth + 1);
   }
 
@@ -91,14 +86,14 @@ function sanitizeValue(value: unknown, depth: number): unknown {
  * This is a defense-in-depth measure
  */
 export function sanitizeForSql(input: string): string {
-  if (typeof input !== 'string') {
-    return '';
+  if (typeof input !== "string") {
+    return "";
   }
 
   // Remove common SQL injection patterns
   return input
-    .replace(/(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi, '')
-    .replace(/(--|#|\/\*|\*\/)/g, '')
+    .replace(/(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi, "")
+    .replace(/(--|#|\/\*|\*\/)/g, "")
     .slice(0, MAX_STRING_LENGTH);
 }
 
@@ -107,55 +102,51 @@ export function sanitizeForSql(input: string): string {
  * Note: React escapes by default, this is for when you need explicit HTML
  */
 export function sanitizeHtml(dirty: string): string {
-  if (typeof dirty !== 'string') {
-    return '';
+  if (typeof dirty !== "string") {
+    return "";
   }
 
   // Basic HTML entity encoding
   const entities: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;',
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#x27;",
+    "/": "&#x2F;",
   };
 
-  return dirty
-    .replace(/[&<>"'/]/g, (char) => entities[char] || char)
-    .slice(0, MAX_STRING_LENGTH);
+  return dirty.replace(/[&<>"'/]/g, (char) => entities[char] || char).slice(0, MAX_STRING_LENGTH);
 }
 
 /**
  * Sanitize a filename
  */
 export function sanitizeFilename(filename: string): string {
-  if (typeof filename !== 'string') {
-    return 'file';
+  if (typeof filename !== "string") {
+    return "file";
   }
 
-  return filename
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .slice(0, 255);
+  return filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 255);
 }
 
 /**
  * Sanitize URL (basic validation)
  */
 export function sanitizeUrl(url: string): string {
-  if (typeof url !== 'string') {
-    return '';
+  if (typeof url !== "string") {
+    return "";
   }
 
   try {
     const parsed = new URL(url);
     // Only allow http and https
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return '';
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "";
     }
     return url.slice(0, 2048);
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -177,15 +168,15 @@ export function sanitizeStringArray(input: string[]): string[] {
  * Validate and sanitize email
  */
 export function sanitizeEmail(email: string): string {
-  if (typeof email !== 'string') {
-    return '';
+  if (typeof email !== "string") {
+    return "";
   }
 
   const sanitized = email.toLowerCase().trim().slice(0, 254);
 
   // Basic email regex
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitized)) {
-    return '';
+    return "";
   }
 
   return sanitized;
@@ -195,7 +186,7 @@ export function sanitizeEmail(email: string): string {
  * Validate and sanitize UUID
  */
 export function isValidUuid(id: string): boolean {
-  if (typeof id !== 'string') {
+  if (typeof id !== "string") {
     return false;
   }
 
@@ -207,15 +198,16 @@ export function isValidUuid(id: string): boolean {
  * Sanitize cron expression (basic validation)
  */
 export function sanitizeCronExpression(cron: string): string {
-  if (typeof cron !== 'string') {
-    return '';
+  if (typeof cron !== "string") {
+    return "";
   }
 
   // Basic cron format validation (minute hour day month dayOfWeek)
-  const cronRegex = /^(\*|([0-5]?\d)) (\*|([0-5]?\d)) (\*|([01]?\d|2[0-3])) (\*|([0-6])$)/;
+  const cronRegex =
+    /^(\*|[0-5]?\d) (\*|[0-5]?\d) (\*|[12]\d|3[01]|[1-9]) (\*|1[0-2]|[1-9]) (\*|[0-6])$/;
 
   if (!cronRegex.test(cron)) {
-    return '';
+    return "";
   }
 
   return cron.trim();

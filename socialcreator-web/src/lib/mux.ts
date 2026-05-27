@@ -24,7 +24,7 @@ export interface MuxAssetResult {
 export async function createMuxClip(
   inputUrl: string,
   startTime: number,
-  endTime: number
+  endTime: number,
 ): Promise<MuxClipResult> {
   const mux = getMuxClient();
   const asset = await mux.video.assets.create({

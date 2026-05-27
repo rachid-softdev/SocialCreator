@@ -93,21 +93,24 @@ export default function VideoPipelinePage() {
     setCurrentStep(statusToStep[videoAsset.status] ?? 0);
   }, [videoAsset?.status]);
 
-  const handleUploadComplete = useCallback((videoAssetId: string, uploadUrl: string) => {
-    setVideoAsset({
-      id: videoAssetId,
-      profileId,
-      uploadUrl,
-      muxAssetId: null,
-      muxPlaybackId: null,
-      transcript: null,
-      segments: null,
-      status: "UPLOADED",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    setCurrentStep(1);
-  }, [profileId]);
+  const handleUploadComplete = useCallback(
+    (videoAssetId: string, uploadUrl: string) => {
+      setVideoAsset({
+        id: videoAssetId,
+        profileId,
+        uploadUrl,
+        muxAssetId: null,
+        muxPlaybackId: null,
+        transcript: null,
+        segments: null,
+        status: "UPLOADED",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setCurrentStep(1);
+    },
+    [profileId],
+  );
 
   const handleTranscribe = useCallback(async () => {
     if (!videoAsset) return;
@@ -126,9 +129,7 @@ export default function VideoPipelinePage() {
 
       const { transcript } = await response.json();
 
-      setVideoAsset((prev) =>
-        prev ? { ...prev, transcript, status: "TRANSCRIBED" } : null
-      );
+      setVideoAsset((prev) => (prev ? { ...prev, transcript, status: "TRANSCRIBED" } : null));
       setCurrentStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transcription failed");
@@ -154,9 +155,7 @@ export default function VideoPipelinePage() {
 
       const { segments } = await response.json();
 
-      setVideoAsset((prev) =>
-        prev ? { ...prev, segments, status: "SEGMENTS_IDENTIFIED" } : null
-      );
+      setVideoAsset((prev) => (prev ? { ...prev, segments, status: "SEGMENTS_IDENTIFIED" } : null));
       setCurrentStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Segment identification failed");
@@ -165,36 +164,37 @@ export default function VideoPipelinePage() {
     }
   }, [videoAsset]);
 
-  const handleCreateClips = useCallback(async (selectedSegments: Segment[]) => {
-    if (!videoAsset) return;
+  const handleCreateClips = useCallback(
+    async (selectedSegments: Segment[]) => {
+      if (!videoAsset) return;
 
-    setIsCreatingClips(true);
-    setError(null);
+      setIsCreatingClips(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`/api/video/${videoAsset.id}/clips`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ segments: selectedSegments }),
-      });
+      try {
+        const response = await fetch(`/api/video/${videoAsset.id}/clips`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ segments: selectedSegments }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Clip creation failed");
+        if (!response.ok) {
+          throw new Error("Clip creation failed");
+        }
+
+        const { clips: newClips } = await response.json();
+        setClips(newClips);
+
+        setVideoAsset((prev) => (prev ? { ...prev, status: "CLIPS_CREATED" } : null));
+        setCurrentStep(4);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Clip creation failed");
+      } finally {
+        setIsCreatingClips(false);
       }
-
-      const { clips: newClips } = await response.json();
-      setClips(newClips);
-
-      setVideoAsset((prev) =>
-        prev ? { ...prev, status: "CLIPS_CREATED" } : null
-      );
-      setCurrentStep(4);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Clip creation failed");
-    } finally {
-      setIsCreatingClips(false);
-    }
-  }, [videoAsset]);
+    },
+    [videoAsset],
+  );
 
   const handleGenerateContent = useCallback(async () => {
     if (!videoAsset) return;
@@ -228,9 +228,7 @@ export default function VideoPipelinePage() {
 
   const handlePlatformToggle = useCallback((platform: Platform) => {
     setSelectedPlatforms((prev) =>
-      prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform],
     );
   }, []);
 
@@ -335,22 +333,31 @@ export default function VideoPipelinePage() {
                 <div className="mb-6">
                   <h3 className="text-body-strong text-ink mb-3">Select Platforms</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(["TIKTOK", "INSTAGRAM", "YOUTUBE", "FACEBOOK", "X", "LINKEDIN", "THREADS", "PINTEREST"] as Platform[]).map(
-                      (platform) => (
-                        <button
-                          key={platform}
-                          onClick={() => handlePlatformToggle(platform)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-pill text-caption transition-colors",
-                            selectedPlatforms.includes(platform)
-                              ? "bg-gradient-mint text-ink"
-                              : "bg-surface-strong text-muted hover:text-ink"
-                          )}
-                        >
-                          {platform}
-                        </button>
-                      )
-                    )}
+                    {(
+                      [
+                        "TIKTOK",
+                        "INSTAGRAM",
+                        "YOUTUBE",
+                        "FACEBOOK",
+                        "X",
+                        "LINKEDIN",
+                        "THREADS",
+                        "PINTEREST",
+                      ] as Platform[]
+                    ).map((platform) => (
+                      <button
+                        key={platform}
+                        onClick={() => handlePlatformToggle(platform)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-pill text-caption transition-colors",
+                          selectedPlatforms.includes(platform)
+                            ? "bg-gradient-mint text-ink"
+                            : "bg-surface-strong text-muted hover:text-ink",
+                        )}
+                      >
+                        {platform}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -393,11 +400,7 @@ export default function VideoPipelinePage() {
                     playbackId={videoAsset.muxPlaybackId}
                     hook={videoAsset.segments?.[0]?.hook}
                   />
-                  <VideoTimeline
-                    words={[]}
-                    segments={videoAsset.segments || []}
-                    duration={120}
-                  />
+                  <VideoTimeline words={[]} segments={videoAsset.segments || []} duration={120} />
                 </div>
               ) : videoAsset?.uploadUrl ? (
                 <div className="aspect-video bg-surface-strong rounded-lg flex items-center justify-center">

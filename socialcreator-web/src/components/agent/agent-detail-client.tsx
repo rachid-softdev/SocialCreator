@@ -38,7 +38,12 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: Settings },
     { id: "runs" as const, label: "Runs", icon: RefreshCw, count: agent._count?.runs || 0 },
-    { id: "content" as const, label: "Content", icon: FileText, count: (agent._count as any)?.generatedContents || 0 },
+    {
+      id: "content" as const,
+      label: "Content",
+      icon: FileText,
+      count: (agent._count as any)?.generatedContents || 0,
+    },
   ];
 
   const handleToggleActive = async () => {
@@ -119,13 +124,13 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
             onClick={handleToggleActive}
             className={cn(
               "relative w-12 h-6 rounded-full transition-colors",
-              isActive ? "bg-semantic-success" : "bg-muted-soft"
+              isActive ? "bg-semantic-success" : "bg-muted-soft",
             )}
           >
             <span
               className={cn(
                 "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                isActive ? "left-7" : "left-1"
+                isActive ? "left-7" : "left-1",
               )}
             />
           </button>
@@ -152,7 +157,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
               "flex items-center gap-2 px-4 py-3 text-body-sm border-b-2 transition-colors",
               activeTab === tab.id
                 ? "border-primary text-ink"
-                : "border-transparent text-muted hover:text-ink"
+                : "border-transparent text-muted hover:text-ink",
             )}
           >
             <tab.icon className="w-4 h-4" />
@@ -248,9 +253,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
           />
         )}
 
-        {activeTab === "content" && (
-          <ContentListForAgent agentId={agent.id} />
-        )}
+        {activeTab === "content" && <ContentListForAgent agentId={agent.id} />}
       </div>
 
       {/* Run Modal */}
@@ -285,7 +288,11 @@ function ContentListForAgent({ agentId }: { agentId: string }) {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return <ContentList contents={contents} />;

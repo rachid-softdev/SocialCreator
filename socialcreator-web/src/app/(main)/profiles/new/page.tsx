@@ -27,12 +27,7 @@ export default function NewProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Breadcrumb
-        items={[
-          { label: "Profiles", href: "/profiles" },
-          { label: "New Profile" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Profiles", href: "/profiles" }, { label: "New Profile" }]} />
 
       <PageHeader
         title="Create Profile"

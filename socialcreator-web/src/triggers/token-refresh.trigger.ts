@@ -51,10 +51,7 @@ export const tokenRefreshJob = client.defineJob({
 
     const decryptedRefreshToken = decryptToken(account.refreshToken);
 
-    const newTokens = await refreshOAuthToken(
-      account.platform,
-      decryptedRefreshToken
-    );
+    const newTokens = await refreshOAuthToken(account.platform, decryptedRefreshToken);
 
     if (!newTokens) {
       await io.logger.warn("Token refresh returned no tokens", {
@@ -97,16 +94,14 @@ interface TokenResponse {
 
 async function refreshOAuthToken(
   platform: string,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<TokenResponse | null> {
   const now = new Date();
 
   switch (platform) {
     case "INSTAGRAM":
     case "FACEBOOK": {
-      const url = new URL(
-        "https://graph.facebook.com/v19.0/oauth/access_token"
-      );
+      const url = new URL("https://graph.facebook.com/v19.0/oauth/access_token");
       url.searchParams.set("grant_type", "fb_exchange_token");
       url.searchParams.set("client_id", process.env.META_CLIENT_ID!);
       url.searchParams.set("client_secret", process.env.META_CLIENT_SECRET!);
@@ -143,19 +138,16 @@ async function refreshOAuthToken(
     }
 
     case "LINKEDIN": {
-      const response = await fetch(
-        "https://www.linkedin.com/oauth/v2/accessToken",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            grant_type: "refresh_token",
-            refresh_token: refreshToken,
-            client_id: process.env.LINKEDIN_CLIENT_ID!,
-            client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
-          }),
-        }
-      );
+      const response = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+          client_id: process.env.LINKEDIN_CLIENT_ID!,
+          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+        }),
+      });
       if (!response.ok) return null;
 
       const data = await response.json();

@@ -1,52 +1,52 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Calendar, ChevronDown } from "lucide-react"
-import { cn } from "@socialcreator/utils"
+import { useState } from "react";
+import { Calendar, ChevronDown } from "lucide-react";
+import { cn } from "@socialcreator/utils";
 
-type DateRange = "7d" | "30d" | "90d" | "custom"
+type DateRange = "7d" | "30d" | "90d" | "custom";
 
 interface DateRangePickerProps {
-  value?: DateRange
-  onChange?: (range: DateRange, startDate?: Date, endDate?: Date) => void
+  value?: DateRange;
+  onChange?: (range: DateRange, startDate?: Date, endDate?: Date) => void;
 }
 
 const RANGES: { value: DateRange; label: string; days: number }[] = [
   { value: "7d", label: "Last 7 days", days: 7 },
   { value: "30d", label: "Last 30 days", days: 30 },
   { value: "90d", label: "Last 90 days", days: 90 },
-]
+];
 
 export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
-  const selectedRange = RANGES.find((r) => r.value === value)
-  const selectedLabel = selectedRange?.label || "Select range"
+  const selectedRange = RANGES.find((r) => r.value === value);
+  const selectedLabel = selectedRange?.label || "Select range";
 
   const handleSelect = (range: DateRange) => {
-    onChange?.(range)
-    setIsOpen(false)
-  }
+    onChange?.(range);
+    setIsOpen(false);
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
   const getDateRange = (range: DateRange) => {
-    const r = RANGES.find((r) => r.value === range)
-    if (!r || range === "custom") return null
+    const r = RANGES.find((r) => r.value === range);
+    if (!r || range === "custom") return null;
 
-    const end = new Date()
-    const start = new Date()
-    start.setDate(end.getDate() - r.days)
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - r.days);
 
-    return { start, end }
-  }
+    return { start, end };
+  };
 
-  const dateRange = getDateRange(value)
+  const dateRange = getDateRange(value);
 
   return (
     <div className="relative">
@@ -54,7 +54,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg border border-hairline text-body-sm",
-          "hover:border-hairline-strong transition-colors"
+          "hover:border-hairline-strong transition-colors",
         )}
       >
         <Calendar className="w-4 h-4 text-muted" />
@@ -64,7 +64,9 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
             ({formatDate(dateRange.start)} - {formatDate(dateRange.end)})
           </span>
         )}
-        <ChevronDown className={cn("w-4 h-4 text-muted", isOpen && "rotate-180 transition-transform")} />
+        <ChevronDown
+          className={cn("w-4 h-4 text-muted", isOpen && "rotate-180 transition-transform")}
+        />
       </button>
 
       {isOpen && (
@@ -75,7 +77,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
               onClick={() => handleSelect(range.value)}
               className={cn(
                 "w-full px-3 py-2 text-left text-body-sm hover:bg-surface-strong transition-colors",
-                value === range.value && "bg-surface-strong font-medium"
+                value === range.value && "bg-surface-strong font-medium",
               )}
             >
               {range.label}
@@ -88,7 +90,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
             onClick={() => handleSelect("custom")}
             className={cn(
               "w-full px-3 py-2 text-left text-body-sm hover:bg-surface-strong transition-colors",
-              value === "custom" && "bg-surface-strong font-medium"
+              value === "custom" && "bg-surface-strong font-medium",
             )}
           >
             Custom range
@@ -96,5 +98,5 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
         </div>
       )}
     </div>
-  )
+  );
 }

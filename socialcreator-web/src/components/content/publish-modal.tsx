@@ -149,8 +149,7 @@ export function PublishModal({
               <AlertCircle className="w-4 h-4" />
               <span>
                 {capStatus.max - capStatus.count} publication
-                {capStatus.max - capStatus.count !== 1 ? "s" : ""} remaining
-                today
+                {capStatus.max - capStatus.count !== 1 ? "s" : ""} remaining today
               </span>
             </div>
           )}

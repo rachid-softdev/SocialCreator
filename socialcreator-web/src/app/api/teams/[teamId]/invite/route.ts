@@ -48,10 +48,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validation = inviteSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { email, role } = validation.data;
@@ -64,20 +61,15 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!invitedUser) {
       return NextResponse.json(
         { error: "User not found. They must create an account first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Check if user is already a member
-    const existingMember = team.members.find(
-      (m) => m.userId === invitedUser.id
-    );
+    const existingMember = team.members.find((m) => m.userId === invitedUser.id);
 
     if (existingMember) {
-      return NextResponse.json(
-        { error: "User is already a member of this team" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "User is already a member of this team" }, { status: 409 });
     }
 
     // Check permissions (only owner can invite)
@@ -106,13 +98,10 @@ export async function POST(request: Request, { params }: RouteParams) {
         message: `Successfully invited ${email} to the team`,
         member,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error inviting team member:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

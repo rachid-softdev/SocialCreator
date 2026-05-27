@@ -46,10 +46,7 @@ export default async function EditAgentPage({ params }: PageProps) {
         ]}
       />
 
-      <PageHeader
-        title="Edit Agent"
-        description="Update your agent configuration"
-      />
+      <PageHeader title="Edit Agent" description="Update your agent configuration" />
 
       <div className="bg-surface-card rounded-xl border border-hairline p-6">
         <AgentForm

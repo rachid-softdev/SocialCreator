@@ -47,16 +47,17 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{PLATFORMS.find((p) => p.value === content.platform)?.icon}</span>
+          <span className="text-2xl">
+            {PLATFORMS.find((p) => p.value === content.platform)?.icon}
+          </span>
           <div>
             <h2 className="text-title-sm text-ink">Edit Content</h2>
-            <p className="text-caption text-muted">{PLATFORMS.find((p) => p.value === content.platform)?.label}</p>
+            <p className="text-caption text-muted">
+              {PLATFORMS.find((p) => p.value === content.platform)?.label}
+            </p>
           </div>
         </div>
-        <button
-          onClick={onCancel}
-          className="p-2 rounded-lg hover:bg-surface-strong text-muted"
-        >
+        <button onClick={onCancel} className="p-2 rounded-lg hover:bg-surface-strong text-muted">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -74,7 +75,9 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
           onChange={(e) => setTextContent(e.target.value)}
           className={cn(
             "w-full px-4 py-3 rounded-lg bg-surface-card border text-body-md text-ink resize-none focus:outline-none focus:ring-1",
-            isOverLimit ? "border-semantic-error focus:border-semantic-error" : "border-hairline-strong focus:border-primary"
+            isOverLimit
+              ? "border-semantic-error focus:border-semantic-error"
+              : "border-hairline-strong focus:border-primary",
           )}
           rows={8}
         />

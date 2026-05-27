@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -59,12 +59,9 @@ export async function POST(request: Request) {
       uploadUrl: fileResult.url,
       videoAssetId: videoAsset.id,
     });
-} catch (error) {
+  } catch (error) {
     console.error("Error uploading video:", error);
-    return NextResponse.json(
-      { error: "Video upload failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Video upload failed" }, { status: 500 });
   }
 }
 

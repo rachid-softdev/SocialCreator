@@ -19,7 +19,7 @@ export interface TokenResponse {
 export async function exchangeCodeForToken(
   platform: OAuthProvider,
   code: string,
-  redirectUri: string
+  redirectUri: string,
 ): Promise<TokenResponse> {
   const credentials = getProviderCredentials(platform);
 
@@ -65,7 +65,7 @@ export async function exchangeCodeForToken(
  */
 export async function refreshAccessToken(
   platform: OAuthProvider,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<TokenResponse> {
   const credentials = getProviderCredentials(platform);
 
@@ -123,15 +123,10 @@ function getTokenUrl(platform: OAuthProvider): string {
  * Normalize the token response from different platforms
  * Each platform may return the token in slightly different formats
  */
-function normalizeTokenResponse(
-  platform: OAuthProvider,
-  data: any
-): TokenResponse {
+function normalizeTokenResponse(platform: OAuthProvider, data: any): TokenResponse {
   // Different platforms use different field names
   const accessToken =
-    data.access_token ||
-    data.accessToken ||
-    data.access_token_response?.access_token;
+    data.access_token || data.accessToken || data.access_token_response?.access_token;
 
   if (!accessToken) {
     throw new Error(`No access token in response for ${platform}`);

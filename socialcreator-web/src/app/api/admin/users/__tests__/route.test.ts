@@ -66,7 +66,7 @@ describe("GET /api/admin/users", () => {
 
     it("should return 403 when requireAdmin throws AuthError with status 403", async () => {
       mockRequireAdmin.mockRejectedValue(
-        new MockAuthError("Accès non autorisé - rôle administrateur requis", 403)
+        new MockAuthError("Accès non autorisé - rôle administrateur requis", 403),
       );
 
       const res = await GET();
@@ -79,12 +79,40 @@ describe("GET /api/admin/users", () => {
 
   describe("when authorized", () => {
     const mockUsers = [
-      { id: "1", email: "user1@test.com", name: "User 1", role: "USER", userRoles: [{ role: "USER" }], createdAt: new Date("2024-01-01") },
-      { id: "2", email: "admin@test.com", name: "Admin", role: "ADMIN", userRoles: [{ role: "ADMIN" }], createdAt: new Date("2024-01-02") },
+      {
+        id: "1",
+        email: "user1@test.com",
+        name: "User 1",
+        role: "USER",
+        userRoles: [{ role: "USER" }],
+        createdAt: new Date("2024-01-01"),
+      },
+      {
+        id: "2",
+        email: "admin@test.com",
+        name: "Admin",
+        role: "ADMIN",
+        userRoles: [{ role: "ADMIN" }],
+        createdAt: new Date("2024-01-02"),
+      },
     ];
     const expectedUsersJson = [
-      { id: "1", email: "user1@test.com", name: "User 1", role: "USER", userRoles: [{ role: "USER" }], createdAt: "2024-01-01T00:00:00.000Z" },
-      { id: "2", email: "admin@test.com", name: "Admin", role: "ADMIN", userRoles: [{ role: "ADMIN" }], createdAt: "2024-01-02T00:00:00.000Z" },
+      {
+        id: "1",
+        email: "user1@test.com",
+        name: "User 1",
+        role: "USER",
+        userRoles: [{ role: "USER" }],
+        createdAt: "2024-01-01T00:00:00.000Z",
+      },
+      {
+        id: "2",
+        email: "admin@test.com",
+        name: "Admin",
+        role: "ADMIN",
+        userRoles: [{ role: "ADMIN" }],
+        createdAt: "2024-01-02T00:00:00.000Z",
+      },
     ];
 
     beforeEach(() => {
@@ -107,7 +135,7 @@ describe("GET /api/admin/users", () => {
       expect(prisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: { createdAt: "desc" },
-        })
+        }),
       );
     });
 
@@ -124,7 +152,7 @@ describe("GET /api/admin/users", () => {
             userRoles: { select: { role: true } },
             createdAt: true,
           },
-        })
+        }),
       );
     });
   });
@@ -133,7 +161,7 @@ describe("GET /api/admin/users", () => {
     it("should return 500 for unexpected errors", async () => {
       mockRequireAdmin.mockResolvedValue({ id: "admin-1", email: "admin@test.com" });
       (prisma.user.findMany as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("Unexpected DB error")
+        new Error("Unexpected DB error"),
       );
 
       const res = await GET();
@@ -231,7 +259,7 @@ describe("POST /api/admin/users", () => {
           data: expect.objectContaining({
             password: "hashed-pw",
           }),
-        })
+        }),
       );
     });
 
@@ -244,7 +272,7 @@ describe("POST /api/admin/users", () => {
           data: expect.not.objectContaining({
             password: expect.anything(),
           }),
-        })
+        }),
       );
     });
 
@@ -269,7 +297,7 @@ describe("POST /api/admin/users", () => {
               create: [{ role: "USER" }],
             },
           }),
-        })
+        }),
       );
     });
 
@@ -285,7 +313,7 @@ describe("POST /api/admin/users", () => {
               create: [{ role: "ADMIN" }],
             },
           }),
-        })
+        }),
       );
     });
   });
@@ -319,7 +347,7 @@ describe("POST /api/admin/users", () => {
   describe("error handling", () => {
     it("should return 500 for unexpected errors", async () => {
       (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("Unexpected error")
+        new Error("Unexpected error"),
       );
 
       const res = await POST(createRequest(validBody));

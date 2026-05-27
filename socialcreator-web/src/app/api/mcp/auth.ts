@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server"
-import { headers } from "next/headers"
-import { prisma } from "@/lib/prisma"
-import crypto from "crypto"
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
 export interface McpAuthResult {
-  userId: string
-  apiKeyId: string
+  userId: string;
+  apiKeyId: string;
 }
 
 /**
@@ -13,17 +13,17 @@ export interface McpAuthResult {
  * Token is SHA-256 hash of the API key
  */
 export async function authenticateMcpRequest(): Promise<McpAuthResult | null> {
-  const headersList = await headers()
-  const authHeader = headersList.get("authorization")
+  const headersList = await headers();
+  const authHeader = headersList.get("authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null
+    return null;
   }
 
-  const token = authHeader.slice(7) // Remove "Bearer " prefix
+  const token = authHeader.slice(7); // Remove "Bearer " prefix
 
   if (!token) {
-    return null
+    return null;
   }
 
   // Try to find the API key by hash
@@ -36,34 +36,34 @@ export async function authenticateMcpRequest(): Promise<McpAuthResult | null> {
       id: true,
       userId: true,
     },
-  })
+  });
 
   if (!apiKey) {
-    return null
+    return null;
   }
 
   // Update lastUsed timestamp
   await prisma.apiKey.update({
     where: { id: apiKey.id },
     data: { lastUsed: new Date() },
-  })
+  });
 
   return {
     userId: apiKey.userId,
     apiKeyId: apiKey.id,
-  }
+  };
 }
 
 /**
  * Hash API key using SHA-256
  */
 export function hashApiKey(key: string): string {
-  return crypto.createHash("sha256").update(key).digest("hex")
+  return crypto.createHash("sha256").update(key).digest("hex");
 }
 
 /**
  * Generate preview prefix for API key display
  */
 export function getApiKeyPrefix(key: string): string {
-  return key.slice(0, 8) + "..."
+  return key.slice(0, 8) + "...";
 }

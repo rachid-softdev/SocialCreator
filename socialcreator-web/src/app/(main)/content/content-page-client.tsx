@@ -15,9 +15,14 @@ interface ContentPageClientProps {
 }
 
 // Memoize pour éviter les re-renders inutiles
-export const ContentPageClient = memo(function ContentPageClient({ initialContents, stats }: ContentPageClientProps) {
+export const ContentPageClient = memo(function ContentPageClient({
+  initialContents,
+  stats,
+}: ContentPageClientProps) {
   const [contents, setContents] = useState(initialContents);
-  const [selectedContent, setSelectedContent] = useState<GeneratedContentWithRelations | null>(null);
+  const [selectedContent, setSelectedContent] = useState<GeneratedContentWithRelations | null>(
+    null,
+  );
   const [isApproving, setIsApproving] = useState(false);
 
   const handleApprove = async (id: string) => {
@@ -28,9 +33,7 @@ export const ContentPageClient = memo(function ContentPageClient({ initialConten
       });
 
       if (response.ok) {
-        setContents(contents.map((c) =>
-          c.id === id ? { ...c, status: "APPROVED" } : c
-        ));
+        setContents(contents.map((c) => (c.id === id ? { ...c, status: "APPROVED" } : c)));
         setSelectedContent(null);
       }
     } catch (error) {
@@ -50,9 +53,7 @@ export const ContentPageClient = memo(function ContentPageClient({ initialConten
       });
 
       if (response.ok) {
-        setContents(contents.map((c) =>
-          c.id === id ? { ...c, status: "REJECTED" } : c
-        ));
+        setContents(contents.map((c) => (c.id === id ? { ...c, status: "REJECTED" } : c)));
         setSelectedContent(null);
       }
     } catch (error) {
@@ -84,7 +85,7 @@ export const ContentPageClient = memo(function ContentPageClient({ initialConten
               key={status}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-pill",
-                count > 0 ? "bg-surface-strong" : "bg-surface-strong/50 opacity-50"
+                count > 0 ? "bg-surface-strong" : "bg-surface-strong/50 opacity-50",
               )}
             >
               <span className="text-caption text-muted">{label}:</span>
@@ -116,4 +117,4 @@ export const ContentPageClient = memo(function ContentPageClient({ initialConten
 });
 
 // Display name pour les DevTools React
-ContentPageClient.displayName = 'ContentPageClient'
+ContentPageClient.displayName = "ContentPageClient";

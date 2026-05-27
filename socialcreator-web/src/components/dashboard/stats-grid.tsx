@@ -16,7 +16,12 @@ const statCards = [
   { key: "totalProfiles", label: "Total Profiles", icon: Users, color: "bg-gradient-mint" },
   { key: "activeAgents", label: "Active Agents", icon: Bot, color: "bg-gradient-peach" },
   { key: "pendingDrafts", label: "Pending Drafts", icon: FileText, color: "bg-gradient-lavender" },
-  { key: "publishedThisWeek", label: "Published This Week", icon: TrendingUp, color: "bg-gradient-sky" },
+  {
+    key: "publishedThisWeek",
+    label: "Published This Week",
+    icon: TrendingUp,
+    color: "bg-gradient-sky",
+  },
 ];
 
 export function StatsGrid({ stats }: StatsGridProps) {
@@ -37,7 +42,9 @@ export function StatsGrid({ stats }: StatsGridProps) {
           className="bg-surface-card border border-hairline rounded-xl p-6 shadow-card"
         >
           <div className="flex items-center justify-between mb-4">
-            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", stat.color)}>
+            <div
+              className={cn("w-10 h-10 rounded-lg flex items-center justify-center", stat.color)}
+            >
               <stat.icon className="w-5 h-5 text-ink" />
             </div>
           </div>

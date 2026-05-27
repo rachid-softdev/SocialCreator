@@ -19,8 +19,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Blog SocialCreator",
-    description:
-      "Conseils et stratégies pour créer du contenu réseaux sociaux performant.",
+    description: "Conseils et stratégies pour créer du contenu réseaux sociaux performant.",
   },
 };
 
@@ -29,7 +28,7 @@ export default function BlogPage() {
 
   // Sort by date descending
   const sortedPosts = [...posts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   return (
@@ -44,10 +43,7 @@ export default function BlogPage() {
             <span className="font-display text-title-md text-ink">SocialCreator</span>
           </Link>
           <nav className="flex items-center gap-6">
-            <Link
-              href="/blog"
-              className="text-body-sm font-medium text-primary"
-            >
+            <Link href="/blog" className="text-body-sm font-medium text-primary">
               Blog
             </Link>
             <Link
@@ -81,8 +77,8 @@ export default function BlogPage() {
               <span className="text-gradient-peach">de Contenu</span>
             </h1>
             <p className="text-body-lg text-muted max-w-2xl leading-relaxed">
-              Conseils pratiques, stratégies testées et tendances pour créer des réseaux
-              sociaux qui cartonnent. Sans blabla, que du concret.
+              Conseils pratiques, stratégies testées et tendances pour créer des réseaux sociaux qui
+              cartonnent. Sans blabla, que du concret.
             </p>
           </div>
         </div>
@@ -100,8 +96,8 @@ export default function BlogPage() {
             Prêt à créer du contenu qui engage ?
           </h2>
           <p className="text-body-lg text-on-dark-soft mb-8 max-w-xl mx-auto">
-            SocialCreator te permet de générer des posts IA-optimisés en quelques clics.
-            Teste gratuitement.
+            SocialCreator te permet de générer des posts IA-optimisés en quelques clics. Teste
+            gratuitement.
           </p>
           <Link
             href="/login"
@@ -131,7 +127,10 @@ export default function BlogPage() {
             <Link href="/blog" className="text-caption text-body-strong">
               Blog
             </Link>
-            <Link href="/login" className="text-caption text-muted hover:text-ink transition-colors">
+            <Link
+              href="/login"
+              className="text-caption text-muted hover:text-ink transition-colors"
+            >
               Connexion
             </Link>
           </nav>

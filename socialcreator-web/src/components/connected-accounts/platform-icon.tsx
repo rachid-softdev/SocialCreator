@@ -81,7 +81,7 @@ export function PlatformIcon({ platform, className, size = "md" }: PlatformIconP
         "flex items-center justify-center rounded-lg text-white",
         platformColors[platform],
         sizeClasses[size],
-        className
+        className,
       )}
     >
       {platformIcons[platform]}

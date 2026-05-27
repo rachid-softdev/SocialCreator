@@ -42,7 +42,9 @@ export function PlatformPreview({ platform, content, hashtags }: PlatformPreview
               <p className="text-sm text-gray-800 whitespace-pre-wrap">{content}</p>
               <div className="flex flex-wrap gap-1 mt-2">
                 {hashtags.map((tag) => (
-                  <span key={tag} className="text-blue-600 text-xs">#{tag}</span>
+                  <span key={tag} className="text-blue-600 text-xs">
+                    #{tag}
+                  </span>
                 ))}
               </div>
             </div>
@@ -82,7 +84,9 @@ export function PlatformPreview({ platform, content, hashtags }: PlatformPreview
             {hashtags.length > 0 && (
               <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
                 {hashtags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-blue-600 text-xs">#{tag}</span>
+                  <span key={tag} className="text-blue-600 text-xs">
+                    #{tag}
+                  </span>
                 ))}
               </div>
             )}
@@ -101,7 +105,9 @@ export function PlatformPreview({ platform, content, hashtags }: PlatformPreview
                 <p className="text-white/90 text-sm mt-1 whitespace-pre-wrap">{content}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {hashtags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-white/80 text-xs">#{tag}</span>
+                    <span key={tag} className="text-white/80 text-xs">
+                      #{tag}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -116,7 +122,9 @@ export function PlatformPreview({ platform, content, hashtags }: PlatformPreview
             {hashtags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {hashtags.map((tag) => (
-                  <span key={tag} className="text-gray-500 text-xs">#{tag}</span>
+                  <span key={tag} className="text-gray-500 text-xs">
+                    #{tag}
+                  </span>
                 ))}
               </div>
             )}
@@ -133,12 +141,7 @@ export function PlatformPreview({ platform, content, hashtags }: PlatformPreview
           <Icon className="w-4 h-4 text-muted" />
           <span className="text-body-sm text-ink">{platformInfo?.label}</span>
         </div>
-        <span
-          className={cn(
-            "text-caption",
-            isOverLimit ? "text-semantic-error" : "text-muted"
-          )}
-        >
+        <span className={cn("text-caption", isOverLimit ? "text-semantic-error" : "text-muted")}>
           {content.length}/{constraints.maxChars}
         </span>
       </div>
@@ -163,16 +166,10 @@ interface MultiPlatformPreviewProps {
 }
 
 export function MultiPlatformPreview({ content, hashtags, platforms }: MultiPlatformPreviewProps) {
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(
-    platforms[0] || "INSTAGRAM"
-  );
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(platforms[0] || "INSTAGRAM");
 
   if (platforms.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted">
-        Select platforms to preview content
-      </div>
-    );
+    return <div className="text-center py-8 text-muted">Select platforms to preview content</div>;
   }
 
   return (
@@ -189,7 +186,7 @@ export function MultiPlatformPreview({ content, hashtags, platforms }: MultiPlat
                 "inline-flex items-center gap-2 px-3 py-1.5 rounded-pill text-caption whitespace-nowrap transition-colors",
                 selectedPlatform === platform
                   ? "bg-primary text-on-primary"
-                  : "bg-surface-strong text-muted hover:text-ink"
+                  : "bg-surface-strong text-muted hover:text-ink",
               )}
             >
               <span>{platformInfo?.icon}</span>
@@ -200,11 +197,7 @@ export function MultiPlatformPreview({ content, hashtags, platforms }: MultiPlat
       </div>
 
       {/* Preview */}
-      <PlatformPreview
-        platform={selectedPlatform}
-        content={content}
-        hashtags={hashtags}
-      />
+      <PlatformPreview platform={selectedPlatform} content={content} hashtags={hashtags} />
     </div>
   );
 }

@@ -1,36 +1,36 @@
-import { NextResponse, NextRequest } from "next/server"
-import { authenticateMcpRequest } from "./auth"
-import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-import { triggerAgentRun } from "@/lib/agent-runner"
-import { AgentType, Platform, RunStatus } from "@prisma/client"
-import { checkRateLimit, withRateLimit, getIdentifier } from "@/lib/rate-limit-redis"
+import { NextResponse, NextRequest } from "next/server";
+import { authenticateMcpRequest } from "./auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { triggerAgentRun } from "@/lib/agent-runner";
+import { AgentType, Platform, RunStatus } from "@prisma/client";
+import { checkRateLimit, withRateLimit, getIdentifier } from "@/lib/rate-limit-redis";
 
 // JSON-RPC error codes
-const ERROR_INVALID_REQUEST = -32600
-const ERROR_METHOD_NOT_FOUND = -32601
-const ERROR_INVALID_PARAMS = -32602
-const ERROR_AUTH_ERROR = -32000
-const ERROR_NOT_FOUND = -32001
-const ERROR_CONFLICT = -32002
-const ERROR_INTERNAL_ERROR = -32003
+const ERROR_INVALID_REQUEST = -32600;
+const ERROR_METHOD_NOT_FOUND = -32601;
+const ERROR_INVALID_PARAMS = -32602;
+const ERROR_AUTH_ERROR = -32000;
+const ERROR_NOT_FOUND = -32001;
+const ERROR_CONFLICT = -32002;
+const ERROR_INTERNAL_ERROR = -32003;
 
 interface JsonRpcRequest {
-  jsonrpc: "2.0"
-  id: number | string
-  method: string
-  params?: Record<string, unknown>
+  jsonrpc: "2.0";
+  id: number | string;
+  method: string;
+  params?: Record<string, unknown>;
 }
 
 interface JsonRpcResponse {
-  jsonrpc: "2.0"
-  id: number | string
-  result?: unknown
+  jsonrpc: "2.0";
+  id: number | string;
+  result?: unknown;
   error?: {
-    code: number
-    message: string
-    data?: unknown
-  }
+    code: number;
+    message: string;
+    data?: unknown;
+  };
 }
 
 // Validation schemas
@@ -38,26 +38,28 @@ const CreateAgentSchema = z.object({
   profile_id: z.string(),
   name: z.string().min(1).max(100),
   type: z.enum(["TEXT_POST", "VIDEO_CLIP", "CROSS_POST"]),
-  platforms: z.array(z.enum(["TIKTOK", "INSTAGRAM", "YOUTUBE", "FACEBOOK", "X", "LINKEDIN", "THREADS", "PINTEREST"])),
+  platforms: z.array(
+    z.enum(["TIKTOK", "INSTAGRAM", "YOUTUBE", "FACEBOOK", "X", "LINKEDIN", "THREADS", "PINTEREST"]),
+  ),
   schedule: z.string().optional(),
   auto_publish: z.boolean().optional(),
   max_per_day: z.number().optional(),
-})
+});
 
 const RunAgentSchema = z.object({
   agent_id: z.string(),
   brief: z.string().min(1),
-})
+});
 
 const GetRunStatusSchema = z.object({
   run_id: z.string(),
-})
+});
 
 export async function POST(request: NextRequest) {
   // First, try Redis rate limiting (with fallback to in-memory if Redis not configured)
   const identifier = getIdentifier(request);
   const rateLimitResult = await checkRateLimit(request, identifier);
-  
+
   if (!rateLimitResult.success) {
     return NextResponse.json(
       {
@@ -75,14 +77,18 @@ export async function POST(request: NextRequest) {
           "X-RateLimit-Remaining": "0",
           "X-RateLimit-Reset": rateLimitResult.reset.toString(),
         },
-      }
+      },
     );
   }
 
   // Authenticate request
-  const auth = await authenticateMcpRequest()
+  const auth = await authenticateMcpRequest();
   if (!auth) {
-    const response = createJsonRpcErrorResponse(null, ERROR_AUTH_ERROR, "Invalid or missing API key");
+    const response = createJsonRpcErrorResponse(
+      null,
+      ERROR_AUTH_ERROR,
+      "Invalid or missing API key",
+    );
     response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString());
     response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString());
     response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString());
@@ -90,86 +96,119 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body: JsonRpcRequest = await request.json()
+    const body: JsonRpcRequest = await request.json();
 
     // Validate JSON-RPC structure
     if (!body.jsonrpc || body.jsonrpc !== "2.0") {
-      return createJsonRpcErrorResponse(body.id, ERROR_INVALID_REQUEST, "Invalid JSON-RPC version")
+      return createJsonRpcErrorResponse(body.id, ERROR_INVALID_REQUEST, "Invalid JSON-RPC version");
     }
 
     if (!body.method || typeof body.method !== "string") {
-      return createJsonRpcErrorResponse(body.id, ERROR_INVALID_REQUEST, "Method is required")
+      return createJsonRpcErrorResponse(body.id, ERROR_INVALID_REQUEST, "Method is required");
     }
 
-    const { method, params = {}, id } = body
+    const { method, params = {}, id } = body;
 
     // Route to handler
-    let result: unknown
+    let result: unknown;
     switch (method) {
       case "list_agents":
-        result = await handleListAgents(auth.userId, params.profile_id as string | undefined)
-        break
+        result = await handleListAgents(auth.userId, params.profile_id as string | undefined);
+        break;
 
       case "get_agent":
-        result = await handleGetAgent(auth.userId, params.agent_id as string)
-        break
+        result = await handleGetAgent(auth.userId, params.agent_id as string);
+        break;
 
       case "create_agent":
-        result = await handleCreateAgent(auth.userId, params)
-        break
+        result = await handleCreateAgent(auth.userId, params);
+        break;
 
       case "run_agent":
-        result = await handleRunAgent(auth.userId, params)
-        break
+        result = await handleRunAgent(auth.userId, params);
+        break;
 
       case "get_run_status":
-        result = await handleGetRunStatus(auth.userId, params.run_id as string)
-        break
+        result = await handleGetRunStatus(auth.userId, params.run_id as string);
+        break;
 
       case "list_profiles":
-        result = await handleListProfiles(auth.userId)
-        break
+        result = await handleListProfiles(auth.userId);
+        break;
 
       default:
-        return createJsonRpcErrorResponse(id, ERROR_METHOD_NOT_FOUND, `Method '${method}' not found`)
+        return createJsonRpcErrorResponse(
+          id,
+          ERROR_METHOD_NOT_FOUND,
+          `Method '${method}' not found`,
+        );
     }
 
     return NextResponse.json({
       jsonrpc: "2.0",
       id,
       result,
-    } as JsonRpcResponse)
+    } as JsonRpcResponse);
   } catch (error) {
-    console.error("MCP handler error:", error)
+    console.error("MCP handler error:", error);
 
     if (error instanceof z.ZodError) {
-      return createJsonRpcErrorResponse(null, ERROR_INVALID_PARAMS, error.errors[0].message)
+      return createJsonRpcErrorResponse(null, ERROR_INVALID_PARAMS, error.errors[0].message);
     }
 
-    return createJsonRpcErrorResponse(null, ERROR_INTERNAL_ERROR, "Internal server error")
+    return createJsonRpcErrorResponse(null, ERROR_INTERNAL_ERROR, "Internal server error");
   }
 }
 
-function createJsonRpcErrorResponse(id: number | string | null, code: number, message: string, data?: unknown) {
-  return NextResponse.json({
-    jsonrpc: "2.0",
-    id,
-    error: {
-      code,
-      message,
-      data,
-    },
-  } as JsonRpcResponse, { status: code < -32600 ? 200 : 400 })
+function getHttpStatusFromJsonRpcCode(code: number): number {
+  switch (code) {
+    case -32001:
+      return 404; // NOT_FOUND
+    case -32000:
+      return 401; // AUTH_ERROR
+    case -32002:
+      return 409; // CONFLICT
+    case -32602:
+      return 400; // INVALID_PARAMS
+    case -32600:
+      return 400; // INVALID_REQUEST
+    case -32601:
+      return 404; // METHOD_NOT_FOUND
+    case -32003:
+      return 500; // INTERNAL_ERROR
+    default:
+      return 500;
+  }
+}
+
+function createJsonRpcErrorResponse(
+  id: number | string | null,
+  code: number,
+  message: string,
+  data?: unknown,
+) {
+  return NextResponse.json(
+    {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code,
+        message,
+        data,
+      },
+    } as JsonRpcResponse,
+    { status: getHttpStatusFromJsonRpcCode(code) },
+  );
 }
 
 // Handler implementations
 async function handleListAgents(userId: string, profileId?: string) {
   const where: { profile: { userId: string }; profileId?: string } = {
     profile: { userId },
-  }
+  };
 
   if (profileId) {
-    where.profileId = profileId
+    where.profileId = profileId;
   }
 
   const agents = await prisma.agent.findMany({
@@ -184,9 +223,9 @@ async function handleListAgents(userId: string, profileId?: string) {
       createdAt: true,
     },
     orderBy: { createdAt: "desc" },
-  })
+  });
 
-  return { agents }
+  return { agents };
 }
 
 async function handleGetAgent(userId: string, agentId: string) {
@@ -208,17 +247,17 @@ async function handleGetAgent(userId: string, agentId: string) {
         },
       },
     },
-  })
+  });
 
   if (!agent) {
-    throw { code: ERROR_NOT_FOUND, message: "Agent not found" }
+    throw { code: ERROR_NOT_FOUND, message: "Agent not found" };
   }
 
-  return { agent }
+  return { agent };
 }
 
 async function handleCreateAgent(userId: string, params: unknown) {
-  const parsed = CreateAgentSchema.parse(params)
+  const parsed = CreateAgentSchema.parse(params);
 
   // Verify profile ownership
   const profile = await prisma.profile.findFirst({
@@ -226,10 +265,10 @@ async function handleCreateAgent(userId: string, params: unknown) {
       id: parsed.profile_id,
       userId,
     },
-  })
+  });
 
   if (!profile) {
-    throw { code: ERROR_NOT_FOUND, message: "Profile not found" }
+    throw { code: ERROR_NOT_FOUND, message: "Profile not found" };
   }
 
   // Create the agent first, then we can check runs on this specific agent
@@ -244,13 +283,13 @@ async function handleCreateAgent(userId: string, params: unknown) {
       maxPerDay: parsed.max_per_day ?? 2,
       isActive: true,
     },
-  })
+  });
 
-  return { agent_id: agent.id }
+  return { agent_id: agent.id };
 }
 
 async function handleRunAgent(userId: string, params: unknown) {
-  const parsed = RunAgentSchema.parse(params)
+  const parsed = RunAgentSchema.parse(params);
 
   const agent = await prisma.agent.findFirst({
     where: {
@@ -260,10 +299,10 @@ async function handleRunAgent(userId: string, params: unknown) {
     include: {
       profile: true,
     },
-  })
+  });
 
   if (!agent) {
-    throw { code: ERROR_NOT_FOUND, message: "Agent not found" }
+    throw { code: ERROR_NOT_FOUND, message: "Agent not found" };
   }
 
   // Check if agent is already running
@@ -272,10 +311,10 @@ async function handleRunAgent(userId: string, params: unknown) {
       agentId: agent.id,
       status: "RUNNING",
     },
-  })
+  });
 
   if (runningRun) {
-    throw { code: ERROR_CONFLICT, message: "Agent is already running" }
+    throw { code: ERROR_CONFLICT, message: "Agent is already running" };
   }
 
   // Create run record
@@ -285,16 +324,16 @@ async function handleRunAgent(userId: string, params: unknown) {
       brief: parsed.brief,
       status: "PENDING",
     },
-  })
+  });
 
   // Trigger async execution
   // In production, this would be queued via Trigger.dev
   // For now, we execute immediately
   setImmediate(async () => {
     try {
-      await triggerAgentRun({ runId: run.id, agentId: agent.id })
+      await triggerAgentRun({ runId: run.id, agentId: agent.id });
     } catch (error) {
-      console.error("Agent run error:", error)
+      console.error("Agent run error:", error);
       await prisma.agentRun.update({
         where: { id: run.id },
         data: {
@@ -302,11 +341,11 @@ async function handleRunAgent(userId: string, params: unknown) {
           finishedAt: new Date(),
           error: error instanceof Error ? error.message : "Unknown error",
         },
-      })
+      });
     }
-  })
+  });
 
-  return { run_id: run.id, status: "PENDING" }
+  return { run_id: run.id, status: "PENDING" };
 }
 
 async function handleGetRunStatus(userId: string, runId: string) {
@@ -325,10 +364,10 @@ async function handleGetRunStatus(userId: string, runId: string) {
         },
       },
     },
-  })
+  });
 
   if (!run) {
-    throw { code: ERROR_NOT_FOUND, message: "Run not found" }
+    throw { code: ERROR_NOT_FOUND, message: "Run not found" };
   }
 
   return {
@@ -341,7 +380,7 @@ async function handleGetRunStatus(userId: string, runId: string) {
       error: run.error,
       contents: run.generatedContents,
     },
-  }
+  };
 }
 
 async function handleListProfiles(userId: string) {
@@ -354,7 +393,7 @@ async function handleListProfiles(userId: string) {
       createdAt: true,
     },
     orderBy: { createdAt: "desc" },
-  })
+  });
 
-  return { profiles }
+  return { profiles };
 }

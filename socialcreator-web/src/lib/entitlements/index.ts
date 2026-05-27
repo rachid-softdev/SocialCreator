@@ -4,23 +4,37 @@
  */
 
 // Types
-export * from "./types"
+export * from "./types";
 
 // Core Services
-export { getFeatureGateService, resetFeatureGateService, FeatureGateService } from "./service"
-export { createFeatureNotAvailableError, createLimitReachedError, createSubscriptionExpiredError } from "./service"
+export { getFeatureGateService, resetFeatureGateService, FeatureGateService } from "./service";
+export {
+  createFeatureNotAvailableError,
+  createLimitReachedError,
+  createSubscriptionExpiredError,
+} from "./service";
 
 // Repository
-export { getEntitlementRepository, setEntitlementRepository, resetEntitlementRepository, PrismaEntitlementRepository } from "./repository"
+export {
+  getEntitlementRepository,
+  setEntitlementRepository,
+  resetEntitlementRepository,
+  PrismaEntitlementRepository,
+} from "./repository";
 
 // Cache
-export { cacheService, getEntitlementsCacheKey, getEntitlementsRedis, clearMemoryCache } from "./cache"
+export {
+  cacheService,
+  getEntitlementsCacheKey,
+  getEntitlementsRedis,
+  clearMemoryCache,
+} from "./cache";
 
 // Stripe Webhook
-export { handleStripeWebhook } from "./stripe-webhook"
+export { handleStripeWebhook } from "./stripe-webhook";
 
 // Downgrade
-export { getDowngradeService, resetDowngradeService, DowngradeService } from "./downgrade"
+export { getDowngradeService, resetDowngradeService, DowngradeService } from "./downgrade";
 
 // Middleware
 export {
@@ -34,9 +48,9 @@ export {
   expressRequireFeature,
   expressConsumeFeature,
   getOrgIdFromRequest,
-} from "./middleware"
-export type { MiddlewareContext, MiddlewareHandler } from "./middleware"
+} from "./middleware";
+export type { MiddlewareContext, MiddlewareHandler } from "./middleware";
 
 // Default instance
-import { getFeatureGateService } from "./service"
-export default getFeatureGateService
+import { getFeatureGateService } from "./service";
+export default getFeatureGateService;

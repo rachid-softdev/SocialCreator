@@ -31,11 +31,13 @@ export function BrandVoiceEditor({
           "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
           isNearLimit
             ? "border-semantic-error"
-            : "border-hairline-strong focus:border-primary-active"
+            : "border-hairline-strong focus:border-primary-active",
         )}
       />
       <div className="flex justify-end">
-        <span className={cn("text-caption", isNearLimit ? "text-semantic-error" : "text-muted-soft")}>
+        <span
+          className={cn("text-caption", isNearLimit ? "text-semantic-error" : "text-muted-soft")}
+        >
           {charCount}/{maxLength}
         </span>
       </div>

@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { getPlanData, type PlanKey } from "@/lib/stripe"
-import { Button } from "@socialcreator/ui/button"
-import { Badge } from "@socialcreator/ui/badge"
-import { format } from "date-fns"
-import { 
-  CreditCard, 
-  Calendar, 
-  AlertCircle, 
-  CheckCircle, 
+import { useState } from "react";
+import { getPlanData, type PlanKey } from "@/lib/stripe";
+import { Button } from "@socialcreator/ui/button";
+import { Badge } from "@socialcreator/ui/badge";
+import { format } from "date-fns";
+import {
+  CreditCard,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
   XCircle,
   ExternalLink,
-  Loader2
-} from "lucide-react"
+  Loader2,
+} from "lucide-react";
 
 interface BillingOverviewProps {
-  currentPlan: PlanKey | null
-  status: string | null
-  renewalDate: Date | null
-  customerId: string | null
-  cancelAtPeriodEnd: boolean
-  onOpenPortal: () => Promise<void>
-  onChangePlan: (plan: PlanKey) => void
+  currentPlan: PlanKey | null;
+  status: string | null;
+  renewalDate: Date | null;
+  customerId: string | null;
+  cancelAtPeriodEnd: boolean;
+  onOpenPortal: () => Promise<void>;
+  onChangePlan: (plan: PlanKey) => void;
 }
 
 export function BillingOverview({
@@ -34,13 +34,20 @@ export function BillingOverview({
   onOpenPortal,
   onChangePlan,
 }: BillingOverviewProps) {
-  const [isLoadingPortal, setIsLoadingPortal] = useState(false)
-  const [isChangingPlan, setIsChangingPlan] = useState(false)
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
 
-  const planData = getPlanData(currentPlan ?? "free")
+  const planData = getPlanData(currentPlan ?? "free");
 
   // Free plan fallback
-  const plan = planData ?? { name: "Free", price: 0, profiles: 1, addOnPrice: 0, addOnProfiles: 1, features: [] }
+  const plan = planData ?? {
+    name: "Free",
+    price: 0,
+    profiles: 1,
+    addOnPrice: 0,
+    addOnProfiles: 1,
+    features: [],
+  };
 
   const getStatusBadge = () => {
     switch (status) {
@@ -50,66 +57,62 @@ export function BillingOverview({
             <CheckCircle className="w-3 h-3" />
             Active
           </Badge>
-        )
+        );
       case "trialing":
         return (
           <Badge className="bg-blue-100 text-blue-700 gap-1">
             <CreditCard className="w-3 h-3" />
             Trial
           </Badge>
-        )
+        );
       case "past_due":
         return (
           <Badge className="bg-semantic-error/10 text-semantic-error gap-1">
             <AlertCircle className="w-3 h-3" />
             Past Due
           </Badge>
-        )
+        );
       case "canceled":
         return (
           <Badge className="bg-muted-soft text-muted gap-1">
             <XCircle className="w-3 h-3" />
             Canceled
           </Badge>
-        )
+        );
       default:
-        return (
-          <Badge className="bg-muted-soft text-muted">
-            No Subscription
-          </Badge>
-        )
+        return <Badge className="bg-muted-soft text-muted">No Subscription</Badge>;
     }
-  }
+  };
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
-    }).format(priceInCents / 100)
-  }
+    }).format(priceInCents / 100);
+  };
 
   const handleOpenPortal = async () => {
-    setIsLoadingPortal(true)
+    setIsLoadingPortal(true);
     try {
-      await onOpenPortal()
+      await onOpenPortal();
     } catch (error) {
-      console.error("Failed to open portal:", error)
+      console.error("Failed to open portal:", error);
     } finally {
-      setIsLoadingPortal(false)
+      setIsLoadingPortal(false);
     }
-  }
+  };
 
   const handleChangePlan = async (plan: PlanKey) => {
-    setIsChangingPlan(true)
+    setIsChangingPlan(true);
     try {
-      onChangePlan(plan)
+      onChangePlan(plan);
     } catch (error) {
-      console.error("Failed to change plan:", error)
+      console.error("Failed to change plan:", error);
     } finally {
-      setIsChangingPlan(false)
+      setIsChangingPlan(false);
     }
-  }
+  };
 
   // Pas de subscription
   if (!currentPlan || !plan) {
@@ -119,11 +122,9 @@ export function BillingOverview({
         <p className="text-body-sm text-muted mb-6">
           You don&apos;t have an active subscription. Choose a plan to get started.
         </p>
-        <Button onClick={() => onChangePlan("starter")}>
-          View Plans
-        </Button>
+        <Button onClick={() => onChangePlan("starter")}>View Plans</Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -135,9 +136,7 @@ export function BillingOverview({
             <h3 className="text-title-md font-medium">Current Plan</h3>
             <p className="text-2xl font-semibold mt-1">
               {plan.name}
-              <span className="text-base font-normal text-muted ml-2">
-                /month
-              </span>
+              <span className="text-base font-normal text-muted ml-2">/month</span>
             </p>
           </div>
           {getStatusBadge()}
@@ -148,7 +147,7 @@ export function BillingOverview({
             <CreditCard className="w-4 h-4" />
             {formatPrice(plan.price)}/mo
           </span>
-          
+
           {renewalDate && (
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -165,16 +164,13 @@ export function BillingOverview({
 
         {status === "past_due" && (
           <div className="bg-semantic-error/10 text-semantic-error rounded-lg p-3 mb-4 text-body-sm">
-            Your payment is past due. Please update your payment method to continue using the service.
+            Your payment is past due. Please update your payment method to continue using the
+            service.
           </div>
         )}
 
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={handleOpenPortal}
-            disabled={isLoadingPortal}
-          >
+          <Button variant="outline" onClick={handleOpenPortal} disabled={isLoadingPortal}>
             {isLoadingPortal ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
             ) : (
@@ -185,14 +181,10 @@ export function BillingOverview({
 
           {currentPlan !== "team" && (
             <Button
-              onClick={() => handleChangePlan(
-                currentPlan === "starter" ? "pro" : "team"
-              )}
+              onClick={() => handleChangePlan(currentPlan === "starter" ? "pro" : "team")}
               disabled={isChangingPlan}
             >
-              {isChangingPlan ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
+              {isChangingPlan ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Upgrade Plan
             </Button>
           )}
@@ -235,19 +227,19 @@ export function BillingOverview({
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // Invoice list component
 interface InvoiceListProps {
   invoices: Array<{
-    id: string
-    created: number
-    amount_paid: number
-    currency: string
-    status: string
-    invoice_pdf: string
-  }>
+    id: string;
+    created: number;
+    amount_paid: number;
+    currency: string;
+    status: string;
+    invoice_pdf: string;
+  }>;
 }
 
 export function InvoiceList({ invoices }: InvoiceListProps) {
@@ -255,15 +247,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
-    }).format(amount / 100)
-  }
+    }).format(amount / 100);
+  };
 
   if (invoices.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted">
-        No invoices yet
-      </div>
-    )
+    return <div className="text-center py-8 text-muted">No invoices yet</div>;
   }
 
   return (
@@ -287,9 +275,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 {formatPrice(invoice.amount_paid, invoice.currency)}
               </td>
               <td className="p-4">
-                <Badge 
+                <Badge
                   className={
-                    invoice.status === "paid" 
+                    invoice.status === "paid"
                       ? "bg-semantic-success/10 text-semantic-success"
                       : "bg-muted-soft text-muted"
                   }
@@ -314,5 +302,5 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
         </tbody>
       </table>
     </div>
-  )
+  );
 }

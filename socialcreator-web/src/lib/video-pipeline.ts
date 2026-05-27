@@ -45,7 +45,7 @@ export interface VideoPipelineResult {
 export async function identifySegments(transcript: string): Promise<Segment[]> {
   const result = await generateContent(
     "Tu es un expert en création de contenu viral pour les réseaux sociaux.",
-    `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`
+    `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`,
   );
   return (result as any).segments as Segment[];
 }
@@ -53,7 +53,7 @@ export async function identifySegments(transcript: string): Promise<Segment[]> {
 export async function runVideoPipeline(
   videoAssetId: string,
   profileId: string,
-  targetPlatforms: Platform[]
+  targetPlatforms: Platform[],
 ): Promise<VideoPipelineResult> {
   // 1. Get video asset
   const videoAsset = await prisma.videoAsset.findUnique({
@@ -85,7 +85,7 @@ export async function runVideoPipeline(
     const { assetId, playbackId } = await createMuxClip(
       videoAsset.uploadUrl,
       segment.start,
-      segment.end
+      segment.end,
     );
     clips.push({
       segment,
@@ -117,7 +117,7 @@ export async function runVideoPipeline(
     for (const platform of targetPlatforms) {
       const userPrompt = buildGenerationPrompt({
         brief: `${clip.segment.hook}\n\nContexte: ${clip.segment.reason}`,
-        platform
+        platform,
       });
       const result = await generateContent(systemPrompt, userPrompt);
       contents.push({

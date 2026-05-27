@@ -26,7 +26,7 @@ export async function transcribeVideo(videoUrl: string): Promise<TranscriptResul
       timestamps: true,
       model: "nova-2",
       language: "multi",
-    }
+    },
   );
 
   return {
@@ -45,7 +45,7 @@ export async function getTranscriptWithTimestamps(videoUrl: string): Promise<{
       punctuate: true,
       model: "nova-2",
       detect_language: true,
-    }
+    },
   );
 
   return {

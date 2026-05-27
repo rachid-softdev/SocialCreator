@@ -12,7 +12,8 @@ export default function LoginPage() {
           <div
             className="w-[500px] h-[500px] rounded-full opacity-60"
             style={{
-              background: "radial-gradient(circle, var(--color-gradient-peach) 0%, transparent 70%)",
+              background:
+                "radial-gradient(circle, var(--color-gradient-peach) 0%, transparent 70%)",
             }}
           />
         </div>
@@ -31,12 +32,8 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h2 className="text-display-sm font-display text-ink mb-2">
-              Sign In
-            </h2>
-            <p className="text-body text-muted">
-              Enter your credentials to access your account
-            </p>
+            <h2 className="text-display-sm font-display text-ink mb-2">Sign In</h2>
+            <p className="text-body text-muted">Enter your credentials to access your account</p>
           </div>
 
           <Suspense fallback={<div className="text-center py-4">Loading...</div>}>

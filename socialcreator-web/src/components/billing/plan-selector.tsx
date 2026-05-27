@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Check, Minus, Plus } from "lucide-react"
-import { Button } from "@socialcreator/ui/button"
-import { getPlanData, type PlanKey, PLANS } from "@/lib/stripe"
+import { useState } from "react";
+import { Check, Minus, Plus } from "lucide-react";
+import { Button } from "@socialcreator/ui/button";
+import { getPlanData, type PlanKey, PLANS } from "@/lib/stripe";
 
 interface PlanSelectorProps {
-  onSubmit?: (plan: PlanKey, additionalProfiles: number) => void
-  currentPlan?: PlanKey
+  onSubmit?: (plan: PlanKey, additionalProfiles: number) => void;
+  currentPlan?: PlanKey;
 }
 
 export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>(currentPlan || "starter")
-  const [additionalProfiles, setAdditionalProfiles] = useState(0)
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>(currentPlan || "starter");
+  const [additionalProfiles, setAdditionalProfiles] = useState(0);
 
-  const plan = getPlanData(selectedPlan)!
+  const plan = getPlanData(selectedPlan)!;
 
-  const totalPrice = (plan?.price ?? 0) + (plan?.addOnPrice ?? 0) * additionalProfiles
+  const totalPrice = (plan?.price ?? 0) + (plan?.addOnPrice ?? 0) * additionalProfiles;
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
-    }).format(priceInCents / 100)
-  }
+    }).format(priceInCents / 100);
+  };
 
   const handleSubmit = () => {
-    onSubmit?.(selectedPlan, additionalProfiles)
-  }
+    onSubmit?.(selectedPlan, additionalProfiles);
+  };
 
   return (
     <div className="rounded-xl border border-hairline bg-surface-card p-6">
@@ -37,29 +37,29 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
 
         <div className="flex gap-2">
           {(["starter", "pro", "team"] as PlanKey[]).map((planKey) => {
-            const isSelected = selectedPlan === planKey
-            const isCurrent = currentPlan === planKey
+            const isSelected = selectedPlan === planKey;
+            const isCurrent = currentPlan === planKey;
 
             return (
               <button
                 key={planKey}
                 onClick={() => {
-                  setSelectedPlan(planKey)
-                  setAdditionalProfiles(0)
+                  setSelectedPlan(planKey);
+                  setAdditionalProfiles(0);
                 }}
                 disabled={isCurrent}
                 className={`flex-1 py-2 px-3 rounded-lg border text-center text-body-sm transition-colors ${
                   isSelected
                     ? "border-primary bg-surface-dark text-on-dark"
                     : isCurrent
-                    ? "border-hairline-severe text-muted cursor-not-allowed"
-                    : "border-hairline text-ink hover:border-hairline-strong"
+                      ? "border-hairline-severe text-muted cursor-not-allowed"
+                      : "border-hairline text-ink hover:border-hairline-strong"
                 }`}
               >
                 {getPlanData(planKey)?.name}
                 {isCurrent && " (current)"}
               </button>
-            )
+            );
           })}
         </div>
       </div>
@@ -77,9 +77,7 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
               <Minus className="w-4 h-4" />
             </button>
 
-            <div className="text-xl font-semibold w-12 text-center">
-              {additionalProfiles}
-            </div>
+            <div className="text-xl font-semibold w-12 text-center">{additionalProfiles}</div>
 
             <button
               onClick={() => setAdditionalProfiles(additionalProfiles + 1)}
@@ -106,5 +104,5 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
         Continue to Checkout
       </Button>
     </div>
-  )
+  );
 }

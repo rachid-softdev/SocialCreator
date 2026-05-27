@@ -10,7 +10,8 @@ interface BadgeProps {
 }
 
 export function Badge({ variant = "default", className, children }: BadgeProps) {
-  const baseStyles = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors";
+  const baseStyles =
+    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors";
   const variantStyles = {
     default: "bg-primary/10 text-primary",
     secondary: "bg-secondary/10 text-secondary-foreground",

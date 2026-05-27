@@ -53,9 +53,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error deleting team:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

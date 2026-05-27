@@ -35,10 +35,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const validation = updateRoleSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
 
     const { role } = validation.data;
@@ -66,10 +63,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error updating member role:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -109,9 +103,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error removing member:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

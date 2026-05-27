@@ -18,8 +18,8 @@ vi.mock("bcryptjs", () => ({
   default: { hash: vi.fn(), compare: vi.fn() },
 }));
 
-vi.mock("@/lib/rate-limit", () => ({
-  withRateLimit: vi.fn((_req: any, handler: () => Promise<any>) => handler()),
+vi.mock("@/lib/rate-limit-redis", () => ({
+  withRateLimit: vi.fn((_req: any) => null),
 }));
 
 import { POST } from "../route";
@@ -108,7 +108,8 @@ describe("POST /api/auth/register", () => {
     it("should not store the plaintext password in the user data passed to prisma", async () => {
       await POST(createRequest(validBody));
 
-      const createCallArgs = (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      const createCallArgs = (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
       expect(createCallArgs.data.password).toBe("hashed-password-123");
       expect(createCallArgs.data.password).not.toBe("password123");
     });
@@ -125,7 +126,7 @@ describe("POST /api/auth/register", () => {
               create: [{ role: "USER" }],
             },
           }),
-        })
+        }),
       );
     });
 
@@ -137,7 +138,7 @@ describe("POST /api/auth/register", () => {
           data: expect.objectContaining({
             cguAccepted: false,
           }),
-        })
+        }),
       );
     });
   });
@@ -173,7 +174,7 @@ describe("POST /api/auth/register", () => {
   describe("error handling", () => {
     it("should return 500 when prisma create throws", async () => {
       (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("DB error")
+        new Error("DB error"),
       );
 
       const res = await POST(createRequest(validBody));
@@ -184,7 +185,7 @@ describe("POST /api/auth/register", () => {
 
     it("should return 500 when bcrypt hash throws", async () => {
       (bcrypt.hash as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("Hash error")
+        new Error("Hash error"),
       );
 
       const res = await POST(createRequest(validBody));
@@ -198,7 +199,7 @@ describe("POST /api/auth/register", () => {
         new Prisma.PrismaClientKnownRequestError("Unique constraint", {
           code: "P2002",
           clientVersion: "5.0.0",
-        })
+        }),
       );
       const res = await POST(createRequest(validBody));
       const data = await res.json();

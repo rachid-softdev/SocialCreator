@@ -4,11 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Menu } from "lucide-react";
 
-export default async function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -34,9 +30,7 @@ export default async function MainLayout({
           <Menu className="w-6 h-6 text-ink" />
           <span className="font-display text-title-md text-ink">SocialCreator</span>
         </header>
-        <div className="p-6 lg:p-8">
-          {children}
-        </div>
+        <div className="p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );

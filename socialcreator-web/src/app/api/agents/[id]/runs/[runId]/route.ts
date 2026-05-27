@@ -12,10 +12,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id, runId } = await params;
@@ -26,10 +23,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
 
     if (!agent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     const run = await prisma.agentRun.findFirst({
@@ -50,17 +44,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
 
     if (!run) {
-      return NextResponse.json(
-        { error: "Run not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Run not found" }, { status: 404 });
     }
 
     // Calculate duration if finished
     let duration: number | null = null;
     if (run.startedAt && run.finishedAt) {
       duration = Math.round(
-        (new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) / 1000
+        (new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) / 1000,
       );
     }
 
@@ -72,10 +63,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error fetching run:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -85,10 +73,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id, runId } = await params;
@@ -99,10 +84,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
 
     if (!agent) {
-      return NextResponse.json(
-        { error: "Agent not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     const existingRun = await prisma.agentRun.findFirst({
@@ -110,18 +92,12 @@ export async function POST(request: Request, { params }: RouteParams) {
     });
 
     if (!existingRun) {
-      return NextResponse.json(
-        { error: "Run not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Run not found" }, { status: 404 });
     }
 
     // Only allow rerun for failed runs
     if (existingRun.status !== "FAILED") {
-      return NextResponse.json(
-        { error: "Only failed runs can be rerun" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Only failed runs can be rerun" }, { status: 400 });
     }
 
     // Create a new run with the same brief
@@ -155,15 +131,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       console.error("Error triggering agent run:", err);
     }
 
-    return NextResponse.json(
-      { runId: newRun.id, status: newRun.status },
-      { status: 201 }
-    );
+    return NextResponse.json({ runId: newRun.id, status: newRun.status }, { status: 201 });
   } catch (error) {
     console.error("Error rerunning agent:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

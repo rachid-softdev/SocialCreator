@@ -3,10 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { transcribeVideo } from "@/lib/deepgram";
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
@@ -62,10 +59,7 @@ export async function POST(
       data: { status: "ERROR" },
     });
 
-    return NextResponse.json(
-      { error: "Transcription failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Transcription failed" }, { status: 500 });
   }
 }
 

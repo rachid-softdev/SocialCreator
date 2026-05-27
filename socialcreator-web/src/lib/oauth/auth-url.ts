@@ -46,10 +46,7 @@ export function parseState(state: string): AuthState | null {
  * Build the OAuth authorization URL for a given platform and profile
  * Includes all required parameters: client_id, redirect_uri, scope, response_type, state
  */
-export function buildAuthUrl(
-  platform: OAuthProvider,
-  profileId: string
-): string {
+export function buildAuthUrl(platform: OAuthProvider, profileId: string): string {
   const config = OAUTH_PROVIDERS[platform];
   const redirectUri = getRedirectUri(platform);
 
@@ -84,7 +81,7 @@ export function buildAuthUrl(
 export function buildAuthUrlWithParams(
   platform: OAuthProvider,
   profileId: string,
-  additionalParams?: Record<string, string>
+  additionalParams?: Record<string, string>,
 ): string {
   let url = buildAuthUrl(platform, profileId);
 

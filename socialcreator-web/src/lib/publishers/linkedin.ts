@@ -13,7 +13,7 @@ export async function publishToLinkedIn(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   try {
     const postData = {

@@ -28,9 +28,7 @@ export function PublishStats({
     return (
       <div className="bg-surface-card rounded-xl border border-hairline p-6">
         <h3 className="text-title-sm text-ink mb-4">{title}</h3>
-        <p className="text-body-sm text-muted">
-          No active platform connections yet
-        </p>
+        <p className="text-body-sm text-muted">No active platform connections yet</p>
       </div>
     );
   }
@@ -51,17 +49,15 @@ export function PublishStats({
           return (
             <div key={stat.platform} className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-body-sm text-ink">
-                  {getPlatformName(stat.platform)}
-                </span>
+                <span className="text-body-sm text-ink">{getPlatformName(stat.platform)}</span>
                 <span
                   className={cn(
                     "text-caption font-medium",
                     isAtLimit
                       ? "text-semantic-error"
                       : isNearLimit
-                      ? "text-amber-600"
-                      : "text-muted"
+                        ? "text-amber-600"
+                        : "text-muted",
                   )}
                 >
                   {stat.count}/{stat.max}
@@ -76,8 +72,8 @@ export function PublishStats({
                     isAtLimit
                       ? "bg-semantic-error"
                       : isNearLimit
-                      ? "bg-amber-500"
-                      : "bg-semantic-success"
+                        ? "bg-amber-500"
+                        : "bg-semantic-success",
                   )}
                   style={{ width: `${Math.min(percentage, 100)}%` }}
                 />

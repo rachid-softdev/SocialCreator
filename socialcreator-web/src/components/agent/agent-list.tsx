@@ -40,12 +40,7 @@ export function AgentList({ agents, profileId, onDelete, onEdit }: AgentListProp
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {agents.map((agent) => (
-        <AgentCard
-          key={agent.id}
-          agent={agent}
-          onDelete={onDelete}
-          onEdit={onEdit}
-        />
+        <AgentCard key={agent.id} agent={agent} onDelete={onDelete} onEdit={onEdit} />
       ))}
     </div>
   );

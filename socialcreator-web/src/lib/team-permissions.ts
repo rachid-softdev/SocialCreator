@@ -1,6 +1,6 @@
 /**
  * Team Permissions Middleware
- * Vérifie les permissions des utilisateurs pour les actions sur les teams et profiles
+ * Checks user permissions for actions on teams and profiles
  */
 
 import { prisma } from "./prisma";
@@ -12,12 +12,9 @@ export interface PermissionCheck {
 }
 
 /**
- * Vérifie si un user peut accéder à une team
+ * Check if a user can access a team
  */
-export async function checkTeamAccess(
-  userId: string,
-  teamId: string
-): Promise<PermissionCheck> {
+export async function checkTeamAccess(userId: string, teamId: string): Promise<PermissionCheck> {
   const membership = await prisma.teamMember.findFirst({
     where: {
       teamId,
@@ -45,13 +42,13 @@ export async function checkTeamAccess(
 }
 
 /**
- * Vérifie si un user peut modifier le rôle d'un membre
- * Seul le OWNER peut modifier les rôles
+ * Check if a user can modify a member's role
+ * Only the OWNER can modify roles
  */
 export async function canModifyMemberRole(
   userId: string,
   teamId: string,
-  targetMemberId: string
+  targetMemberId: string,
 ): Promise<PermissionCheck> {
   // Check if user is owner
   const team = await prisma.team.findUnique({
@@ -76,13 +73,13 @@ export async function canModifyMemberRole(
 }
 
 /**
- * Vérifie si un user peut supprimer un membre
- * OWNER et ADMIN peuvent supprimer des membres
+ * Check if a user can remove a member
+ * OWNER and ADMIN can remove members
  */
 export async function canRemoveMember(
   userId: string,
   teamId: string,
-  targetMemberId: string
+  targetMemberId: string,
 ): Promise<PermissionCheck> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -123,13 +120,10 @@ export async function canRemoveMember(
 }
 
 /**
- * Vérifie si un user peut supprimer la team
- * Seul le OWNER peut supprimer
+ * Check if a user can delete the team
+ * Only the OWNER can delete
  */
-export async function canDeleteTeam(
-  userId: string,
-  teamId: string
-): Promise<PermissionCheck> {
+export async function canDeleteTeam(userId: string, teamId: string): Promise<PermissionCheck> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     select: { ownerId: true },
@@ -162,12 +156,9 @@ export async function canDeleteTeam(
 }
 
 /**
- * Vérifie si un user peut éditer un profile partagé
+ * Check if a user can edit a shared profile
  */
-export async function canEditProfile(
-  userId: string,
-  profileId: string
-): Promise<PermissionCheck> {
+export async function canEditProfile(userId: string, profileId: string): Promise<PermissionCheck> {
   const profile = await prisma.profile.findUnique({
     where: { id: profileId },
     select: {
@@ -210,12 +201,9 @@ export async function canEditProfile(
 }
 
 /**
- * Récupère le rôle d'un user dans une team
+ * Get the role of a user in a team
  */
-export async function getUserTeamRole(
-  userId: string,
-  teamId: string
-): Promise<TeamRole | null> {
+export async function getUserTeamRole(userId: string, teamId: string): Promise<TeamRole | null> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     select: { ownerId: true },

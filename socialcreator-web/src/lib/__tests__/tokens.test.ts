@@ -53,7 +53,7 @@ describe("crypto utilities", () => {
         " spaces around ",
       ];
 
-      tokens.forEach(token => {
+      tokens.forEach((token) => {
         const encrypted = encryptToken(token);
         const decrypted = decryptToken(encrypted);
         expect(decrypted).toBe(token);

@@ -19,9 +19,7 @@ export default async function CGUPage() {
     <div className="min-h-screen bg-canvas flex items-center justify-center p-8">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-display-md font-display text-ink mb-2">
-            Accept Terms to Continue
-          </h1>
+          <h1 className="text-display-md font-display text-ink mb-2">Accept Terms to Continue</h1>
           <p className="text-body text-muted">
             Please review and accept our Terms of Service to use SocialCreator
           </p>

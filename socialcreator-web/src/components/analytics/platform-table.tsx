@@ -1,63 +1,63 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ChevronUp, ChevronDown } from "lucide-react"
-import { cn } from "@socialcreator/utils"
+import { useState } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { cn } from "@socialcreator/utils";
 
 interface PlatformData {
-  platform: string
-  impressions: number
-  engagements: number
-  clicks: number
-  followers: number
-  published: number
+  platform: string;
+  impressions: number;
+  engagements: number;
+  clicks: number;
+  followers: number;
+  published: number;
 }
 
 interface PlatformTableProps {
-  data: PlatformData[]
+  data: PlatformData[];
 }
 
-type SortKey = keyof PlatformData
+type SortKey = keyof PlatformData;
 
 export function PlatformTable({ data }: PlatformTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey>("impressions")
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [sortKey, setSortKey] = useState<SortKey>("impressions");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc")
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortKey(key)
-      setSortDir("desc")
+      setSortKey(key);
+      setSortDir("desc");
     }
-  }
+  };
 
   const sortedData = [...data].sort((a, b) => {
-    const aVal = a[sortKey]
-    const bVal = b[sortKey]
-    const multiplier = sortDir === "asc" ? 1 : -1
+    const aVal = a[sortKey];
+    const bVal = b[sortKey];
+    const multiplier = sortDir === "asc" ? 1 : -1;
 
     if (typeof aVal === "number" && typeof bVal === "number") {
-      return (aVal - bVal) * multiplier
+      return (aVal - bVal) * multiplier;
     }
     // Handle string values, converting to string if needed
-    const aStr = String(aVal ?? "")
-    const bStr = String(bVal ?? "")
-    return aStr.localeCompare(bStr) * multiplier
-  })
+    const aStr = String(aVal ?? "");
+    const bStr = String(bVal ?? "");
+    return aStr.localeCompare(bStr) * multiplier;
+  });
 
   const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return null
+    if (sortKey !== column) return null;
     return sortDir === "asc" ? (
       <ChevronUp className="w-4 h-4" />
     ) : (
       <ChevronDown className="w-4 h-4" />
-    )
-  }
+    );
+  };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("en-US").format(num)
-  }
+    return new Intl.NumberFormat("en-US").format(num);
+  };
 
   const columns: { key: SortKey; label: string }[] = [
     { key: "platform", label: "Platform" },
@@ -66,7 +66,7 @@ export function PlatformTable({ data }: PlatformTableProps) {
     { key: "clicks", label: "Clicks" },
     { key: "followers", label: "Followers" },
     { key: "published", label: "Published" },
-  ]
+  ];
 
   return (
     <div className="rounded-xl border border-hairline overflow-hidden">
@@ -79,7 +79,7 @@ export function PlatformTable({ data }: PlatformTableProps) {
                 onClick={() => handleSort(col.key)}
                 className={cn(
                   "px-4 py-3 text-left text-caption font-medium text-muted cursor-pointer hover:text-ink transition-colors",
-                  col.key === "platform" && "cursor-default"
+                  col.key === "platform" && "cursor-default",
                 )}
               >
                 <div className="flex items-center gap-1">
@@ -110,5 +110,5 @@ export function PlatformTable({ data }: PlatformTableProps) {
         </tbody>
       </table>
     </div>
-  )
+  );
 }

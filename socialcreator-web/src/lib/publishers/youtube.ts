@@ -1,7 +1,7 @@
 /**
  * YouTube publisher via YouTube Data API v3 + Resumable Upload
  * Supports uploading videos and creating Shorts
- * 
+ *
  * Required scopes: youtube.upload, youtube.force-ssl
  */
 
@@ -34,7 +34,7 @@ export async function publishToYouTube(
     accountId: string;
     accessToken: string;
   },
-  options: Partial<YouTubeUploadOptions> = {}
+  options: Partial<YouTubeUploadOptions> = {},
 ): Promise<PublishResult> {
   // YouTube requires video content
   if (content.mediaUrls.length === 0) {
@@ -76,12 +76,14 @@ export async function publishToYouTube(
               selfDeclaredMadeForKids: false,
             },
           }),
-        }
+        },
       );
 
       if (!initResponse.ok) {
         const errorData = await initResponse.json();
-        throw new Error(errorData.error?.message || `Upload initiation failed: ${initResponse.status}`);
+        throw new Error(
+          errorData.error?.message || `Upload initiation failed: ${initResponse.status}`,
+        );
       }
 
       // Get the upload URL from Location header
@@ -112,7 +114,9 @@ export async function publishToYouTube(
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
-        throw new Error(errorData.error?.message || `Video upload failed: ${uploadResponse.status}`);
+        throw new Error(
+          errorData.error?.message || `Video upload failed: ${uploadResponse.status}`,
+        );
       }
 
       const videoData = await uploadResponse.json();
@@ -164,7 +168,7 @@ export async function postToYouTubeCommunity(
   account: {
     accountId: string;
     accessToken: string;
-  }
+  },
 ): Promise<PublishResult> {
   // YouTube Community posts require a different API
   // This is a stub - would need to use YouTube Partner API
@@ -179,7 +183,7 @@ export async function postToYouTubeCommunity(
  */
 export async function getYouTubeVideoDetails(
   videoId: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<{
   id: string;
   title: string;
@@ -187,14 +191,11 @@ export async function getYouTubeVideoDetails(
   privacyStatus: string;
 } | null> {
   try {
-    const response = await fetch(
-      `${YOUTUBE_API_BASE}/videos?part=snippet,status&id=${videoId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response = await fetch(`${YOUTUBE_API_BASE}/videos?part=snippet,status&id=${videoId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     if (!response.ok) return null;
 

@@ -16,7 +16,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         checks: { database: "failed" },
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }

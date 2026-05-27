@@ -42,10 +42,7 @@ export function ApprovalPanel({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
 
       {/* Panel */}
       <div className="fixed right-0 top-0 h-screen w-full max-w-lg bg-surface-dark z-50 shadow-xl overflow-y-auto">
@@ -128,7 +125,7 @@ export function ApprovalPanel({
                 "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-pill transition-colors",
                 showRejectInput
                   ? "bg-semantic-error text-white hover:bg-semantic-error/90"
-                  : "bg-surface-dark-elevated text-semantic-error hover:bg-semantic-error/10"
+                  : "bg-surface-dark-elevated text-semantic-error hover:bg-semantic-error/10",
               )}
             >
               <AlertTriangle className="w-4 h-4" />

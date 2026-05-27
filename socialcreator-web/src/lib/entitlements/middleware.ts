@@ -4,19 +4,19 @@
  * No if(plan === "PRO") in endpoints - use these instead
  */
 
-import { getFeatureGateService } from "./service"
-import { createFeatureNotAvailableError, createLimitReachedError } from "./service"
-import type { EntitlementError } from "./types"
+import { getFeatureGateService } from "./service";
+import { createFeatureNotAvailableError, createLimitReachedError } from "./service";
+import type { EntitlementError } from "./types";
 
 export interface MiddlewareContext {
-  orgId: string
-  userId?: string
+  orgId: string;
+  userId?: string;
 }
 
 export type MiddlewareHandler = (
   context: MiddlewareContext,
-  handler: () => Promise<Response>
-) => Promise<Response>
+  handler: () => Promise<Response>,
+) => Promise<Response>;
 
 /**
  * Factory: requireFeature
@@ -25,21 +25,21 @@ export type MiddlewareHandler = (
  */
 export function requireFeature(featureKey: string): MiddlewareHandler {
   return async (context, handler) => {
-    const service = getFeatureGateService()
-    const hasFeature = await service.hasFeature(context.orgId, featureKey)
+    const service = getFeatureGateService();
+    const hasFeature = await service.hasFeature(context.orgId, featureKey);
 
     if (!hasFeature) {
-      const trace = await service.getDebugTrace(context.orgId, featureKey)
-      const error = createFeatureNotAvailableError(featureKey, trace.planKey || "free")
+      const trace = await service.getDebugTrace(context.orgId, featureKey);
+      const error = createFeatureNotAvailableError(featureKey, trace.planKey || "free");
 
       return new Response(JSON.stringify(error), {
         status: 403,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
-    return handler()
-  }
+    return handler();
+  };
 }
 
 /**
@@ -49,23 +49,23 @@ export function requireFeature(featureKey: string): MiddlewareHandler {
  */
 export function requireLimit(limitKey: string): MiddlewareHandler {
   return async (context, handler) => {
-    const service = getFeatureGateService()
-    const limit = await service.getLimit(context.orgId, limitKey)
+    const service = getFeatureGateService();
+    const limit = await service.getLimit(context.orgId, limitKey);
 
     if (limit === null) {
       // Unlimited - continue
-      return handler()
+      return handler();
     }
 
     // Check current usage
-    const canConsume = await service.canConsume(context.orgId, limitKey, 1)
+    const canConsume = await service.canConsume(context.orgId, limitKey, 1);
 
     if (!canConsume) {
-      const entitlements = await service.getAllEntitlements(context.orgId)
-      const used = entitlements.usage[limitKey] || 0
-      const resetAt = entitlements.resetAt[limitKey]
+      const entitlements = await service.getAllEntitlements(context.orgId);
+      const used = entitlements.usage[limitKey] || 0;
+      const resetAt = entitlements.resetAt[limitKey];
 
-      const error = createLimitReachedError(limitKey, limit, used, resetAt)
+      const error = createLimitReachedError(limitKey, limit, used, resetAt);
 
       return new Response(JSON.stringify(error), {
         status: 402,
@@ -74,23 +74,23 @@ export function requireLimit(limitKey: string): MiddlewareHandler {
           "X-RateLimit-Limit": limit.toString(),
           "X-RateLimit-Remaining": Math.max(0, limit - used).toString(),
         },
-      })
+      });
     }
 
     // Add remaining info to headers for client
-    const response = await handler()
+    const response = await handler();
 
     if (response.headers) {
-      const entitlements = await service.getAllEntitlements(context.orgId)
-      response.headers.set("X-RateLimit-Limit", (limit || 0).toString())
+      const entitlements = await service.getAllEntitlements(context.orgId);
+      response.headers.set("X-RateLimit-Limit", (limit || 0).toString());
       response.headers.set(
         "X-RateLimit-Remaining",
-        Math.max(0, (limit || 0) - (entitlements.usage[limitKey] || 0)).toString()
-      )
+        Math.max(0, (limit || 0) - (entitlements.usage[limitKey] || 0)).toString(),
+      );
     }
 
-    return response
-  }
+    return response;
+  };
 }
 
 /**
@@ -100,30 +100,30 @@ export function requireLimit(limitKey: string): MiddlewareHandler {
  */
 export function consumeFeature(featureKey: string, amount: number = 1): MiddlewareHandler {
   return async (context, handler) => {
-    const service = getFeatureGateService()
+    const service = getFeatureGateService();
 
     // First check if feature is available
-    const hasFeature = await service.hasFeature(context.orgId, featureKey)
+    const hasFeature = await service.hasFeature(context.orgId, featureKey);
     if (!hasFeature) {
-      const trace = await service.getDebugTrace(context.orgId, featureKey)
-      const error = createFeatureNotAvailableError(featureKey, trace.planKey || "free")
+      const trace = await service.getDebugTrace(context.orgId, featureKey);
+      const error = createFeatureNotAvailableError(featureKey, trace.planKey || "free");
 
       return new Response(JSON.stringify(error), {
         status: 403,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
     // Consume the quota
-    const result = await service.consume(context.orgId, featureKey, amount)
+    const result = await service.consume(context.orgId, featureKey, amount);
 
     if (!result.success) {
       const error = createLimitReachedError(
         featureKey,
         result.limit || 0,
         result.used,
-        result.resetAt
-      )
+        result.resetAt,
+      );
 
       return new Response(JSON.stringify(error), {
         status: 402,
@@ -132,42 +132,40 @@ export function consumeFeature(featureKey: string, amount: number = 1): Middlewa
           "X-RateLimit-Limit": (result.limit || 0).toString(),
           "X-RateLimit-Remaining": "0",
         },
-      })
+      });
     }
 
     // Add usage info to response headers
-    const response = await handler()
+    const response = await handler();
 
     if (response.headers) {
-      response.headers.set("X-RateLimit-Limit", (result.limit || 0).toString())
+      response.headers.set("X-RateLimit-Limit", (result.limit || 0).toString());
       response.headers.set(
         "X-RateLimit-Remaining",
-        Math.max(0, (result.limit || 0) - result.used).toString()
-      )
+        Math.max(0, (result.limit || 0) - result.used).toString(),
+      );
     }
 
-    return response
-  }
+    return response;
+  };
 }
 
 /**
  * Combine multiple middleware in sequence
  */
-export function withEntitlements(
-  ...middlewares: MiddlewareHandler[]
-): MiddlewareHandler {
+export function withEntitlements(...middlewares: MiddlewareHandler[]): MiddlewareHandler {
   return async (context, handler) => {
-    let currentHandler = handler
+    let currentHandler = handler;
 
     // Build middleware chain in reverse
     for (let i = middlewares.length - 1; i >= 0; i--) {
-      const middleware = middlewares[i]
-      const nextHandler = currentHandler
-      currentHandler = () => middleware(context, nextHandler)
+      const middleware = middlewares[i];
+      const nextHandler = currentHandler;
+      currentHandler = () => middleware(context, nextHandler);
     }
 
-    return currentHandler()
-  }
+    return currentHandler();
+  };
 }
 
 /**
@@ -176,15 +174,15 @@ export function withEntitlements(
  */
 export function getOrgIdFromRequest(request: Request): string | null {
   // Check header first (for API keys, etc)
-  const orgIdHeader = request.headers.get("x-org-id")
-  if (orgIdHeader) return orgIdHeader
+  const orgIdHeader = request.headers.get("x-org-id");
+  if (orgIdHeader) return orgIdHeader;
 
   // Check query param
-  const url = new URL(request.url)
-  const orgIdQuery = url.searchParams.get("orgId")
-  if (orgIdQuery) return orgIdQuery
+  const url = new URL(request.url);
+  const orgIdQuery = url.searchParams.get("orgId");
+  if (orgIdQuery) return orgIdQuery;
 
-  return null
+  return null;
 }
 
 /**
@@ -194,38 +192,35 @@ export function getOrgIdFromRequest(request: Request): string | null {
  */
 export function withFeature(featureKey: string, handler: (req: Request) => Promise<Response>) {
   return async (request: Request) => {
-    const orgId = getOrgIdFromRequest(request)
+    const orgId = getOrgIdFromRequest(request);
     if (!orgId) {
       return new Response(JSON.stringify({ error: "Organization not found" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
-    const middleware = requireFeature(featureKey)
-    return middleware({ orgId }, () => handler(request))
-  }
+    const middleware = requireFeature(featureKey);
+    return middleware({ orgId }, () => handler(request));
+  };
 }
 
 /**
  * Wrapper with limit check
  */
-export function withLimit(
-  limitKey: string,
-  handler: (req: Request) => Promise<Response>
-) {
+export function withLimit(limitKey: string, handler: (req: Request) => Promise<Response>) {
   return async (request: Request) => {
-    const orgId = getOrgIdFromRequest(request)
+    const orgId = getOrgIdFromRequest(request);
     if (!orgId) {
       return new Response(JSON.stringify({ error: "Organization not found" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
-    const middleware = requireLimit(limitKey)
-    return middleware({ orgId }, () => handler(request))
-  }
+    const middleware = requireLimit(limitKey);
+    return middleware({ orgId }, () => handler(request));
+  };
 }
 
 /**
@@ -234,20 +229,20 @@ export function withLimit(
 export function withConsume(
   featureKey: string,
   amount: number = 1,
-  handler: (req: Request) => Promise<Response>
+  handler: (req: Request) => Promise<Response>,
 ) {
   return async (request: Request) => {
-    const orgId = getOrgIdFromRequest(request)
+    const orgId = getOrgIdFromRequest(request);
     if (!orgId) {
       return new Response(JSON.stringify({ error: "Organization not found" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
-    const middleware = consumeFeature(featureKey, amount)
-    return middleware({ orgId }, () => handler(request))
-  }
+    const middleware = consumeFeature(featureKey, amount);
+    return middleware({ orgId }, () => handler(request));
+  };
 }
 
 // ============================================
@@ -261,9 +256,9 @@ export function withConsume(
  */
 export function expressRequireFeature(featureKey: string) {
   return (req: any, res: any, next: any) => {
-    const orgId = req.headers["x-org-id"] || req.query.orgId
+    const orgId = req.headers["x-org-id"] || req.query.orgId;
     if (!orgId) {
-      return res.status(401).json({ error: "Organization not found" })
+      return res.status(401).json({ error: "Organization not found" });
     }
 
     getFeatureGateService()
@@ -273,22 +268,22 @@ export function expressRequireFeature(featureKey: string) {
           return res.status(403).json({
             error: "FEATURE_NOT_AVAILABLE",
             feature: featureKey,
-          })
+          });
         }
-        next()
+        next();
       })
       .catch((err) => {
-        console.error("[Entitlements] Middleware error:", err)
-        res.status(500).json({ error: "Internal server error" })
-      })
-  }
+        console.error("[Entitlements] Middleware error:", err);
+        res.status(500).json({ error: "Internal server error" });
+      });
+  };
 }
 
 export function expressConsumeFeature(featureKey: string, amount: number = 1) {
   return (req: any, res: any, next: any) => {
-    const orgId = req.headers["x-org-id"] || req.query.orgId
+    const orgId = req.headers["x-org-id"] || req.query.orgId;
     if (!orgId) {
-      return res.status(401).json({ error: "Organization not found" })
+      return res.status(401).json({ error: "Organization not found" });
     }
 
     getFeatureGateService()
@@ -301,22 +296,19 @@ export function expressConsumeFeature(featureKey: string, amount: number = 1) {
             limit: result.limit,
             used: result.used,
             resetAt: result.resetAt.toISOString(),
-          })
+          });
         }
 
         // Add headers
-        res.setHeader("X-RateLimit-Limit", result.limit || 0)
-        res.setHeader(
-          "X-RateLimit-Remaining",
-          Math.max(0, (result.limit || 0) - result.used)
-        )
-        next()
+        res.setHeader("X-RateLimit-Limit", result.limit || 0);
+        res.setHeader("X-RateLimit-Remaining", Math.max(0, (result.limit || 0) - result.used));
+        next();
       })
       .catch((err) => {
-        console.error("[Entitlements] Middleware error:", err)
-        res.status(500).json({ error: "Internal server error" })
-      })
-  }
+        console.error("[Entitlements] Middleware error:", err);
+        res.status(500).json({ error: "Internal server error" });
+      });
+  };
 }
 
 const entitlementsMiddleware = {
@@ -329,6 +321,6 @@ const entitlementsMiddleware = {
   withConsume,
   expressRequireFeature,
   expressConsumeFeature,
-}
+};
 
-export default entitlementsMiddleware
+export default entitlementsMiddleware;

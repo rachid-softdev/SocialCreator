@@ -3,30 +3,30 @@
  * Conditionally render children based on feature availability
  */
 
-"use client"
+"use client";
 
-import { useFeature } from "@socialcreator/ui/hooks"
+import { useFeature } from "@socialcreator/ui/hooks";
 
 interface FeatureGuardProps {
   /**
    * Feature key to check
    */
-  feature: string
+  feature: string;
 
   /**
    * Fallback to show when feature is not available
    */
-  fallback?: React.ReactNode
+  fallback?: React.ReactNode;
 
   /**
    * Children to render when feature IS available
    */
-  children: React.ReactNode
+  children: React.ReactNode;
 
   /**
    * Show a default upgrade banner as fallback
    */
-  showUpgradeBanner?: boolean
+  showUpgradeBanner?: boolean;
 }
 
 export function FeatureGuard({
@@ -35,7 +35,7 @@ export function FeatureGuard({
   children,
   showUpgradeBanner = false,
 }: FeatureGuardProps) {
-  const { enabled, isLoading } = useFeature(feature)
+  const { enabled, isLoading } = useFeature(feature);
 
   if (isLoading) {
     return (
@@ -43,58 +43,45 @@ export function FeatureGuard({
         {/* Optional loading skeleton */}
         <div className="h-4 bg-gray-200 rounded w-24" />
       </div>
-    )
+    );
   }
 
   if (!enabled) {
     if (showUpgradeBanner) {
-      return (
-        <UpgradePrompt feature={feature}>
-          {fallback}
-        </UpgradePrompt>
-      )
+      return <UpgradePrompt feature={feature}>{fallback}</UpgradePrompt>;
     }
-    return <>{fallback}</>
+    return <>{fallback}</>;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 /**
  * Upgrade prompt component
  */
-function UpgradePrompt({
-  feature,
-  children,
-}: {
-  feature: string
-  children?: React.ReactNode
-}) {
+function UpgradePrompt({ feature, children }: { feature: string; children?: React.ReactNode }) {
   return (
     <div className="relative">
       {children}
       <div className="mt-2 text-xs text-gray-500">
         This feature requires a higher plan.{" "}
-        <a
-          href="/settings/billing?upgrade=true"
-          className="text-blue-600 hover:underline"
-        >
+        <a href="/settings/billing?upgrade=true" className="text-blue-600 hover:underline">
           Upgrade now
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 /**
  * Button wrapper that disables based on feature
  */
 interface FeatureButtonProps {
-  feature: string
-  children: React.ReactNode
-  onClick?: () => void
-  disabled?: boolean
-  className?: string
+  feature: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function FeatureButton({
@@ -104,7 +91,7 @@ export function FeatureButton({
   disabled = false,
   className = "",
 }: FeatureButtonProps) {
-  const { enabled } = useFeature(feature)
+  const { enabled } = useFeature(feature);
 
   return (
     <button
@@ -115,26 +102,21 @@ export function FeatureButton({
     >
       {children}
     </button>
-  )
+  );
 }
 
 /**
  * Link wrapper that shows upgrade prompt on click if feature unavailable
  */
 interface FeatureLinkProps {
-  feature: string
-  href: string
-  children: React.ReactNode
-  className?: string
+  feature: string;
+  href: string;
+  children: React.ReactNode;
+  className?: string;
 }
 
-export function FeatureLink({
-  feature,
-  href,
-  children,
-  className = "",
-}: FeatureLinkProps) {
-  const { enabled } = useFeature(feature)
+export function FeatureLink({ feature, href, children, className = "" }: FeatureLinkProps) {
+  const { enabled } = useFeature(feature);
 
   if (!enabled) {
     return (
@@ -145,14 +127,14 @@ export function FeatureLink({
       >
         {children}
       </a>
-    )
+    );
   }
 
   return (
     <a href={href} className={className}>
       {children}
     </a>
-  )
+  );
 }
 
-export default FeatureGuard
+export default FeatureGuard;

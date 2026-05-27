@@ -10,7 +10,12 @@ interface BadgePillProps {
 
 export function BadgePill({ children, className }: BadgePillProps) {
   return (
-    <span className={cn("inline-flex items-center rounded-pill bg-surface-strong px-[10px] py-1 text-caption-uppercase text-ink", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-pill bg-surface-strong px-[10px] py-1 text-caption-uppercase text-ink",
+        className,
+      )}
+    >
       {children}
     </span>
   );
