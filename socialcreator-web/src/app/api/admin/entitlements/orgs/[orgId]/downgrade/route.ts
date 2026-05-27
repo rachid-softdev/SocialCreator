@@ -5,6 +5,7 @@
 
 import { NextResponse } from "next/server"
 import { getDowngradeService } from "@/lib/entitlements/downgrade"
+import { requireAdmin, AuthError } from "@/lib/auth/require-admin"
 
 export async function GET(
   request: Request,
@@ -12,6 +13,7 @@ export async function GET(
 ) {
   try {
     const { orgId } = await params
+    await requireAdmin();
     const url = new URL(request.url)
     const targetPlan = url.searchParams.get("targetPlan")
 
@@ -35,6 +37,9 @@ export async function GET(
     })
   } catch (error) {
     console.error("[Downgrade Preview] GET error:", error)
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -1,7 +1,4 @@
-/**
- * @jest-environment node
- */
-
+import { vi } from "vitest"
 import { encryptToken, decryptToken } from "../crypto"
 
 describe("crypto", () => {
@@ -9,7 +6,11 @@ describe("crypto", () => {
 
   beforeEach(() => {
     // Override the encryption key for testing
-    jest.spyOn(process.env, "ENCRYPTION_KEY", "get").mockReturnValue(TEST_SECRET)
+    vi.stubEnv("ENCRYPTION_KEY", TEST_SECRET)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   describe("encryptToken", () => {
@@ -25,10 +26,10 @@ describe("crypto", () => {
       const token = "same_token"
 
       // Temporarily change the key
-      jest.spyOn(process.env, "ENCRYPTION_KEY", "get").mockReturnValueOnce("key1")
+      vi.stubEnv("ENCRYPTION_KEY", "key1")
       const encrypted1 = encryptToken(token)
 
-      jest.spyOn(process.env, "ENCRYPTION_KEY", "get").mockReturnValueOnce("key2")
+      vi.stubEnv("ENCRYPTION_KEY", "key2")
       const encrypted2 = encryptToken(token)
 
       expect(encrypted1).not.toBe(encrypted2)

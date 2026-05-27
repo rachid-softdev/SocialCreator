@@ -56,21 +56,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.cguAccepted = (user as any).cguAccepted;
-        token.role = (user as any).role;
+        token.cguAccepted = (user as any)?.cguAccepted ?? false;
+        token.role = (user as any)?.role ?? 'USER';
+        token.roles = [(user as any)?.role ?? 'USER'];
       }
 
-      // Add CGU status to token from database on initial sign in
-      if (account && user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { cguAccepted: true },
-        });
-        if (dbUser) {
-          token.cguAccepted = dbUser.cguAccepted;
+      // Fetch roles from DB on token refresh (subsequent requests)
+      if (!user && token.sub) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            include: { userRoles: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.roles = dbUser.userRoles.map((ur) => ur.role);
+          }
+        } catch (error) {
+          console.error('[Auth] Failed to fetch user roles on token refresh:', error);
         }
       }
 
@@ -84,8 +90,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        (session.user as any).cguAccepted = token.cguAccepted;
-        (session.user as any).role = token.role as "USER" | "ADMIN";
+        session.user.cguAccepted = token.cguAccepted;
+        session.user.role = token.role;
+        session.user.roles = token.roles;
       }
       return session;
     },

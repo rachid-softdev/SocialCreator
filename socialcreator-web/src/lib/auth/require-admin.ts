@@ -15,7 +15,10 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
     throw new AuthError('Non authentifié', 401);
   }
 
-  if ((session.user as any).role !== 'ADMIN') {
+  const userRoles = session.user.roles as string[] | undefined;
+  const userRole = session.user.role as string | undefined;
+  const isAdmin = userRoles?.includes('ADMIN') || userRole === 'ADMIN';
+  if (!isAdmin) {
     throw new AuthError('Accès non autorisé - rôle administrateur requis', 403);
   }
 

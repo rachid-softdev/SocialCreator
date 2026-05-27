@@ -1,1 +1,6 @@
-module.exports = require("@socialcreator/config/tailwind/postcss.js");
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
