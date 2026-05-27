@@ -4,11 +4,14 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FeatureGateService } from "../service";
+import {
+  createFeatureNotAvailableError,
+  createLimitReachedError,
+  createSubscriptionExpiredError,
+  FeatureGateService,
+} from "../service";
 import type {
-  EntitlementValue,
   ExperimentConfig,
-  FeatureDefinition,
   IEntitlementRepository,
   PlanFeatureConfig,
   SubscriptionStatus,
@@ -23,7 +26,15 @@ const createMockRepository = (
 ): IEntitlementRepository => ({
   getPlanFeatures: vi.fn().mockResolvedValue(new Map()),
   getPlan: vi.fn().mockResolvedValue(null),
-  getFeature: vi.fn().mockResolvedValue(null),
+  getFeature: vi.fn().mockImplementation((key: string) =>
+    Promise.resolve({
+      key,
+      name: key,
+      type: "LIMIT" as const,
+      defaultConfig: { defaultLimit: 0 },
+      isActive: true,
+    }),
+  ),
   getAllFeatures: vi.fn().mockResolvedValue([]),
   getUserOverride: vi.fn().mockResolvedValue(null),
   getOrgOverride: vi.fn().mockResolvedValue(null),
@@ -34,7 +45,7 @@ const createMockRepository = (
   getCurrentPeriodUsage: vi
     .fn()
     .mockResolvedValue({ used: 0, periodStart: new Date(), periodEnd: new Date() }),
-  consumeUsage: vi.fn().mockResolvedValue(true),
+  consumeUsage: vi.fn().mockResolvedValue({ success: true, currentCount: 0 }),
   getExperiment: vi.fn().mockResolvedValue(null),
   ...overrides,
 });
@@ -51,7 +62,7 @@ describe("FeatureGateService", () => {
     service = new FeatureGateService();
 
     // Inject mock repo using internal setter
-    vi.mocked((service["repo"] = mockRepo));
+    vi.mocked((service.repo = mockRepo));
   });
 
   afterEach(() => {
@@ -281,7 +292,7 @@ describe("FeatureGateService", () => {
       });
 
       mockRepo.getPlanFeatures = vi.fn().mockResolvedValue(planFeatures);
-      mockRepo.consumeUsage = vi.fn().mockResolvedValue(true);
+      mockRepo.consumeUsage = vi.fn().mockResolvedValue({ success: true, currentCount: 6 });
 
       const result = await service.consume("org-1", "AI_GENERATIONS", 1);
 
@@ -291,8 +302,9 @@ describe("FeatureGateService", () => {
     });
 
     it("should fail when limit reached", async () => {
+      const currentUsed = 10;
       mockRepo.getCurrentPeriodUsage = vi.fn().mockResolvedValue({
-        used: 10,
+        used: currentUsed,
         periodStart: new Date(),
         periodEnd: new Date(),
       });
@@ -309,6 +321,18 @@ describe("FeatureGateService", () => {
       });
 
       mockRepo.getPlanFeatures = vi.fn().mockResolvedValue(planFeatures);
+
+      // Mock consumeUsage to simulate limit check (currentUsed + amount > limit)
+      mockRepo.consumeUsage = vi
+        .fn()
+        .mockImplementation(
+          async (_orgId: string, _featureKey: string, amount: number, limit: number | null) => {
+            if (limit !== null && currentUsed + amount > limit) {
+              return { success: false, currentCount: currentUsed };
+            }
+            return { success: true, currentCount: currentUsed + amount };
+          },
+        );
 
       const result = await service.consume("org-1", "AI_GENERATIONS", 1);
 
@@ -336,7 +360,7 @@ describe("FeatureGateService", () => {
 
       mockRepo.consumeUsage = vi.fn().mockImplementation(() => {
         usageCount += 1;
-        return Promise.resolve(true);
+        return Promise.resolve({ success: true, currentCount: usageCount });
       });
 
       const planFeatures = new Map<string, PlanFeatureConfig>([
@@ -382,10 +406,10 @@ describe("FeatureGateService", () => {
       // First call returns old period, consume should handle new period
       mockRepo.consumeUsage = vi
         .fn()
-        .mockImplementation((orgId, featureKey, amount, newPeriodStart, newPeriodEnd) => {
+        .mockImplementation((_orgId, _featureKey, _amount, _limit, periodStart, _periodEnd) => {
           // Verify new period dates are created
-          expect(newPeriodStart.getMonth()).toBe(new Date().getMonth());
-          return Promise.resolve(true);
+          expect(periodStart.getMonth()).toBe(new Date().getMonth());
+          return Promise.resolve({ success: true, currentCount: 11 });
         });
 
       const planFeatures = new Map<string, PlanFeatureConfig>([
@@ -540,8 +564,6 @@ describe("FeatureGateService", () => {
 
 describe("Error creation", () => {
   it("should create FeatureNotAvailableError correctly", () => {
-    const { createFeatureNotAvailableError } = require("../service");
-
     const error = createFeatureNotAvailableError("EXPORT_PDF", "free");
 
     expect(error.error).toBe("FEATURE_NOT_AVAILABLE");
@@ -551,8 +573,6 @@ describe("Error creation", () => {
   });
 
   it("should create LimitReachedError correctly", () => {
-    const { createLimitReachedError } = require("../service");
-
     const resetAt = new Date();
     const error = createLimitReachedError("AI_GENERATIONS", 10, 10, resetAt);
 
@@ -564,8 +584,6 @@ describe("Error creation", () => {
   });
 
   it("should create SubscriptionExpiredError correctly", () => {
-    const { createSubscriptionExpiredError } = require("../service");
-
     const error = createSubscriptionExpiredError();
 
     expect(error.error).toBe("SUBSCRIPTION_EXPIRED");

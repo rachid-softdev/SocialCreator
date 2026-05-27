@@ -9,7 +9,7 @@ export function getStripe(): Stripe {
     throw new Error("STRIPE_SECRET_KEY is not set");
   }
   stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-02-24.acacia" as any,
+    apiVersion: "2025-02-24.acacia" as const,
   });
   return stripeInstance;
 }
@@ -55,7 +55,7 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
     });
 
     // Map Stripe prices to our plans
-    const priceMapping: Record<string, PaidPlanKey> = {
+    const _priceMapping: Record<string, PaidPlanKey> = {
       starter: "starter",
       pro: "pro",
       team: "team",
@@ -71,7 +71,10 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
       if (!price.id || !price.unit_amount) continue;
 
       // Try to match price to plan via product name or metadata
-      const productName = price.product as unknown as string;
+      const productName =
+        typeof price.product === "string"
+          ? price.product
+          : ((price.product as Stripe.Product)?.name ?? "");
 
       if (productName.toLowerCase().includes("starter")) {
         activePrices.starter = price.unit_amount;

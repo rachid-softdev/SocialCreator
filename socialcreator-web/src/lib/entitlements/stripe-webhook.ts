@@ -41,6 +41,9 @@ export async function handleStripeWebhook(
 ): Promise<WebhookHandlerResult> {
   const stripe = getStripe();
 
+  // Periodic cleanup of old idempotency records
+  await maybeCleanup();
+
   // Verify signature
   let event: Stripe.Event;
   try {
@@ -79,7 +82,7 @@ export async function handleStripeWebhook(
 // ============================================
 
 async function processEvent(event: Stripe.Event): Promise<WebhookHandlerResult> {
-  const featureGate = getFeatureGateService();
+  const _featureGate = getFeatureGateService();
 
   switch (event.type) {
     case "customer.subscription.created":
@@ -111,7 +114,7 @@ async function handleSubscriptionCreated(
   subscription: Stripe.Subscription,
 ): Promise<WebhookHandlerResult> {
   const customerId = subscription.customer as string;
-  const subId = subscription.id;
+  const _subId = subscription.id;
 
   // Find org by customer ID
   const org = await prisma.organization.findUnique({
@@ -138,6 +141,11 @@ async function handleSubscriptionCreated(
     });
 
     await createOrUpdateSubscription(orgData.id, subscription);
+
+    // Invalidate cache for the newly created org
+    await cacheService.invalidate(getEntitlementsCacheKey(orgData.id));
+    await cacheService.publishInvalidation(orgData.id);
+
     return { success: true, orgId: orgData.id, eventType: "customer.subscription.created" };
   }
 
@@ -214,7 +222,7 @@ async function handleSubscriptionDeleted(
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<WebhookHandlerResult> {
   const customerId = invoice.customer as string;
-  const subscriptionId = invoice.subscription as string;
+  const _subscriptionId = invoice.subscription as string;
 
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },
@@ -361,6 +369,43 @@ async function markEventProcessed(eventId: string, eventType: string): Promise<v
       type: eventType,
     },
   });
+}
+
+// ============================================
+// Idempotency Table Cleanup
+// ============================================
+
+let lastCleanup: number = 0;
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // Once per day
+const WEBHOOK_EVENT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/**
+ * Delete webhook event records older than 7 days to prevent table bloat.
+ * Can also be invoked via a cron job (e.g., daily) for more reliable cleanup.
+ */
+async function cleanupOldWebhookEvents(): Promise<void> {
+  const cutoff = new Date(Date.now() - WEBHOOK_EVENT_TTL_MS);
+  try {
+    const result = await prisma.webhookEvent.deleteMany({
+      where: { createdAt: { lt: cutoff } },
+    });
+    if (result.count > 0) {
+      console.log(`[Entitlements] Cleaned up ${result.count} old webhook event records`);
+    }
+    lastCleanup = Date.now();
+  } catch (error) {
+    console.error("[Entitlements] Failed to clean up old webhook events:", error);
+  }
+}
+
+/**
+ * Run cleanup if it hasn't run in the past day.
+ * Called at the start of handleStripeWebhook to keep the table lean.
+ */
+async function maybeCleanup(): Promise<void> {
+  if (Date.now() - lastCleanup > CLEANUP_INTERVAL_MS) {
+    await cleanupOldWebhookEvents();
+  }
 }
 
 export default handleStripeWebhook;

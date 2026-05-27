@@ -45,6 +45,7 @@ export type ResolutionSource = "user_override" | "org_override" | "plan" | "fall
 export interface EntitlementValue {
   enabled: boolean;
   limit: number | null; // null = unlimited
+  expiresAt?: Date;
   config?: FeatureConfig;
 }
 
@@ -211,9 +212,10 @@ export interface IEntitlementRepository {
     orgId: string,
     featureKey: string,
     amount: number,
+    limit: number | null,
     periodStart: Date,
     periodEnd: Date,
-  ): Promise<boolean>;
+  ): Promise<{ success: boolean; currentCount: number }>;
 
   // Experiments
   getExperiment(experimentKey: string): Promise<ExperimentConfig | null>;

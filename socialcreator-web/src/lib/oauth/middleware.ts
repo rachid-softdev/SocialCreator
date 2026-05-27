@@ -57,9 +57,6 @@ export async function getValidAccessToken(profileId: string, platform: Platform)
 
   if (!needsRefresh) {
     // Token is still valid, return it
-    if (!connectedAccount.accessToken) {
-      throw new Error(`No access token available for profile ${profileId}, platform ${platform}`);
-    }
     return connectedAccount.accessToken;
   }
 

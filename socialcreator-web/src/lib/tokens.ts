@@ -2,7 +2,7 @@
  * Token management utilities - handles token decryption, validation, and refresh
  */
 
-import type { ConnectedAccount } from "@prisma/client";
+import type { ConnectedAccount, Platform } from "@prisma/client";
 import { decryptToken, encryptToken } from "./crypto";
 import {
   isTokenExpired,
@@ -73,9 +73,11 @@ export async function updateAccountToken(
   refreshToken?: string,
   expiresIn?: number,
 ): Promise<void> {
-  const updateData: any = {
-    accessToken: encryptToken(accessToken),
-  };
+  const updateData: {
+    accessToken: string;
+    refreshToken?: string;
+    expiresAt?: Date;
+  } = { accessToken: encryptToken(accessToken) };
 
   if (refreshToken) {
     updateData.refreshToken = encryptToken(refreshToken);
@@ -110,7 +112,7 @@ export async function createConnectedAccount(
   return await prisma.connectedAccount.create({
     data: {
       profileId,
-      platform: platform as any,
+      platform: platform as Platform,
       accessToken: encryptToken(tokens.access_token),
       refreshToken: tokens.refresh_token ? encryptToken(tokens.refresh_token) : null,
       expiresAt,
@@ -157,7 +159,7 @@ export async function isAccountValid(accountId: string): Promise<boolean> {
     where: { id: accountId },
   });
 
-  if (!account || !account.isActive) {
+  if (!account?.isActive) {
     return false;
   }
 

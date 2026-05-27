@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { buildAuthUrl } from "@/lib/oauth/auth-url";
 import { prisma } from "@/lib/prisma";
+import { connectAccountSchema } from "@/lib/validations";
 
 interface ConnectedAccountResponse {
   id: string;
@@ -96,11 +97,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { profileId, platform } = body;
-
-    if (!profileId || !platform) {
-      return NextResponse.json({ error: "profileId and platform are required" }, { status: 400 });
+    const parsed = connectAccountSchema.pick({ platform: true, profileId: true }).safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: `Invalid request: ${parsed.error.errors.map((e) => e.message).join(", ")}` },
+        { status: 400 },
+      );
     }
+    const { profileId, platform } = parsed.data;
 
     // Verify profile ownership
     const profile = await prisma.profile.findFirst({
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
       where: {
         profileId_platform: {
           profileId,
-          platform: platform as Platform,
+          platform,
         },
       },
     });
@@ -132,23 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the OAuth authorization URL
-    // Validate platform is supported
-    const supportedPlatforms = [
-      "INSTAGRAM",
-      "TIKTOK",
-      "LINKEDIN",
-      "X",
-      "YOUTUBE",
-      "FACEBOOK",
-      "PINTEREST",
-      "THREADS",
-    ];
-
-    if (!supportedPlatforms.includes(platform)) {
-      return NextResponse.json({ error: "Unsupported platform" }, { status: 400 });
-    }
-
-    const redirectUrl = buildAuthUrl(platform as any, profileId);
+    const redirectUrl = buildAuthUrl(platform, profileId);
 
     return NextResponse.json({ redirectUrl });
   } catch (error) {

@@ -108,10 +108,52 @@ async function revokeLinkedInToken(accessToken: string): Promise<boolean> {
 /**
  * Revoke Pinterest token
  */
-async function revokePinterestToken(accessToken: string): Promise<boolean> {
+async function revokePinterestToken(_accessToken: string): Promise<boolean> {
   // Pinterest doesn't have a public revocation API
   // We simply return false indicating we couldn't revoke
   return false;
+}
+
+/**
+ * Revoke a Google refresh token (used for YOUTUBE)
+ */
+async function revokeGoogleRefreshToken(refreshToken: string): Promise<boolean> {
+  const credentials = getProviderCredentials("YOUTUBE");
+  if (!credentials.clientId || !credentials.clientSecret) {
+    return false;
+  }
+  const response = await fetch("https://oauth2.googleapis.com/revoke", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(
+        `${credentials.clientId}:${credentials.clientSecret}`,
+      ).toString("base64")}`,
+    },
+    body: `token=${refreshToken}`,
+  });
+  return response.ok || response.status === 400;
+}
+
+/**
+ * Revoke a LinkedIn refresh token
+ */
+async function revokeLinkedInRefreshToken(refreshToken: string): Promise<boolean> {
+  const credentials = getProviderCredentials("LINKEDIN");
+  if (!credentials.clientId || !credentials.clientSecret) {
+    return false;
+  }
+  const response = await fetch("https://www.linkedin.com/oauth/v2/revoke", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(
+        `${credentials.clientId}:${credentials.clientSecret}`,
+      ).toString("base64")}`,
+    },
+    body: `token=${refreshToken}`,
+  });
+  return response.ok;
 }
 
 /**
@@ -121,7 +163,13 @@ export async function revokeRefreshToken(
   platform: OAuthProvider,
   refreshToken: string,
 ): Promise<boolean> {
-  // Most platforms don't have a separate refresh token revocation
-  // The access token revocation should suffice
-  return revokeToken(platform, refreshToken);
+  switch (platform) {
+    case "YOUTUBE":
+      return revokeGoogleRefreshToken(refreshToken);
+    case "LINKEDIN":
+      return revokeLinkedInRefreshToken(refreshToken);
+    default:
+      console.warn(`[Revoke] Refresh token revocation not implemented for ${platform}`);
+      return false;
+  }
 }

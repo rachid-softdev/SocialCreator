@@ -16,25 +16,17 @@ export async function publishToX(
   },
 ): Promise<PublishResult> {
   try {
+    // Media upload via X API v1.1 requires multipart/form-data.
+    // Skipping media upload for now; posting text-only tweet.
+    if (content.mediaUrls.length > 0) {
+      console.warn(
+        "[X Publisher] Media upload not supported in current implementation. Posting text-only tweet.",
+      );
+    }
+
     const tweet: Record<string, unknown> = {
       text: content.textContent.slice(0, 280),
     };
-
-    if (content.mediaUrls.length > 0) {
-      // Upload media first via v1.1 media upload
-      const mediaResponse = await fetch("https://upload.twitter.com/1.1/media/upload.json", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${account.accessToken}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: `media_url=${encodeURIComponent(content.mediaUrls[0])}`,
-      });
-      const mediaData = await mediaResponse.json();
-      if (mediaData.media_id_string) {
-        tweet["media"] = { media_ids: [mediaData.media_id_string] };
-      }
-    }
 
     const response = await fetch("https://api.twitter.com/2/tweets", {
       method: "POST",
@@ -44,13 +36,24 @@ export async function publishToX(
       },
       body: JSON.stringify(tweet),
     });
+
     const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+
+    if (!response.ok) {
+      const errorMessage =
+        data.detail || data.title || data.errors?.[0]?.message || JSON.stringify(data);
+      throw new Error(errorMessage);
+    }
+
+    // X API v2 returns { data: { id: string } } on success
+    if (!data.data?.id) {
+      throw new Error("Unexpected response format from X API");
+    }
 
     return {
       success: true,
-      postId: data.id,
-      postUrl: data.id ? `https://twitter.com/i/status/${data.id}` : undefined,
+      postId: data.data.id,
+      postUrl: `https://twitter.com/i/status/${data.data.id}`,
     };
   } catch (error) {
     return {

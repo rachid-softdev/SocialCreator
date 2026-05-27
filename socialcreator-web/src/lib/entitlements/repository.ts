@@ -58,7 +58,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
           enabled: pf.enabled,
           limitValue: pf.limitValue,
           configJson: (pf.configJson as FeatureConfig) || {},
-          downgradeStrategy: (pf.configJson as any)?.downgradeStrategy,
+          downgradeStrategy: (pf.configJson as FeatureConfig).downgradeStrategy,
         });
       }
     }
@@ -92,7 +92,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
       key: feature.key,
       name: feature.name,
       description: feature.description || undefined,
-      type: feature.type as any,
+      type: feature.type as FeatureType,
       defaultConfig: feature.defaultConfig as FeatureConfig,
       isActive: feature.isActive,
     };
@@ -110,7 +110,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
       key: f.key,
       name: f.name,
       description: f.description || undefined,
-      type: f.type as any,
+      type: f.type as FeatureType,
       defaultConfig: f.defaultConfig as FeatureConfig,
       isActive: f.isActive,
     }));
@@ -162,6 +162,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
     return {
       enabled: override.enabled,
       limit: override.limitValue,
+      expiresAt: override.expiresAt ?? undefined,
     };
   }
 
@@ -282,45 +283,69 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
 
   /**
    * Atomically consume usage (for race-condition safety)
+   * Uses Prisma $transaction to ensure read-check-write is atomic
    */
   async consumeUsage(
     orgId: string,
     featureKey: string,
     amount: number,
+    limit: number | null,
     periodStart: Date,
     periodEnd: Date,
-  ): Promise<boolean> {
-    // First, get current limit to check if we can consume
-    // This is handled at the service level with the limit value
-
+  ): Promise<{ success: boolean; currentCount: number }> {
     try {
-      // Try to create if not exists, then update atomically
-      const result = await prisma.usageTracking.upsert({
-        where: {
-          orgId_featureKey_periodStart: {
+      return await prisma.$transaction(async (tx) => {
+        // 1. READ current usage within the transaction
+        const tracking = await tx.usageTracking.findUnique({
+          where: {
+            orgId_featureKey_periodStart: {
+              orgId,
+              featureKey,
+              periodStart,
+            },
+          },
+        });
+
+        const currentCount = tracking?.usageCount || 0;
+
+        // 2. CHECK if current + amount <= limit within the transaction
+        if (limit !== null && currentCount + amount > limit) {
+          return { success: false, currentCount };
+        }
+
+        // 3. UPSERT only if within limits
+        const result = await tx.usageTracking.upsert({
+          where: {
+            orgId_featureKey_periodStart: {
+              orgId,
+              featureKey,
+              periodStart,
+            },
+          },
+          create: {
             orgId,
             featureKey,
+            usageCount: amount,
             periodStart,
+            periodEnd,
           },
-        },
-        create: {
-          orgId,
-          featureKey,
-          usageCount: amount,
-          periodStart,
-          periodEnd,
-        },
-        update: {
-          usageCount: {
-            increment: amount,
+          update: {
+            usageCount: {
+              increment: amount,
+            },
           },
-        },
-      });
+        });
 
-      return true;
+        return { success: true, currentCount: result.usageCount };
+      });
     } catch (error) {
+      // DESIGN TRADE-OFF: All DB errors (connection drops, constraint violations)
+      // return { success: false, currentCount: 0 }. The caller (service.ts) treats
+      // this the same as hitting the limit. Acceptable because:
+      //   1. Usage tracking is best-effort (non-critical path)
+      //   2. Returning false is the safe default (deny rather than over-consume)
       console.error("[Entitlements] Failed to consume usage:", error);
-      return false;
+      return { success: false, currentCount: 0 };
     }
   }
 

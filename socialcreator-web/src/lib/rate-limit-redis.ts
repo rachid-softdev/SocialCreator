@@ -20,6 +20,13 @@ interface RateLimitConfig {
 
 // Rate limits per endpoint path
 const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
+  // Auth - strict limits for security
+  "/api/auth/callback/credentials": { limit: 5, window: "60s" },
+  "/api/auth/signin": { limit: 10, window: "60s" },
+  "/api/auth/register": { limit: 3, window: "60s" },
+  "/api/auth/session": { limit: 30, window: "60s" },
+  "/api/auth": { limit: 20, window: "60s" },
+
   // MCP API - plus strict because publicly exposed
   "/api/mcp": { limit: 60, window: "60s" },
 
@@ -81,7 +88,15 @@ if (typeof setInterval !== "undefined") {
 }
 
 /**
- * Check rate limit using in-memory store (fallback)
+ * In-memory rate limiting store (fallback when Redis unavailable)
+ *
+ * ⚠️ LIMITATIONS (documented):
+ * - Resets on server restart → limits reset after deploy/restart
+ * - NOT shared across instances → each instance has independent counter
+ * - Used ONLY when Redis is not configured or when Redis call fails
+ * - For production: configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+ *
+ * Behavior: FAIL OPEN on Redis error (allows request to proceed.)
  */
 function checkRateLimitInMemory(identifier: string, path: string): RateLimitResult {
   const config = getConfigForPath(path);
@@ -400,32 +415,55 @@ export async function getRateLimitStatus(
   identifier: string,
   path: string,
 ): Promise<{ limit: number; remaining: number; reset: number } | null> {
-  const limiter = getRateLimiter(path);
-  if (!limiter) return null;
+  const config = getConfigForPath(path);
+  if (!config) return null;
 
-  try {
-    // Use Redis directly to get current state
-    const redisClient = getRedis();
-    if (!redisClient) return null;
+  const redisClient = getRedis();
+  if (!redisClient) {
+    // Read from in-memory store (read-only peek, no increment)
+    const inMemKey = `${path}:${identifier}`;
+    const entry = inMemoryStore.get(inMemKey);
+    const now = Date.now();
+    const windowSeconds = parseWindowToSeconds(config.window);
 
-    // Build key based on path
-    const pathConfig = getConfigForPath(path);
-    const prefix = pathConfig ? `ratelimit:${path}` : "ratelimit:default";
-    const key = `${prefix}:${identifier}`;
-    const data = await redisClient.get(key);
-
-    const limit = pathConfig?.limit ?? 100;
-
-    if (!data) {
-      return { limit, remaining: limit, reset: 0 };
+    if (!entry || entry.resetTime < now) {
+      return {
+        limit: config.limit,
+        remaining: config.limit,
+        reset: now + windowSeconds * 1000,
+      };
     }
 
-    // Parse the stored data
-    const parsed = typeof data === "string" ? JSON.parse(data) : data;
+    const remaining = Math.max(0, config.limit - entry.count);
+    return { limit: config.limit, remaining, reset: entry.resetTime };
+  }
+
+  try {
+    // Read-only: Redis GET to peek at counter without incrementing
+    // NOTE: Key format @upstash/ratelimit:{path}:{identifier} is an internal
+    // detail of the @upstash/ratelimit library. If this breaks, fall back
+    // to the in-memory path above.
+    const prefix = `@upstash/ratelimit:${path}`;
+    const key = `${prefix}:${identifier}`;
+    const data = await redisClient.get<string>(key);
+
+    const windowSeconds = parseWindowToSeconds(config.window);
+    const now = Date.now();
+
+    if (!data) {
+      return { limit: config.limit, remaining: config.limit, reset: now + windowSeconds * 1000 };
+    }
+
+    // @upstash/ratelimit stores data as a JSON string with 'count' field
+    const parsed = JSON.parse(data);
+    const currentCount = parsed.count || 0;
+    const windowStart = parsed.start || now;
+    const windowEndMs = windowStart + windowSeconds * 1000;
+
     return {
-      limit,
-      remaining: Math.max(0, limit - (parsed.remaining || 0)),
-      reset: parsed.reset || 0,
+      limit: config.limit,
+      remaining: Math.max(0, config.limit - currentCount),
+      reset: windowEndMs,
     };
   } catch {
     return null;
