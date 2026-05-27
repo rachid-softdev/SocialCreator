@@ -313,43 +313,12 @@ export class FeatureGateService {
     const resetAt: Record<string, Date> = {}
     const config: Record<string, any> = {}
 
-    // Get all org overrides
-    const orgOverrides = new Map<string, EntitlementValue>()
-    for (const f of allFeatures) {
-      const override = await this.repo.getOrgOverride(orgId, f.key)
-      if (override) {
-        orgOverrides.set(f.key, override)
-      }
-    }
-
-    // Get plan features if subscribed
-    let planFeatures: Map<string, any> = new Map()
-    if (subscription && (subscription.status === "ACTIVE" || subscription.status === "TRIALING")) {
-      planFeatures = await this.repo.getPlanFeatures(subscription.planKey)
-    }
-
-    // Build map for each feature
     for (const feature of allFeatures) {
-      // Resolve using priority system
-      let value: EntitlementValue
-
-      const orgOverride = orgOverrides.get(feature.key)
-      if (orgOverride) {
-        value = orgOverride
-      } else if (subscription && (subscription.status === "ACTIVE" || subscription.status === "TRIALING")) {
-        const pf = planFeatures.get(feature.key)
-        value = pf
-          ? { enabled: pf.enabled, limit: pf.limitValue, config: pf.configJson }
-          : { enabled: false, limit: feature.type === "LIMIT" ? 0 : null }
-      } else {
-        value = { enabled: false, limit: feature.type === "LIMIT" ? 0 : null }
-      }
-
+      const value = await this.resolveEntitlement(orgId, feature.key)
       features[feature.key] = value.enabled
       limits[feature.key] = value.limit
       config[feature.key] = value.config || feature.defaultConfig
 
-      // Get usage
       const usageInfo = await this.repo.getCurrentPeriodUsage(orgId, feature.key)
       usage[feature.key] = usageInfo.used
       resetAt[feature.key] = usageInfo.periodEnd

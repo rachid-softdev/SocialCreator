@@ -59,9 +59,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.cguAccepted = (user as any)?.cguAccepted ?? false;
-        token.role = (user as any)?.role ?? 'USER';
-        token.roles = [(user as any)?.role ?? 'USER'];
+        token.cguAccepted = user.cguAccepted ?? false;
+        token.role = user.role ?? 'USER';
+        token.roles = user.roles ?? [user.role ?? 'USER'];
       }
 
       // Fetch roles from DB on token refresh (subsequent requests)

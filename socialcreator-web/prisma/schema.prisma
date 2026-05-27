@@ -95,6 +95,8 @@ model Team {
   profiles    Profile[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  @@index([ownerId])
 }
 
 enum TeamRole {
@@ -114,6 +116,7 @@ model TeamMember {
   invitedAt   DateTime  @default(now())
   joinedAt    DateTime?
   @@unique([teamId, userId])
+  @@index([userId])
 }
 
 // ── Media Library ─────────────────────────────────────────
@@ -131,6 +134,8 @@ model MediaAsset {
   height      Int?
   duration    Float?    // For video/audio
   uploadedAt  DateTime  @default(now())
+
+  @@index([profileId])
 }
 
 enum MediaType {
@@ -226,6 +231,8 @@ model Agent {
   runs        AgentRun[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  @@index([profileId])
 }
 
 enum AgentType {
@@ -245,6 +252,8 @@ model AgentRun {
   error           String?
   generatedContents GeneratedContent[]
   createdAt       DateTime           @default(now())
+
+  @@index([agentId])
 }
 
 enum RunStatus {
@@ -356,6 +365,7 @@ model Analytics {
 model VideoAsset {
   id           String    @id @default(cuid())
   profileId    String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   uploadUrl    String    @db.Text
   muxAssetId   String?   @unique
   muxPlaybackId String?
@@ -364,6 +374,8 @@ model VideoAsset {
   status      String    @default("UPLOADING")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([profileId])
 }
 
 // ============================================
@@ -423,6 +435,7 @@ model Organization {
   stripeSubscriptionId String?
   subscription        Subscription?
   teamId              String?          @unique
+  team                Team?            @relation(fields: [teamId], references: [id])
   entitlementOverrides EntitlementOverride[]
   usageTrackings      UsageTracking[]
   createdAt           DateTime         @default(now())

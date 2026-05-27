@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import { Prisma } from "@prisma/client";
 
 // vi.mock factories are hoisted, so we use vi.hoisted for shared references
 const { mockRequireAdmin, MockAuthError } = vi.hoisted(() => {
@@ -291,8 +292,10 @@ describe("POST /api/admin/users", () => {
 
   describe("duplicate email handling", () => {
     it("should return 409 when email already exists (P2002)", async () => {
-      const prismaError = new Error("Unique constraint failed");
-      (prismaError as any).code = "P2002";
+      const prismaError = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "5.0.0",
+      });
       (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(prismaError);
 
       const res = await POST(createRequest(validBody));

@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 // Mock dependencies
 vi.mock("@/lib/prisma", () => ({
@@ -17,12 +18,16 @@ vi.mock("bcryptjs", () => ({
   default: { hash: vi.fn(), compare: vi.fn() },
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  withRateLimit: vi.fn((_req: any, handler: () => Promise<any>) => handler()),
+}));
+
 import { POST } from "../route";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-function createRequest(body: unknown): Request {
-  return new Request("http://localhost:3000/api/auth/register", {
+function createRequest(body: unknown): NextRequest {
+  return new NextRequest("http://localhost:3000/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -45,35 +50,40 @@ describe("POST /api/auth/register", () => {
       const res = await POST(createRequest({ email: "test@test.com", password: "password123" }));
       const data = await res.json();
       expect(res.status).toBe(400);
-      expect(data.error).toBe("All fields are required");
+      expect(data.error).toBe("Validation failed");
+      expect(data.fieldErrors.name).toBeDefined();
     });
 
     it("should return 400 when email is missing", async () => {
       const res = await POST(createRequest({ name: "Test", password: "password123" }));
       const data = await res.json();
       expect(res.status).toBe(400);
-      expect(data.error).toBe("All fields are required");
+      expect(data.error).toBe("Validation failed");
+      expect(data.fieldErrors.email).toBeDefined();
     });
 
     it("should return 400 when password is missing", async () => {
       const res = await POST(createRequest({ name: "Test", email: "test@test.com" }));
       const data = await res.json();
       expect(res.status).toBe(400);
-      expect(data.error).toBe("All fields are required");
+      expect(data.error).toBe("Validation failed");
+      expect(data.fieldErrors.password).toBeDefined();
     });
 
     it("should return 400 for invalid email format", async () => {
       const res = await POST(createRequest({ ...validBody, email: "not-an-email" }));
       const data = await res.json();
       expect(res.status).toBe(400);
-      expect(data.error).toBe("Invalid email format");
+      expect(data.error).toBe("Validation failed");
+      expect(data.fieldErrors.email).toBeDefined();
     });
 
     it("should return 400 when password is shorter than 8 characters", async () => {
       const res = await POST(createRequest({ ...validBody, password: "short" }));
       const data = await res.json();
       expect(res.status).toBe(400);
-      expect(data.error).toBe("Password must be at least 8 characters");
+      expect(data.error).toBe("Validation failed");
+      expect(data.fieldErrors.password).toBeDefined();
     });
 
     it("should return 400 when email already registered", async () => {
@@ -181,6 +191,19 @@ describe("POST /api/auth/register", () => {
       expect(res.status).toBe(500);
       const data = await res.json();
       expect(data.error).toBe("Internal server error");
+    });
+
+    it("should return 409 on duplicate email (P2002)", async () => {
+      (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+          code: "P2002",
+          clientVersion: "5.0.0",
+        })
+      );
+      const res = await POST(createRequest(validBody));
+      const data = await res.json();
+      expect(res.status).toBe(409);
+      expect(data.error).toBe("Email already registered");
     });
   });
 });

@@ -12,21 +12,31 @@ import { getEntitlementRepository } from "@/lib/entitlements/repository"
 import type { OverrideInput } from "@/lib/entitlements/types"
 import { requireAdmin, AuthError } from "@/lib/auth/require-admin"
 
+const ALLOWED_SORT_FIELDS = ["key", "name", "sortOrder", "createdAt", "isActive"] as const;
+const ALLOWED_SORT_ORDERS = ["asc", "desc"] as const;
+
 export async function GET(request: Request) {
   try {
     await requireAdmin();
     const url = new URL(request.url)
     const resource = url.searchParams.get("resource") || "plans"
-    const page = parseInt(url.searchParams.get("page") || "1")
-    const limit = parseInt(url.searchParams.get("limit") || "20")
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1") || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "20") || 20));
     const sort = url.searchParams.get("sort") || "sortOrder:asc"
-    const [sortField, sortOrder] = sort.split(":")
+    let [sortField, sortOrder] = sort.split(":")
+
+    if (!ALLOWED_SORT_FIELDS.includes(sortField as typeof ALLOWED_SORT_FIELDS[number])) {
+      sortField = "sortOrder";
+    }
+    if (!ALLOWED_SORT_ORDERS.includes(sortOrder as typeof ALLOWED_SORT_ORDERS[number])) {
+      sortOrder = "asc";
+    }
 
     switch (resource) {
       case "plans": {
         const [plans, total] = await Promise.all([
           prisma.plan.findMany({
-            orderBy: { [sortField]: sortField === "sortOrder" ? sortOrder : "asc" },
+            orderBy: { [sortField]: sortOrder },
             skip: (page - 1) * limit,
             take: limit,
           }),
@@ -97,11 +107,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { scope, scopeId, featureKey, enabled, limitValue, expiresAt, reason } = body
 
-    if (!scope || !scopeId || !featureKey || reason === undefined) {
+    if (!scope || !scopeId || !featureKey || !reason) {
       return NextResponse.json(
         { error: "Missing required fields: scope, scopeId, featureKey, reason" },
         { status: 400 }
       )
+    }
+
+    const VALID_SCOPES = ["ORG", "USER"] as const;
+    if (!VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number])) {
+      return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
     }
 
     const input: OverrideInput = {

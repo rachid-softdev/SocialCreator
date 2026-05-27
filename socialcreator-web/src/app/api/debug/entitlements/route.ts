@@ -5,17 +5,12 @@
  */
 
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireAdmin, AuthError } from "@/lib/auth/require-admin"
 import { getFeatureGateService } from "@/lib/entitlements/service"
 
 export async function GET(request: Request) {
   try {
-    const session = await auth()
-
-    // In production, check for admin role
-    // if (!session?.user?.isAdmin) {
-    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    // }
+    await requireAdmin();
 
     const url = new URL(request.url)
     const orgId = url.searchParams.get("orgId")
@@ -44,6 +39,9 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error("[Debug Entitlements] GET error:", error)
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

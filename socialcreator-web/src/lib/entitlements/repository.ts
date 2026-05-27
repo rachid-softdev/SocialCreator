@@ -153,7 +153,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
     const override = await prisma.entitlementOverride.findFirst({
       where: {
         scope: "ORG",
-        orgId,
+        scopeId: orgId,
         featureKey,
         OR: [
           { expiresAt: null },
