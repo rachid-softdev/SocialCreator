@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
 export class AuthError extends Error {
@@ -15,15 +16,24 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
     throw new AuthError("Non authentifié", 401);
   }
 
-  const userRoles = session.user.roles;
-  const userRole = session.user.role;
-  const isAdmin = userRoles?.includes("ADMIN") || userRole === "ADMIN";
-  if (!isAdmin) {
+  // Verify role from DATABASE — don't trust cached JWT token
+  // JWT roles may be stale if admin was revoked between token refresh cycles
+  let dbUser;
+  try {
+    dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, email: true },
+    });
+  } catch {
+    throw new AuthError("Erreur de vérification administrateur", 500);
+  }
+
+  if (!dbUser || dbUser.role !== "ADMIN") {
     throw new AuthError("Accès non autorisé - rôle administrateur requis", 403);
   }
 
   return {
     id: session.user.id,
-    email: session.user.email ?? "",
+    email: dbUser.email ?? "",
   };
 }

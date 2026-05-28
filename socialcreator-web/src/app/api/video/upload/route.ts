@@ -30,6 +30,23 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
+  // SECURITY: Validate the URL protocol to prevent SSRF attacks
+  // Only HTTPS URLs are allowed — reject file://, ftp://, http://, etc.
+  try {
+    const parsedUrl = new URL(videoUrl);
+    if (parsedUrl.protocol !== "https:") {
+      return NextResponse.json(
+        { error: "Only HTTPS URLs are allowed for video uploads" },
+        { status: 400 },
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid URL format" },
+      { status: 400 },
+    );
+  }
+
   // Upload video from URL via UploadThing
   const uploadResult = await utapi.uploadFilesFromUrl(videoUrl);
 

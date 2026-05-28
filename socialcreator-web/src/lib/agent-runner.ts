@@ -1,4 +1,5 @@
 import type { Platform } from "@prisma/client";
+import logger from "@/lib/logger";
 import { generateContent } from "@/lib/llm";
 import { prisma } from "@/lib/prisma";
 import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
@@ -11,17 +12,36 @@ interface TriggerAgentRunParams {
 export async function triggerAgentRun(params: TriggerAgentRunParams): Promise<void> {
   const { agentId, runId } = params;
 
-  // 1. Fetch agent + profile
+  // 1. Fetch agent + profile + user (for CGU check)
   const agent = await prisma.agent.findUnique({
     where: { id: agentId },
-    include: { profile: true },
+    include: {
+      profile: {
+        include: {
+          user: { select: { cguAccepted: true } },
+        },
+      },
+    },
   });
 
   if (!agent) {
     throw new Error("Agent not found");
   }
 
-  // 2. Update run status to RUNNING
+  // 2. CGU CHECK — user must accept terms before running agents
+  if (!agent.profile.user.cguAccepted) {
+    await prisma.agentRun.update({
+      where: { id: runId },
+      data: {
+        status: "FAILED",
+        finishedAt: new Date(),
+        error: "CGU acceptance required to run agents",
+      },
+    });
+    return;
+  }
+
+  // 3. Update run status to RUNNING
   await prisma.agentRun.update({
     where: { id: runId },
     data: { status: "RUNNING", startedAt: new Date() },
@@ -40,36 +60,45 @@ export async function triggerAgentRun(params: TriggerAgentRunParams): Promise<vo
   }
 
   try {
-    // 3. Pour chaque plateforme, générer le contenu
-    for (const platform of agent.platforms) {
-      const userPrompt = buildGenerationPrompt({
-        brief: run.brief,
-        platform: platform as Platform,
-      });
-
-      const result = await generateContent(systemPrompt, userPrompt);
-
-      // 4. Sauvegarder le GeneratedContent
-      await prisma.generatedContent.create({
-        data: {
-          runId: runId,
-          profileId: agent.profileId,
+    // 4. Generate content for ALL platforms IN PARALLEL using Promise.all
+    const results = await Promise.all(
+      agent.platforms.map(async (platform) => {
+        const userPrompt = buildGenerationPrompt({
+          brief: run.brief,
           platform: platform as Platform,
-          textContent: result.textContent,
-          hashtags: result.hashtags || [],
-          mediaUrls: [],
-          status: agent.autoPublish ? "APPROVED" : "DRAFT",
-        },
-      });
-    }
+        });
+        const result = await generateContent(systemPrompt, userPrompt);
+        return { platform, result };
+      }),
+    );
 
-    // 5. Update run status to SUCCESS
+    // 5. Save all GeneratedContent atomically in a single transaction
+    //    STATUS IS ALWAYS DRAFT — auto-publish workflow is handled separately
+    //    This ensures human approval gate is never bypassed
+    await prisma.$transaction(
+      results.map(({ platform, result }) =>
+        prisma.generatedContent.create({
+          data: {
+            runId: runId,
+            profileId: agent.profileId,
+            platform: platform as Platform,
+            textContent: result.textContent,
+            hashtags: result.hashtags || [],
+            mediaUrls: [],
+            status: "DRAFT",
+          },
+        }),
+      ),
+    );
+
+    // 6. Update run status to SUCCESS
     await prisma.agentRun.update({
       where: { id: runId },
       data: { status: "SUCCESS", finishedAt: new Date() },
     });
   } catch (error) {
-    // 6. On error, update run status to FAILED
+    // 7. On error, update run status to FAILED
+    logger.error({ err: error }, "Agent run failed");
     await prisma.agentRun.update({
       where: { id: runId },
       data: {

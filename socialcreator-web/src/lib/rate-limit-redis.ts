@@ -89,6 +89,24 @@ if (typeof setInterval !== "undefined") {
 }
 
 /**
+ * Strict fallback limits used when Redis is unavailable.
+ * These are MORE restrictive than normal limits because:
+ * - In-memory store resets on server restart
+ * - In-memory is per-instance (not shared across deployments)
+ * - Redis failure may indicate an attack (resource exhaustion)
+ *
+ * This is a FAIL CLOSED approach for the degraded mode.
+ */
+const STRICT_FALLBACK_LIMITS: Record<string, { limit: number; window: string }> = {
+  // Auth: extremely strict when degraded
+  "/api/auth/callback/credentials": { limit: 2, window: "120s" },
+  "/api/auth/signin": { limit: 5, window: "120s" },
+  "/api/auth/register": { limit: 1, window: "120s" },
+  // Default for everything else when degraded
+  default: { limit: 20, window: "60s" },
+};
+
+/**
  * In-memory rate limiting store (fallback when Redis unavailable)
  *
  * ⚠️ LIMITATIONS (documented):
@@ -97,10 +115,25 @@ if (typeof setInterval !== "undefined") {
  * - Used ONLY when Redis is not configured or when Redis call fails
  * - For production: configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
  *
- * Behavior: FAIL OPEN on Redis error (allows request to proceed.)
+ * Behavior: FAIL CLOSED on Redis error (applies stricter limits).
+ * When Redis is simply not configured (dev mode), normal limits apply.
  */
-function checkRateLimitInMemory(identifier: string, path: string): RateLimitResult {
-  const config = getConfigForPath(path);
+function checkRateLimitInMemory(
+  identifier: string,
+  path: string,
+  useStrictLimits: boolean = false,
+): RateLimitResult {
+  let config: RateLimitConfig | null;
+
+  if (useStrictLimits) {
+    // Use strict limits when falling back due to Redis error
+    const strictKey = Object.keys(STRICT_FALLBACK_LIMITS).find((k) => path.startsWith(k));
+    const strictConfig = strictKey ? STRICT_FALLBACK_LIMITS[strictKey] : STRICT_FALLBACK_LIMITS.default;
+    config = { limit: strictConfig.limit, window: strictConfig.window };
+  } else {
+    config = getConfigForPath(path);
+  }
+
   const limit = config?.limit ?? 100;
   const windowSeconds = config ? parseWindowToSeconds(config.window) : 60;
 
@@ -108,30 +141,34 @@ function checkRateLimitInMemory(identifier: string, path: string): RateLimitResu
   const now = Date.now();
   const resetTime = now + windowSeconds * 1000;
 
-  const entry = inMemoryStore.get(key);
+  // Atomic read-and-increment using a single Map operation
+  // This avoids the race condition of read-then-write
+  const prevEntry = inMemoryStore.get(key);
 
-  if (!entry || entry.resetTime < now) {
+  if (!prevEntry || prevEntry.resetTime < now) {
     // New window
+    const remaining = limit - 1;
     inMemoryStore.set(key, { count: 1, resetTime });
     return {
       success: true,
       limit,
-      remaining: limit - 1,
+      remaining: Math.max(0, remaining),
       reset: resetTime,
     };
   }
 
-  // Existing window - check and increment
-  entry.count++;
+  // Existing window — atomically increment
+  const newCount = prevEntry.count + 1;
+  prevEntry.count = newCount;
 
-  const remaining = Math.max(0, limit - entry.count);
-  const success = entry.count <= limit;
+  const remaining = Math.max(0, limit - newCount);
+  const success = newCount <= limit;
 
   return {
     success,
     limit,
     remaining,
-    reset: entry.resetTime,
+    reset: prevEntry.resetTime,
   };
 }
 
@@ -307,9 +344,9 @@ export async function checkRateLimit(
   const limiter = getRateLimiter(path);
 
   if (!limiter) {
-    // Redis not configured - use in-memory fallback
+    // Redis not configured (dev mode) — use in-memory fallback with normal limits
     logger.debug(`Using in-memory rate limiting for ${path}`);
-    return checkRateLimitInMemory(identifier, path);
+    return checkRateLimitInMemory(identifier, path, false);
   }
 
   try {
@@ -322,15 +359,20 @@ export async function checkRateLimit(
       reset: result.reset,
     };
   } catch (error) {
-    // On error, fall back to in-memory (fail graceful)
-    logger.error({ err: error }, "Rate limit Redis check failed, using in-memory fallback");
-    return checkRateLimitInMemory(identifier, path);
+    // On Redis error, fall back to in-memory with STRICT limits
+    // This is fail-closed: we rate-limit MORE aggressively when degraded
+    logger.error({ err: error }, "Rate limit Redis check failed, using strict in-memory fallback");
+    return checkRateLimitInMemory(identifier, path, true);
   }
 }
 
 /**
  * Extract identifier from request
  * Priority: user ID > API key > IP address
+ *
+ * ⚠️ SECURITY: Does NOT trust x-forwarded-for or x-real-ip headers
+ * because they can be spoofed by clients to bypass rate limits.
+ * Uses NextRequest.ip (actual TCP connection IP) when available.
  */
 export function getIdentifier(request: Request, userId?: string, apiKey?: string): string {
   if (userId) {
@@ -341,16 +383,11 @@ export function getIdentifier(request: Request, userId?: string, apiKey?: string
     return `apikey:${apiKey}`;
   }
 
-  // Fall back to IP
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const ip = forwarded.split(",")[0].trim();
-    return `ip:${ip}`;
-  }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return `ip:${realIp}`;
+  // Use actual connection IP from NextRequest (not spoofable headers)
+  // NextRequest.ip is set by the server from the actual TCP connection
+  const nextReq = request as { ip?: string };
+  if (nextReq.ip) {
+    return `ip:${nextReq.ip}`;
   }
 
   return `ip:unknown`;

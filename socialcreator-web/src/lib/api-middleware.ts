@@ -1,6 +1,6 @@
 /**
  * Composable API middleware for routes
- * Applies: rate-limiting → auth → error handling
+ * Applies: body-size-limit → rate-limiting → auth → error handling
  */
 
 import type { NextRequest, NextResponse } from "next/server";
@@ -19,6 +19,9 @@ export type ApiHandler = (
   params?: Record<string, string>,
 ) => Promise<NextResponse>;
 
+/** Maximum request body size in bytes (100 KB) */
+const MAX_BODY_SIZE = 100_000;
+
 export function withApiMiddleware(handler: ApiHandler) {
   return async (
     request: NextRequest,
@@ -26,6 +29,14 @@ export function withApiMiddleware(handler: ApiHandler) {
   ) => {
     const start = Date.now();
     const resolvedParams = params ? await params : {};
+
+    // 0. Enforce request body size limit
+    if (request.body) {
+      const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+      if (contentLength > MAX_BODY_SIZE) {
+        return errorResponse(413, "LIMIT_REACHED", `Request body too large. Maximum is ${MAX_BODY_SIZE} bytes.`);
+      }
+    }
 
     // 1. Rate limiting
     const rateLimitResult = await withRateLimit(request);

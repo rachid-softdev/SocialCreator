@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getValidAccessToken } from "@/lib/tokens";
 import { publishContent } from "@/lib/publishers";
 
 const bulkActionSchema = z.object({
@@ -125,6 +126,17 @@ export async function POST(request: Request) {
               continue;
             }
 
+            // CRITICAL: Decrypt the access token before sending to external APIs
+            // account.accessToken is AES-256-GCM ciphertext, not a usable token
+            const accessToken = await getValidAccessToken(account.id);
+            if (!accessToken) {
+              results.failed.push({
+                id: content.id,
+                error: `Failed to get valid access token for ${content.platform}`,
+              });
+              continue;
+            }
+
             const publishResult = await publishContent(
               content.platform,
               {
@@ -134,7 +146,7 @@ export async function POST(request: Request) {
               },
               {
                 accountId: account.accountId,
-                accessToken: account.accessToken,
+                accessToken,
               },
             );
 

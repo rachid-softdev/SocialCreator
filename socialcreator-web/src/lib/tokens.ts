@@ -1,8 +1,13 @@
 /**
  * Token management utilities - handles token decryption, validation, and refresh
+ *
+ * @note This is the SINGLE source of truth for token operations.
+ * All OAuth token access should go through this module.
+ * Do NOT create alternative token-handling functions elsewhere.
  */
 
 import type { ConnectedAccount, Platform } from "@prisma/client";
+import logger from "@/lib/logger";
 import { decryptToken, encryptToken } from "./crypto";
 import {
   isTokenExpired,
@@ -14,8 +19,11 @@ import { prisma } from "./prisma";
 
 /**
  * Get a valid access token for a connected account
- * Automatically refreshes the token if it's expired or about to expire
- * Returns the decrypted access token or null if refresh fails
+ * Uses accountId (UUID) to look up the stored account.
+ * Automatically refreshes the token if it's expired or about to expire.
+ * Returns the decrypted access token or null if refresh fails.
+ *
+ * For profileId + platform lookup, use getValidAccessTokenByAccount()
  */
 export async function getValidAccessToken(accountId: string): Promise<string | null> {
   const account = await prisma.connectedAccount.findUnique({
@@ -31,7 +39,7 @@ export async function getValidAccessToken(accountId: string): Promise<string | n
   try {
     accessToken = decryptToken(account.accessToken);
   } catch (error) {
-    console.error("Failed to decrypt access token:", error);
+    logger.error({ err: error }, "Failed to decrypt access token");
     return null;
   }
 
@@ -53,9 +61,13 @@ export async function getValidAccessToken(accountId: string): Promise<string | n
 
         return newTokens.access_token;
       } catch (error) {
-        console.error("Failed to refresh token:", error);
-        // Token refresh failed, return the current token (might still work)
-        return accessToken;
+        logger.error({ err: error, accountId }, "Failed to refresh token — deactivating account");
+        // Token refresh failed — deactivate the account and return null
+        // Returning the expired token would cause confusing auth failures on the platform side
+        await deactivateConnectedAccount(accountId).catch((e) =>
+          logger.error({ err: e, accountId }, "Failed to deactivate account after refresh failure"),
+        );
+        return null;
       }
     }
   }
@@ -206,4 +218,21 @@ export async function reactivateConnectedAccount(accountId: string): Promise<voi
     where: { id: accountId },
     data: { isActive: true },
   });
+}
+
+/**
+ * Get a valid access token by profileId + platform lookup
+ * Convenience wrapper that resolves the accountId first, then calls getValidAccessToken()
+ * This replaces the old oauth/middleware.ts getValidAccessToken(profileId, platform) function
+ */
+export async function getValidAccessTokenByAccount(
+  profileId: string,
+  platform: Platform,
+): Promise<string | null> {
+  const account = await prisma.connectedAccount.findUnique({
+    where: { profileId_platform: { profileId, platform } },
+    select: { id: true },
+  });
+  if (!account) return null;
+  return getValidAccessToken(account.id);
 }

@@ -5,6 +5,7 @@
  * Meta Threads API supports media containers via `/me/threads_media` endpoint.
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 export async function publishToThreads(
@@ -19,14 +20,18 @@ export async function publishToThreads(
   },
 ): Promise<PublishResult> {
   try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/${account.accountId}/threads`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: content.textContent.slice(0, 500),
-        access_token: account.accessToken,
-      }),
-    });
+    const response = await fetchWithTimeout(
+      `https://graph.facebook.com/v18.0/${account.accountId}/threads`,
+      {
+        method: "POST",
+        timeout: 15000,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content.textContent.slice(0, 500),
+          access_token: account.accessToken,
+        }),
+      },
+    );
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 

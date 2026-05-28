@@ -6,6 +6,7 @@
 
 import type { Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import {
   exchangeCodeForToken,
   getRedirectUri,
@@ -64,6 +65,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (!profile) {
       return NextResponse.redirect(new URL("/profiles?error=profile_not_found"));
+    }
+
+    // SECURITY: Verify the authenticated user owns this profile
+    // Even if the encrypted state were somehow compromised, this prevents
+    // an attacker from connecting their social account to another user's profile.
+    const session = await auth();
+    if (!session?.user?.id || profile.userId !== session.user.id) {
+      return NextResponse.redirect(new URL("/profiles?error=access_denied"));
     }
 
     // Get the redirect URI for this platform

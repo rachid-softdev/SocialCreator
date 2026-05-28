@@ -2,6 +2,7 @@
  * Facebook publisher via Meta Graph API
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 export async function publishToFacebook(
@@ -26,11 +27,15 @@ export async function publishToFacebook(
       body.link = content.mediaUrls[0];
     }
 
-    const response = await fetch(`https://graph.facebook.com/v18.0/${account.accountId}/feed`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const response = await fetchWithTimeout(
+      `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
+      {
+        method: "POST",
+        timeout: 15000,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 

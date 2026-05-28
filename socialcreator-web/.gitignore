@@ -11,8 +11,9 @@ out/
 dist/
 build/
 
-# Environment variables
-.env*.local
+# Environment variables — keep ALL .env* out of git (except .env.example)
+.env*
+!.env.example
 
 # IDE
 .idea/

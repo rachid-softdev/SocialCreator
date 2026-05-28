@@ -36,10 +36,16 @@ export async function authenticateMcpRequest(): Promise<McpAuthResult | null> {
     select: {
       id: true,
       userId: true,
+      expiresAt: true,
     },
   });
 
   if (!apiKey) {
+    return null;
+  }
+
+  // Check if key has expired
+  if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
     return null;
   }
 

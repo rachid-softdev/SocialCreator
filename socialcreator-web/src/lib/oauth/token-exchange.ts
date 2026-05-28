@@ -2,6 +2,8 @@
  * OAuth token exchange - exchanges authorization codes for access tokens
  */
 
+import { parseState } from "./auth-url";
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { getProviderCredentials, type OAuthProvider } from "./providers";
 
 export interface TokenResponse {
@@ -45,8 +47,9 @@ export async function exchangeCodeForToken(
     formData.append("code_verifier", codeVerifier);
   }
 
-  const response = await fetch(getTokenUrl(platform), {
+  const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
+    timeout: 10000, // OAuth token exchange: 10s timeout
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
@@ -84,8 +87,9 @@ export async function refreshAccessToken(
   formData.append("refresh_token", refreshToken);
   formData.append("grant_type", "refresh_token");
 
-  const response = await fetch(getTokenUrl(platform), {
+  const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
+    timeout: 10000, // Token refresh: 10s timeout
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
@@ -139,12 +143,13 @@ function normalizeTokenResponse(platform: OAuthProvider, data: any): TokenRespon
 
 /**
  * Extract code_verifier from the OAuth state parameter
+ * Uses parseState which handles AES-256-GCM decryption.
  */
 function extractCodeVerifierFromState(state?: string): string | null {
   if (!state) return null;
   try {
-    const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
-    return decoded.codeVerifier || null;
+    const decoded = parseState(state);
+    return decoded?.codeVerifier || null;
   } catch {
     return null;
   }

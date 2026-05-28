@@ -21,6 +21,11 @@ export async function GET(request: Request) {
 
     const pids = profileIds.map((p) => p.id);
 
+    // Validate profileId ownership if provided
+    if (profileId && !pids.includes(profileId)) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
     const videos = await prisma.videoAsset.findMany({
       where: {
         profileId: profileId ? profileId : { in: pids },

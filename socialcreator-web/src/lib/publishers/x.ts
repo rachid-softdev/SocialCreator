@@ -5,6 +5,7 @@
  * Media upload requires Twitter API v1.1 media/upload endpoint with multipart/form-data.
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 export async function publishToX(
@@ -31,8 +32,9 @@ export async function publishToX(
       text: content.textContent.slice(0, 280),
     };
 
-    const response = await fetch("https://api.twitter.com/2/tweets", {
+    const response = await fetchWithTimeout("https://api.twitter.com/2/tweets", {
       method: "POST",
+      timeout: 15000, // X API: 15s timeout
       headers: {
         Authorization: `Bearer ${account.accessToken}`,
         "Content-Type": "application/json",

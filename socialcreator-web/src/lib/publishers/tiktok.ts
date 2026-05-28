@@ -3,6 +3,7 @@
  * Supports video uploads, text-only posts, and retry logic
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
@@ -100,8 +101,9 @@ export async function publishToTikTok(
           ...options,
         };
 
-        const response = await fetch(`${TIKTOK_API_BASE}/post/publish/video/init/`, {
+        const response = await fetchWithTimeout(`${TIKTOK_API_BASE}/post/publish/video/init/`, {
           method: "POST",
+          timeout: 15000,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${account.accessToken}`,
@@ -136,7 +138,9 @@ export async function publishToTikTok(
           console.log("TikTok: Starting video upload to", data.upload_url);
 
           // Fetch the video from our storage
-          const videoResponse = await fetch(content.mediaUrls[0]);
+          const videoResponse = await fetchWithTimeout(content.mediaUrls[0], {
+            timeout: 30000, // Video download: 30s timeout
+          });
 
           if (!videoResponse.ok) {
             throw new Error(`Failed to fetch video: ${videoResponse.status}`);
@@ -145,8 +149,9 @@ export async function publishToTikTok(
           const videoBlob = await videoResponse.blob();
 
           // Upload to TikTok's upload URL with proper headers
-          const uploadResponse = await fetch(data.upload_url, {
+          const uploadResponse = await fetchWithTimeout(data.upload_url, {
             method: "PUT",
+            timeout: 60000, // TikTok upload: 60s timeout
             body: videoBlob,
             headers: {
               "Content-Type": "video/mp4",
@@ -220,11 +225,15 @@ export async function getTikTokPostStatus(
   error?: string;
 } | null> {
   try {
-    const response = await fetch(`${TIKTOK_API_BASE}/post/publish/status/get/?post_id=${postId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    const response = await fetchWithTimeout(
+      `${TIKTOK_API_BASE}/post/publish/status/get/?post_id=${postId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 10000,
       },
-    });
+    );
 
     if (!response.ok) return null;
 
@@ -248,10 +257,11 @@ export async function getTikTokProfile(accessToken: string): Promise<{
   avatar_url?: string;
 } | null> {
   try {
-    const response = await fetch(`${TIKTOK_API_BASE}/user/info/`, {
+    const response = await fetchWithTimeout(`${TIKTOK_API_BASE}/user/info/`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      timeout: 10000,
     });
 
     if (!response.ok) return null;

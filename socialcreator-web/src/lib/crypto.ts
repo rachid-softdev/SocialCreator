@@ -3,9 +3,7 @@
  * AES-256 encryption for sensitive data (OAuth tokens, API keys)
  */
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
-import AES from "crypto-js/aes";
-import Utf8 from "crypto-js/enc-utf8";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt } from "node:crypto";
 
 const SECRET = process.env.ENCRYPTION_KEY;
 if (!SECRET) {
@@ -44,10 +42,7 @@ export function encryptToken(token: string): string {
 
 /**
  * Decrypt an encrypted token
- * Supports both legacy (crypto-js AES, single base64 string) and new
- * (node:crypto AES-256-GCM, iv:tag:ciphertext) formats.
- * All NEW encryptions use AES-256-GCM via node:crypto.
- * Old crypto-js format falls back on decrypt only — migration strategy.
+ * Uses AES-256-GCM with format: base64(iv):base64(tag):base64(ciphertext)
  */
 export function decryptToken(encrypted: string): string {
   if (!encrypted || typeof encrypted !== "string") {
@@ -56,35 +51,21 @@ export function decryptToken(encrypted: string): string {
 
   const parts = encrypted.split(":");
 
-  // New format (node:crypto AES-256-GCM): iv:tag:ciphertext
-  if (parts.length === 3) {
-    const [ivB64, tagB64, dataB64] = parts;
-    const iv = Buffer.from(ivB64, "base64");
-    const tag = Buffer.from(tagB64, "base64");
-    const data = Buffer.from(dataB64, "base64");
-    const decipher = createDecipheriv(ALGORITHM, deriveKey(), iv);
-    decipher.setAuthTag(tag);
-    const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
-    return decrypted.toString("utf8");
+  if (parts.length !== 3) {
+    throw new Error("Invalid encrypted format — expected iv:tag:ciphertext (AES-256-GCM)");
   }
 
-  // Legacy format (crypto-js AES): single base64 string with embedded salt/IV
-  // Used for all tokens encrypted before migration to node:crypto
-  console.warn(
-    "Legacy crypto-js token detected. Please reconnect your account to upgrade encryption.",
-  );
-  try {
-    const legacyKey = createHash("sha256").update(SECRET).digest("hex");
-    const bytes = AES.decrypt(encrypted, legacyKey);
-    const decrypted = bytes.toString(Utf8);
-    if (!decrypted) {
-      throw new Error("Failed to decrypt with legacy crypto-js format");
-    }
-    return decrypted;
-  } catch (_err) {
-    throw new Error("Decryption failed - token may be corrupted or encryption key has changed");
-  }
+  const [ivB64, tagB64, dataB64] = parts;
+  const iv = Buffer.from(ivB64, "base64");
+  const tag = Buffer.from(tagB64, "base64");
+  const data = Buffer.from(dataB64, "base64");
+  const decipher = createDecipheriv(ALGORITHM, deriveKey(), iv);
+  decipher.setAuthTag(tag);
+  const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
+  return decrypted.toString("utf8");
 }
+
+
 
 /**
  * Encrypt an object (serializes to JSON first)
@@ -113,27 +94,17 @@ export function decryptObject<T>(encrypted: string): T {
 }
 
 /**
- * Generate a secure random string
+ * Generate a secure random string using crypto.randomInt for unbiased selection
  * @param length - Length of the random string
  * @returns Random string
  */
 export function generateSecureToken(length: number = 32): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
-  const bytes = new Uint8Array(length);
-
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
-  } else {
-    // Fallback for Node.js
-    const buf = randomBytes(length);
-    for (let i = 0; i < length; i++) {
-      bytes[i] = buf[i];
-    }
-  }
 
   for (let i = 0; i < length; i++) {
-    result += chars[bytes[i] % chars.length];
+    // randomInt is unbiased (uses rejection sampling internally)
+    result += chars[randomInt(chars.length)];
   }
 
   return result;

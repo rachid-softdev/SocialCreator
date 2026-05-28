@@ -21,12 +21,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Local env files — keep ALL .env* out of git (except .env.example)
+.env*
+!.env.example
 
 # Vercel
 .vercel

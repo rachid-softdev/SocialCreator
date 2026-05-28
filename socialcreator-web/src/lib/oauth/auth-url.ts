@@ -1,8 +1,13 @@
 /**
  * OAuth URL builder - generates authorization URLs with proper state handling
+ *
+ * SECURITY: The state parameter is AES-256-GCM encrypted (not just base64-encoded)
+ * to prevent tampering. An attacker who modifies the state will cause decryption
+ * to fail, preventing profile hijacking via the OAuth callback.
  */
 
 import { createHash, randomBytes } from "node:crypto";
+import { encryptToken, decryptToken } from "@/lib/crypto";
 import { getRedirectUri, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
 interface AuthState {
@@ -14,7 +19,8 @@ interface AuthState {
 
 /**
  * Generate a state parameter for CSRF protection
- * The state is a base64-encoded JSON object containing platform, profileId, and timestamp
+ * The state is an AES-256-GCM encrypted JSON object containing platform, profileId, and timestamp.
+ * Encryption prevents tampering: any modification will cause decryption to fail.
  */
 export function generateState(platform: string, profileId: string, codeVerifier?: string): string {
   const state: AuthState = {
@@ -23,7 +29,7 @@ export function generateState(platform: string, profileId: string, codeVerifier?
     timestamp: Date.now(),
     ...(codeVerifier ? { codeVerifier } : {}),
   };
-  return Buffer.from(JSON.stringify(state)).toString("base64url");
+  return encryptToken(JSON.stringify(state));
 }
 
 /**
@@ -47,11 +53,13 @@ export function generatePKCEChallenge(verifier: string): string {
 
 /**
  * Parse and validate a state parameter
- * Returns null if the state is invalid or expired (older than 10 minutes)
+ * Returns null if the state is invalid, tampered with, or expired (older than 10 minutes).
+ * Uses AES-256-GCM decryption which will fail on any tampering.
  */
 export function parseState(state: string): AuthState | null {
   try {
-    const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
+    const decrypted = decryptToken(state);
+    const decoded = JSON.parse(decrypted);
     const isExpired = Date.now() - decoded.timestamp > 10 * 60 * 1000; // 10 minutes
 
     if (isExpired) {

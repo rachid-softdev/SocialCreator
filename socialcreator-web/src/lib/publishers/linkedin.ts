@@ -6,6 +6,7 @@
  * Actual migration depends on architect decision — this comment documents the issue.
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 export async function publishToLinkedIn(
@@ -31,8 +32,9 @@ export async function publishToLinkedIn(
       visibility: { "com.linkedin.ugcShares.VisibilityMemberNetwork": "" },
     };
 
-    const response = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+    const response = await fetchWithTimeout("https://api.linkedin.com/v2/ugcPosts", {
       method: "POST",
+      timeout: 15000,
       headers: {
         Authorization: `Bearer ${account.accessToken}`,
         "Content-Type": "application/json",

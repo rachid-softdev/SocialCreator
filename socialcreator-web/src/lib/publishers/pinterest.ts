@@ -3,6 +3,7 @@
  * Supports creating pins, boards, and publishing
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
@@ -27,10 +28,11 @@ interface PinterestPinOptions {
  */
 export async function getPinterestBoards(accessToken: string): Promise<PinterestBoard[]> {
   try {
-    const response = await fetch(`${PINTEREST_API_BASE}/boards`, {
+    const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/boards`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      timeout: 10000,
     });
 
     if (!response.ok) {
@@ -90,8 +92,9 @@ export async function publishToPinterest(
         },
       };
 
-      const response = await fetch(`${PINTEREST_API_BASE}/pins`, {
+      const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/pins`, {
         method: "POST",
+        timeout: 15000,
         headers: {
           Authorization: `Bearer ${account.accessToken}`,
           "Content-Type": "application/json",
@@ -169,8 +172,9 @@ export async function createPinterestBoard(
   accessToken: string,
 ): Promise<{ success: boolean; boardId?: string; error?: string }> {
   try {
-    const response = await fetch(`${PINTEREST_API_BASE}/boards`, {
+    const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/boards`, {
       method: "POST",
+      timeout: 10000,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -212,10 +216,11 @@ export async function getPinterestProfile(accessToken: string): Promise<{
   boards_count: number;
 } | null> {
   try {
-    const response = await fetch(`${PINTEREST_API_BASE}/user_account`, {
+    const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/user_account`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      timeout: 10000,
     });
 
     if (!response.ok) return null;

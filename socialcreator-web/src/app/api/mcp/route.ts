@@ -56,8 +56,16 @@ const _GetRunStatusSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  // First, try Redis rate limiting (with fallback to in-memory if Redis not configured)
-  const identifier = getIdentifier(request);
+  // 1. AUTHENTICATE FIRST — before rate limiting or any processing
+  //    This prevents unauthenticated requests from consuming rate-limit capacity
+  //    and ensures rate-limit identifier uses the authenticated userId
+  const auth = await authenticateMcpRequest();
+  if (!auth) {
+    return createJsonRpcErrorResponse(null, ERROR_AUTH_ERROR, "Invalid or missing API key");
+  }
+
+  // 2. Rate limit AFTER auth — uses userId for more accurate rate limiting
+  const identifier = getIdentifier(request, auth.userId);
   const rateLimitResult = await checkRateLimit(request, identifier);
 
   if (!rateLimitResult.success) {
@@ -70,29 +78,8 @@ export async function POST(request: NextRequest) {
           message: `Rate limit exceeded. Try again in ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds.`,
         },
       },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimitResult.limit.toString(),
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": rateLimitResult.reset.toString(),
-        },
-      },
+      { status: 429 },
     );
-  }
-
-  // Authenticate request
-  const auth = await authenticateMcpRequest();
-  if (!auth) {
-    const response = createJsonRpcErrorResponse(
-      null,
-      ERROR_AUTH_ERROR,
-      "Invalid or missing API key",
-    );
-    response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString());
-    response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString());
-    response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString());
-    return response;
   }
 
   try {

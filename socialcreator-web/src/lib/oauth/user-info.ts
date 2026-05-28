@@ -2,6 +2,7 @@
  * OAuth user info - retrieves user profile information from each platform
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { OAuthProvider } from "./providers";
 
 export interface UserInfo {
@@ -18,7 +19,10 @@ export async function getUserInfo(platform: OAuthProvider, accessToken: string):
   const userInfoUrl = getUserInfoUrl(platform);
   const headers = getUserInfoHeaders(platform, accessToken);
 
-  const response = await fetch(userInfoUrl, { headers });
+  const response = await fetchWithTimeout(userInfoUrl, {
+    headers,
+    timeout: 8000, // User info: 8s timeout
+  });
 
   if (!response.ok) {
     const error = await response.text();
@@ -143,12 +147,13 @@ function normalizeUserInfo(platform: OAuthProvider, data: any): UserInfo {
 export async function getInstagramAccountId(accessToken: string): Promise<string | null> {
   try {
     // First get the user's Facebook pages
-    const pagesResponse = await fetch(
+    const pagesResponse = await fetchWithTimeout(
       "https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        timeout: 8000,
       },
     );
 

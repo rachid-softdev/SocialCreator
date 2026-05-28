@@ -16,28 +16,28 @@ enum Role {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  name             String?
-  email            String    @unique
-  emailVerified    DateTime?
-  image            String?
-  password         String?   // For credentials auth (optional, OAuth users don't have password)
-  stripeCustomerId String?
-  stripeSubscriptionId String?
+  id                       String       @id @default(cuid())
+  name                     String?
+  email                    String       @unique
+  emailVerified            DateTime?
+  image                    String?
+  password                 String? // For credentials auth (optional, OAuth users don't have password)
+  stripeCustomerId         String?
+  stripeSubscriptionId     String?
   stripeSubscriptionStatus String?
-  cguAccepted      Boolean   @default(false)
-  cguAcceptedAt    DateTime?
-  ownedTeams       Team[]    @relation("TeamOwner")
-  teamMemberships  TeamMember[]
-  accounts         Account[]
-  sessions         Session[]
-  profiles         Profile[]
-  apiKeys          ApiKey[]
-  publishLogs      PublishLog[]
-  userRoles        UserRole[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  role             Role      @default(USER)
+  cguAccepted              Boolean      @default(false)
+  cguAcceptedAt            DateTime?
+  ownedTeams               Team[]       @relation("TeamOwner")
+  teamMemberships          TeamMember[]
+  accounts                 Account[]
+  sessions                 Session[]
+  profiles                 Profile[]
+  apiKeys                  ApiKey[]
+  publishLogs              PublishLog[]
+  userRoles                UserRole[]
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  role                     Role         @default(USER)
 }
 
 model UserRole {
@@ -64,6 +64,7 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
+
   @@unique([provider, providerAccountId])
 }
 
@@ -79,6 +80,7 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
@@ -87,14 +89,15 @@ model VerificationToken {
 // ── Team Collaboration ─────────────────────────────────────
 
 model Team {
-  id          String       @id @default(cuid())
-  name        String
-  ownerId     String
-  owner       User         @relation("TeamOwner", fields: [ownerId], references: [id])
-  members     TeamMember[]
-  profiles    Profile[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  ownerId      String
+  owner        User          @relation("TeamOwner", fields: [ownerId], references: [id])
+  members      TeamMember[]
+  profiles     Profile[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  organization Organization?
 
   @@index([ownerId])
 }
@@ -107,14 +110,15 @@ enum TeamRole {
 }
 
 model TeamMember {
-  id          String    @id @default(cuid())
-  teamId      String
-  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        TeamRole  @default(VIEWER)
-  invitedAt   DateTime  @default(now())
-  joinedAt    DateTime?
+  id        String    @id @default(cuid())
+  teamId    String
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      TeamRole  @default(VIEWER)
+  invitedAt DateTime  @default(now())
+  joinedAt  DateTime?
+
   @@unique([teamId, userId])
   @@index([userId])
 }
@@ -122,18 +126,18 @@ model TeamMember {
 // ── Media Library ─────────────────────────────────────────
 
 model MediaAsset {
-  id          String    @id @default(cuid())
-  profileId   String
-  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  type        MediaType
-  url         String    @db.Text
-  filename    String?
-  mimeType    String?
-  size        Int?
-  width       Int?
-  height      Int?
-  duration    Float?    // For video/audio
-  uploadedAt  DateTime  @default(now())
+  id         String    @id @default(cuid())
+  profileId  String
+  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type       MediaType
+  url        String    @db.Text
+  filename   String?
+  mimeType   String?
+  size       Int?
+  width      Int?
+  height     Int?
+  duration   Float? // For video/audio
+  uploadedAt DateTime  @default(now())
 
   @@index([profileId])
 }
@@ -146,48 +150,49 @@ enum MediaType {
 }
 
 model Profile {
-  id               String             @id @default(cuid())
-  userId           String
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teamId           String?
-  team             Team?              @relation(fields: [teamId], references: [id])
-  name             String
-  brandVoice       String             @db.Text
-  contentBank     String?            @db.Text
-  platforms       Platform[]
-  avatarUrl        String?
-  isActive        Boolean            @default(true)
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId            String?
+  team              Team?              @relation(fields: [teamId], references: [id])
+  name              String
+  brandVoice        String             @db.Text
+  contentBank       String?            @db.Text
+  platforms         Platform[]
+  avatarUrl         String?
+  isActive          Boolean            @default(true)
   connectedAccounts ConnectedAccount[]
-  agents           Agent[]
-  analytics        Analytics[]
+  agents            Agent[]
+  analytics         Analytics[]
   generatedContents GeneratedContent[]
-  mediaAssets      MediaAsset[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  mediaAssets       MediaAsset[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  videoAssets       VideoAsset[]
 
   @@index([teamId])
 }
 
 model ConnectedAccount {
-  id           String    @id @default(cuid())
-  profileId    String
-  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  platform    Platform
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  platform  Platform
 
   /// Access token stocké chiffré via AES-256 (cf. src/lib/crypto.ts)
   /// L'encrypt/decrypt est géré côté application via getValidAccessToken()
-  accessToken  String    @db.Text
+  accessToken String @db.Text
 
   /// Refresh token stocké chiffré via AES-256
   /// Utilisé pour automatiquement renouveler l'access token avant expiration
-  refreshToken String?   @db.Text
+  refreshToken String? @db.Text
 
   /// Date d'expiration de l'access token
   /// Si expiré, le système tente automatiquement un refresh via refreshToken
-  expiresAt   DateTime?
+  expiresAt DateTime?
 
   /// ID du compte sur la plateforme (ex: Instagram Business Account ID)
-  accountId   String
+  accountId String
 
   /// Nom du compte (ex: @username)
   accountName String
@@ -197,10 +202,10 @@ model ConnectedAccount {
 
   /// Indique si le compte est actif pour la publication
   /// Un compte peut être désactivé sans être supprimé (pour révocation de permissions)
-  isActive   Boolean   @default(true)
+  isActive Boolean @default(true)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([profileId, platform])
 }
@@ -217,20 +222,20 @@ enum Platform {
 }
 
 model Agent {
-  id           String      @id @default(cuid())
+  id           String     @id @default(cuid())
   profileId    String
-  profile     Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  name        String
-  type        AgentType
-  platforms   Platform[]
+  profile      Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name         String
+  type         AgentType
+  platforms    Platform[]
   scheduleCron String?
-  isActive    Boolean           @default(false)
-  autoPublish Boolean           @default(false)
-  maxPerDay   Int               @default(2)
-  config      Json              @default("{}")
-  runs        AgentRun[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  isActive     Boolean    @default(false)
+  autoPublish  Boolean    @default(false)
+  maxPerDay    Int        @default(2)
+  config       Json       @default("{}")
+  runs         AgentRun[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([profileId])
 }
@@ -242,16 +247,16 @@ enum AgentType {
 }
 
 model AgentRun {
-  id               String             @id @default(cuid())
-  agentId          String
-  agent            Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  brief            String             @db.Text
-  status           RunStatus          @default(PENDING)
-  startedAt        DateTime?
-  finishedAt      DateTime?
-  error           String?
+  id                String             @id @default(cuid())
+  agentId           String
+  agent             Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  brief             String             @db.Text
+  status            RunStatus          @default(PENDING)
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  error             String?
   generatedContents GeneratedContent[]
-  createdAt       DateTime           @default(now())
+  createdAt         DateTime           @default(now())
 
   @@index([agentId])
 }
@@ -269,17 +274,17 @@ model GeneratedContent {
   runId              String?
   run                AgentRun?     @relation(fields: [runId], references: [id])
   profileId          String
-  profile            Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile            Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform           Platform
   textContent        String        @db.Text
   mediaUrls          String[]
   hashtags           String[]
-  status             ContentStatus  @default(DRAFT)
+  status             ContentStatus @default(DRAFT)
   postId             String?
   publishedAt        DateTime?
   rejectedAt         DateTime?
-  scheduledPublishAt DateTime?     // Publication planifiée
-  scheduledTimezone  String?        @default("UTC")
+  scheduledPublishAt DateTime? // Publication planifiée
+  scheduledTimezone  String?       @default("UTC")
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
@@ -293,28 +298,28 @@ enum ContentStatus {
   PUBLISHED
   FAILED
   REJECTED
-  SCHEDULED  // En attente de publication planifiée
+  SCHEDULED // En attente de publication planifiée
 }
 
 /// Journal d'audit immuable pour chaque publication
 /// Aucune mise à jour possible - uniquement des lectures et insertions
 /// Utilisé pour vérifier les caps quotidiens et pour l'audit de conformité
 model PublishLog {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  profileId   String
-  platform   Platform
-  contentId  String
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  profileId String
+  platform  Platform
+  contentId String
 
   /// Hash SHA-256 du contenu publié - permet détection de doublons
   contentHash String
 
   /// Indique si la publication a réussi
-  success    Boolean
+  success Boolean
 
   /// Message d'erreur si échec (null si succès)
-  error      String?
+  error String?
 
   publishedAt DateTime @default(now())
 
@@ -323,57 +328,60 @@ model PublishLog {
 }
 
 model ApiKey {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// Nom arbitraire pour identifier la clé (ex: "Production API Key")
-  name      String
+  name String
 
   /// Hash SHA-256 de la clé API - JAMAIS stocké en clair
   /// Pour valider: hash(input) === keyHash
-  keyHash   String    @unique
+  keyHash String @unique
 
   /// Préfixe pour identifier le type de clé (ex: "sc_live_" ou "sc_test_")
   /// Permet d'afficher un préfixe à l'utilisateur sans révéler la clé complète
-  prefix    String
+  prefix String
 
   /// Dernière utilisation de la clé
-  lastUsed  DateTime?
+  lastUsed DateTime?
 
   /// Date de révocation (si non null, la clé ne fonctionne plus)
   revokedAt DateTime?
 
-  createdAt DateTime  @default(now())
+  /// Date d'expiration automatique (si non null, la clé expire à cette date)
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
 }
 
 model Analytics {
-  id         String   @id @default(cuid())
-  profileId  String
-  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  date       DateTime @default(now()) @db.Date
-  platform  Platform
-  impressions Int   @default(0)
-  engagements Int   @default(0)
-  clicks     Int    @default(0)
-  followers  Int     @default(0)
+  id          String   @id @default(cuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now()) @db.Date
+  platform    Platform
+  impressions Int      @default(0)
+  engagements Int      @default(0)
+  clicks      Int      @default(0)
+  followers   Int      @default(0)
 
   @@unique([profileId, date, platform])
   @@index([profileId, date])
 }
 
 model VideoAsset {
-  id           String    @id @default(cuid())
-  profileId    String
-  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  uploadUrl    String    @db.Text
-  muxAssetId   String?   @unique
+  id            String   @id @default(cuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  uploadUrl     String   @db.Text
+  muxAssetId    String?  @unique
   muxPlaybackId String?
-  transcript  String?   @db.Text
-  segments    Json?
-  status      String    @default("UPLOADING")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  transcript    String?  @db.Text
+  segments      Json?
+  status        String   @default("UPLOADING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([profileId])
 }
@@ -383,28 +391,28 @@ model VideoAsset {
 // ============================================
 
 model Plan {
-  id            String        @id @default(cuid())
-  key           String        @unique // "free", "starter", "pro", "team"
-  name          String
-  priceMonthly  Int           @default(0) // cents
-  isActive      Boolean       @default(true)
-  sortOrder     Int           @default(0)
-  planFeatures  PlanFeature[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  key          String        @unique // "free", "starter", "pro", "team"
+  name         String
+  priceMonthly Int           @default(0) // cents
+  isActive     Boolean       @default(true)
+  sortOrder    Int           @default(0)
+  planFeatures PlanFeature[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Feature {
-  id              String         @id @default(cuid())
-  key             String         @unique // "EXPORT_PDF", "AI_SUMMARY", etc.
-  name            String
-  description     String?
-  type            FeatureType    @default(BOOLEAN) // "boolean", "limit", "experiment"
-  defaultConfig   Json           @default("{}") // default values for experiment type
-  isActive        Boolean        @default(true)
-  planFeatures    PlanFeature[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id            String        @id @default(cuid())
+  key           String        @unique // "EXPORT_PDF", "AI_SUMMARY", etc.
+  name          String
+  description   String?
+  type          FeatureType   @default(BOOLEAN) // "boolean", "limit", "experiment"
+  defaultConfig Json          @default("{}") // default values for experiment type
+  isActive      Boolean       @default(true)
+  planFeatures  PlanFeature[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum FeatureType {
@@ -414,46 +422,46 @@ enum FeatureType {
 }
 
 model PlanFeature {
-  id                String           @id @default(cuid())
-  planId            String
-  plan              Plan             @relation(fields: [planId], references: [id], onDelete: Cascade)
-  featureId         String
-  feature           Feature          @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  enabled           Boolean          @default(false)
-  limitValue        Int?             // null = unlimited (Enterprise)
-  configJson        Json             @default("{}") // experiment config, downgrade strategy
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id         String   @id @default(cuid())
+  planId     String
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  featureId  String
+  feature    Feature  @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  enabled    Boolean  @default(false)
+  limitValue Int? // null = unlimited (Enterprise)
+  configJson Json     @default("{}") // experiment config, downgrade strategy
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([planId, featureId])
 }
 
 model Organization {
-  id                  String           @id @default(cuid())
-  name                String
-  stripeCustomerId    String?          @unique
+  id                   String                @id @default(cuid())
+  name                 String
+  stripeCustomerId     String?               @unique
   stripeSubscriptionId String?
-  subscription        Subscription?
-  teamId              String?          @unique
-  team                Team?            @relation(fields: [teamId], references: [id])
+  subscription         Subscription?
+  teamId               String?               @unique
+  team                 Team?                 @relation(fields: [teamId], references: [id])
   entitlementOverrides EntitlementOverride[]
-  usageTrackings      UsageTracking[]
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  usageTrackings       UsageTracking[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 model Subscription {
-  id                  String           @id @default(cuid())
-  orgId               String           @unique
-  organization        Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  planKey             String           // "free", "starter", "pro", "team"
-  status              SubscriptionStatus @default(ACTIVE) // ACTIVE, TRIALING, PAST_DUE, CANCELED, UNPAID
-  stripeSubId         String?
-  currentPeriodStart  DateTime?
-  currentPeriodEnd    DateTime?
-  cancelAtPeriodEnd   Boolean          @default(false)
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  id                 String             @id @default(cuid())
+  orgId              String             @unique
+  organization       Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  planKey            String // "free", "starter", "pro", "team"
+  status             SubscriptionStatus @default(ACTIVE) // ACTIVE, TRIALING, PAST_DUE, CANCELED, UNPAID
+  stripeSubId        String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 enum SubscriptionStatus {
@@ -465,18 +473,18 @@ enum SubscriptionStatus {
 }
 
 model EntitlementOverride {
-  id          String        @id @default(cuid())
-  scope       OverrideScope // "org" or "user"
-  scopeId     String        // orgId or userId
-  featureKey  String
-  enabled     Boolean
-  limitValue  Int?
-  expiresAt   DateTime?
-  reason      String?       // mandatory for admin-created overrides
-  org         Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  scope      OverrideScope // "org" or "user"
+  scopeId    String // orgId or userId
+  featureKey String
+  enabled    Boolean
+  limitValue Int?
+  expiresAt  DateTime?
+  reason     String? // mandatory for admin-created overrides
+  org        Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@index([scope, scopeId])
   @@index([scope, scopeId, featureKey])
@@ -488,15 +496,15 @@ enum OverrideScope {
 }
 
 model UsageTracking {
-  id            String      @id @default(cuid())
-  orgId         String
-  organization  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  featureKey    String
-  usageCount    Int         @default(0)
-  periodStart   DateTime
-  periodEnd     DateTime
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id           String       @id @default(cuid())
+  orgId        String
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  featureKey   String
+  usageCount   Int          @default(0)
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([orgId, featureKey, periodStart])
   @@index([orgId, featureKey])

@@ -38,11 +38,18 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name } = body as { name: string };
+    const { name, expiresInDays } = body as { name: string; expiresInDays?: number };
 
     if (!name || typeof name !== "string" || name.length < 1 || name.length > 100) {
       return NextResponse.json(
         { error: "Name is required and must be between 1-100 characters" },
+        { status: 400 },
+      );
+    }
+
+    if (expiresInDays !== undefined && (typeof expiresInDays !== "number" || expiresInDays < 1 || expiresInDays > 365)) {
+      return NextResponse.json(
+        { error: "expiresInDays must be between 1 and 365" },
         { status: 400 },
       );
     }
@@ -58,11 +65,13 @@ export async function POST(request: Request) {
         name,
         keyHash,
         prefix,
+        expiresAt: expiresInDays ? new Date(Date.now() + expiresInDays * 86400000) : undefined,
       },
       select: {
         id: true,
         name: true,
         prefix: true,
+        expiresAt: true,
       },
     });
 
@@ -71,6 +80,7 @@ export async function POST(request: Request) {
       id: apiKey.id,
       name: apiKey.name,
       prefix: apiKey.prefix,
+      expiresAt: apiKey.expiresAt,
       apiKey: rawKey, // Only visible now
     });
   } catch (error) {

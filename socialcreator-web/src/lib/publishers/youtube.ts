@@ -5,6 +5,7 @@
  * Required scopes: youtube.upload, youtube.force-ssl
  */
 
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { PublishResult } from "./index";
 
 const YOUTUBE_UPLOAD_URL = "https://upload.youtube.com/upload/gateway";
@@ -54,10 +55,11 @@ export async function publishToYouTube(
       const tags = content.hashtags.slice(0, 15);
 
       // Step 1: Initiate resumable upload
-      const initResponse = await fetch(
+      const initResponse = await fetchWithTimeout(
         `${YOUTUBE_UPLOAD_URL}?uploadType=resumable&part=snippet,status`,
         {
           method: "POST",
+          timeout: 15000,
           headers: {
             Authorization: `Bearer ${account.accessToken}`,
             "Content-Type": "application/json",
@@ -95,7 +97,9 @@ export async function publishToYouTube(
       // Step 2: Upload the video file
       // Note: In production, you'd implement chunked upload for large files
       // For this implementation, we'll do a simple upload
-      const videoResponse = await fetch(content.mediaUrls[0]);
+      const videoResponse = await fetchWithTimeout(content.mediaUrls[0], {
+        timeout: 30000, // Video download: 30s timeout (large files)
+      });
       if (!videoResponse.ok) {
         throw new Error(`Failed to fetch video: ${videoResponse.status}`);
       }
@@ -103,8 +107,9 @@ export async function publishToYouTube(
       const videoBlob = await videoResponse.blob();
 
       // Upload to YouTube
-      const uploadResponse = await fetch(uploadUrl, {
+      const uploadResponse = await fetchWithTimeout(uploadUrl, {
         method: "PUT",
+        timeout: 60000, // YouTube upload: 60s timeout (very large files)
         headers: {
           "Content-Length": videoBlob.size.toString(),
           "Content-Type": "video/mp4",
@@ -191,11 +196,15 @@ export async function getYouTubeVideoDetails(
   privacyStatus: string;
 } | null> {
   try {
-    const response = await fetch(`${YOUTUBE_API_BASE}/videos?part=snippet,status&id=${videoId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    const response = await fetchWithTimeout(
+      `${YOUTUBE_API_BASE}/videos?part=snippet,status&id=${videoId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 10000,
       },
-    });
+    );
 
     if (!response.ok) return null;
 

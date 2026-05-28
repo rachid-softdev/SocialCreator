@@ -5,7 +5,16 @@ vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
 }));
 
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { AuthError, requireAdmin } from "../require-admin";
 
 describe("requireAdmin", () => {
@@ -46,6 +55,10 @@ describe("requireAdmin", () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "user-1", email: "user@test.com", role: "USER", roles: ["USER"] },
       });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "USER",
+        email: "user@test.com",
+      });
 
       await expect(requireAdmin()).rejects.toThrow(AuthError);
       await expect(requireAdmin()).rejects.toMatchObject({ status: 403 });
@@ -55,6 +68,10 @@ describe("requireAdmin", () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "user-1", email: "user@test.com", role: "USER", roles: [] },
       });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "USER",
+        email: "user@test.com",
+      });
 
       await expect(requireAdmin()).rejects.toThrow(AuthError);
       await expect(requireAdmin()).rejects.toMatchObject({ status: 403 });
@@ -63,6 +80,10 @@ describe("requireAdmin", () => {
     it("should throw AuthError with status 403 when roles is undefined", async () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "user-1", email: "user@test.com" },
+      });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "USER",
+        email: "user@test.com",
       });
 
       await expect(requireAdmin()).rejects.toThrow(AuthError);
@@ -75,6 +96,10 @@ describe("requireAdmin", () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "admin-1", email: "admin@test.com", role: "ADMIN", roles: ["ADMIN"] },
       });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "ADMIN",
+        email: "admin@test.com",
+      });
 
       const result = await requireAdmin();
       expect(result).toEqual({ id: "admin-1", email: "admin@test.com" });
@@ -84,6 +109,10 @@ describe("requireAdmin", () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "admin-2", email: "admin2@test.com", role: "USER", roles: ["USER", "ADMIN"] },
       });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "ADMIN",
+        email: "admin2@test.com",
+      });
 
       const result = await requireAdmin();
       expect(result).toEqual({ id: "admin-2", email: "admin2@test.com" });
@@ -92,6 +121,10 @@ describe("requireAdmin", () => {
     it("should handle missing email gracefully", async () => {
       (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: "admin-3", role: "ADMIN", roles: ["ADMIN"] },
+      });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        role: "ADMIN",
+        email: null,
       });
 
       const result = await requireAdmin();
