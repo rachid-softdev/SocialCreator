@@ -3,6 +3,8 @@
  * Each platform has its own OAuth credentials and endpoints
  */
 
+export type OAuthAuthMethod = "body" | "basic";
+
 export const OAUTH_PROVIDERS = {
   INSTAGRAM: {
     name: "Instagram",
@@ -13,6 +15,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "instagram_basic instagram_content_publish pages_read_engagement",
     userInfoUrl: "https://graph.facebook.com/me?fields=id,name,picture",
     color: "#E1306C",
+    authMethod: "body" as const,
   },
   TIKTOK: {
     name: "TikTok",
@@ -23,6 +26,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "user.info.basic post.video",
     userInfoUrl: "https://open.tiktokapis.com/v2/user/info/",
     color: "#000000",
+    authMethod: "body" as const,
   },
   LINKEDIN: {
     name: "LinkedIn",
@@ -33,6 +37,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "openid profile email w_member_social",
     userInfoUrl: "https://api.linkedin.com/v2/userinfo",
     color: "#0A66C2",
+    authMethod: "basic" as const,
   },
   X: {
     name: "X",
@@ -43,6 +48,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "tweet.read tweet.write users.read offline.access",
     userInfoUrl: "https://api.twitter.com/2/users/me",
     color: "#000000",
+    authMethod: "basic" as const,
   },
   YOUTUBE: {
     name: "YouTube",
@@ -54,6 +60,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "https://www.googleapis.com/auth/youtube.force-ssl",
     userInfoUrl: "https://www.googleapis.com/youtube/v3/channels",
     color: "#FF0000",
+    authMethod: "body" as const,
   },
   FACEBOOK: {
     name: "Facebook",
@@ -64,6 +71,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "pages_read_engagement publish_to_groups",
     userInfoUrl: "https://graph.facebook.com/me?fields=id,name,picture",
     color: "#1877F2",
+    authMethod: "body" as const,
   },
   PINTEREST: {
     name: "Pinterest",
@@ -74,6 +82,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "boards:read boards:write pins:read pins:write",
     userInfoUrl: "https://api.pinterest.com/v5/user_account",
     color: "#E60023",
+    authMethod: "body" as const,
   },
   THREADS: {
     name: "Threads",
@@ -85,6 +94,7 @@ export const OAUTH_PROVIDERS = {
     scopes: "threads_basic_exposure threads_content_publish",
     userInfoUrl: "https://graph.facebook.com/me",
     color: "#000000",
+    authMethod: "body" as const,
   },
 } as const;
 

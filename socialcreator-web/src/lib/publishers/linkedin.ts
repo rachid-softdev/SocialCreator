@@ -1,9 +1,8 @@
 /**
- * LinkedIn publisher via LinkedIn API v2
+ * LinkedIn publisher via LinkedIn REST API (/rest/posts)
  *
- * NOTE: The current implementation uses the deprecated `/v2/ugcPosts` endpoint.
- * LinkedIn has migrated to the `/rest/posts` API.
- * Actual migration depends on architect decision — this comment documents the issue.
+ * Uses the new `/rest/posts` endpoint as the deprecated `/v2/ugcPosts` endpoint
+ * has been removed.
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
@@ -23,28 +22,33 @@ export async function publishToLinkedIn(
   try {
     const postData = {
       author: `urn:li:person:${account.accountId}`,
-      lifecycleState: "PUBLISHED",
-      specificContent: {
-        "com.linkedin.ugcShares": {
-          raw: `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`,
-        },
+      commentary: `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`,
+      visibility: "PUBLIC",
+      distribution: {
+        feedDistribution: "MAIN_FEED",
+        targetEntities: [],
+        thirdPartyDistributionChannels: [],
       },
-      visibility: { "com.linkedin.ugcShares.VisibilityMemberNetwork": "" },
+      lifecycleState: "PUBLISHED",
+      isReshareDisabledByAuthor: false,
     };
 
-    const response = await fetchWithTimeout("https://api.linkedin.com/v2/ugcPosts", {
+    const response = await fetchWithTimeout("https://api.linkedin.com/rest/posts", {
       method: "POST",
       timeout: 15000,
       headers: {
         Authorization: `Bearer ${account.accessToken}`,
         "Content-Type": "application/json",
+        "LinkedIn-Version": "202402",
         "X-Restli-Protocol-Version": "2.0.0",
       },
       body: JSON.stringify(postData),
     });
+
     const data = await response.json();
-    if (data.error || data.message) {
-      throw new Error(data.message || data.error);
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
 
     return { success: true, postId: data.id };

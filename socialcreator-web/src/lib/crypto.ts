@@ -3,7 +3,14 @@
  * AES-256 encryption for sensitive data (OAuth tokens, API keys)
  */
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  randomInt,
+  timingSafeEqual,
+} from "node:crypto";
 
 const SECRET = process.env.ENCRYPTION_KEY;
 if (!SECRET) {
@@ -65,8 +72,6 @@ export function decryptToken(encrypted: string): string {
   return decrypted.toString("utf8");
 }
 
-
-
 /**
  * Encrypt an object (serializes to JSON first)
  * @param obj - Object to encrypt
@@ -126,7 +131,17 @@ export function hashString(input: string): string {
  * @returns Boolean indicating if they match
  */
 export function verifyHash(input: string, hash: string): boolean {
-  return hashString(input) === hash;
+  const inputHash = hashString(input);
+  const inputBuffer = Buffer.from(inputHash);
+  const hashBuffer = Buffer.from(hash);
+
+  if (inputBuffer.length !== hashBuffer.length) {
+    // Masquer la différence de longueur avec une comparaison factice
+    timingSafeEqual(inputBuffer, inputBuffer);
+    return false;
+  }
+
+  return timingSafeEqual(inputBuffer, hashBuffer);
 }
 
 /**

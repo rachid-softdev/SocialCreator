@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { getApiKeyPrefix, hashApiKey } from "@/app/api/mcp/auth";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -47,7 +48,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (expiresInDays !== undefined && (typeof expiresInDays !== "number" || expiresInDays < 1 || expiresInDays > 365)) {
+    if (
+      expiresInDays !== undefined &&
+      (typeof expiresInDays !== "number" || expiresInDays < 1 || expiresInDays > 365)
+    ) {
       return NextResponse.json(
         { error: "expiresInDays must be between 1 and 365" },
         { status: 400 },
@@ -84,7 +88,7 @@ export async function POST(request: Request) {
       apiKey: rawKey, // Only visible now
     });
   } catch (error) {
-    console.error("API key creation error:", error);
+    logger.error({ err: error }, "API key creation error");
     return NextResponse.json({ error: "Failed to create API key" }, { status: 500 });
   }
 }

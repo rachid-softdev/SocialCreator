@@ -6,6 +6,8 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import logger from "@/lib/logger";
+import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishResult } from "./index";
 
 const YOUTUBE_UPLOAD_URL = "https://upload.youtube.com/upload/gateway";
@@ -97,7 +99,12 @@ export async function publishToYouTube(
       // Step 2: Upload the video file
       // Note: In production, you'd implement chunked upload for large files
       // For this implementation, we'll do a simple upload
-      const videoResponse = await fetchWithTimeout(content.mediaUrls[0], {
+      const mediaUrl = content.mediaUrls[0];
+      const urlValidation = validateMediaUrl(mediaUrl);
+      if (!urlValidation.valid) {
+        throw new Error(`Invalid video URL: ${urlValidation.error}`);
+      }
+      const videoResponse = await fetchWithTimeout(mediaUrl, {
         timeout: 30000, // Video download: 30s timeout (large files)
       });
       if (!videoResponse.ok) {
@@ -132,7 +139,7 @@ export async function publishToYouTube(
         postUrl: `https://youtu.be/${videoData.id}`,
       };
     } catch (error) {
-      console.error(`YouTube upload attempt ${attempt} failed:`, error);
+      logger.error({ err: error, attempt, platform: "youtube" }, "Upload attempt failed");
 
       // Retry on network errors or 5xx status codes
       if (attempt < maxRetries && error instanceof Error) {

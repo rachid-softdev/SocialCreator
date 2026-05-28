@@ -4,6 +4,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import logger from "@/lib/logger";
 import type { PublishResult } from "./index";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
@@ -45,7 +46,7 @@ export async function getPinterestBoards(accessToken: string): Promise<Pinterest
       name: board.name,
     }));
   } catch (error) {
-    console.error("Error fetching Pinterest boards:", error);
+    logger.error({ err: error, platform: "pinterest" }, "Error fetching Pinterest boards");
     return [];
   }
 }
@@ -134,7 +135,7 @@ export async function publishToPinterest(
         postUrl: `https://pin.it/${pinData.id}`,
       };
     } catch (error) {
-      console.error(`Pinterest publish attempt ${attempt} failed:`, error);
+      logger.error({ err: error, attempt, platform: "pinterest" }, "Publish attempt failed");
 
       // Retry on network errors or 5xx status codes
       if (attempt < maxRetries && error instanceof Error) {

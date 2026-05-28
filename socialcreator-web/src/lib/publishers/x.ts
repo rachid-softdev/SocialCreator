@@ -6,6 +6,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import logger from "@/lib/logger";
 import type { PublishResult } from "./index";
 
 export async function publishToX(
@@ -23,7 +24,7 @@ export async function publishToX(
     // Media upload via X API v1.1 requires multipart/form-data.
     // Skipping media upload for now; posting text-only tweet.
     if (content.mediaUrls.length > 0) {
-      console.warn(
+      logger.warn(
         "[X Publisher] Media upload not supported in current implementation. Posting text-only tweet.",
       );
     }

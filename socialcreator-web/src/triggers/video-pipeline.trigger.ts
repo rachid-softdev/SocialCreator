@@ -15,6 +15,13 @@ import { createMuxClip } from "@/lib/mux";
 import { prisma } from "@/lib/prisma";
 import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
+const SegmentSchema = z.object({
+  start: z.number().nonnegative(),
+  end: z.number().nonnegative(),
+  reason: z.string().min(1),
+  hook: z.string().min(1),
+});
+
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
 Identifie 3 à 5 segments de 30-90 secondes qui constituent les moments les plus impactants pour les réseaux sociaux.
 Chaque segment doit avoir un "hook" fort — un moment où l'attention du viewer est captée.
@@ -82,7 +89,11 @@ export async function runVideoPipelineJob(payload: z.infer<typeof PipelinePayloa
       `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`,
     );
 
-    const segments = (result as any).segments as SegmentResult[];
+    const segmentsRaw = SegmentSchema.array().safeParse((result as any).segments);
+    if (!segmentsRaw.success) {
+      throw new Error(`Invalid segment format from LLM: ${segmentsRaw.error.message}`);
+    }
+    const segments = segmentsRaw.data;
 
     await prisma.videoAsset.update({
       where: { id: videoAssetId },

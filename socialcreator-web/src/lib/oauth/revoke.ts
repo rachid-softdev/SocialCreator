@@ -2,6 +2,7 @@
  * OAuth token revocation - revokes access tokens on platforms that support it
  */
 
+import logger from "@/lib/logger";
 import { getProviderCredentials, type OAuthProvider } from "./providers";
 
 /**
@@ -32,7 +33,7 @@ export async function revokeToken(platform: OAuthProvider, accessToken: string):
         return false;
     }
   } catch (error) {
-    console.error(`Failed to revoke token for ${platform}:`, error);
+    logger.error({ err: error, platform }, "Failed to revoke token");
     return false;
   }
 }
@@ -169,7 +170,7 @@ export async function revokeRefreshToken(
     case "LINKEDIN":
       return revokeLinkedInRefreshToken(refreshToken);
     default:
-      console.warn(`[Revoke] Refresh token revocation not implemented for ${platform}`);
+      logger.warn({ platform }, "Refresh token revocation not implemented");
       return false;
   }
 }

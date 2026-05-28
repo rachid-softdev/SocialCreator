@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import AES from "crypto-js/aes";
 import { vi } from "vitest";
-import { decryptToken, encryptToken } from "../crypto";
+import { decryptToken, encryptToken, hashString, verifyHash } from "../crypto";
 
 // NOTE: crypto.ts loads SECRET from process.env.ENCRYPTION_KEY at import time.
 // vitest.setup.ts sets ENCRYPTION_KEY="test-encryption-key" before all tests.
@@ -70,39 +70,40 @@ describe("crypto", () => {
   });
 
   describe("legacy format (crypto-js)", () => {
-    it("should decrypt legacy-format tokens correctly", () => {
+    // decryptToken has been refactored to use AES-256-GCM (node:crypto) only.
+    // Legacy crypto-js format tokens are no longer supported and will throw.
+    it("should throw for legacy-format tokens (no longer supported)", () => {
       const token = "old-token-format";
       const legacyEncrypted = createLegacyEncryptedToken(token);
 
-      const decrypted = decryptToken(legacyEncrypted);
-      expect(decrypted).toBe(token);
+      expect(() => decryptToken(legacyEncrypted)).toThrow("Invalid encrypted format");
     });
 
-    it("should handle special characters in legacy format", () => {
+    it("should throw for special characters in legacy format", () => {
       const token = "token!@#$%^&*()_+-=[]{}|;':\",./<>?";
       const legacyEncrypted = createLegacyEncryptedToken(token);
-      const decrypted = decryptToken(legacyEncrypted);
-      expect(decrypted).toBe(token);
+      expect(() => decryptToken(legacyEncrypted)).toThrow("Invalid encrypted format");
     });
 
-    it("should handle unicode characters in legacy format", () => {
+    it("should throw for unicode characters in legacy format", () => {
       const token = "token_émojis_🎉_日本語";
       const legacyEncrypted = createLegacyEncryptedToken(token);
-      const decrypted = decryptToken(legacyEncrypted);
-      expect(decrypted).toBe(token);
+      expect(() => decryptToken(legacyEncrypted)).toThrow("Invalid encrypted format");
     });
 
-    it("should emit console.warn when decrypting legacy format", () => {
+    it("should not emit console.warn when trying legacy format (detection removed)", () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       const token = "legacy-token-test";
       const legacyEncrypted = createLegacyEncryptedToken(token);
 
-      decryptToken(legacyEncrypted);
+      try {
+        decryptToken(legacyEncrypted);
+      } catch {
+        // expected
+      }
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        "Legacy crypto-js token detected. Please reconnect your account to upgrade encryption.",
-      );
+      expect(warnSpy).not.toHaveBeenCalled();
 
       warnSpy.mockRestore();
     });
@@ -140,6 +141,37 @@ describe("crypto", () => {
         const decrypted = decryptToken(encrypted);
         expect(decrypted).toBe(token);
       });
+    });
+  });
+
+  describe("verifyHash (timing-safe)", () => {
+    it("should return true for matching input and hash", () => {
+      const hash = hashString("correct-password");
+      expect(verifyHash("correct-password", hash)).toBe(true);
+    });
+
+    it("should return false for non-matching input", () => {
+      const hash = hashString("correct-password");
+      expect(verifyHash("wrong-password", hash)).toBe(false);
+    });
+
+    it("should handle empty strings", () => {
+      const hash = hashString("");
+      expect(verifyHash("", hash)).toBe(true);
+      expect(verifyHash("x", hash)).toBe(false);
+    });
+
+    it("should handle different hash lengths gracefully (no crash)", () => {
+      // hashString returns 64 hex chars; a shorter string should not crash
+      expect(() => verifyHash("test", "tooshort")).not.toThrow();
+      expect(verifyHash("test", "tooshort")).toBe(false);
+    });
+
+    it("should be constant-time (not crash on any input)", () => {
+      // This should never throw regardless of input
+      expect(() => verifyHash("anything", "anything")).not.toThrow();
+      expect(() => verifyHash("", "")).not.toThrow();
+      expect(() => verifyHash("a", "b")).not.toThrow();
     });
   });
 });

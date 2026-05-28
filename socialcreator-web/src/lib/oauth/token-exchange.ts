@@ -2,9 +2,9 @@
  * OAuth token exchange - exchanges authorization codes for access tokens
  */
 
-import { parseState } from "./auth-url";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
-import { getProviderCredentials, type OAuthProvider } from "./providers";
+import { parseState } from "./auth-url";
+import { getProviderCredentials, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
 export interface TokenResponse {
   access_token: string;
@@ -12,6 +12,30 @@ export interface TokenResponse {
   expires_in?: number;
   token_type?: string;
   scope?: string;
+}
+
+function buildAuthHeaders(
+  platform: OAuthProvider,
+  clientId: string,
+  clientSecret: string,
+): { headers: Record<string, string> } {
+  const config = OAUTH_PROVIDERS[platform];
+  const commonHeaders: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    Accept: "application/json",
+  };
+
+  if (config.authMethod === "basic") {
+    const encoded = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    return {
+      headers: {
+        ...commonHeaders,
+        Authorization: `Basic ${encoded}`,
+      },
+    };
+  }
+
+  return { headers: commonHeaders };
 }
 
 /**
@@ -30,9 +54,16 @@ export async function exchangeCodeForToken(
     throw new Error(`OAuth credentials not configured for ${platform}`);
   }
 
+  const { headers } = buildAuthHeaders(platform, credentials.clientId, credentials.clientSecret);
+
   const formData = new URLSearchParams();
-  formData.append("client_id", credentials.clientId);
-  formData.append("client_secret", credentials.clientSecret);
+
+  // For body auth, include credentials in the form body
+  if (OAUTH_PROVIDERS[platform].authMethod === "body") {
+    formData.append("client_id", credentials.clientId);
+    formData.append("client_secret", credentials.clientSecret);
+  }
+
   formData.append("code", code);
   formData.append("redirect_uri", redirectUri);
   formData.append("grant_type", "authorization_code");
@@ -50,10 +81,7 @@ export async function exchangeCodeForToken(
   const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
     timeout: 10000, // OAuth token exchange: 10s timeout
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
+    headers,
     body: formData.toString(),
   });
 
@@ -81,19 +109,23 @@ export async function refreshAccessToken(
     throw new Error(`OAuth credentials not configured for ${platform}`);
   }
 
+  const { headers } = buildAuthHeaders(platform, credentials.clientId, credentials.clientSecret);
+
   const formData = new URLSearchParams();
-  formData.append("client_id", credentials.clientId);
-  formData.append("client_secret", credentials.clientSecret);
+
+  // For body auth, include credentials in the form body
+  if (OAUTH_PROVIDERS[platform].authMethod === "body") {
+    formData.append("client_id", credentials.clientId);
+    formData.append("client_secret", credentials.clientSecret);
+  }
+
   formData.append("refresh_token", refreshToken);
   formData.append("grant_type", "refresh_token");
 
   const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
     timeout: 10000, // Token refresh: 10s timeout
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
+    headers,
     body: formData.toString(),
   });
 

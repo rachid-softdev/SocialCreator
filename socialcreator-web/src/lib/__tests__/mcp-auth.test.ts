@@ -110,6 +110,7 @@ describe("MCP Auth", () => {
         select: {
           id: true,
           userId: true,
+          expiresAt: true,
         },
       });
 

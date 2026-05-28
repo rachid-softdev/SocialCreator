@@ -4,6 +4,7 @@
  */
 
 import type Stripe from "stripe";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { cacheService, getEntitlementsCacheKey } from "./cache";
@@ -13,7 +14,7 @@ import type { SubscriptionStatus } from "./types";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 if (!WEBHOOK_SECRET) {
-  console.warn("[Entitlements] STRIPE_WEBHOOK_SECRET not set - webhook handler will not work");
+  logger.warn("[Entitlements] STRIPE_WEBHOOK_SECRET not set - webhook handler will not work");
 }
 
 // ============================================
@@ -49,14 +50,14 @@ export async function handleStripeWebhook(
   try {
     event = stripe.webhooks.constructEvent(payload, signature, WEBHOOK_SECRET!);
   } catch (err) {
-    console.error("[Entitlements] Webhook signature verification failed:", err);
+    logger.error({ err }, "Webhook signature verification failed");
     return { success: false, error: "Invalid signature" };
   }
 
   // Check idempotency - skip if already processed
   const alreadyProcessed = await checkIdempotency(event.id);
   if (alreadyProcessed) {
-    console.log(`[Entitlements] Event ${event.id} already processed, skipping`);
+    logger.info({ eventId: event.id }, "Event already processed, skipping");
     return { success: true, eventType: event.type };
   }
 
@@ -69,7 +70,7 @@ export async function handleStripeWebhook(
 
     return result;
   } catch (error) {
-    console.error("[Entitlements] Webhook processing failed:", error);
+    logger.error({ err: error }, "Webhook processing failed");
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -101,7 +102,7 @@ async function processEvent(event: Stripe.Event): Promise<WebhookHandlerResult> 
       return await handlePaymentFailed(event.data.object as Stripe.Invoice);
 
     default:
-      console.log(`[Entitlements] Unhandled event type: ${event.type}`);
+      logger.info({ eventType: event.type }, "Unhandled event type");
       return { success: true, eventType: event.type };
   }
 }
@@ -128,7 +129,7 @@ async function handleSubscriptionCreated(
     });
 
     if (!user) {
-      console.warn(`[Entitlements] No org found for customer ${customerId}`);
+      logger.warn({ customerId }, "No org found for customer");
       return { success: false, error: "Organization not found" };
     }
 
@@ -170,7 +171,7 @@ async function handleSubscriptionUpdated(
   });
 
   if (!org) {
-    console.warn(`[Entitlements] No org found for customer ${customerId}`);
+    logger.warn({ customerId }, "No org found for customer");
     return { success: false, error: "Organization not found" };
   }
 
@@ -180,7 +181,7 @@ async function handleSubscriptionUpdated(
   await cacheService.invalidate(getEntitlementsCacheKey(org.id));
   await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Subscription ${subId} updated for org ${org.id}`);
+  logger.info({ subId, orgId: org.id }, "Subscription updated");
   return { success: true, orgId: org.id, eventType: "customer.subscription.updated" };
 }
 
@@ -194,7 +195,7 @@ async function handleSubscriptionDeleted(
   });
 
   if (!org) {
-    console.warn(`[Entitlements] No org found for customer ${customerId}`);
+    logger.warn({ customerId }, "No org found for customer");
     return { success: false, error: "Organization not found" };
   }
 
@@ -216,7 +217,7 @@ async function handleSubscriptionDeleted(
   await cacheService.invalidate(getEntitlementsCacheKey(org.id));
   await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Subscription deleted for org ${org.id}`);
+  logger.info({ orgId: org.id }, "Subscription deleted");
   return { success: true, orgId: org.id, eventType: "customer.subscription.deleted" };
 }
 
@@ -245,7 +246,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<WebhookH
     },
   });
 
-  console.log(`[Entitlements] Payment succeeded for org ${org.id}`);
+  logger.info({ orgId: org.id }, "Payment succeeded");
   return { success: true, orgId: org.id, eventType: "invoice.payment_succeeded" };
 }
 
@@ -271,7 +272,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<WebhookHand
   await cacheService.invalidate(getEntitlementsCacheKey(org.id));
   await cacheService.publishInvalidation(org.id);
 
-  console.log(`[Entitlements] Payment failed for org ${org.id}`);
+  logger.info({ orgId: org.id }, "Payment failed for org");
   return { success: true, orgId: org.id, eventType: "invoice.payment_failed" };
 }
 
@@ -390,11 +391,11 @@ async function cleanupOldWebhookEvents(): Promise<void> {
       where: { createdAt: { lt: cutoff } },
     });
     if (result.count > 0) {
-      console.log(`[Entitlements] Cleaned up ${result.count} old webhook event records`);
+      logger.info({ count: result.count }, "Cleaned up old webhook event records");
     }
     lastCleanup = Date.now();
   } catch (error) {
-    console.error("[Entitlements] Failed to clean up old webhook events:", error);
+    logger.error({ err: error }, "Failed to clean up old webhook events");
   }
 }
 

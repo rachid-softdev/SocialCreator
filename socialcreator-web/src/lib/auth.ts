@@ -1,19 +1,22 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+
 // Pre-computed at module level (runs once on first import)
 // Used as a dummy hash for constant-time bcrypt comparison when user is not found,
 // preventing timing-based user enumeration attacks
 const DUMMY_HASH = bcrypt.hashSync("constant-time-fallback", 10);
+
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import logger from "./logger";
 import { prisma } from "./prisma";
 
 // Validate critical auth configuration at module load
 if (!process.env.AUTH_SECRET) {
   throw new Error(
     "AUTH_SECRET environment variable is required. " +
-    "Generate one with: npx auth secret (NextAuth v5) or a random 32-char string.",
+      "Generate one with: npx auth secret (NextAuth v5) or a random 32-char string.",
   );
 }
 
@@ -84,7 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.roles = dbUser.userRoles.map((ur) => ur.role);
           }
         } catch (error) {
-          console.error("[Auth] Failed to fetch user roles on token refresh:", error);
+          logger.error({ err: error }, "Failed to fetch user roles on token refresh");
         }
       }
 
