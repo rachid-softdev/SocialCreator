@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@socialcreator/utils";
-import { Check, Clock, Play, X } from "lucide-react";
+import { Check, Clock, Play } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";

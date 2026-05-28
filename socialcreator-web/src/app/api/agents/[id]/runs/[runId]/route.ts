@@ -7,7 +7,7 @@ interface RouteParams {
 }
 
 // GET /api/agents/[id]/runs/[runId]
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -68,7 +68,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 // POST /api/agents/[id]/runs/[runId]/rerun
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 

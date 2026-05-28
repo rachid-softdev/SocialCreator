@@ -39,7 +39,7 @@ async function getTeamOr404(teamId: string, userId: string) {
 }
 
 // GET /api/teams/[teamId]/members
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -148,7 +148,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
 // DELETE /api/teams/[teamId]/members/[memberId]
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: RouteParams & { params: Promise<{ memberId: string }> },
 ) {
   try {

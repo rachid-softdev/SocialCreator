@@ -2,7 +2,6 @@
 
 import type { Platform, Profile } from "@prisma/client";
 import { PLATFORMS } from "@socialcreator/types/profile";
-import { cn } from "@socialcreator/utils";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

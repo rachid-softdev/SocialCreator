@@ -1,9 +1,9 @@
-import { type AgentType, type Platform, RunStatus } from "@prisma/client";
+import type { AgentType, Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { triggerAgentRun } from "@/lib/agent-runner";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit, getIdentifier, withRateLimit } from "@/lib/rate-limit-redis";
+import { checkRateLimit, getIdentifier } from "@/lib/rate-limit-redis";
 import { authenticateMcpRequest } from "./auth";
 
 // JSON-RPC error codes
@@ -51,7 +51,7 @@ const RunAgentSchema = z.object({
   brief: z.string().min(1),
 });
 
-const GetRunStatusSchema = z.object({
+const _GetRunStatusSchema = z.object({
   run_id: z.string(),
 });
 
@@ -329,7 +329,7 @@ async function handleRunAgent(userId: string, params: unknown) {
   // Trigger async execution
   // In production, this would be queued via Trigger.dev
   // For now, we execute immediately
-  setImmediate(async () => {
+  queueMicrotask(async () => {
     try {
       await triggerAgentRun({ runId: run.id, agentId: agent.id });
     } catch (error) {

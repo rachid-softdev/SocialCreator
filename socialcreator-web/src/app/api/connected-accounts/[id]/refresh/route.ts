@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { type OAuthProvider, refreshAccessToken } from "@/lib/oauth";
 import { prisma } from "@/lib/prisma";
-import { getValidAccessToken, updateAccountToken } from "@/lib/tokens";
+import { updateAccountToken } from "@/lib/tokens";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -18,7 +18,7 @@ interface RouteParams {
  * POST /api/connected-accounts/[id]/refresh
  * Refreshes the access token
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     const { id } = await params;

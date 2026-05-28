@@ -120,8 +120,8 @@ describe("FeatureGateService", () => {
   // ============================================
 
   describe("user override", () => {
-    it("should return true when user override enables feature", async () => {
-      mockRepo.getUserOverride = vi.fn().mockResolvedValue({
+    it("should return true when org override enables feature", async () => {
+      mockRepo.getOrgOverride = vi.fn().mockResolvedValue({
         enabled: true,
         limit: null,
       });
@@ -129,7 +129,7 @@ describe("FeatureGateService", () => {
       const result = await service.hasFeature("org-1", "EXPORT_PDF");
 
       expect(result).toBe(true);
-      expect(mockRepo.getUserOverride).toHaveBeenCalled();
+      expect(mockRepo.getOrgOverride).toHaveBeenCalledWith("org-1", "EXPORT_PDF");
     });
 
     it("should return false when user override disables feature (overrides plan)", async () => {
@@ -393,22 +393,25 @@ describe("FeatureGateService", () => {
   // ============================================
 
   describe("monthly quota reset", () => {
-    it("should create new period when current period is expired", async () => {
+    it("should pass period info to consumeUsage for repository-level handling", async () => {
       const oldPeriodStart = new Date();
       oldPeriodStart.setMonth(oldPeriodStart.getMonth() - 1);
+      const periodEnd = new Date();
 
       mockRepo.getCurrentPeriodUsage = vi.fn().mockResolvedValue({
         used: 10,
         periodStart: oldPeriodStart, // Last month
-        periodEnd: new Date(), // Period has ended
+        periodEnd: periodEnd, // Period has ended
       });
 
-      // First call returns old period, consume should handle new period
+      // Service passes period info through to consumeUsage; repository handles reset
       mockRepo.consumeUsage = vi
         .fn()
-        .mockImplementation((_orgId, _featureKey, _amount, _limit, periodStart, _periodEnd) => {
-          // Verify new period dates are created
-          expect(periodStart.getMonth()).toBe(new Date().getMonth());
+        .mockImplementation((_orgId, _featureKey, _amount, limit, periodStart, _periodEnd) => {
+          // Verify limit is passed correctly (from resolveEntitlement)
+          expect(limit).toBe(10);
+          // Verify the period info is passed as-is from getCurrentPeriodUsage
+          expect(periodStart.getMonth()).toBe(oldPeriodStart.getMonth());
           return Promise.resolve({ success: true, currentCount: 11 });
         });
 

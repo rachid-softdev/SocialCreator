@@ -16,7 +16,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
     }
 
-    const user = await prisma.user.update({
+    const _user = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         cguAccepted: true,

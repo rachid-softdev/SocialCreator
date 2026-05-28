@@ -1,42 +1,29 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withApiMiddleware } from "@/lib/api-middleware";
 import { createCheckoutSession, type PlanKey } from "@/lib/stripe";
 
-export async function POST(request: Request) {
-  const session = await auth();
+export const POST = withApiMiddleware(async ({ userId, request }) => {
+  const body = await request.json();
+  const { plan, additionalProfiles = 0 } = body as {
+    plan: PlanKey;
+    additionalProfiles?: number;
+  };
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!plan || !["starter", "pro", "team"].includes(plan)) {
+    return NextResponse.json(
+      { error: "Invalid plan. Must be: starter, pro, or team" },
+      { status: 400 },
+    );
   }
 
+  // Get the user email from session (stored in auth)
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "User email not found" }, { status: 400 });
   }
 
-  try {
-    const body = await request.json();
-    const { plan, additionalProfiles = 0 } = body as {
-      plan: PlanKey;
-      additionalProfiles?: number;
-    };
+  const { url } = await createCheckoutSession(userId, session.user.email, plan, additionalProfiles);
 
-    if (!plan || !["starter", "pro", "team"].includes(plan)) {
-      return NextResponse.json(
-        { error: "Invalid plan. Must be: starter, pro, or team" },
-        { status: 400 },
-      );
-    }
-
-    const { url } = await createCheckoutSession(
-      session.user.id,
-      session.user.email,
-      plan,
-      additionalProfiles,
-    );
-
-    return NextResponse.json({ url });
-  } catch (error) {
-    console.error("Stripe checkout error:", error);
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
-  }
-}
+  return NextResponse.json({ url });
+});

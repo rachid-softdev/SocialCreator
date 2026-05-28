@@ -1,8 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { AgentDetailClient } from "@/components/agent/agent-detail-client";
-import { AgentRunModal } from "@/components/agent/agent-run-modal";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 

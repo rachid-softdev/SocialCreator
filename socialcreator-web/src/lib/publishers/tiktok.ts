@@ -81,7 +81,7 @@ export async function publishToTikTok(
   },
   options: Partial<TikTokVideoUploadOptions> = {},
 ): Promise<PublishResult> {
-  const description = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
+  const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
 
   // Determine post mode based on media availability
   const hasVideo = content.mediaUrls.length > 0;
@@ -273,8 +273,8 @@ export async function getTikTokProfile(accessToken: string): Promise<{
  */
 export function validateTikTokVideo(
   videoUrl: string,
-  maxSizeMB: number = 287.6, // TikTok max is ~287.6MB
-  maxDurationSeconds: number = 600, // TikTok max is 10 minutes
+  _maxSizeMB: number = 287.6, // TikTok max is ~287.6MB
+  _maxDurationSeconds: number = 600, // TikTok max is 10 minutes
 ): { valid: boolean; error?: string } {
   // Note: In production, you'd fetch the video headers to check size
   // For now, we validate based on the URL being provided

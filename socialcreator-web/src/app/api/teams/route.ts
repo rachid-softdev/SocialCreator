@@ -17,12 +17,12 @@ const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
-const updateTeamSchema = z.object({
+const _updateTeamSchema = z.object({
   name: z.string().min(1).max(100).optional(),
 });
 
 // GET /api/teams
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await auth();
 

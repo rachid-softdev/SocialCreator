@@ -108,7 +108,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 // DELETE /api/content/[id]/schedule
 // Cancel scheduled publication
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 

@@ -1,5 +1,9 @@
 /**
  * LinkedIn publisher via LinkedIn API v2
+ *
+ * NOTE: The current implementation uses the deprecated `/v2/ugcPosts` endpoint.
+ * LinkedIn has migrated to the `/rest/posts` API.
+ * Actual migration depends on architect decision — this comment documents the issue.
  */
 
 import type { PublishResult } from "./index";
@@ -21,7 +25,7 @@ export async function publishToLinkedIn(
       lifecycleState: "PUBLISHED",
       specificContent: {
         "com.linkedin.ugcShares": {
-          raw: `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`,
+          raw: `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`,
         },
       },
       visibility: { "com.linkedin.ugcShares.VisibilityMemberNetwork": "" },

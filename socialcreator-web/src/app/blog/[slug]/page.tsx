@@ -1,6 +1,4 @@
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";

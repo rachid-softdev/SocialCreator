@@ -54,7 +54,7 @@ async function getAgentOr404(id: string, userId: string) {
 }
 
 // GET /api/agents/[id]
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -138,7 +138,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 }
 
 // DELETE /api/agents/[id]
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 

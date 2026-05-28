@@ -18,7 +18,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
   const [error, setError] = useState<string | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
-  const [videoAssetId, setVideoAssetId] = useState<string | null>(null);
+  const [_videoAssetId, setVideoAssetId] = useState<string | null>(null);
 
   const handleFileSelect = useCallback(
     async (file: File) => {

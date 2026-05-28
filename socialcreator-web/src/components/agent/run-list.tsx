@@ -1,10 +1,9 @@
 "use client";
 
 import type { AgentRunWithRelations } from "@socialcreator/types/agent";
-import { cn, formatDateTime } from "@socialcreator/utils";
-import { ChevronLeft, ChevronRight, Eye, RefreshCw, Trash2 } from "lucide-react";
+import { formatDateTime } from "@socialcreator/utils";
+import { ChevronLeft, ChevronRight, Eye, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { RunStatusBadge } from "./run-status-badge";
 
 interface RunListProps {

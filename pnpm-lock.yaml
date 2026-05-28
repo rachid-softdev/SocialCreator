@@ -252,8 +252,8 @@ importers:
         specifier: ^2.4.15
         version: 2.4.15
       '@next/bundle-analyzer':
-        specifier: ^16.2.6
-        version: 16.2.6
+        specifier: ^14.2.35
+        version: 14.2.35
       '@playwright/test':
         specifier: ^1.60.0
         version: 1.60.0
@@ -1073,8 +1073,8 @@ packages:
   '@mux/mux-node@8.8.0':
     resolution: {integrity: sha512-7EMuTh62s3Ux+SrcKHoLvXgLDQzeHmbBnOf8xO9hEPLxU9SdV8XX7cqTkWnYlmVdP6ywIoBb4boQX2skI5qk5w==}
 
-  '@next/bundle-analyzer@16.2.6':
-    resolution: {integrity: sha512-amPkVtHCTJAdBwyhhl5+qztHk24O4JlASgrWqh15AmnYi74apfZR46NGC0u4pM6BMAU1mYld4WdzD3cRBP3dOA==}
+  '@next/bundle-analyzer@14.2.35':
+    resolution: {integrity: sha512-br772Uozk44eJq3a0Z+sTyNII+29d7ue1a0s4xd+9MlUQl3HhKo/wLqxZPFngMbwr6YnAWh/uKoVEpEOV35Fzw==}
 
   '@next/env@14.2.35':
     resolution: {integrity: sha512-DuhvCtj4t9Gwrx80dmz2F4t/zKQ4ktN8WrMwOuVzkJfBilwAwGr6v16M5eI8yCuZ63H9TTuEU09Iu2HqkzFPVQ==}
@@ -4975,7 +4975,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@next/bundle-analyzer@16.2.6':
+  '@next/bundle-analyzer@14.2.35':
     dependencies:
       webpack-bundle-analyzer: 4.10.1
     transitivePeerDependencies:

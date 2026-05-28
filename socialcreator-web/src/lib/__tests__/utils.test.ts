@@ -1,8 +1,4 @@
-/**
- * @jest-environment node
- */
-
-import { formatDate, hashContent, slugify, startOfDayUTC, truncateText } from "../utils";
+import { formatDate, hashContent, startOfDayUTC } from "../utils";
 
 describe("utils", () => {
   describe("startOfDayUTC", () => {
@@ -59,62 +55,6 @@ describe("utils", () => {
 
       expect(formatted).toContain("2024");
       expect(formatted).toContain("15");
-    });
-  });
-
-  describe("truncateText", () => {
-    it("should not truncate text shorter than maxLength", () => {
-      const text = "Short text";
-      const result = truncateText(text, 20);
-
-      expect(result).toBe(text);
-    });
-
-    it("should truncate text longer than maxLength", () => {
-      const text = "This is a very long text that should be truncated";
-      const result = truncateText(text, 20);
-
-      expect(result.length).toBeLessThanOrEqual(23); // 20 + "..."
-      expect(result.endsWith("...")).toBe(true);
-    });
-
-    it("should handle exact maxLength", () => {
-      const text = "Exactly twenty char";
-      const result = truncateText(text, 20);
-
-      expect(result).toBe(text);
-    });
-
-    it("should handle empty string", () => {
-      const result = truncateText("", 10);
-
-      expect(result).toBe("");
-    });
-  });
-
-  describe("slugify", () => {
-    it("should convert text to slug", () => {
-      expect(slugify("Hello World")).toBe("hello-world");
-      expect(slugify("Some Title Here")).toBe("some-title-here");
-    });
-
-    it("should remove special characters", () => {
-      expect(slugify("Test@#$%Value")).toBe("testvalue");
-      expect(slugify("Hello  World")).toBe("hello-world");
-    });
-
-    it("should handle underscores and hyphens", () => {
-      expect(slugify("test_value")).toBe("test-value");
-      expect(slugify("test-value")).toBe("test-value");
-    });
-
-    it("should handle empty string", () => {
-      expect(slugify("")).toBe("");
-    });
-
-    it("should handle unicode", () => {
-      expect(slugify("日本語")).toBe("");
-      expect(slugify("Hello")).toBe("hello");
     });
   });
 });

@@ -64,7 +64,7 @@ export default function VideoPipelinePage() {
 
   const [videoAsset, setVideoAsset] = useState<VideoAsset | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isIdentifyingSegments, setIsIdentifyingSegments] = useState(false);
   const [isCreatingClips, setIsCreatingClips] = useState(false);
@@ -91,7 +91,7 @@ export default function VideoPipelinePage() {
     };
 
     setCurrentStep(statusToStep[videoAsset.status] ?? 0);
-  }, [videoAsset?.status]);
+  }, [videoAsset?.status, videoAsset]);
 
   const handleUploadComplete = useCallback(
     (videoAssetId: string, uploadUrl: string) => {

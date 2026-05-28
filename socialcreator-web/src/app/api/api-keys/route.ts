@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { getApiKeyPrefix, hashApiKey } from "@/app/api/mcp/auth";
 import { auth } from "@/lib/auth";
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     // Generate API key
-    const rawKey = "sk_" + crypto.randomBytes(32).toString("hex");
+    const rawKey = `sk_${crypto.randomBytes(32).toString("hex")}`;
     const keyHash = hashApiKey(rawKey);
     const prefix = getApiKeyPrefix(rawKey);
 

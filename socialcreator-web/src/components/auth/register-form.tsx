@@ -77,7 +77,7 @@ export function RegisterForm() {
       } else {
         router.push("/onboarding/cgu");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -90,7 +90,7 @@ export function RegisterForm() {
       await signIn("google", {
         callbackUrl: "/onboarding/cgu",
       });
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to sign in with Google");
       setIsGoogleLoading(false);
     }

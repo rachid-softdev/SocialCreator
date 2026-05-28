@@ -216,10 +216,10 @@ async function fetchYouTubeInsights(
     if (!stats) return null;
 
     return {
-      impressions: parseInt(stats.viewCount) || 0,
-      engagements: (parseInt(stats.likeCount) || 0) + (parseInt(stats.commentCount) || 0),
+      impressions: parseInt(stats.viewCount, 10) || 0,
+      engagements: (parseInt(stats.likeCount, 10) || 0) + (parseInt(stats.commentCount, 10) || 0),
       clicks: 0, // YouTube ne fournit pas de clicks via API
-      followers: parseInt(stats.subscriberCount) || 0,
+      followers: parseInt(stats.subscriberCount, 10) || 0,
     };
   } catch (error) {
     console.error("YouTube insights error:", error);
@@ -266,7 +266,7 @@ async function fetchLinkedInInsights(
  */
 async function fetchPinterestInsights(
   accessToken: string,
-  accountId: string,
+  _accountId: string,
 ): Promise<PlatformInsights | null> {
   try {
     const response = await fetch(`https://api.pinterest.com/v5/user_account`, {

@@ -1,7 +1,7 @@
 "use client";
 
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
-import { cn, formatDateTime } from "@socialcreator/utils";
+import { formatDateTime } from "@socialcreator/utils";
 import { Check, Eye, Send, X } from "lucide-react";
 import Link from "next/link";
 import { ContentStatusBadge } from "./content-status-badge";

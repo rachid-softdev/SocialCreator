@@ -16,14 +16,14 @@ export async function publishToFacebook(
   },
 ): Promise<PublishResult> {
   try {
-    const message = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
+    const message = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
     const body: Record<string, string> = {
       message,
       access_token: account.accessToken,
     };
 
     if (content.mediaUrls.length > 0) {
-      body["link"] = content.mediaUrls[0];
+      body.link = content.mediaUrls[0];
     }
 
     const response = await fetch(`https://graph.facebook.com/v18.0/${account.accountId}/feed`, {

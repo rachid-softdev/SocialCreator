@@ -10,14 +10,9 @@ import { Button } from "@socialcreator/ui/button";
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import {
-  AccountList,
-  getAllPlatforms,
-  getUnconnectedPlatforms,
-} from "@/components/connected-accounts/account-list";
+import { AccountList, getUnconnectedPlatforms } from "@/components/connected-accounts/account-list";
 import { ConnectModal } from "@/components/connected-accounts/connect-modal";
 import { DisconnectModal } from "@/components/connected-accounts/disconnect-modal";
-import { PlatformIcon } from "@/components/connected-accounts/platform-icon";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 

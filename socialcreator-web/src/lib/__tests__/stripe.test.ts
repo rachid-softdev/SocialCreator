@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { getPlanData, PLANS, type PlanKey } from "../stripe";
 
 describe("stripe", () => {
@@ -52,9 +48,9 @@ describe("stripe", () => {
       expect(getPlanData("free")).toBeNull();
     });
 
-    it("should return null for invalid keys", () => {
-      expect(getPlanData("invalid" as PlanKey)).toBeNull();
-      expect(getPlanData("enterprise" as PlanKey)).toBeNull();
+    it("should return undefined for invalid keys", () => {
+      expect(getPlanData("invalid" as PlanKey)).toBeUndefined();
+      expect(getPlanData("enterprise" as PlanKey)).toBeUndefined();
     });
   });
 

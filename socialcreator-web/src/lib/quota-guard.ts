@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 
+/**
+ * @deprecated Use FeatureGateService instead.
+ * Migration tracked for future: Move plan limits to PlanFeature table.
+ * The FeatureGateService already supports feature flags and limits.
+ */
 const PLAN_LIMITS = {
   free: 1,
   starter: 1,
@@ -48,6 +53,6 @@ export function getPlanLimit(plan: PlanTier): number {
   return PLAN_LIMITS[plan];
 }
 
-export function getRemainingQuota(userId: string, currentCount: number, plan: PlanTier): number {
+export function getRemainingQuota(_userId: string, currentCount: number, plan: PlanTier): number {
   return Math.max(0, PLAN_LIMITS[plan] - currentCount);
 }

@@ -11,7 +11,7 @@
 "use client";
 
 import { Button } from "@socialcreator/ui/button";
-import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { Home, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 
 interface ErrorProps {

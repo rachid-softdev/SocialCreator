@@ -110,7 +110,7 @@ export function TranscriptViewer({
       {words.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {words
-            .filter((w, i) => i % 50 === 0)
+            .filter((_w, i) => i % 50 === 0)
             .slice(0, 20)
             .map((w, i) => (
               <button

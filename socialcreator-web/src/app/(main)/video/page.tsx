@@ -84,7 +84,7 @@ export default function AllVideosPage() {
     const fetchVideosAsync = async () => {
       try {
         // Fetch videos from all profiles (in a real app, you'd have a dedicated endpoint)
-        const videosPromises = profiles.map(async (profile) => {
+        const videosPromises = profiles.map(async (_profile) => {
           if (signal.aborted) return [];
           // This would be a dedicated endpoint in production
           return [];

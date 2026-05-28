@@ -70,6 +70,9 @@ export function decryptToken(encrypted: string): string {
 
   // Legacy format (crypto-js AES): single base64 string with embedded salt/IV
   // Used for all tokens encrypted before migration to node:crypto
+  console.warn(
+    "Legacy crypto-js token detected. Please reconnect your account to upgrade encryption.",
+  );
   try {
     const legacyKey = createHash("sha256").update(SECRET).digest("hex");
     const bytes = AES.decrypt(encrypted, legacyKey);

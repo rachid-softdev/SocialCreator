@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { withApiMiddleware } from "@/lib/api-middleware";
 import { prisma } from "@/lib/prisma";
 
 const createAgentSchema = z.object({
@@ -28,126 +28,99 @@ const createAgentSchema = z.object({
 });
 
 // GET /api/agents?profileId=xxx
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
+export const GET = withApiMiddleware(async ({ userId, request }) => {
+  const { searchParams } = new URL(request.url);
+  const profileId = searchParams.get("profileId");
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const whereClause = profileId ? { profileId, profile: { userId } } : { profile: { userId } };
 
-    const { searchParams } = new URL(request.url);
-    const profileId = searchParams.get("profileId");
-
-    const whereClause = profileId
-      ? { profileId, profile: { userId: session.user.id } }
-      : { profile: { userId: session.user.id } };
-
-    const agents = await prisma.agent.findMany({
-      where: whereClause,
-      orderBy: { createdAt: "desc" },
-      include: {
-        profile: {
-          select: { id: true, name: true },
-        },
-        _count: {
-          select: {
-            runs: true,
-          },
-        },
-        runs: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
+  const agents = await prisma.agent.findMany({
+    where: whereClause,
+    orderBy: { createdAt: "desc" },
+    include: {
+      profile: {
+        select: { id: true, name: true },
+      },
+      _count: {
+        select: {
+          runs: true,
         },
       },
-    });
-
-    // Calculate stats for each agent
-    const agentsWithStats = await Promise.all(
-      agents.map(async (agent) => {
-        const totalRuns = await prisma.agentRun.count({
-          where: { agentId: agent.id },
-        });
-        const successRuns = await prisma.agentRun.count({
-          where: { agentId: agent.id, status: "SUCCESS" },
-        });
-
-        return {
-          ...agent,
-          stats: {
-            totalRuns,
-            successRate: totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0,
-          },
-        };
-      }),
-    );
-
-    return NextResponse.json(
-      { agents: agentsWithStats },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
-        },
+      runs: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
       },
-    );
-  } catch (error) {
-    console.error("Error fetching agents:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+    },
+  });
+
+  // Calculate stats for each agent
+  const agentsWithStats = await Promise.all(
+    agents.map(async (agent) => {
+      const totalRuns = await prisma.agentRun.count({
+        where: { agentId: agent.id },
+      });
+      const successRuns = await prisma.agentRun.count({
+        where: { agentId: agent.id, status: "SUCCESS" },
+      });
+
+      return {
+        ...agent,
+        stats: {
+          totalRuns,
+          successRate: totalRuns > 0 ? Math.round((successRuns / totalRuns) * 100) : 0,
+        },
+      };
+    }),
+  );
+
+  return NextResponse.json(
+    { agents: agentsWithStats },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+      },
+    },
+  );
+});
 
 // POST /api/agents
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
+export const POST = withApiMiddleware(async ({ userId, request }) => {
+  const body = await request.json();
+  const validationResult = createAgentSchema.safeParse(body);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const validationResult = createAgentSchema.safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0].message },
-        { status: 400 },
-      );
-    }
-
-    const { profileId, name, type, platforms, scheduleCron, autoPublish, maxPerDay, config } =
-      validationResult.data;
-
-    // Verify profile ownership
-    const profile = await prisma.profile.findFirst({
-      where: { id: profileId, userId: session.user.id },
-    });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    const agent = await prisma.agent.create({
-      data: {
-        profileId,
-        name,
-        type,
-        platforms,
-        scheduleCron,
-        autoPublish: autoPublish ?? false,
-        maxPerDay: maxPerDay ?? 2,
-        config: (config ?? {}) as any,
-      },
-      include: {
-        profile: {
-          select: { id: true, name: true },
-        },
-      },
-    });
-
-    return NextResponse.json({ agent }, { status: 201 });
-  } catch (error) {
-    console.error("Error creating agent:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  if (!validationResult.success) {
+    return NextResponse.json({ error: validationResult.error.errors[0].message }, { status: 400 });
   }
-}
+
+  const { profileId, name, type, platforms, scheduleCron, autoPublish, maxPerDay, config } =
+    validationResult.data;
+
+  // Verify profile ownership
+  const profile = await prisma.profile.findFirst({
+    where: { id: profileId, userId },
+  });
+
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  const agent = await prisma.agent.create({
+    data: {
+      profileId,
+      name,
+      type,
+      platforms,
+      scheduleCron,
+      autoPublish: autoPublish ?? false,
+      maxPerDay: maxPerDay ?? 2,
+      config: (config ?? {}) as any,
+    },
+    include: {
+      profile: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
+  return NextResponse.json({ agent }, { status: 201 });
+});

@@ -68,7 +68,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 }
 
 // DELETE /api/teams/[teamId]/members/[memberId]
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {

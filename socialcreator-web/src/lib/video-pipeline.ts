@@ -128,5 +128,19 @@ export async function runVideoPipeline(
     }
   }
 
+  // Persist generated content to the database (mirrors agent-runner.ts pattern)
+  for (const content of contents) {
+    await prisma.generatedContent.create({
+      data: {
+        profileId,
+        platform: content.platform,
+        textContent: content.textContent,
+        hashtags: content.hashtags,
+        mediaUrls: [],
+        status: "DRAFT",
+      },
+    });
+  }
+
   return { transcript, segments, clips, contents };
 }

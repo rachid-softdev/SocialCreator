@@ -55,7 +55,7 @@ export function CGUConsentForm() {
       }
 
       router.push("/dashboard");
-    } catch (err) {
+    } catch (_err) {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

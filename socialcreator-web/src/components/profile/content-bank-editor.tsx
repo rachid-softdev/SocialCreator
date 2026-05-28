@@ -134,7 +134,7 @@ export function ContentBankEditor({
                 <div className="flex-1">
                   <p className="text-body-sm text-body whitespace-pre-wrap">
                     {example.content.length > 200
-                      ? example.content.slice(0, 200) + "..."
+                      ? `${example.content.slice(0, 200)}...`
                       : example.content}
                   </p>
 

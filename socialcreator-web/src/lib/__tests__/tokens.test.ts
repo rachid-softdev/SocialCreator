@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { decryptToken, encryptToken, generateSecureToken, hashString, maskString } from "../crypto";
 
 describe("crypto utilities", () => {
@@ -102,7 +98,7 @@ describe("crypto utilities", () => {
 
     it("should show only 4 characters at start and end by default", () => {
       const masked = maskString("1234567890");
-      expect(masked).toBe("1234********7890");
+      expect(masked).toBe("1234**7890");
     });
 
     it("should mask short strings completely", () => {

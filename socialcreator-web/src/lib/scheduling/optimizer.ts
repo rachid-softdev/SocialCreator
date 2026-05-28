@@ -63,7 +63,7 @@ export async function analyzeProfilePerformance(profileId: string): Promise<{
       platformData.set(entry.platform, []);
     }
     const dayOfWeek = new Date(entry.date).getDay();
-    platformData.get(entry.platform)!.push({
+    platformData.get(entry.platform)?.push({
       hour: 12, // Pour l'instant on n'a pas l'heure exacte
       dayOfWeek,
       impressions: entry.impressions,
@@ -203,7 +203,7 @@ function getDefaultNextSlot(platform: Platform): {
   reason: string;
 } {
   const now = new Date();
-  const dayOfWeek = now.getDay();
+  const _dayOfWeek = now.getDay();
   const hour = now.getHours();
 
   // Heuristiques par plateforme

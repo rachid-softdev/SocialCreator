@@ -1,8 +1,38 @@
-/**
- * @jest-environment node
- */
-
+import { vi } from "vitest";
 import { hashContent, startOfDayUTC } from "../utils";
+
+// Mock dependencies for publish-guard functions
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    agent: {
+      findMany: vi.fn(),
+    },
+    publishLog: {
+      count: vi.fn(),
+    },
+    connectedAccount: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+vi.mock("@/lib/entitlements/service", () => ({
+  getFeatureGateService: vi.fn(() => ({
+    hasFeature: vi.fn().mockResolvedValue(true),
+  })),
+}));
+
+vi.mock("./rate-limit-redis", () => ({
+  getRedis: vi.fn(),
+}));
+
+vi.mock("@/lib/logger", () => ({
+  default: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe("publish-guard utilities", () => {
   describe("startOfDayUTC", () => {
@@ -53,22 +83,50 @@ describe("publish-guard utilities", () => {
       X: { maxPerDay: 8, maxPerWeek: 40 },
       FACEBOOK: { maxPerDay: 4, maxPerWeek: 20 },
       THREADS: { maxPerDay: 4, maxPerWeek: 20 },
-      PINTEREST: { maxPerDay: 10, maxPerWeek: 50 },
+      PINTEREST: { maxPerDay: 8, maxPerWeek: 40 },
     };
 
     it("should have reasonable cap limits", () => {
-      Object.entries(platformCaps).forEach(([platform, caps]) => {
+      Object.entries(platformCaps).forEach(([_platform, caps]) => {
         expect(caps.maxPerDay).toBeGreaterThan(0);
-        expect(caps.maxPerDay).toBeLessThanOrEqual(10);
+        expect(caps.maxPerDay).toBeLessThanOrEqual(8);
         expect(caps.maxPerWeek).toBeGreaterThan(caps.maxPerDay);
       });
     });
 
     it("should not exceed absolute maximum of 8 per day", () => {
-      Object.entries(platformCaps).forEach(([platform, caps]) => {
+      Object.entries(platformCaps).forEach(([_platform, caps]) => {
         // Per PLAN.md: max 8 posts/day configurable
         expect(caps.maxPerDay).toBeLessThanOrEqual(8);
       });
+    });
+  });
+
+  describe("published guard split functions", () => {
+    it("should export peekDailyCap function", async () => {
+      const { peekDailyCap } = await import("../publish-guard");
+      expect(typeof peekDailyCap).toBe("function");
+    });
+
+    it("should export incrementDailyCap function", async () => {
+      const { incrementDailyCap } = await import("../publish-guard");
+      expect(typeof incrementDailyCap).toBe("function");
+    });
+
+    it("should export recordPublish as alias for incrementDailyCap", async () => {
+      const { recordPublish, incrementDailyCap } = await import("../publish-guard");
+      expect(typeof recordPublish).toBe("function");
+      expect(typeof incrementDailyCap).toBe("function");
+    });
+
+    it("should export canPublish function", async () => {
+      const { canPublish } = await import("../publish-guard");
+      expect(typeof canPublish).toBe("function");
+    });
+
+    it("should export getProfileCapStatus function", async () => {
+      const { getProfileCapStatus } = await import("../publish-guard");
+      expect(typeof getProfileCapStatus).toBe("function");
     });
   });
 

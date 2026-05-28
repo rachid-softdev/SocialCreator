@@ -1,11 +1,10 @@
 "use client";
 
 import type { AgentWithRelations } from "@socialcreator/types/agent";
-import { EmptyState } from "@socialcreator/ui/empty-state";
-import { Bot, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AgentList } from "@/components/agent/agent-list";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
@@ -18,7 +17,7 @@ interface AgentsClientProps {
 export function AgentsClient({ profileId, initialAgents }: AgentsClientProps) {
   const router = useRouter();
   const [agents, setAgents] = useState(initialAgents);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
 
   // Stats
   const totalAgents = agents.length;

@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import { Loader2, Send, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

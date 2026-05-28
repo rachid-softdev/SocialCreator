@@ -3,7 +3,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@socialcreator/utils";
 import type { LucideIcon } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes } from "react";
 import { forwardRef } from "react";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

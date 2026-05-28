@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import type { Platform } from "@prisma/client";
 import { buildGenerationPrompt, buildSystemPrompt, PLATFORM_PROMPTS } from "../prompts";
 

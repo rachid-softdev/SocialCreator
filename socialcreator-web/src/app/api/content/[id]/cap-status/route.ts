@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Verify user owns this profile
     const profile = await import("@/lib/prisma").then((m) =>
       m.prisma.profile.findFirst({
-        where: { id: profileId, userId: session.user!.id },
+        where: { id: profileId, userId: session.user?.id },
       }),
     );
 

@@ -77,7 +77,7 @@ export async function publishToPinterest(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const title = content.textContent.slice(0, 100);
-      const description = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
+      const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
 
       // Create pin payload
       const pinOptions: PinterestPinOptions = {

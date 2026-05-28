@@ -1,10 +1,4 @@
-/**
- * Feature Flags & Entitlements - Stripe Webhook Tests
- * Tests for idempotency, signature verification, and event handling
- */
-
-import Stripe from "stripe";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Stripe
 const mockStripe = {
@@ -26,6 +20,7 @@ const mockPrisma = {
   webhookEvent: {
     findUnique: vi.fn(),
     create: vi.fn(),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
   },
   user: {
     findFirst: vi.fn(),
@@ -142,7 +137,17 @@ describe("Stripe Webhook Handler", () => {
       const mockEvent = {
         id: "evt_test_new",
         type: "customer.subscription.created",
-        data: { object: { id: "sub_123", customer: "cus_123", status: "active" } },
+        data: {
+          object: {
+            id: "sub_123",
+            customer: "cus_123",
+            status: "active",
+            current_period_start: Math.floor(Date.now() / 1000) - 86400 * 30,
+            current_period_end: Math.floor(Date.now() / 1000) + 86400,
+            items: { data: [{ price: { id: "price_pro", unit_amount: 7000 } }] },
+            cancel_at_period_end: false,
+          },
+        },
       };
 
       mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);

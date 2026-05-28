@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "@next/bundle-analyzer": "^16.2.6",
+    "@next/bundle-analyzer": "^14.2.35",
     "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/crypto-js": "^4.2.2",

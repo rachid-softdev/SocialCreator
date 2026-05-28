@@ -29,7 +29,7 @@ export default function ApiKeysPage() {
       // Clean URL
       window.history.replaceState({}, "", "/settings/api-keys");
     }
-  }, []);
+  }, [fetchKeys]);
 
   const fetchKeys = async () => {
     try {

@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import type { Platform } from "@prisma/client";
 import { buildGenerationPrompt, buildSystemPrompt } from "../prompts";
 
@@ -127,7 +123,7 @@ describe("agent-runner utilities", () => {
         PINTEREST: { maxLength: 500 },
       };
 
-      Object.entries(platformConstraints).forEach(([platform, constraint]) => {
+      Object.entries(platformConstraints).forEach(([_platform, constraint]) => {
         expect(constraint.maxLength).toBeGreaterThan(0);
       });
     });

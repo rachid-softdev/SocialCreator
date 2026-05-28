@@ -77,7 +77,7 @@ export function MuxPlayer({
         (hlsRef.current as { destroy: () => void }).destroy();
       }
     };
-  }, [streamUrl, startTime, endTime, autoPlay]);
+  }, [streamUrl, startTime, autoPlay]);
 
   const handleLoadedMetadata = useCallback(() => {
     if (videoRef.current && startTime > 0) {

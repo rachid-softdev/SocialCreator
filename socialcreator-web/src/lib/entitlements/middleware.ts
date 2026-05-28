@@ -9,7 +9,6 @@ import {
   createLimitReachedError,
   getFeatureGateService,
 } from "./service";
-import type { EntitlementError } from "./types";
 
 export interface MiddlewareContext {
   orgId: string;

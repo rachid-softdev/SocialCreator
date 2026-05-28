@@ -3,7 +3,7 @@
 import type { Profile, Team, TeamMember } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
 import { Button } from "@socialcreator/ui/button";
-import { Crown, Edit, MoreHorizontal, Settings, Shield, Trash2, Users, X } from "lucide-react";
+import { Crown, Edit, Settings, Shield, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 interface TeamWithRelations extends Team {

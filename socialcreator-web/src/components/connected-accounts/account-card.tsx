@@ -5,15 +5,15 @@
 
 "use client";
 
-import { type ConnectedAccount as ConnectedAccountType, Platform } from "@prisma/client";
+import type { ConnectedAccount as ConnectedAccountType } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
 import { Button } from "@socialcreator/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MoreVertical, RefreshCw, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { getPlatformColor, getPlatformName, PlatformIcon } from "./platform-icon";
+import { getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface AccountCardProps {
   account: ConnectedAccountType;

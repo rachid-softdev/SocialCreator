@@ -1,5 +1,8 @@
 /**
  * Threads publisher via Meta Graph API
+ *
+ * TODO: Add media support (currently text-only).
+ * Meta Threads API supports media containers via `/me/threads_media` endpoint.
  */
 
 import type { PublishResult } from "./index";
