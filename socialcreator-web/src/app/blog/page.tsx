@@ -1,6 +1,5 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { BlogList } from "@/components/blog/blog-list";
 import { postsData } from "@/lib/blog";

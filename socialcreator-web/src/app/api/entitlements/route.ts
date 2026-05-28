@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getFeatureGateService } from "@/lib/entitlements/service";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await auth();
 

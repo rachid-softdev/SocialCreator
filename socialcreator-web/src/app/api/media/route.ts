@@ -35,8 +35,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get("profileId");
     const type = searchParams.get("type");
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
     if (!profileId) {
       return NextResponse.json({ error: "profileId is required" }, { status: 400 });

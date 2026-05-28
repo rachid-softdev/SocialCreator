@@ -3,7 +3,6 @@
 import { cn } from "@socialcreator/utils";
 import { AlertCircle, Loader2, Send } from "lucide-react";
 import { useState } from "react";
-import { PlatformBadge } from "./platform-badge";
 import { PublishModal } from "./publish-modal";
 
 interface PublishButtonProps {
@@ -73,7 +72,7 @@ export function PublishButton({
           window.location.reload();
         }, 2000);
       }
-    } catch (error) {
+    } catch (_error) {
       setPublishResult({
         success: false,
         error: "Network error occurred",
@@ -84,7 +83,7 @@ export function PublishButton({
   };
 
   const capPercentage = capStatus ? (capStatus.count / capStatus.max) * 100 : 0;
-  const isNearCap = capPercentage >= 75;
+  const _isNearCap = capPercentage >= 75;
   const isAtCap = capStatus && !capStatus.allowed;
 
   // If at cap, show disabled state

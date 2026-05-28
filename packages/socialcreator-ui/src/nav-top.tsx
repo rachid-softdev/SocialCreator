@@ -2,7 +2,6 @@
 
 import { cn } from "@socialcreator/utils";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 interface NavTopProps {
   links?: { href: string; label: string }[];

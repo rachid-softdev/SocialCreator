@@ -26,7 +26,7 @@ export function LoginForm() {
       } else {
         router.push(callbackUrl);
       }
-    } catch (err) {
+    } catch (_err) {
       // Default to dashboard on error
       router.push(callbackUrl);
     }
@@ -49,7 +49,7 @@ export function LoginForm() {
       } else {
         await checkCGUAndRedirect();
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ export function LoginForm() {
       await signIn("google", {
         callbackUrl: "/api/auth/cgu-redirect",
       });
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to sign in with Google");
       setIsGoogleLoading(false);
     }

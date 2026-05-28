@@ -18,7 +18,7 @@ interface RouteParams {
  * GET /api/connected-accounts/[id]
  * Returns a single connected account (tokens masked)
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     const { id } = await params;
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Disconnects and removes a connected account
  * Optionally revokes the token on the platform
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     const { id } = await params;

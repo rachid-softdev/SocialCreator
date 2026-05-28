@@ -8,6 +8,7 @@
 import { Platform } from "@prisma/client";
 import { startOfDayUTC } from "@socialcreator/utils";
 import { getFeatureGateService } from "@/lib/entitlements/service";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getRedis } from "./rate-limit-redis";
 
@@ -47,10 +48,11 @@ async function getMaxPerDay(
 }
 
 /**
- * Check daily publishing cap for a profile/platform
+ * Peek daily publishing cap for a profile/platform (read-only)
  * Uses Redis for performance, falls back to database
+ * Does NOT increment the counter — use incrementDailyCap() after successful publish
  */
-export async function checkDailyCap(
+export async function peekDailyCap(
   profileId: string,
   platform: Platform,
   maxOverride?: number,
@@ -61,20 +63,12 @@ export async function checkDailyCap(
   if (redis) {
     try {
       const key = getCapKey(profileId, platform);
-      // NOTE: incr happens BEFORE entitlement + account checks in canPublish().
-      // If publish is later rejected, the counter was already incremented.
-      // Acceptable because: Redis key has 24h TTL; incr is once per call;
-      // the cap is a soft limit, not a hard security measure.
-      const count = await redis.incr(key);
+      const val = await redis.get(key);
+      const count = val ? parseInt(val, 10) : 0;
 
-      // Set expiry on first increment (24 hours)
-      if (count === 1) {
-        await redis.expire(key, 86400); // 24 hours in seconds
-      }
-
-      return { allowed: count <= max, count, max };
+      return { allowed: count < max, count, max };
     } catch (error) {
-      console.warn("Redis cap check failed, falling back to database:", error);
+      logger.warn({ err: error }, "Redis cap check failed, falling back to database");
       // Fall through to database fallback
     }
   }
@@ -94,26 +88,30 @@ export async function checkDailyCap(
 }
 
 /**
- * Record a successful publish (increment cap counter)
+ * Increment daily cap counter for a profile/platform (write-only)
+ * Called only after successful publish
  */
-export async function recordPublish(profileId: string, platform: Platform): Promise<void> {
+export async function incrementDailyCap(profileId: string, platform: Platform): Promise<void> {
   const redis = getRedis();
-
   if (redis) {
     try {
       const key = getCapKey(profileId, platform);
-      await redis.incr(key);
-
-      // Set expiry on first increment
-      const current = await redis.get(key);
-      if (current === "1") {
+      const count = await redis.incr(key);
+      if (count === 1) {
         await redis.expire(key, 86400);
       }
     } catch (error) {
-      console.warn("Failed to record publish in Redis:", error);
+      logger.warn({ err: error }, "Redis increment failed");
     }
   }
-  // Note: Database write happens via PublishLog in the publish flow
+}
+
+/**
+ * Record a successful publish (increment cap counter)
+ * Database write happens via PublishLog in the caller
+ */
+export async function recordPublish(profileId: string, platform: Platform): Promise<void> {
+  await incrementDailyCap(profileId, platform);
 }
 
 /**
@@ -136,7 +134,7 @@ export async function canPublish(
     }
   }
 
-  const { allowed, count, max } = await checkDailyCap(profileId, platform);
+  const { allowed, count, max } = await peekDailyCap(profileId, platform);
 
   if (!allowed) {
     return {
@@ -173,7 +171,7 @@ export async function getProfileCapStatus(profileId: string): Promise<
 
   const results = await Promise.all(
     platforms.map(async (platform) => {
-      const { allowed, count, max } = await checkDailyCap(profileId, platform);
+      const { allowed, count, max } = await peekDailyCap(profileId, platform);
       return { platform, count, max, allowed };
     }),
   );

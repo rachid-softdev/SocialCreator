@@ -1,6 +1,5 @@
 "use client";
 
-import type { ContentStatus } from "@prisma/client";
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { CONTENT_STATUS_LABELS } from "@socialcreator/types/profile";
 import { cn } from "@socialcreator/utils";

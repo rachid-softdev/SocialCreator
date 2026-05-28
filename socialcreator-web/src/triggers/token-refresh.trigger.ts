@@ -1,96 +1,70 @@
-// OAuth Token Refresh Trigger Job
-// Refreshes expired or soon-to-expire OAuth tokens for connected accounts
+/**
+ * OAuth Token Refresh worker
+ * Refreshes expired or soon-to-expire OAuth tokens for connected accounts
+ */
 
-import { client } from "@/lib/trigger";
-
-// Mock triggerHttpPayload - will be replaced with actual implementation
-const triggerHttpPayload = (config: any) => config;
-
-import { z } from "zod";
 import { decryptToken, encryptToken } from "@/lib/crypto";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-
-export const tokenRefreshJob = client.defineJob({
-  id: "token-refresh",
-  name: "OAuth Token Refresh",
-  version: "0.1.0",
-  trigger: triggerHttpPayload({
-    schema: z.object({
-      accountId: z.string(),
-    }),
-  }),
-  output: z.object({
-    accountId: z.string(),
-    platform: z.string(),
-    refreshed: z.boolean(),
-    expiresAt: z.string().optional(),
-  }),
-  retries: {
-    maxAttempts: 3,
-    backoff: { type: "exponential", seconds: [10, 30, 60] },
-  },
-  run: async (payload: any, io: any) => {
-    const { accountId } = payload;
-
-    await io.logger.info("Starting token refresh", { accountId });
-
-    const account = await prisma.connectedAccount.findUnique({
-      where: { id: accountId },
-    });
-
-    if (!account) {
-      throw new Error(`Connected account not found: ${accountId}`);
-    }
-
-    if (!account.refreshToken) {
-      await io.logger.warn("No refresh token available", {
-        accountId,
-        platform: account.platform,
-      });
-      return { accountId, platform: account.platform, refreshed: false };
-    }
-
-    const decryptedRefreshToken = decryptToken(account.refreshToken);
-
-    const newTokens = await refreshOAuthToken(account.platform, decryptedRefreshToken);
-
-    if (!newTokens) {
-      await io.logger.warn("Token refresh returned no tokens", {
-        accountId,
-        platform: account.platform,
-      });
-      return { accountId, platform: account.platform, refreshed: false };
-    }
-
-    await prisma.connectedAccount.update({
-      where: { id: accountId },
-      data: {
-        accessToken: encryptToken(newTokens.accessToken),
-        refreshToken: newTokens.refreshToken
-          ? encryptToken(newTokens.refreshToken)
-          : account.refreshToken,
-        expiresAt: newTokens.expiresAt ?? null,
-      },
-    });
-
-    await io.logger.info("Token refreshed successfully", {
-      accountId,
-      platform: account.platform,
-    });
-
-    return {
-      accountId,
-      platform: account.platform,
-      refreshed: true,
-      expiresAt: newTokens.expiresAt?.toISOString(),
-    };
-  },
-});
 
 interface TokenResponse {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: Date;
+}
+
+/**
+ * Run the token refresh for a given account
+ */
+export async function runTokenRefresh(accountId: string): Promise<{
+  accountId: string;
+  platform: string;
+  refreshed: boolean;
+  expiresAt?: string;
+}> {
+  logger.info({ accountId }, "Starting token refresh");
+
+  const account = await prisma.connectedAccount.findUnique({
+    where: { id: accountId },
+  });
+
+  if (!account) {
+    throw new Error(`Connected account not found: ${accountId}`);
+  }
+
+  if (!account.refreshToken) {
+    logger.warn({ accountId, platform: account.platform }, "No refresh token available");
+    return { accountId, platform: account.platform, refreshed: false };
+  }
+
+  const decryptedRefreshToken = decryptToken(account.refreshToken);
+
+  const newTokens = await refreshOAuthToken(account.platform, decryptedRefreshToken);
+
+  if (!newTokens) {
+    logger.warn({ accountId, platform: account.platform }, "Token refresh returned no tokens");
+    return { accountId, platform: account.platform, refreshed: false };
+  }
+
+  await prisma.connectedAccount.update({
+    where: { id: accountId },
+    data: {
+      accessToken: encryptToken(newTokens.accessToken),
+      refreshToken: newTokens.refreshToken
+        ? encryptToken(newTokens.refreshToken)
+        : account.refreshToken,
+      expiresAt: newTokens.expiresAt ?? null,
+    },
+  });
+
+  logger.info({ accountId, platform: account.platform }, "Token refreshed successfully");
+
+  return {
+    accountId,
+    platform: account.platform,
+    refreshed: true,
+    expiresAt: newTokens.expiresAt?.toISOString(),
+  };
 }
 
 async function refreshOAuthToken(

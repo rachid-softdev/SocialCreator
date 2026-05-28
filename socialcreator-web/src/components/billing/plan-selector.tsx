@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@socialcreator/ui/button";
-import { Check, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
-import { getPlanData, PLANS, type PlanKey } from "@/lib/stripe";
+import { getPlanData, type PlanKey } from "@/lib/stripe";
 
 interface PlanSelectorProps {
   onSubmit?: (plan: PlanKey, additionalProfiles: number) => void;

@@ -1,10 +1,9 @@
 import { GradientOrb } from "@socialcreator/ui/gradient-orb";
-import { redirect } from "next/navigation";
 import { PricingTable } from "@/components/billing/pricing-table";
 import { auth } from "@/lib/auth";
 
 export default async function PricingPage() {
-  const session = await auth();
+  const _session = await auth();
 
   const faqs = [
     {

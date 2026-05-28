@@ -16,7 +16,7 @@ export async function publishToInstagram(
   },
 ): Promise<PublishResult> {
   try {
-    const caption = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
+    const caption = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
 
     if (content.mediaUrls.length > 0) {
       // Upload image/video first

@@ -7,7 +7,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canPublish } from "@/lib/publish-guard";
 import { publishContent } from "@/lib/publishers";
 
 const bulkActionSchema = z.object({

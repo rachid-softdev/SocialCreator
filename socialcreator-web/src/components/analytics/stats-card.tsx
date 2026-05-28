@@ -13,7 +13,7 @@ interface StatsCardProps {
 export function StatsCard({ label, value, trend, icon: Icon }: StatsCardProps) {
   const isPositive = trend !== undefined && trend > 0;
   const isNegative = trend !== undefined && trend < 0;
-  const isFlat = trend === 0;
+  const _isFlat = trend === 0;
 
   const trendColors = {
     positive: "text-semantic-success",

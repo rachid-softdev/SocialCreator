@@ -13,13 +13,13 @@ const updateContentSchema = z.object({
 });
 
 // Schema for scheduling content
-const scheduleContentSchema = z.object({
+const _scheduleContentSchema = z.object({
   scheduledPublishAt: z.string().datetime(),
   scheduledTimezone: z.string().optional().default("UTC"),
 });
 
 // Schema for bulk operations
-const bulkActionSchema = z.object({
+const _bulkActionSchema = z.object({
   contentIds: z.array(z.string().uuid()).min(1).max(50),
   action: z.enum(["approve", "reject", "publish", "delete"]),
 });
@@ -49,7 +49,7 @@ async function getContentOr404(id: string, userId: string) {
 }
 
 // GET /api/content/[id]
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -125,7 +125,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 }
 
 // DELETE /api/content/[id]
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 

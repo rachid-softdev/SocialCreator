@@ -1,6 +1,6 @@
 "use client";
 
-import type { ContentStatus, GeneratedContent, Platform } from "@prisma/client";
+import type { GeneratedContent, Platform } from "@prisma/client";
 import {
   CONTENT_STATUS_COLORS,
   CONTENT_STATUS_LABELS,
@@ -63,7 +63,7 @@ export function RecentContent({ contents }: RecentContentProps) {
                 {content.profileName && (
                   <span className="text-muted-soft">{content.profileName} · </span>
                 )}
-                {content.textContent ? content.textContent.substring(0, 60) + "..." : "No content"}
+                {content.textContent ? `${content.textContent.substring(0, 60)}...` : "No content"}
               </p>
             </div>
             <span className="text-caption text-muted-soft whitespace-nowrap ml-4">

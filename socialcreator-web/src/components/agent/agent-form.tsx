@@ -243,7 +243,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
               max="8"
               value={formData.maxPerDay}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, maxPerDay: parseInt(e.target.value) }))
+                setFormData((prev) => ({ ...prev, maxPerDay: parseInt(e.target.value, 10) }))
               }
               className="w-full"
             />

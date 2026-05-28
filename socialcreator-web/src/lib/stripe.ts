@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 let stripeInstance: Stripe | null = null;
@@ -34,13 +35,13 @@ const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> {
   // Return cached prices if still valid
   if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION_MS) {
-    console.debug("[Stripe] Using cached prices");
+    logger.debug("[Stripe] Using cached prices");
     return priceCache.prices;
   }
 
   // Check if Stripe is configured
   if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn("[Stripe] STRIPE_SECRET_KEY not set, using static prices");
+    logger.warn("[Stripe] STRIPE_SECRET_KEY not set, using static prices");
     return getStaticPrices();
   }
 
@@ -91,10 +92,10 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
       timestamp: Date.now(),
     };
 
-    console.log("[Stripe] Successfully fetched dynamic prices:", activePrices);
+    logger.info({ prices: activePrices }, "[Stripe] Successfully fetched dynamic prices");
     return activePrices;
   } catch (error) {
-    console.error("[Stripe] Failed to fetch prices, using static:", error);
+    logger.error({ err: error }, "[Stripe] Failed to fetch prices, using static");
     priceCache = {
       prices: getStaticPrices(),
       timestamp: Date.now(),
@@ -134,6 +135,10 @@ export async function getPlanPrice(plan: PaidPlanKey): Promise<number> {
 // Plan Configuration
 // ============================================
 
+/**
+ * @deprecated Use FeatureGateService / PlanFeature table instead.
+ * Migration tracked for future: Move plan limits to PlanFeature table.
+ */
 export const PLANS = {
   starter: {
     name: "Starter",
@@ -362,7 +367,7 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
       plan = null;
     }
   } catch (error) {
-    console.error("Failed to fetch Stripe subscription:", error);
+    logger.error({ err: error }, "Failed to fetch Stripe subscription");
     // En cas d'erreur, on retourne les info de base
   }
 

@@ -25,7 +25,7 @@ interface RouteParams {
 }
 
 // POST /api/content/[id]/publish
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -76,7 +76,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       },
     });
 
-    if (!account || !account.isActive) {
+    if (!account?.isActive) {
       return NextResponse.json(
         { error: `No active connected account for ${content.platform}` },
         { status: 400 },

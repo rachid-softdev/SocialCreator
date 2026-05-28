@@ -8,6 +8,7 @@
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import logger from "@/lib/logger";
 
 // ============================================
 // Configuration
@@ -171,7 +172,7 @@ export function initRedis(): Redis | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    console.warn(
+    logger.warn(
       "Upstash Redis not configured. Using in-memory fallback. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment for production.",
     );
     return null;
@@ -223,7 +224,7 @@ function getRateLimiter(path: string): Ratelimit | null {
   // Check if Redis is available
   const redisClient = getRedis();
   if (!redisClient) {
-    console.warn(`Redis not available, falling back to no rate limiting for ${path}`);
+    logger.warn(`Redis not available, falling back to no rate limiting for ${path}`);
     return null;
   }
 
@@ -307,7 +308,7 @@ export async function checkRateLimit(
 
   if (!limiter) {
     // Redis not configured - use in-memory fallback
-    console.debug(`Using in-memory rate limiting for ${path}`);
+    logger.debug(`Using in-memory rate limiting for ${path}`);
     return checkRateLimitInMemory(identifier, path);
   }
 
@@ -322,7 +323,7 @@ export async function checkRateLimit(
     };
   } catch (error) {
     // On error, fall back to in-memory (fail graceful)
-    console.error("Rate limit Redis check failed, using in-memory fallback:", error);
+    logger.error({ err: error }, "Rate limit Redis check failed, using in-memory fallback");
     return checkRateLimitInMemory(identifier, path);
   }
 }

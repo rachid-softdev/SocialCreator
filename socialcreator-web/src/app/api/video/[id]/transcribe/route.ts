@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { transcribeVideo } from "@/lib/deepgram";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {

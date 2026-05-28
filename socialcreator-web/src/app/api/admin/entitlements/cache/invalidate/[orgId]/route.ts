@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getFeatureGateService } from "@/lib/entitlements/service";
 
-export async function POST(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
+export async function POST(_request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   try {
     const { orgId } = await params;
     await requireAdmin();

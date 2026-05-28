@@ -45,9 +45,9 @@ export function AnalyticsDashboard({
   initialCapStatus,
 }: AnalyticsDashboardProps) {
   const [selectedProfileId, setSelectedProfileId] = useState(initialProfileId);
-  const [isLoading, setIsLoading] = useState(false);
-  const [publishLogs, setPublishLogs] = useState(initialPublishLogs);
-  const [recentContent, setRecentContent] = useState(initialRecentContent);
+  const [_isLoading, setIsLoading] = useState(false);
+  const [publishLogs, _setPublishLogs] = useState(initialPublishLogs);
+  const [recentContent, _setRecentContent] = useState(initialRecentContent);
   const [capStatus, setCapStatus] = useState(initialCapStatus);
 
   const handleProfileChange = async (profileId: string) => {
@@ -61,7 +61,7 @@ export function AnalyticsDashboard({
       ]);
 
       if (analyticsRes.ok) {
-        const data = await analyticsRes.json();
+        const _data = await analyticsRes.json();
         // Would update charts data here
       }
 

@@ -50,7 +50,7 @@ export async function publishToYouTube(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const videoTitle = (content.textContent.slice(0, 100) || "Untitled Video").trim();
-      const description = `${content.textContent}\n\n${content.hashtags.map((t) => "#" + t).join(" ")}`;
+      const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
       const tags = content.hashtags.slice(0, 15);
 
       // Step 1: Initiate resumable upload
@@ -161,11 +161,11 @@ export async function publishToYouTube(
  * Note: Requires channel account and additional API setup
  */
 export async function postToYouTubeCommunity(
-  content: {
+  _content: {
     textContent: string;
     mediaUrls?: string[];
   },
-  account: {
+  _account: {
     accountId: string;
     accessToken: string;
   },

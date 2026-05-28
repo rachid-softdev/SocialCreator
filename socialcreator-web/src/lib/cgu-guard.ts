@@ -12,7 +12,6 @@
  * }
  */
 
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -35,7 +34,7 @@ const DEFAULT_OPTIONS: CguCheckOptions = {
  */
 export async function requireCguAccepted(
   request: Request,
-  options: CguCheckOptions = DEFAULT_OPTIONS,
+  _options: CguCheckOptions = DEFAULT_OPTIONS,
 ): Promise<{ userId: string; cguAccepted: boolean }> {
   const session = await auth();
 
@@ -48,7 +47,7 @@ export async function requireCguAccepted(
 
   // Quick check via session token
   // Note: In NextAuth v5, the token contains additional info
-  const cguAccepted = (session as any).user?.cguAccepted || false;
+  const _cguAccepted = (session as any).user?.cguAccepted || false;
 
   // For certain actions, require that the user has really accepted the CGU
   // Perform a DB check to confirm
@@ -157,6 +156,6 @@ export const CGU_REQUIRED_ROUTES = [
  */
 export function requiresCgu(pathname: string): boolean {
   return CGU_REQUIRED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + "/"),
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }

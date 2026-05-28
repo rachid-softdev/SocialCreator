@@ -1,10 +1,8 @@
-import { Button } from "@socialcreator/ui/button";
 import { formatDateTime } from "@socialcreator/utils";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { RunDetail } from "@/components/agent/run-detail";
-import { RunStatusBadge } from "@/components/agent/run-status-badge";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";

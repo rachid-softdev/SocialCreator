@@ -1,99 +1,88 @@
 import { contentFilterSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withApiMiddleware } from "@/lib/api-middleware";
 import { prisma } from "@/lib/prisma";
 import { isValidUuid } from "@/lib/sanitize";
 
 // GET /api/content?profileId=xxx&status=DRAFT&page=1
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
+export const GET = withApiMiddleware(async ({ userId, request }) => {
+  const { searchParams } = new URL(request.url);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  // Extract raw values
+  const rawFilters = {
+    profileId: searchParams.get("profileId"),
+    status: searchParams.get("status"),
+    platform: searchParams.get("platform"),
+    page: searchParams.get("page"),
+    pageSize: searchParams.get("pageSize"),
+  };
 
-    const { searchParams } = new URL(request.url);
+  // Validate filters with Zod
+  const validation = contentFilterSchema.safeParse(rawFilters);
 
-    // Extract raw values
-    const rawFilters = {
-      profileId: searchParams.get("profileId"),
-      status: searchParams.get("status"),
-      platform: searchParams.get("platform"),
-      page: searchParams.get("page"),
-      pageSize: searchParams.get("pageSize"),
-    };
+  if (!validation.success) {
+    return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+  }
 
-    // Validate filters with Zod
-    const validation = contentFilterSchema.safeParse(rawFilters);
+  const { profileId, status, platform, page, pageSize } = validation.data;
 
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
-    }
+  // Validate profileId if provided
+  if (profileId && !isValidUuid(profileId)) {
+    return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
+  }
 
-    const { profileId, status, platform, page, pageSize } = validation.data;
+  // Build where clause
+  const whereClause: Record<string, unknown> = {
+    profile: { userId },
+  };
 
-    // Validate profileId if provided
-    if (profileId && !isValidUuid(profileId)) {
-      return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
-    }
+  if (profileId) {
+    whereClause.profileId = profileId;
+  }
 
-    // Build where clause
-    const whereClause: Record<string, unknown> = {
-      profile: { userId: session.user.id },
-    };
+  if (status) {
+    whereClause.status = status;
+  }
 
-    if (profileId) {
-      whereClause.profileId = profileId;
-    }
+  if (platform) {
+    whereClause.platform = platform;
+  }
 
-    if (status) {
-      whereClause.status = status;
-    }
-
-    if (platform) {
-      whereClause.platform = platform;
-    }
-
-    const [contents, total] = await Promise.all([
-      prisma.generatedContent.findMany({
-        where: whereClause,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        include: {
-          profile: {
-            select: { id: true, name: true },
-          },
-          run: {
-            select: {
-              id: true,
-              agent: {
-                select: { id: true, name: true },
-              },
+  const [contents, total] = await Promise.all([
+    prisma.generatedContent.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        profile: {
+          select: { id: true, name: true },
+        },
+        run: {
+          select: {
+            id: true,
+            agent: {
+              select: { id: true, name: true },
             },
           },
         },
-      }),
-      prisma.generatedContent.count({ where: whereClause }),
-    ]);
+      },
+    }),
+    prisma.generatedContent.count({ where: whereClause }),
+  ]);
 
-    return NextResponse.json(
-      {
-        contents,
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
+  return NextResponse.json(
+    {
+      contents,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
       },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
-        },
-      },
-    );
-  } catch (error) {
-    console.error("Error fetching content:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+    },
+  );
+});

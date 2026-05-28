@@ -10,6 +10,29 @@ const logger = pino({
     level: (label) => ({ level: label }),
   },
   timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: [
+      "userId",
+      "*.userId",
+      "user.id",
+      "*.user.id",
+      "accessToken",
+      "*.accessToken",
+      "refreshToken",
+      "*.refreshToken",
+      "token",
+      "*.token",
+      "secret",
+      "*.secret",
+      "email",
+      "*.email",
+      "password",
+      "*.password",
+      "ip",
+      "*.ip",
+    ],
+    censor: "[REDACTED]",
+  },
 });
 
 export default logger;

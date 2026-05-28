@@ -2,7 +2,7 @@
 
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { formatDateTime } from "@socialcreator/utils";
-import { ArrowLeft, Check, ExternalLink, Send, X } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

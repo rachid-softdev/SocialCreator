@@ -3,7 +3,7 @@
 import type { AgentType, AgentWithRelations } from "@socialcreator/types/agent";
 import { AGENT_TYPE_LABELS } from "@socialcreator/types/agent";
 import { cn, formatDateTime } from "@socialcreator/utils";
-import { Bot, MoreVertical, Pencil, Play, Trash2 } from "lucide-react";
+import { Bot, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { PlatformBadge } from "@/components/content/platform-badge";

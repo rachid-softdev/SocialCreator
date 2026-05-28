@@ -1,14 +1,14 @@
 import type {
   Agent,
   AgentRun,
-  GeneratedContent,
   AgentType,
-  RunStatus,
   ContentStatus,
+  GeneratedContent,
+  RunStatus,
 } from "@prisma/client";
 import type { Platform } from "./platforms";
 
-export type { Agent, AgentRun, GeneratedContent, AgentType, RunStatus, ContentStatus, Platform };
+export type { Agent, AgentRun, AgentType, ContentStatus, GeneratedContent, Platform, RunStatus };
 
 export type AgentWithRelations = Agent & {
   profile: { id: string; name: string };

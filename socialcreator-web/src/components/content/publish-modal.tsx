@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@socialcreator/utils";
 import { AlertCircle, CheckCircle, ExternalLink, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { PlatformBadge } from "./platform-badge";

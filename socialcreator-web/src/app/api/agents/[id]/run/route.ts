@@ -106,8 +106,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
     // Verify agent ownership
     const agent = await prisma.agent.findFirst({

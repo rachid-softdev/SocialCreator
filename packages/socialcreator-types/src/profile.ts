@@ -1,4 +1,4 @@
-import type { Profile, ContentStatus } from "@prisma/client";
+import type { ContentStatus, Profile } from "@prisma/client";
 import type { Platform } from "./platforms";
 import { PLATFORM_DISPLAY } from "./platforms";
 

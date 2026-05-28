@@ -35,28 +35,31 @@ export interface Publisher {
   ): Promise<PublishResult>;
 }
 
+// Publisher map for O(1) lookup
+const publisherMap = new Map<Platform, Publisher>();
+
+// Helper to register a publisher
+function registerPublisher(platform: Platform, fn: Publisher["publish"]): void {
+  publisherMap.set(platform, { publish: fn });
+}
+
+// Register all publishers
+registerPublisher("INSTAGRAM", (content, account) => publishToInstagram(content, account));
+registerPublisher("TIKTOK", (content, account) => publishToTikTok(content, account));
+registerPublisher("YOUTUBE", (content, account) => publishToYouTube(content, account));
+registerPublisher("FACEBOOK", (content, account) => publishToFacebook(content, account));
+registerPublisher("X", (content, account) => publishToX(content, account));
+registerPublisher("LINKEDIN", (content, account) => publishToLinkedIn(content, account));
+registerPublisher("THREADS", (content, account) => publishToThreads(content, account));
+registerPublisher("PINTEREST", (content, account) => publishToPinterest(content, account));
+
 // Factory function to get the right publisher for a platform
 export function getPublisher(platform: Platform): Publisher {
-  switch (platform) {
-    case "INSTAGRAM":
-      return instagramPublisher;
-    case "TIKTOK":
-      return tiktokPublisher;
-    case "YOUTUBE":
-      return youtubePublisher;
-    case "FACEBOOK":
-      return facebookPublisher;
-    case "X":
-      return xPublisher;
-    case "LINKEDIN":
-      return linkedinPublisher;
-    case "THREADS":
-      return threadsPublisher;
-    case "PINTEREST":
-      return pinterestPublisher;
-    default:
-      throw new Error(`Unknown platform: ${platform}`);
+  const publisher = publisherMap.get(platform);
+  if (!publisher) {
+    throw new Error(`Unknown platform: ${platform}`);
   }
+  return publisher;
 }
 
 /**
@@ -89,53 +92,4 @@ export {
   publishToTikTok,
   publishToX,
   publishToYouTube,
-};
-
-// Stub implementations for factory pattern
-const instagramPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToInstagram(content, account);
-  },
-};
-
-const tiktokPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToTikTok(content, account);
-  },
-};
-
-const youtubePublisher: Publisher = {
-  async publish(content, account) {
-    return publishToYouTube(content, account);
-  },
-};
-
-const facebookPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToFacebook(content, account);
-  },
-};
-
-const xPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToX(content, account);
-  },
-};
-
-const linkedinPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToLinkedIn(content, account);
-  },
-};
-
-const threadsPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToThreads(content, account);
-  },
-};
-
-const pinterestPublisher: Publisher = {
-  async publish(content, account) {
-    return publishToPinterest(content, account);
-  },
 };

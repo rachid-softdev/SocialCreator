@@ -4,7 +4,7 @@ import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
 import { Download, MoreVertical, Play, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { getMuxThumbnailUrl } from "@/lib/mux";
 
 interface Clip {
@@ -40,7 +40,7 @@ const STATUS_LABELS: Record<string, string> = {
   ERROR: "Error",
 };
 
-const PLATFORM_ICONS: Record<Platform, string> = {
+const _PLATFORM_ICONS: Record<Platform, string> = {
   TIKTOK: "🎵",
   INSTAGRAM: "📷",
   YOUTUBE: "▶️",

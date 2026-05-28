@@ -94,7 +94,7 @@ describe("Entitlements Middleware", () => {
       const context = { orgId: "org-1" };
       const handler = vi.fn().mockResolvedValue(new Response("OK"));
 
-      const result = await middleware(context, handler);
+      const _result = await middleware(context, handler);
 
       expect(handler).toHaveBeenCalled();
       expect(mockService.consume).toHaveBeenCalledWith("org-1", "AI_GENERATIONS", 1);

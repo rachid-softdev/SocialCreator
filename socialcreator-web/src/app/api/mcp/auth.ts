@@ -1,6 +1,5 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export interface McpAuthResult {
@@ -16,7 +15,7 @@ export async function authenticateMcpRequest(): Promise<McpAuthResult | null> {
   const headersList = await headers();
   const authHeader = headersList.get("authorization");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
 
@@ -26,10 +25,12 @@ export async function authenticateMcpRequest(): Promise<McpAuthResult | null> {
     return null;
   }
 
-  // Try to find the API key by hash
+  // Hash the incoming token before comparing against stored keyHash
+  const hashedToken = hashApiKey(token);
+
   const apiKey = await prisma.apiKey.findFirst({
     where: {
-      keyHash: token,
+      keyHash: hashedToken,
       revokedAt: null,
     },
     select: {
@@ -65,5 +66,5 @@ export function hashApiKey(key: string): string {
  * Generate preview prefix for API key display
  */
 export function getApiKeyPrefix(key: string): string {
-  return key.slice(0, 8) + "...";
+  return `${key.slice(0, 8)}...`;
 }

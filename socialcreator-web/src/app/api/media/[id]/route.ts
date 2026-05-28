@@ -11,7 +11,7 @@ interface RouteParams {
 }
 
 // DELETE /api/media/[id]
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 

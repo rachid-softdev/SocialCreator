@@ -14,9 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@socialcreator/ui/dialog";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
-import { getAllPlatforms, getUnconnectedPlatforms } from "./account-list";
+import { getUnconnectedPlatforms } from "./account-list";
 import { getPlatformName, PlatformIcon } from "./platform-icon";
 
 interface ConnectModalProps {

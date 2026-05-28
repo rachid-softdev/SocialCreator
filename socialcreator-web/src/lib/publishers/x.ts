@@ -1,5 +1,8 @@
 /**
  * X (Twitter) publisher via Twitter API v2
+ *
+ * TODO: Add media upload support (currently text-only).
+ * Media upload requires Twitter API v1.1 media/upload endpoint with multipart/form-data.
  */
 
 import type { PublishResult } from "./index";

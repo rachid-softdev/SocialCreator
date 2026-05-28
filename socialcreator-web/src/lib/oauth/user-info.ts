@@ -59,16 +59,16 @@ function getUserInfoHeaders(platform: OAuthProvider, accessToken: string): Heade
   // Some platforms use different header formats
   if (platform === "LINKEDIN") {
     // LinkedIn uses Bearer token
-    headers["Authorization"] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   } else if (platform === "TIKTOK") {
     // TikTok uses Bearer token
-    headers["Authorization"] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   } else if (platform === "X") {
     // X uses Bearer token
-    headers["Authorization"] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   } else if (platform === "PINTEREST") {
     // Pinterest uses Bearer token
-    headers["Authorization"] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   }
 
   return headers;
@@ -120,7 +120,7 @@ function normalizeUserInfo(platform: OAuthProvider, data: any): UserInfo {
     case "PINTEREST":
       return {
         accountId: data.user?.id || data.id,
-        accountName: data.user?.first_name + " " + data.user?.last_name || data.user?.username,
+        accountName: `${data.user?.first_name} ${data.user?.last_name}` || data.user?.username,
         accountAvatarUrl: data.user?.profile_image || null,
       };
 
