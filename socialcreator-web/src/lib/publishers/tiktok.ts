@@ -4,6 +4,8 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import logger from "@/lib/logger";
+import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishResult } from "./index";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
@@ -53,7 +55,10 @@ async function retryWithBackoff<T>(
 
         if (shouldRetry) {
           const delay = baseDelay * 2 ** (attempt - 1);
-          console.log(`TikTok retry ${attempt}/${maxRetries} after ${delay}ms`);
+          logger.info(
+            { attempt, maxRetries, delayMs: delay, platform: "tiktok" },
+            "Retrying TikTok publish",
+          );
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
@@ -86,6 +91,17 @@ export async function publishToTikTok(
 
   // Determine post mode based on media availability
   const hasVideo = content.mediaUrls.length > 0;
+
+  // Validate media URL for SSRF prevention
+  if (hasVideo) {
+    const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+    if (!urlValidation.valid) {
+      return {
+        success: false,
+        error: `Invalid video URL: ${urlValidation.error}`,
+      };
+    }
+  }
 
   try {
     return await retryWithBackoff(
@@ -135,10 +151,21 @@ export async function publishToTikTok(
         // Handle video upload URL response (for large video uploads)
         if (data.upload_url) {
           // Upload video to TikTok's upload URL
-          console.log("TikTok: Starting video upload to", data.upload_url);
+
+          // SSRF validation before fetching media
+          const mediaUrl = content.mediaUrls[0];
+          const mediaUrlValidation = validateMediaUrl(mediaUrl);
+          if (!mediaUrlValidation.valid) {
+            throw new Error(`Invalid video URL: ${mediaUrlValidation.error}`);
+          }
+
+          logger.info(
+            { uploadUrl: data.upload_url, platform: "tiktok" },
+            "Starting TikTok video upload",
+          );
 
           // Fetch the video from our storage
-          const videoResponse = await fetchWithTimeout(content.mediaUrls[0], {
+          const videoResponse = await fetchWithTimeout(mediaUrl, {
             timeout: 30000, // Video download: 30s timeout
           });
 
@@ -161,11 +188,11 @@ export async function publishToTikTok(
 
           if (!uploadResponse.ok) {
             const errorText = await uploadResponse.text();
-            console.error("TikTok video upload failed:", errorText);
+            logger.error({ err: errorText, platform: "tiktok" }, "TikTok video upload failed");
             throw new Error(`Video upload failed: ${uploadResponse.status}`);
           }
 
-          console.log("TikTok: Video upload complete");
+          logger.info({ platform: "tiktok" }, "TikTok video upload complete");
 
           // After upload, need to finalize the post
           // The post_id should now be available
@@ -205,7 +232,7 @@ export async function publishToTikTok(
       2000,
     );
   } catch (error) {
-    console.error("TikTok publish error:", error);
+    logger.error({ err: error, platform: "tiktok" }, "TikTok publish error");
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown TikTok publish error",

@@ -2,6 +2,7 @@ import type { AgentType, Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { triggerAgentRun } from "@/lib/agent-runner";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getIdentifier } from "@/lib/rate-limit-redis";
 import { authenticateMcpRequest } from "./auth";
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       result,
     } as JsonRpcResponse);
   } catch (error) {
-    console.error("MCP handler error:", error);
+    logger.error({ err: error, handler: "mcp" }, "MCP handler error");
 
     if (error instanceof z.ZodError) {
       return createJsonRpcErrorResponse(null, ERROR_INVALID_PARAMS, error.errors[0].message);
@@ -320,7 +321,7 @@ async function handleRunAgent(userId: string, params: unknown) {
     try {
       await triggerAgentRun({ runId: run.id, agentId: agent.id });
     } catch (error) {
-      console.error("Agent run error:", error);
+      logger.error({ err: error, handler: "agent-run" }, "Agent run error");
       await prisma.agentRun.update({
         where: { id: run.id },
         data: {

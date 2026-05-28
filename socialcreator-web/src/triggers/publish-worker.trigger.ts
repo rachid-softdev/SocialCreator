@@ -96,28 +96,54 @@ export async function runPublishWorker(payload: z.infer<typeof PublishPayloadSch
     },
   );
 
-  // Create PublishLog (immutable)
-  await prisma.publishLog.create({
-    data: {
-      userId,
-      profileId,
-      platform: content.platform,
-      contentId: content.id,
-      contentHash: hashContent(content.textContent),
-      success: result.success,
-      error: result.error || null,
-    },
-  });
+  // Wrap status update + PublishLog in a transaction for atomicity
+  if (result.success) {
+    await prisma.$transaction([
+      prisma.publishLog.create({
+        data: {
+          userId,
+          profileId,
+          platform: content.platform,
+          contentId: content.id,
+          contentHash: hashContent(content.textContent),
+          success: true,
+        },
+      }),
+      prisma.generatedContent.update({
+        where: { id: contentId },
+        data: {
+          status: "PUBLISHED",
+          postId: result.postId || null,
+          publishedAt: new Date(),
+        },
+      }),
+    ]);
 
-  // Update content status
-  await prisma.generatedContent.update({
-    where: { id: contentId },
-    data: {
-      status: result.success ? "PUBLISHED" : "FAILED",
-      postId: result.postId || null,
-      publishedAt: result.success ? new Date() : null,
-    },
-  });
+    // Increment cap (Redis atomic — outside Prisma transaction)
+    await incrementDailyCap(profileId, content.platform);
+  } else {
+    await prisma.$transaction([
+      prisma.publishLog.create({
+        data: {
+          userId,
+          profileId,
+          platform: content.platform,
+          contentId: content.id,
+          contentHash: hashContent(content.textContent),
+          success: false,
+          error: result.error || null,
+        },
+      }),
+      prisma.generatedContent.update({
+        where: { id: contentId },
+        data: {
+          status: "FAILED",
+          postId: null,
+          publishedAt: null,
+        },
+      }),
+    ]);
+  }
 
   logger.info({ contentId, success: result.success }, "Publish worker completed");
 
@@ -139,10 +165,6 @@ export async function enqueuePublish(payload: z.infer<typeof PublishPayloadSchem
     "publish-content",
     async () => {
       await runPublishWorker(payload);
-      await incrementDailyCap(
-        payload.profileId,
-        (await prisma.generatedContent.findUnique({ where: { id: payload.contentId } }))?.platform,
-      );
     },
     { maxAttempts: 3, retryDelay: 2000 },
   );

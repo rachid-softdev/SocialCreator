@@ -1,4 +1,5 @@
 import type { Platform } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { transcribeVideo } from "./deepgram";
 import { generateContent } from "./llm";
@@ -42,12 +43,30 @@ export interface VideoPipelineResult {
   contents: ContentResult[];
 }
 
+const SegmentSchema = z.object({
+  start: z.number().nonnegative(),
+  end: z.number().nonnegative(),
+  reason: z.string().min(1),
+  hook: z.string().min(1),
+});
+
 export async function identifySegments(transcript: string): Promise<Segment[]> {
   const result = await generateContent(
     "Tu es un expert en création de contenu viral pour les réseaux sociaux.",
     `${SEGMENT_PROMPT}\n\nTranscript:\n${transcript}`,
   );
-  return (result as any).segments as Segment[];
+
+  const segments = SegmentSchema.array()
+    .min(1)
+    .safeParse((result as any).segments);
+  if (!segments.success) {
+    throw new Error(
+      `Failed to parse LLM segment response: ${segments.error.message}. ` +
+        `Raw: ${JSON.stringify(result).slice(0, 200)}`,
+    );
+  }
+
+  return segments.data;
 }
 
 export async function runVideoPipeline(

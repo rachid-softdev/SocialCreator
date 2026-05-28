@@ -7,6 +7,7 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { recordPublish } from "@/lib/publish-guard";
 import { publishContent } from "@/lib/publishers";
+import { getValidAccessToken } from "@/lib/tokens";
 
 /**
  * Run the scheduled content publisher
@@ -55,6 +56,17 @@ export async function runScheduledContentPublisher(): Promise<{
         continue;
       }
 
+      const decryptedAccessToken = await getValidAccessToken(account.id);
+
+      if (!decryptedAccessToken) {
+        logger.error(
+          { accountId: account.id, platform: content.platform },
+          "Failed to get valid access token for scheduled content",
+        );
+        failed++;
+        continue;
+      }
+
       const result = await publishContent(
         content.platform,
         {
@@ -64,7 +76,7 @@ export async function runScheduledContentPublisher(): Promise<{
         },
         {
           accountId: account.accountId,
-          accessToken: account.accessToken,
+          accessToken: decryptedAccessToken,
         },
       );
 

@@ -4,6 +4,7 @@
  */
 
 import { decryptToken, encryptToken } from "@/lib/crypto";
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
@@ -82,7 +83,7 @@ async function refreshOAuthToken(
       url.searchParams.set("client_secret", process.env.META_CLIENT_SECRET!);
       url.searchParams.set("fb_exchange_token", refreshToken);
 
-      const response = await fetch(url.toString());
+      const response = await fetchWithTimeout(url.toString(), { timeout: 10000 });
       if (!response.ok) return null;
 
       const data = await response.json();
@@ -93,8 +94,9 @@ async function refreshOAuthToken(
     }
 
     case "YOUTUBE": {
-      const response = await fetch("https://oauth2.googleapis.com/token", {
+      const response = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
         method: "POST",
+        timeout: 10000,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
           grant_type: "refresh_token",
@@ -113,8 +115,9 @@ async function refreshOAuthToken(
     }
 
     case "LINKEDIN": {
-      const response = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+      const response = await fetchWithTimeout("https://www.linkedin.com/oauth/v2/accessToken", {
         method: "POST",
+        timeout: 10000,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
           grant_type: "refresh_token",
