@@ -3,7 +3,7 @@
  * Tests: Health check, API availability
  */
 
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("API Endpoints", () => {
   test("should return 200 for health check", async ({ request }) => {
@@ -26,13 +26,10 @@ test.describe("API Endpoints", () => {
         params: {},
       },
     });
-
-    // Should return auth error (401 or JSON-RPC error)
     expect([401, 200]).toContain(response.status());
   });
 
   test("should return proper error for invalid MCP request", async ({ request }) => {
-    // Even with auth, invalid method should return error
     const response = await request.post("/api/mcp", {
       data: {
         jsonrpc: "2.0",
@@ -41,7 +38,6 @@ test.describe("API Endpoints", () => {
         params: {},
       },
     });
-
     const json = await response.json();
     expect(json.error).toBeDefined();
   });
