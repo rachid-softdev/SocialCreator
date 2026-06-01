@@ -84,7 +84,6 @@ describe("GET /api/admin/users", () => {
         email: "user1@test.com",
         name: "User 1",
         role: "USER",
-        userRoles: [{ role: "USER" }],
         createdAt: new Date("2024-01-01"),
       },
       {
@@ -92,7 +91,6 @@ describe("GET /api/admin/users", () => {
         email: "admin@test.com",
         name: "Admin",
         role: "ADMIN",
-        userRoles: [{ role: "ADMIN" }],
         createdAt: new Date("2024-01-02"),
       },
     ];
@@ -102,7 +100,6 @@ describe("GET /api/admin/users", () => {
         email: "user1@test.com",
         name: "User 1",
         role: "USER",
-        userRoles: [{ role: "USER" }],
         createdAt: "2024-01-01T00:00:00.000Z",
       },
       {
@@ -110,7 +107,6 @@ describe("GET /api/admin/users", () => {
         email: "admin@test.com",
         name: "Admin",
         role: "ADMIN",
-        userRoles: [{ role: "ADMIN" }],
         createdAt: "2024-01-02T00:00:00.000Z",
       },
     ];
@@ -149,7 +145,6 @@ describe("GET /api/admin/users", () => {
             email: true,
             name: true,
             role: true,
-            userRoles: { select: { role: true } },
             createdAt: true,
           },
         }),
@@ -180,7 +175,6 @@ describe("POST /api/admin/users", () => {
     email: "newuser@test.com",
     name: "New User",
     role: "USER",
-    userRoles: [{ role: "USER" }],
   };
 
   beforeEach(() => {
@@ -285,23 +279,20 @@ describe("POST /api/admin/users", () => {
     });
   });
 
-  describe("UserRole creation", () => {
-    it("should create user with userRoles matching the specified role", async () => {
+  describe("role assignment", () => {
+    it("should create user with USER role by default", async () => {
       await POST(createRequest(validBody));
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             role: "USER",
-            userRoles: {
-              create: [{ role: "USER" }],
-            },
           }),
         }),
       );
     });
 
-    it("should create user with ADMIN role and userRoles", async () => {
+    it("should create user with ADMIN role when specified", async () => {
       const body = { email: "admin2@test.com", role: "ADMIN" };
       await POST(createRequest(body));
 
@@ -309,9 +300,6 @@ describe("POST /api/admin/users", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             role: "ADMIN",
-            userRoles: {
-              create: [{ role: "ADMIN" }],
-            },
           }),
         }),
       );
