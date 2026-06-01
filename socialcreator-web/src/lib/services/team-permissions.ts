@@ -4,7 +4,7 @@
  */
 
 import type { TeamRole } from "@prisma/client";
-import { prisma } from "./prisma";
+import { prisma } from "@/lib/prisma";
 
 export interface PermissionCheck {
   can: boolean;

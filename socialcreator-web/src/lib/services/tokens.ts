@@ -7,15 +7,15 @@
  */
 
 import type { ConnectedAccount, Platform } from "@prisma/client";
+import { decryptToken, encryptToken } from "@/lib/crypto";
 import logger from "@/lib/logger";
-import { decryptToken, encryptToken } from "./crypto";
+import { prisma } from "@/lib/prisma";
 import {
   isTokenExpired,
   type OAuthProvider,
   refreshAccessToken,
   type TokenResponse,
 } from "./oauth";
-import { prisma } from "./prisma";
 
 /**
  * Get a valid access token for a connected account

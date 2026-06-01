@@ -1,13 +1,14 @@
 /**
  * Composable API middleware for routes
- * Applies: body-size-limit → rate-limiting → auth → error handling
+ * Applies: body-size-limit → rate-limiting → auth → request-id → error handling
  */
 
-import type { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { errorResponse, unauthorized } from "@/lib/api-errors";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { withRateLimit } from "@/lib/rate-limit-redis";
+import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
 
 export interface ApiContext {
   userId: string;
@@ -30,7 +31,10 @@ export function withApiMiddleware(handler: ApiHandler) {
     const start = Date.now();
     const resolvedParams = params ? await params : {};
 
-    // 0. Enforce request body size limit
+    // 0. Generate or propagate request ID for distributed tracing
+    const requestId = getOrCreateRequestId(request);
+
+    // 1. Enforce request body size limit
     if (request.body) {
       const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
       if (contentLength > MAX_BODY_SIZE) {
@@ -42,23 +46,32 @@ export function withApiMiddleware(handler: ApiHandler) {
       }
     }
 
-    // 1. Rate limiting
+    // 2. Rate limiting
     const rateLimitResult = await withRateLimit(request);
     if (rateLimitResult) return rateLimitResult;
 
-    // 2. Auth check
+    // 3. Auth check
     const session = await auth();
     if (!session?.user?.id) {
       return unauthorized();
     }
 
-    // 3. Execute handler
+    // 4. Execute handler
     try {
       const response = await handler({ userId: session.user.id, request }, resolvedParams);
 
-      // 4. Logging (no PII)
+      // 5. Add request ID to response headers
+      const responseWithId = new NextResponse(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+      responseWithId.headers.set(REQUEST_ID_HEADER, requestId);
+
+      // 6. Logging (no PII) with request ID
       logger.info(
         {
+          requestId,
           method: request.method,
           path: request.nextUrl.pathname,
           duration: Date.now() - start,
@@ -67,10 +80,11 @@ export function withApiMiddleware(handler: ApiHandler) {
         "API request completed",
       );
 
-      return response;
+      return responseWithId;
     } catch (error) {
       logger.error(
         {
+          requestId,
           err: error,
           method: request.method,
           path: request.nextUrl.pathname,

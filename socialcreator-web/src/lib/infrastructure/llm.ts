@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { withRetry } from "@/lib/retry";
 
 const claude = new Anthropic();
 
@@ -12,13 +13,24 @@ export async function generateContent(
   systemPrompt: string,
   userPrompt: string,
 ): Promise<GenerationResult> {
-  const msg = await claude.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
-    temperature: 0.8,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  const msg = await withRetry(
+    () =>
+      claude.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        temperature: 0.8,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    {
+      maxAttempts: 3,
+      baseDelayMs: 2000,
+      retryOn: (error) => {
+        const status = (error as any).status;
+        return status === 429 || (status >= 500 && status < 600);
+      },
+    },
+  );
 
   const text = msg.content[0].type === "text" ? msg.content[0].text : "";
 

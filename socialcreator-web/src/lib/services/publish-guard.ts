@@ -10,7 +10,7 @@ import { startOfDayUTC } from "@socialcreator/utils";
 import { getFeatureGateService } from "@/lib/entitlements/service";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { getRedis } from "./rate-limit-redis";
+import { getRedis } from "@/lib/rate-limit-redis";
 
 export interface CapStatus {
   allowed: boolean;
