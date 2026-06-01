@@ -115,16 +115,14 @@ describe("POST /api/auth/register", () => {
     });
   });
 
-  describe("UserRole creation", () => {
-    it("should create a UserRole entry with role USER on registration", async () => {
+  describe("role and cgu", () => {
+    it("should create user with default role USER on registration", async () => {
       await POST(createRequest(validBody));
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            userRoles: {
-              create: [{ role: "USER" }],
-            },
+            role: "USER",
           }),
         }),
       );
