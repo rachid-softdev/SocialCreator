@@ -16,7 +16,7 @@ import { hashContent } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canPublish } from "@/lib/publish-guard";
+import { canPublish, recordPublish } from "@/lib/publish-guard";
 import { getPublisher } from "@/lib/publishers";
 import { getValidAccessToken } from "@/lib/tokens";
 
@@ -127,6 +127,9 @@ export async function POST(_request: Request, { params }: RouteParams) {
           publishedAt: new Date(),
         },
       });
+
+      // Record publish in Redis cap counter
+      await recordPublish(content.profileId, content.platform);
 
       return NextResponse.json({
         success: true,

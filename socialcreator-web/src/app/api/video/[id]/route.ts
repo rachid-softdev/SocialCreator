@@ -27,7 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     });
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
     return NextResponse.json({ videoAsset });
@@ -62,7 +62,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     });
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
     // Delete video asset

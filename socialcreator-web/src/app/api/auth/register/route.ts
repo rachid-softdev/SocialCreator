@@ -46,9 +46,6 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         cguAccepted: false,
-        userRoles: {
-          create: [{ role: "USER" }],
-        },
       },
     });
 

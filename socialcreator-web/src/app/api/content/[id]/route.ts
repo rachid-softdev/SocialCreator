@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { verifyContentOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
 const updateContentSchema = z.object({
@@ -28,26 +29,6 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-async function getContentOr404(id: string, userId: string) {
-  const content = await prisma.generatedContent.findFirst({
-    where: { id, profile: { userId } },
-    include: {
-      profile: {
-        select: { id: true, name: true },
-      },
-      run: {
-        select: {
-          id: true,
-          agent: {
-            select: { id: true, name: true },
-          },
-        },
-      },
-    },
-  });
-  return content;
-}
-
 // GET /api/content/[id]
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
@@ -58,13 +39,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const content = await getContentOr404(id, session.user.id);
+    const result = await verifyContentOwnership(session.user.id, id);
 
-    if (!content) {
-      return NextResponse.json({ error: "Content not found" }, { status: 404 });
-    }
+    if (!result.valid) return result.error;
 
-    return NextResponse.json({ content });
+    return NextResponse.json({ content: result.data });
   } catch (error) {
     console.error("Error fetching content:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -81,11 +60,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingContent = await getContentOr404(id, session.user.id);
+    const ownership = await verifyContentOwnership(session.user.id, id);
 
-    if (!existingContent) {
-      return NextResponse.json({ error: "Content not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     const body = await request.json();
     const validationResult = updateContentSchema.safeParse(body);
@@ -134,11 +111,9 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingContent = await getContentOr404(id, session.user.id);
+    const ownership = await verifyContentOwnership(session.user.id, id);
 
-    if (!existingContent) {
-      return NextResponse.json({ error: "Content not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     await prisma.generatedContent.delete({
       where: { id },
