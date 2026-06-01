@@ -8,6 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { decryptToken } from "@/lib/crypto";
 import { revokeToken } from "@/lib/oauth/revoke";
+import { verifyConnectedAccountOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
@@ -27,21 +28,11 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const account = await prisma.connectedAccount.findUnique({
-      where: { id },
-      include: {
-        profile: true,
-      },
-    });
+    const result = await verifyConnectedAccountOwnership(session.user.id, id);
 
-    if (!account) {
-      return NextResponse.json({ error: "Connected account not found" }, { status: 404 });
-    }
+    if (!result.valid) return result.error;
 
-    // Verify ownership
-    if (account.profile.userId !== session.user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
+    const account = result.data;
 
     // Return account without tokens
     return NextResponse.json({
@@ -74,21 +65,11 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const account = await prisma.connectedAccount.findUnique({
-      where: { id },
-      include: {
-        profile: true,
-      },
-    });
+    const result = await verifyConnectedAccountOwnership(session.user.id, id);
 
-    if (!account) {
-      return NextResponse.json({ error: "Connected account not found" }, { status: 404 });
-    }
+    if (!result.valid) return result.error;
 
-    // Verify ownership
-    if (account.profile.userId !== session.user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
+    const account = result.data;
 
     // Try to revoke the token on the platform (best effort)
     // If this fails, we still delete the account from our database

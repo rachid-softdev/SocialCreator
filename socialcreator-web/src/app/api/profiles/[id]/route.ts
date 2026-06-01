@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { verifyProfileOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
 const updateProfileSchema = z.object({
@@ -29,13 +30,6 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-async function getProfileOr404(id: string, userId: string) {
-  const profile = await prisma.profile.findFirst({
-    where: { id, userId },
-  });
-  return profile;
-}
-
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
@@ -45,13 +39,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const profile = await getProfileOr404(id, session.user.id);
+    const result = await verifyProfileOwnership(session.user.id, id);
 
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
+    if (!result.valid) return result.error;
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({ profile: result.data });
   } catch (error) {
     console.error("Error fetching profile:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -67,11 +59,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingProfile = await getProfileOr404(id, session.user.id);
+    const ownership = await verifyProfileOwnership(session.user.id, id);
 
-    if (!existingProfile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     const body = await request.json();
     const validationResult = updateProfileSchema.safeParse(body);
@@ -106,11 +96,9 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingProfile = await getProfileOr404(id, session.user.id);
+    const ownership = await verifyProfileOwnership(session.user.id, id);
 
-    if (!existingProfile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     // Cascade delete - Prisma handles this via onDelete: Cascade
     // But we need to explicitly delete to trigger hooks if any

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { verifyAgentOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
 const updateAgentSchema = z.object({
@@ -32,27 +33,6 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-async function getAgentOr404(id: string, userId: string) {
-  const agent = await prisma.agent.findFirst({
-    where: { id, profile: { userId } },
-    include: {
-      profile: {
-        select: { id: true, name: true },
-      },
-      _count: {
-        select: {
-          runs: true,
-        },
-      },
-      runs: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-    },
-  });
-  return agent;
-}
-
 // GET /api/agents/[id]
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
@@ -63,11 +43,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const agent = await getAgentOr404(id, session.user.id);
+    const result = await verifyAgentOwnership(session.user.id, id);
 
-    if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
+    if (!result.valid) return result.error;
+
+    const agent = result.data;
 
     // Calculate stats
     const totalRuns = await prisma.agentRun.count({
@@ -102,11 +82,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingAgent = await getAgentOr404(id, session.user.id);
+    const ownership = await verifyAgentOwnership(session.user.id, id);
 
-    if (!existingAgent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     const body = await request.json();
     const validationResult = updateAgentSchema.safeParse(body);
@@ -147,11 +125,9 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const existingAgent = await getAgentOr404(id, session.user.id);
+    const ownership = await verifyAgentOwnership(session.user.id, id);
 
-    if (!existingAgent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
+    if (!ownership.valid) return ownership.error;
 
     // Cascade delete - Prisma handles this via onDelete: Cascade
     // But we need to explicitly delete runs first if not using cascade

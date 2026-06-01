@@ -23,7 +23,6 @@ export async function GET() {
         email: true,
         name: true,
         role: true,
-        userRoles: { select: { role: true } },
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -52,16 +51,12 @@ export async function POST(request: Request) {
         name,
         ...(password ? { password: await bcrypt.hash(password, 12) } : {}),
         role,
-        userRoles: {
-          create: [{ role }],
-        },
       },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
-        userRoles: { select: { role: true } },
       },
     });
     return NextResponse.json({ user }, { status: 201 });

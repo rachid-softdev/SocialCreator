@@ -34,20 +34,9 @@ model User {
   profiles                 Profile[]
   apiKeys                  ApiKey[]
   publishLogs              PublishLog[]
-  userRoles                UserRole[]
   createdAt                DateTime     @default(now())
   updatedAt                DateTime     @updatedAt
   role                     Role         @default(USER)
-}
-
-model UserRole {
-  id     String @id @default(cuid())
-  userId String
-  role   Role
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, role])
-  @@index([userId])
 }
 
 model Account {

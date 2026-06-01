@@ -18,7 +18,7 @@ type OwnershipResultError = { valid: false; error: NextResponse };
 type OwnershipResult<T> = OwnershipResultSuccess<T> | OwnershipResultError;
 
 // Prisma GetPayload helpers
-type ProfileResult = Prisma.ProfileGetPayload<{}>;
+type ProfileResult = Prisma.ProfileGetPayload<Record<string, never>>;
 type AgentWithProfile = Prisma.AgentGetPayload<{ include: { profile: true } }>;
 type ContentWithProfile = Prisma.GeneratedContentGetPayload<{
   include: { profile: true };
@@ -26,7 +26,7 @@ type ContentWithProfile = Prisma.GeneratedContentGetPayload<{
 type AccountWithProfile = Prisma.ConnectedAccountGetPayload<{
   include: { profile: true };
 }>;
-type VideoAssetResult = Prisma.VideoAssetGetPayload<{}>;
+type VideoAssetResult = Prisma.VideoAssetGetPayload<Record<string, never>>;
 type AgentRunWithAgentProfile = Prisma.AgentRunGetPayload<{
   include: { agent: { include: { profile: true } } };
 }>;
@@ -153,7 +153,10 @@ export async function verifyVideoAssetOwnership(
   if (!profile || profile.userId !== userId) {
     return {
       valid: false,
-      error: NextResponse.json({ error: "Access denied" }, { status: 403 }),
+      error: NextResponse.json(
+        { error: "Video asset not found or access denied" },
+        { status: 404 },
+      ),
     };
   }
 

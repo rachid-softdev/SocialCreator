@@ -33,6 +33,8 @@ const nextConfig = {
 
   // Security headers
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
+
     return [
       {
         source: "/(.*)",
@@ -41,8 +43,30 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-DNS-Prefetch-Control", value: "off" },
-          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              // 'unsafe-eval' only in development (needed for HMR)
+              // 'unsafe-inline' is required by Next.js for inline hydration scripts
+              // TODO: Investigate nonce/hash-based CSP for production hardening
+              `script-src 'self'${isDev ? " 'unsafe-eval'" : ""} 'unsafe-inline'`,
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: uploadthing.com googleusercontent.com images.unsplash.com avatars.githubusercontent.com image.mux.com",
+              "media-src 'self' data: blob: stream.mux.com",
+              "font-src 'self' data:",
+              "connect-src 'self' https://api.anthropic.com https://api.stripe.com https://api.deepgram.com https://api.uploadthing.com https://api.mux.com https://*.upstash.io wss://*.trigger.dev",
+              "frame-src 'self' https://js.stripe.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
         ],
       },
     ];

@@ -20,6 +20,12 @@ if (!process.env.AUTH_SECRET) {
   );
 }
 
+const googleId = process.env.GOOGLE_CLIENT_ID;
+const googleSecret = process.env.GOOGLE_CLIENT_SECRET;
+if (!googleId || !googleSecret) {
+  throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables are required.");
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -30,8 +36,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: googleId,
+      clientSecret: googleSecret,
     }),
     Credentials({
       name: "credentials",
@@ -72,7 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.cguAccepted = user.cguAccepted ?? false;
         token.role = user.role ?? "USER";
-        token.roles = user.roles ?? [user.role ?? "USER"];
+        token.roles = [user.role ?? "USER"];
       }
 
       // Fetch roles from DB on token refresh (subsequent requests)
@@ -80,11 +86,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            include: { userRoles: true },
+            select: { role: true },
           });
           if (dbUser) {
             token.role = dbUser.role;
-            token.roles = dbUser.userRoles.map((ur) => ur.role);
+            token.roles = [dbUser.role];
           }
         } catch (error) {
           logger.error({ err: error }, "Failed to fetch user roles on token refresh");
