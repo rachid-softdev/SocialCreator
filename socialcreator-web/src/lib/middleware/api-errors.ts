@@ -34,6 +34,7 @@ export function errorResponse(
   return NextResponse.json(body, { status });
 }
 
+export const badRequest = (message: string) => errorResponse(400, "VALIDATION_ERROR", message);
 export const unauthorized = () => errorResponse(401, "UNAUTHORIZED", "Unauthorized");
 export const notFound = (resource = "Resource") =>
   errorResponse(404, "NOT_FOUND", `${resource} not found`);

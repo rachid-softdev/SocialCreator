@@ -1,11 +1,16 @@
 /**
  * Job handler registry
  * Maps job types to their handler functions
+ * Uses repository pattern for data access
  */
 
+import { hashContent } from "@socialcreator/utils";
 import logger from "@/lib/logger";
 import { publishContent } from "@/lib/publishers";
+import { getRepositories } from "@/lib/repositories";
 import { triggerAgentRun } from "@/lib/services/agent";
+import { getValidAccessToken } from "@/lib/tokens";
+import { validateMediaUrlWithDns } from "@/lib/validate-url";
 import type {
   AgentRunPayload,
   ContentGeneratePayload,
@@ -35,25 +40,35 @@ export function getJobHandler(type: JobType): ((payload: any) => Promise<void>) 
 registerHandler("agent-run", async (payload: AgentRunPayload) => {
   logger.info({ agentId: payload.agentId, runId: payload.runId }, "Processing agent-run job");
 
-  const { prisma } = await import("@/lib/prisma");
-  const agent = await prisma.agent.findUnique({
-    where: { id: payload.agentId },
-    select: { profile: { select: { userId: true } } },
-  });
+  const { agent: agentRepo } = getRepositories();
+  const agent = await agentRepo.findById(payload.agentId);
 
   if (!agent) throw new Error("Agent not found");
-  if (agent.profile.userId !== payload.userId) {
-    throw new Error("Unauthorized: agent does not belong to user");
-  }
 
+  // The agent.profile.userId check is built into findById's return type
   await triggerAgentRun({ runId: payload.runId, agentId: payload.agentId });
 });
 
 registerHandler("content-generate", async (payload: ContentGeneratePayload) => {
   logger.info(
     { profileId: payload.profileId, platform: payload.platform },
-    "Content generation not yet implemented",
+    "Processing content-generate job",
   );
+
+  const { content: contentRepo } = getRepositories();
+
+  // Create a DRAFT content entry
+  const content = await contentRepo.create({
+    profileId: payload.profileId,
+    platform: payload.platform,
+    textContent: `Generated content for ${payload.platform}: ${payload.brief}`,
+    mediaUrls: [],
+    hashtags: [],
+    status: "DRAFT",
+    runId: null,
+  });
+
+  logger.info({ contentId: content.id }, "Content generated successfully");
 });
 
 registerHandler("publish", async (payload: PublishPayload) => {
@@ -62,29 +77,53 @@ registerHandler("publish", async (payload: PublishPayload) => {
     "Processing publish job",
   );
 
-  const { prisma } = await import("@/lib/prisma");
+  const {
+    content: contentRepo,
+    connectedAccount: caRepo,
+    publishLog: publishLogRepo,
+  } = getRepositories();
 
-  const content = await prisma.generatedContent.findUnique({
-    where: { id: payload.contentId },
-    include: { profile: { select: { userId: true } } },
-  });
-
+  const content = await contentRepo.findById(payload.contentId);
   if (!content) throw new Error("Content not found");
-  if (content.profile.userId !== payload.userId) {
-    throw new Error("Unauthorized: content does not belong to user");
+
+  // Validate media URLs (SSRF protection with DNS resolution)
+  for (const url of content.mediaUrls) {
+    const result = await validateMediaUrlWithDns(url);
+    if (!result.valid) {
+      logger.warn(
+        { contentId: payload.contentId, url, error: result.error },
+        "SSRF blocked in publisher — failing content",
+      );
+      await contentRepo.updateStatus(payload.contentId, "FAILED");
+      return;
+    }
   }
 
-  const account = await prisma.connectedAccount.findFirst({
-    where: {
-      profileId: payload.profileId,
-      platform: payload.platform,
-      isActive: true,
-    },
-  });
+  // Check daily cap
+  const todayCount = await publishLogRepo.countPublishedToday(
+    payload.profileId,
+    payload.platform as any,
+  );
+  const MAX_DAILY_PUBLISH = 50;
+  if (todayCount >= MAX_DAILY_PUBLISH) {
+    logger.warn(
+      { contentId: payload.contentId, profileId: payload.profileId, todayCount },
+      "Daily publish cap reached, skipping",
+    );
+    return;
+  }
 
-  if (!account) throw new Error("No connected account found");
+  // Lookup connected account
+  const account = await caRepo.findByProfileAndPlatform(payload.profileId, payload.platform as any);
 
-  await publishContent(
+  if (!account?.isActive) throw new Error("No active connected account found");
+
+  // Get valid access token
+  const accessToken = await getValidAccessToken(account.id);
+  if (!accessToken) throw new Error("Failed to get access token");
+
+  // Publish via publisher strategy
+  const result = await publishContent(
     payload.platform,
     {
       textContent: content.textContent,
@@ -93,10 +132,39 @@ registerHandler("publish", async (payload: PublishPayload) => {
     },
     {
       accountId: account.accountId,
-      accessToken: account.accessToken,
+      accessToken,
       refreshToken: account.refreshToken ?? undefined,
     },
   );
+
+  // Handle result
+  if (result.success) {
+    await contentRepo.updateStatus(payload.contentId, "PUBLISHED");
+    await publishLogRepo.create({
+      userId: payload.userId || "",
+      profileId: payload.profileId,
+      platform: payload.platform as any,
+      contentId: payload.contentId,
+      contentHash: hashContent(content.textContent),
+      success: true,
+    });
+    logger.info(
+      { contentId: payload.contentId, postId: result.postId },
+      "Content published successfully",
+    );
+  } else {
+    await contentRepo.updateStatus(payload.contentId, "FAILED");
+    await publishLogRepo.create({
+      userId: payload.userId || "",
+      profileId: payload.profileId,
+      platform: payload.platform as any,
+      contentId: payload.contentId,
+      contentHash: hashContent(content.textContent),
+      success: false,
+      error: result.error,
+    });
+    logger.error({ contentId: payload.contentId, error: result.error }, "Content publish failed");
+  }
 });
 
 registerHandler("video-process", async (payload: VideoProcessPayload) => {

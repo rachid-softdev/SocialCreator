@@ -7,9 +7,8 @@
  */
 
 import type { ConnectedAccount, Platform } from "@prisma/client";
-import { decryptToken, encryptToken } from "@/lib/crypto";
 import logger from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { getRepositories } from "@/lib/repositories";
 import {
   isTokenExpired,
   type OAuthProvider,
@@ -26,29 +25,22 @@ import {
  * For profileId + platform lookup, use getValidAccessTokenByAccount()
  */
 export async function getValidAccessToken(accountId: string): Promise<string | null> {
-  const account = await prisma.connectedAccount.findUnique({
-    where: { id: accountId },
-  });
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  const account = await connectedAccountRepo.findById(accountId);
 
   if (!account) {
     return null;
   }
 
-  // Decrypt the access token
-  let accessToken: string;
-  try {
-    accessToken = decryptToken(account.accessToken);
-  } catch (error) {
-    logger.error({ err: error }, "Failed to decrypt access token");
-    return null;
-  }
+  // Token is already decrypted by the repository
+  const accessToken = account.accessToken;
 
   // Check if token needs refresh
   if (account.expiresAt && isTokenExpired(account.expiresAt)) {
     // Token is expired or about to expire, try to refresh
     if (account.refreshToken) {
       try {
-        const refreshToken = decryptToken(account.refreshToken);
+        const refreshToken = account.refreshToken;
         const newTokens = await refreshAccessToken(account.platform as OAuthProvider, refreshToken);
 
         // Update the account with new tokens
@@ -85,25 +77,15 @@ export async function updateAccountToken(
   refreshToken?: string,
   expiresIn?: number,
 ): Promise<void> {
-  const updateData: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: Date;
-  } = { accessToken: encryptToken(accessToken) };
+  const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined;
 
-  if (refreshToken) {
-    updateData.refreshToken = encryptToken(refreshToken);
-  }
-
-  if (expiresIn) {
-    const expiresAt = new Date(Date.now() + expiresIn * 1000);
-    updateData.expiresAt = expiresAt;
-  }
-
-  await prisma.connectedAccount.update({
-    where: { id: accountId },
-    data: updateData,
-  });
+  // Repository handles encryption automatically
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  await connectedAccountRepo.update(accountId, {
+    accessToken,
+    refreshToken: refreshToken ?? null,
+    expiresAt,
+  } as any);
 }
 
 /**
@@ -119,20 +101,19 @@ export async function createConnectedAccount(
     accountAvatarUrl: string | null;
   },
 ): Promise<ConnectedAccount> {
-  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined;
 
-  return await prisma.connectedAccount.create({
-    data: {
-      profileId,
-      platform: platform as Platform,
-      accessToken: encryptToken(tokens.access_token),
-      refreshToken: tokens.refresh_token ? encryptToken(tokens.refresh_token) : null,
-      expiresAt,
-      accountId: accountInfo.accountId,
-      accountName: accountInfo.accountName,
-      accountAvatarUrl: accountInfo.accountAvatarUrl,
-      isActive: true,
-    },
+  // Repository handles encryption automatically
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  return await connectedAccountRepo.create({
+    profileId,
+    platform: platform as Platform,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token,
+    expiresAt,
+    accountId: accountInfo.accountId,
+    accountName: accountInfo.accountName,
+    accountAvatarUrl: accountInfo.accountAvatarUrl ?? undefined,
   });
 }
 
@@ -150,26 +131,24 @@ export async function updateConnectedAccount(
 ): Promise<ConnectedAccount> {
   const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined;
 
-  return await prisma.connectedAccount.update({
-    where: { id: accountId },
-    data: {
-      accessToken: encryptToken(tokens.access_token),
-      refreshToken: tokens.refresh_token ? encryptToken(tokens.refresh_token) : undefined,
-      expiresAt,
-      accountId: accountInfo.accountId,
-      accountName: accountInfo.accountName,
-      accountAvatarUrl: accountInfo.accountAvatarUrl,
-    },
-  });
+  // Repository handles encryption automatically
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  return await connectedAccountRepo.update(accountId, {
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token ?? null,
+    expiresAt,
+    accountId: accountInfo.accountId,
+    accountName: accountInfo.accountName,
+    accountAvatarUrl: accountInfo.accountAvatarUrl ?? undefined,
+  } as any);
 }
 
 /**
  * Check if a connected account is active and has a valid token
  */
 export async function isAccountValid(accountId: string): Promise<boolean> {
-  const account = await prisma.connectedAccount.findUnique({
-    where: { id: accountId },
-  });
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  const account = await connectedAccountRepo.findById(accountId);
 
   if (!account?.isActive) {
     return false;
@@ -180,7 +159,7 @@ export async function isAccountValid(accountId: string): Promise<boolean> {
     // Token is expired, try to refresh
     if (account.refreshToken) {
       try {
-        const refreshToken = decryptToken(account.refreshToken);
+        const refreshToken = account.refreshToken;
         const newTokens = await refreshAccessToken(account.platform as OAuthProvider, refreshToken);
         await updateAccountToken(
           accountId,
@@ -204,20 +183,16 @@ export async function isAccountValid(accountId: string): Promise<boolean> {
  * Deactivate a connected account (without deleting it)
  */
 export async function deactivateConnectedAccount(accountId: string): Promise<void> {
-  await prisma.connectedAccount.update({
-    where: { id: accountId },
-    data: { isActive: false },
-  });
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  await connectedAccountRepo.update(accountId, { isActive: false } as any);
 }
 
 /**
  * Reactivate a connected account
  */
 export async function reactivateConnectedAccount(accountId: string): Promise<void> {
-  await prisma.connectedAccount.update({
-    where: { id: accountId },
-    data: { isActive: true },
-  });
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  await connectedAccountRepo.update(accountId, { isActive: true } as any);
 }
 
 /**
@@ -229,10 +204,8 @@ export async function getValidAccessTokenByAccount(
   profileId: string,
   platform: Platform,
 ): Promise<string | null> {
-  const account = await prisma.connectedAccount.findUnique({
-    where: { profileId_platform: { profileId, platform } },
-    select: { id: true },
-  });
+  const connectedAccountRepo = getRepositories().connectedAccount;
+  const account = await connectedAccountRepo.findByProfileAndPlatform(profileId, platform);
   if (!account) return null;
   return getValidAccessToken(account.id);
 }

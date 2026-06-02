@@ -5,9 +5,9 @@
 
 import { contentFilterSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
+import { badRequest } from "@/lib/api-errors";
 import { withApiMiddleware } from "@/lib/api-middleware";
 import { getRepositories } from "@/lib/repositories";
-import { isValidUuid } from "@/lib/sanitize";
 
 // GET /api/v1/content?profileId=xxx&status=DRAFT&page=1
 export const GET = withApiMiddleware(async ({ userId, request }) => {
@@ -26,60 +26,55 @@ export const GET = withApiMiddleware(async ({ userId, request }) => {
   const validation = contentFilterSchema.safeParse(rawFilters);
 
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+    return badRequest(validation.error.errors[0].message);
   }
 
   const { profileId, status, platform, page, pageSize } = validation.data;
 
-  // Validate profileId if provided
-  if (profileId && !isValidUuid(profileId)) {
-    return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
-  }
-
   // Use repository pattern
   const { content: contentRepo } = getRepositories();
 
-  // Ensure user can only see their own content
-  const where: Record<string, unknown> = {
-    profile: { userId },
-  };
+  if (profileId) {
+    // Profile-scoped query
+    const data = await contentRepo.findByProfileId(profileId, {
+      status: status || undefined,
+      platform: platform || undefined,
+      page,
+      pageSize,
+    });
 
-  if (profileId) where.profileId = profileId;
-  if (status) where.status = status;
-  if (platform) where.platform = platform;
-
-  // For v1 we still use pagination from the repo's findByProfileId approach
-  // but adapted for user-wide queries. We use prisma directly for this
-  // cross-profile query since the repo is profile-scoped.
-  // In a full migration, IContentRepository would grow a findByUserId method.
-  const { prisma } = await import("@/lib/prisma");
-
-  const [contents, total] = await Promise.all([
-    prisma.generatedContent.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: {
-        profile: { select: { id: true, name: true } },
-        run: {
-          select: {
-            id: true,
-            agent: { select: { id: true, name: true } },
-          },
+    return NextResponse.json(
+      {
+        contents: data.contents,
+        total: data.total,
+        page: data.page,
+        pageSize: data.pageSize,
+        totalPages: data.totalPages,
+      },
+      {
+        headers: {
+          "Cache-Control": "private, no-store",
+          "X-API-Version": "v1",
         },
       },
-    }),
-    prisma.generatedContent.count({ where }),
-  ]);
+    );
+  }
+
+  // Cross-profile query using findByUserId
+  const data = await contentRepo.findByUserId(userId, {
+    status: status || undefined,
+    platform: platform || undefined,
+    page,
+    pageSize,
+  });
 
   return NextResponse.json(
     {
-      contents,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
+      contents: data.contents,
+      total: data.total,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: data.totalPages,
     },
     {
       headers: {

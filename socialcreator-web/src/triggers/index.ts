@@ -5,7 +5,7 @@
  */
 
 export { runAgentScheduler } from "./agent-scheduler.trigger";
-export { enqueuePublish, runPublishWorker } from "./publish-worker.trigger";
+export { runPublishWorker } from "./publish-worker.trigger";
 export { runScheduledContentPublisher } from "./scheduled-content.trigger";
 export { runTokenRefresh } from "./token-refresh.trigger";
 export { runVideoPipelineJob } from "./video-pipeline.trigger";

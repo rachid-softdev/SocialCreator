@@ -1,18 +1,14 @@
 /**
- * Async content publishing worker
- * Handles publishing approved content without blocking the request
- *
- * Retry logic: exponential backoff, max 3 attempts
+ * Async content publishing worker — Trigger.dev entry point
+ * Thin orchestrator: validates content exists, then enqueues to job queue.
+ * Actual publish work happens in the job queue handler.
  */
 
-import { hashContent } from "@socialcreator/utils";
 import { z } from "zod";
 import { enqueueJob } from "@/lib/job-queue";
+import type { PublishPayload } from "@/lib/job-queue/types";
 import logger from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
-import { incrementDailyCap, peekDailyCap } from "@/lib/publish-guard";
-import { getPublisher } from "@/lib/publishers";
-import { getValidAccessToken } from "@/lib/tokens";
+import { getRepositories } from "@/lib/repositories";
 
 // Payload schema for publish job
 const PublishPayloadSchema = z.object({
@@ -23,149 +19,37 @@ const PublishPayloadSchema = z.object({
 
 /**
  * Run the publish worker for a given content payload
+ * Validates content exists, then enqueues a publish job
  */
 export async function runPublishWorker(payload: z.infer<typeof PublishPayloadSchema>): Promise<{
   contentId: string;
-  success: boolean;
-  postId?: string;
-  postUrl?: string;
-  error?: string;
+  queued: boolean;
 }> {
-  const { contentId, userId, profileId } = payload;
+  const { contentId, userId } = payload;
 
-  logger.info({ contentId }, "Starting publish worker");
+  logger.info({ contentId }, "Starting publish worker — validating and enqueuing");
 
-  // Fetch content
-  const content = await prisma.generatedContent.findUnique({
-    where: { id: contentId },
-    include: { profile: true },
-  });
+  // Validate content exists
+  const { content: contentRepo } = getRepositories();
+  const content = await contentRepo.findById(contentId);
 
   if (!content) {
     throw new Error(`Content not found: ${contentId}`);
   }
 
-  // Check cap (read-only peek)
-  const cap = await peekDailyCap(profileId, content.platform);
-
-  if (!cap.allowed) {
-    logger.warn(
-      { platform: content.platform, count: cap.count, max: cap.max },
-      "Daily cap reached, skipping publish",
-    );
-    return {
-      contentId,
-      success: false,
-      error: `Cap atteint: ${cap.count}/${cap.max}`,
-    };
-  }
-
-  // Get connected account
-  const account = await prisma.connectedAccount.findUnique({
-    where: {
-      profileId_platform: {
-        profileId,
-        platform: content.platform,
-      },
-    },
-  });
-
-  if (!account?.isActive) {
-    throw new Error(`No active account for ${content.platform}`);
-  }
-
-  // Get valid access token
-  const accessToken = await getValidAccessToken(account.id);
-
-  if (!accessToken) {
-    throw new Error("Failed to get access token");
-  }
-
-  // Publish
-  const publisher = getPublisher(content.platform);
-  const result = await publisher.publish(
-    {
-      textContent: content.textContent,
-      mediaUrls: content.mediaUrls,
-      hashtags: content.hashtags,
-    },
-    {
-      accountId: account.accountId,
-      accessToken,
-      refreshToken: account.refreshToken || undefined,
-    },
-  );
-
-  // Wrap status update + PublishLog in a transaction for atomicity
-  if (result.success) {
-    await prisma.$transaction([
-      prisma.publishLog.create({
-        data: {
-          userId,
-          profileId,
-          platform: content.platform,
-          contentId: content.id,
-          contentHash: hashContent(content.textContent),
-          success: true,
-        },
-      }),
-      prisma.generatedContent.update({
-        where: { id: contentId },
-        data: {
-          status: "PUBLISHED",
-          postId: result.postId || null,
-          publishedAt: new Date(),
-        },
-      }),
-    ]);
-
-    // Increment cap (Redis atomic — outside Prisma transaction)
-    await incrementDailyCap(profileId, content.platform);
-  } else {
-    await prisma.$transaction([
-      prisma.publishLog.create({
-        data: {
-          userId,
-          profileId,
-          platform: content.platform,
-          contentId: content.id,
-          contentHash: hashContent(content.textContent),
-          success: false,
-          error: result.error || null,
-        },
-      }),
-      prisma.generatedContent.update({
-        where: { id: contentId },
-        data: {
-          status: "FAILED",
-          postId: null,
-          publishedAt: null,
-        },
-      }),
-    ]);
-  }
-
-  logger.info({ contentId, success: result.success }, "Publish worker completed");
-
-  return {
-    contentId,
-    success: result.success,
-    postId: result.postId,
-    postUrl: result.postUrl,
-    error: result.error,
-  };
-}
-
-/**
- * Enqueue a content for publishing
- * Uses the in-process job queue for async execution with retry support
- */
-export async function enqueuePublish(payload: z.infer<typeof PublishPayloadSchema>): Promise<void> {
+  // Enqueue to job queue — actual publish happens in the handler
   enqueueJob(
-    "publish-content",
-    async () => {
-      await runPublishWorker(payload);
-    },
-    { maxAttempts: 3, retryDelay: 2000 },
+    "publish",
+    {
+      contentId,
+      profileId: content.profileId,
+      platform: content.platform,
+      userId,
+    } satisfies PublishPayload,
+    { priority: "high", maxAttempts: 3, retryDelayMs: 5000 },
   );
+
+  logger.info({ contentId }, "Publish job enqueued");
+
+  return { contentId, queued: true };
 }
