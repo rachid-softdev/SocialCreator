@@ -7,7 +7,8 @@ import { expect, test } from "@playwright/test";
 
 const PROTECTED_ROUTES = ["/dashboard", "/profiles", "/settings", "/agents", "/content"];
 
-const PUBLIC_ROUTES = ["/", "/pricing", "/blog", "/login", "/register"];
+// /pricing is under the (main) route group which requires authentication.
+const PUBLIC_ROUTES = ["/", "/blog", "/login", "/register"];
 
 test.describe("Protected Routes", () => {
   for (const route of PROTECTED_ROUTES) {
