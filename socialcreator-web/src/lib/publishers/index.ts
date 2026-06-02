@@ -93,3 +93,38 @@ export {
   publishToX,
   publishToYouTube,
 };
+
+// ============================================
+// Enhanced Publisher Strategy — new exports
+// Backward compatible: all existing exports above remain unchanged
+// ============================================
+
+export type { PipelineContext } from "./pipeline";
+export { runPublishPipeline } from "./pipeline";
+export {
+  getPublisherRegistration,
+  hasPublisher,
+  registerPublisherWithConfig,
+  registerSimplePublisher,
+} from "./registry";
+export type {
+  ContentValidator,
+  OnErrorHook,
+  PostPublishHook,
+  PrePublishHook,
+  PublishAccount,
+  PublishContent as PublishContentInput,
+  PublishContext,
+  PublisherHooks,
+  PublisherRegistration,
+  RetryConfig,
+  ValidationResult,
+} from "./types";
+export {
+  characterLimitValidator,
+  instagramValidator,
+  linkedinValidator,
+  mediaRequiredValidator,
+  tiktokValidator,
+  xValidator,
+} from "./validators";

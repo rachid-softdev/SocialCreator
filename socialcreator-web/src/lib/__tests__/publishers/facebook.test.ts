@@ -125,14 +125,14 @@ describe("publishToFacebook", () => {
     expect(result.error).toBe("Unknown error");
   });
 
-  it("should include access_token as URL query parameter", async () => {
+  it("should include access_token as Authorization header", async () => {
     const mockFetch = vi.mocked(fetchWithTimeout);
     mockFetch.mockResolvedValueOnce(createMockResponse({ json: { id: "fb_123" } }));
 
     await publishToFacebook(mockContent, mockAccount);
 
-    const callUrl = mockFetch.mock.calls[0][0] as string;
-    expect(callUrl).toContain("access_token=fb-token");
+    const headers = (mockFetch.mock.calls[0][1] as any).headers;
+    expect(headers).toHaveProperty("Authorization", "Bearer fb-token");
   });
 
   it("should POST to the correct endpoint", async () => {

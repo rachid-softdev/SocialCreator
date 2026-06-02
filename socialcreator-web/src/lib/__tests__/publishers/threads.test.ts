@@ -113,13 +113,13 @@ describe("publishToThreads", () => {
     expect(callUrl).toContain("/threads");
   });
 
-  it("should include access_token as URL query parameter", async () => {
+  it("should include access_token as Authorization header", async () => {
     const mockFetch = vi.mocked(fetchWithTimeout);
     mockFetch.mockResolvedValueOnce(createMockResponse({ json: { id: "threads_123" } }));
 
     await publishToThreads(mockContent, mockAccount);
 
-    const callUrl = mockFetch.mock.calls[0][0] as string;
-    expect(callUrl).toContain("access_token=threads-token");
+    const headers = (mockFetch.mock.calls[0][1] as any).headers;
+    expect(headers).toHaveProperty("Authorization", "Bearer threads-token");
   });
 });

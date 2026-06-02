@@ -21,11 +21,14 @@ export async function publishToThreads(
 ): Promise<PublishResult> {
   try {
     const response = await fetchWithTimeout(
-      `https://graph.facebook.com/v18.0/${account.accountId}/threads?access_token=${encodeURIComponent(account.accessToken)}`,
+      `https://graph.facebook.com/v18.0/${account.accountId}/threads`,
       {
         method: "POST",
         timeout: 15000,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${account.accessToken}`,
+        },
         body: JSON.stringify({
           message: content.textContent.slice(0, 500),
         }),

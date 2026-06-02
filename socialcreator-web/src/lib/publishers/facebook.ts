@@ -32,11 +32,14 @@ export async function publishToFacebook(
     }
 
     const response = await fetchWithTimeout(
-      `https://graph.facebook.com/v18.0/${account.accountId}/feed?access_token=${encodeURIComponent(account.accessToken)}`,
+      `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
       {
         method: "POST",
         timeout: 15000,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${account.accessToken}`,
+        },
         body: JSON.stringify(body),
       },
     );

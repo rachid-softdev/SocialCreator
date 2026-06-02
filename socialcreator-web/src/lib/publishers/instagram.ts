@@ -28,11 +28,14 @@ export async function publishToInstagram(
 
       // Upload image/video first
       const mediaResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media?access_token=${encodeURIComponent(account.accessToken)}`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/media`,
         {
           method: "POST",
           timeout: 15000, // Meta API: 15s timeout
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${account.accessToken}`,
+          },
           body: JSON.stringify({
             image_url: content.mediaUrls[0],
             caption,
@@ -49,11 +52,14 @@ export async function publishToInstagram(
 
       // Publish the container
       const containerResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media_publish?access_token=${encodeURIComponent(account.accessToken)}`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/media_publish`,
         {
           method: "POST",
           timeout: 15000,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${account.accessToken}`,
+          },
           body: JSON.stringify({
             creation_id: mediaData.id,
           }),
@@ -71,11 +77,14 @@ export async function publishToInstagram(
     } else {
       // Text-only post via Pages API
       const response = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/feed?access_token=${encodeURIComponent(account.accessToken)}`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
         {
           method: "POST",
           timeout: 15000,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${account.accessToken}`,
+          },
           body: JSON.stringify({
             message: caption,
           }),
