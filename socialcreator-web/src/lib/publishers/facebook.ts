@@ -4,45 +4,37 @@
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { validateMediaUrl } from "@/lib/validate-url";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToFacebook(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
+  const { textContent, mediaUrls, hashtags } = input;
+  const { accountId, accessToken } = options;
   try {
-    const message = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
+    const message = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
     const body: Record<string, string> = {
       message,
     };
 
-    if (content.mediaUrls.length > 0) {
-      const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+    if (mediaUrls.length > 0) {
+      const urlValidation = validateMediaUrl(mediaUrls[0]);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
-      body.link = content.mediaUrls[0];
+      body.link = mediaUrls[0];
     }
 
-    const response = await fetchWithTimeout(
-      `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
-      {
-        method: "POST",
-        timeout: 15000,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${account.accessToken}`,
-        },
-        body: JSON.stringify(body),
+    const response = await fetchWithTimeout(`https://graph.facebook.com/v18.0/${accountId}/feed`, {
+      method: "POST",
+      timeout: 15000,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
-    );
+      body: JSON.stringify(body),
+    });
     const data = await response.json();
     if (data.error) {
       if (data.error.code === 190) {

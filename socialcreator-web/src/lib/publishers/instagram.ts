@@ -4,40 +4,35 @@
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { validateMediaUrl } from "@/lib/validate-url";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToInstagram(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
+  const { textContent, mediaUrls, hashtags } = input;
+  const { accountId, accessToken } = options;
   try {
-    const caption = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
+    const caption = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
 
-    if (content.mediaUrls.length > 0) {
-      const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+    if (mediaUrls.length > 0) {
+      const urlValidation = validateMediaUrl(mediaUrls[0]);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
 
       // Upload image/video first
       const mediaResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media`,
+        `https://graph.facebook.com/v18.0/${accountId}/media`,
         {
           method: "POST",
           timeout: 15000, // Meta API: 15s timeout
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${account.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            image_url: content.mediaUrls[0],
+            image_url: mediaUrls[0],
             caption,
           }),
         },
@@ -52,13 +47,13 @@ export async function publishToInstagram(
 
       // Publish the container
       const containerResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media_publish`,
+        `https://graph.facebook.com/v18.0/${accountId}/media_publish`,
         {
           method: "POST",
           timeout: 15000,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${account.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             creation_id: mediaData.id,
@@ -77,13 +72,13 @@ export async function publishToInstagram(
     } else {
       // Text-only post via Pages API
       const response = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
+        `https://graph.facebook.com/v18.0/${accountId}/feed`,
         {
           method: "POST",
           timeout: 15000,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${account.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             message: caption,

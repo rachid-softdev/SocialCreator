@@ -8,7 +8,7 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 const YOUTUBE_UPLOAD_URL = "https://upload.youtube.com/upload/gateway";
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
@@ -28,19 +28,14 @@ interface YouTubeUploadOptions {
  * Note: Requires video content - YouTube doesn't support text-only posts
  */
 export async function publishToYouTube(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
-  options: Partial<YouTubeUploadOptions> = {},
+  input: PublishInput,
+  options: PublishOptions,
+  uploadOptions: Partial<YouTubeUploadOptions> = {},
 ): Promise<PublishResult> {
+  const { textContent, mediaUrls, hashtags } = input;
+  const { accessToken } = options;
   // YouTube requires video content
-  if (content.mediaUrls.length === 0) {
+  if (mediaUrls.length === 0) {
     return {
       success: false,
       error: "YouTube requires video content. No media URLs provided.",
@@ -52,9 +47,9 @@ export async function publishToYouTube(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const videoTitle = (content.textContent.slice(0, 100) || "Untitled Video").trim();
-      const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
-      const tags = content.hashtags.slice(0, 15);
+      const videoTitle = (textContent.slice(0, 100) || "Untitled Video").trim();
+      const description = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
+      const tags = hashtags.slice(0, 15);
 
       // Step 1: Initiate resumable upload
       const initResponse = await fetchWithTimeout(
@@ -63,7 +58,7 @@ export async function publishToYouTube(
           method: "POST",
           timeout: 15000,
           headers: {
-            Authorization: `Bearer ${account.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
             "X-Upload-Content-Length": "0", // Will be updated
             "X-Upload-Content-Type": "video/mp4",
@@ -73,10 +68,10 @@ export async function publishToYouTube(
               title: videoTitle,
               description: description,
               tags: tags,
-              categoryId: options.categoryId || "22", // People & Blogs
+              categoryId: uploadOptions.categoryId || "22", // People & Blogs
             },
             status: {
-              privacyStatus: options.privacyStatus || "public",
+              privacyStatus: uploadOptions.privacyStatus || "public",
               selfDeclaredMadeForKids: false,
             },
           }),
@@ -106,7 +101,7 @@ export async function publishToYouTube(
       // Step 2: Upload the video file
       // Note: In production, you'd implement chunked upload for large files
       // For this implementation, we'll do a simple upload
-      const mediaUrl = content.mediaUrls[0];
+      const mediaUrl = mediaUrls[0];
       const urlValidation = validateMediaUrl(mediaUrl);
       if (!urlValidation.valid) {
         throw new Error(`Invalid video URL: ${urlValidation.error}`);

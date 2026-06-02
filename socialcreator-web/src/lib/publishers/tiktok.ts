@@ -6,7 +6,7 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
 
@@ -76,25 +76,20 @@ async function retryWithBackoff<T>(
  * Supports both video posts and text-only (caption) posts
  */
 export async function publishToTikTok(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
-  options: Partial<TikTokVideoUploadOptions> = {},
+  input: PublishInput,
+  options: PublishOptions,
+  uploadOptions: Partial<TikTokVideoUploadOptions> = {},
 ): Promise<PublishResult> {
-  const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
+  const { textContent, mediaUrls, hashtags } = input;
+  const { accessToken } = options;
+  const description = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
 
   // Determine post mode based on media availability
-  const hasVideo = content.mediaUrls.length > 0;
+  const hasVideo = mediaUrls.length > 0;
 
   // Validate media URL for SSRF prevention
   if (hasVideo) {
-    const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+    const urlValidation = validateMediaUrl(mediaUrls[0]);
     if (!urlValidation.valid) {
       return {
         success: false,
@@ -109,12 +104,12 @@ export async function publishToTikTok(
         // Prepare post payload
         const postPayload = {
           post_mode: hasVideo ? "VIDEO_UPLOAD" : "TEXT_ONLY",
-          title: (content.textContent.slice(0, 150) || "TikTok Post").trim(),
+          title: (textContent.slice(0, 150) || "TikTok Post").trim(),
           description: description,
           ...(hasVideo && {
-            video_url: content.mediaUrls[0],
+            video_url: mediaUrls[0],
           }),
-          ...options,
+          ...uploadOptions,
         };
 
         const response = await fetchWithTimeout(`${TIKTOK_API_BASE}/post/publish/video/init/`, {
@@ -122,7 +117,7 @@ export async function publishToTikTok(
           timeout: 15000,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${account.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(postPayload),
         });
@@ -153,7 +148,7 @@ export async function publishToTikTok(
           // Upload video to TikTok's upload URL
 
           // SSRF validation before fetching media
-          const mediaUrl = content.mediaUrls[0];
+          const mediaUrl = mediaUrls[0];
           const mediaUrlValidation = validateMediaUrl(mediaUrl);
           if (!mediaUrlValidation.valid) {
             throw new Error(`Invalid video URL: ${mediaUrlValidation.error}`);

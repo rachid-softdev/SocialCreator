@@ -10,29 +10,12 @@ import { publishToLinkedIn } from "./linkedin";
 import { publishToPinterest } from "./pinterest";
 import { publishToThreads } from "./threads";
 import { publishToTikTok } from "./tiktok";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 import { publishToX } from "./x";
 import { publishToYouTube } from "./youtube";
 
-export interface PublishResult {
-  success: boolean;
-  postId?: string;
-  postUrl?: string;
-  error?: string;
-}
-
 export interface Publisher {
-  publish(
-    content: {
-      textContent: string;
-      mediaUrls: string[];
-      hashtags: string[];
-    },
-    account: {
-      accountId: string;
-      accessToken: string;
-      refreshToken?: string;
-    },
-  ): Promise<PublishResult>;
+  publish(input: PublishInput, options: PublishOptions): Promise<PublishResult>;
 }
 
 // Publisher map for O(1) lookup
@@ -44,14 +27,14 @@ function registerPublisher(platform: Platform, fn: Publisher["publish"]): void {
 }
 
 // Register all publishers
-registerPublisher("INSTAGRAM", (content, account) => publishToInstagram(content, account));
-registerPublisher("TIKTOK", (content, account) => publishToTikTok(content, account));
-registerPublisher("YOUTUBE", (content, account) => publishToYouTube(content, account));
-registerPublisher("FACEBOOK", (content, account) => publishToFacebook(content, account));
-registerPublisher("X", (content, account) => publishToX(content, account));
-registerPublisher("LINKEDIN", (content, account) => publishToLinkedIn(content, account));
-registerPublisher("THREADS", (content, account) => publishToThreads(content, account));
-registerPublisher("PINTEREST", (content, account) => publishToPinterest(content, account));
+registerPublisher("INSTAGRAM", (input, options) => publishToInstagram(input, options));
+registerPublisher("TIKTOK", (input, options) => publishToTikTok(input, options));
+registerPublisher("YOUTUBE", (input, options) => publishToYouTube(input, options));
+registerPublisher("FACEBOOK", (input, options) => publishToFacebook(input, options));
+registerPublisher("X", (input, options) => publishToX(input, options));
+registerPublisher("LINKEDIN", (input, options) => publishToLinkedIn(input, options));
+registerPublisher("THREADS", (input, options) => publishToThreads(input, options));
+registerPublisher("PINTEREST", (input, options) => publishToPinterest(input, options));
 
 // Factory function to get the right publisher for a platform
 export function getPublisher(platform: Platform): Publisher {
@@ -67,19 +50,11 @@ export function getPublisher(platform: Platform): Publisher {
  */
 export async function publishContent(
   platform: Platform,
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-    refreshToken?: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
   const publisher = getPublisher(platform);
-  return publisher.publish(content, account);
+  return publisher.publish(input, options);
 }
 
 // Export individual publishers for direct use
@@ -117,6 +92,9 @@ export type {
   PublishContext,
   PublisherHooks,
   PublisherRegistration,
+  PublishInput,
+  PublishOptions,
+  PublishResult,
   RetryConfig,
   ValidationResult,
 } from "./types";

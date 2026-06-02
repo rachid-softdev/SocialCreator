@@ -6,31 +6,26 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToThreads(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
+  const { textContent } = input;
+  const { accountId, accessToken } = options;
   try {
     const response = await fetchWithTimeout(
-      `https://graph.facebook.com/v18.0/${account.accountId}/threads`,
+      `https://graph.facebook.com/v18.0/${accountId}/threads`,
       {
         method: "POST",
         timeout: 15000,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${account.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          message: content.textContent.slice(0, 500),
+          message: textContent.slice(0, 500),
         }),
       },
     );
