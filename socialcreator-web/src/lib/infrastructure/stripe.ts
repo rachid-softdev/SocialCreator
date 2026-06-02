@@ -2,6 +2,8 @@ import Stripe from "stripe";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
+const STRIPE_TIMEOUT_MS = 15_000; // 15 seconds
+
 let stripeInstance: Stripe | null = null;
 
 export function getStripe(): Stripe {
@@ -11,9 +13,12 @@ export function getStripe(): Stripe {
   }
   stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2025-02-24.acacia" as const,
+    timeout: STRIPE_TIMEOUT_MS,
   });
   return stripeInstance;
 }
+
+export { STRIPE_TIMEOUT_MS };
 
 // ============================================
 // Dynamic Price Fetching from Stripe

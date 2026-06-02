@@ -1,7 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
+import logger from "@/lib/logger";
 import { withRetry } from "@/lib/retry";
 
-const claude = new Anthropic();
+const ANTHROPIC_TIMEOUT_MS = 60_000; // 60 seconds
+
+const claude = new Anthropic({
+  timeout: ANTHROPIC_TIMEOUT_MS,
+});
 
 export interface GenerationResult {
   textContent: string;

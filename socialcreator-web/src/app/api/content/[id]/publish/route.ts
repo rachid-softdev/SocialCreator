@@ -52,7 +52,17 @@ export async function POST(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Content not found" }, { status: 404 });
     }
 
-    // 2. Verify status is APPROVED
+    // 2. Idempotency: if already PUBLISHED, return 200 with existing post info
+    if (content.status === "PUBLISHED") {
+      return NextResponse.json({
+        success: true,
+        alreadyPublished: true,
+        postId: content.postId,
+        publishedAt: content.publishedAt?.toISOString(),
+      });
+    }
+
+    // 3. Verify status is APPROVED (PUBLISHED case already handled above)
     if (content.status !== "APPROVED") {
       return NextResponse.json(
         { error: `Cannot publish: content status is ${content.status}, must be APPROVED` },
@@ -60,7 +70,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
       );
     }
 
-    // 3. Check daily cap
+    // 4. Check daily cap
     const capCheck = await canPublish(content.profileId, content.platform);
     if (!capCheck.canPublish) {
       return NextResponse.json({ error: capCheck.reason }, { status: 429 });

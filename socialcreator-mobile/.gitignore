@@ -13,8 +13,11 @@ expo-env.d.ts
 dist/
 build/
 
-# Environment variables
-.env*.local
+# Environment variables — keep ALL .env* out of git (except .env.example)
+.env*
+!.env.example
+!.env.local.example
+!.env.production.example
 
 # IDE
 .idea/
