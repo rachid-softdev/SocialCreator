@@ -101,6 +101,33 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter=socialcreator-web exec prisma generate
 
+      - name: Diagnose webServer startup
+        timeout-minutes: 1
+        continue-on-error: true
+        run: |
+          cd socialcreator-web
+          timeout 10 next dev 2>&1 || true
+        env:
+          AUTH_SECRET: ci-test-secret-not-for-production-abcdef123456
+          ENCRYPTION_KEY: ci-test-encryption-key-not-for-production-0123456789abcdef
+          GOOGLE_CLIENT_ID: ci-test-client-id
+          GOOGLE_CLIENT_SECRET: ci-test-client-secret
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/socialcreator_ci
+          META_CLIENT_ID: ci-test-meta-client
+          META_CLIENT_SECRET: ci-test-meta-secret
+          TIKTOK_CLIENT_KEY: ci-test-tiktok-key
+          TIKTOK_CLIENT_SECRET: ci-test-tiktok-secret
+          LINKEDIN_CLIENT_ID: ci-test-linkedin-id
+          LINKEDIN_CLIENT_SECRET: ci-test-linkedin-secret
+          X_CLIENT_ID: ci-test-x-id
+          X_CLIENT_SECRET: ci-test-x-secret
+          PINTEREST_CLIENT_ID: ci-test-pinterest-id
+          PINTEREST_CLIENT_SECRET: ci-test-pinterest-secret
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci_dummy
+          STRIPE_SECRET_KEY: sk_test_ci_dummy
+          STRIPE_WEBHOOK_SECRET: whsec_ci_dummy
+
       - name: Run Playwright tests
         run: pnpm --filter=socialcreator-web exec playwright test
         env:
