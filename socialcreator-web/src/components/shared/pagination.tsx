@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback } from "react";
 
 interface PaginationProps {

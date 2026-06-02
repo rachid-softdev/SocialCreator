@@ -7,7 +7,7 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
-import { encryptToken, decryptToken } from "@/lib/crypto";
+import { decryptToken, encryptToken } from "@/lib/crypto";
 import { getRedirectUri, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
 interface AuthState {

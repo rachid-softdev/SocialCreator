@@ -63,7 +63,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm exec prisma generate
+        run: pnpm --filter=socialcreator-web exec prisma generate
 
       - name: Run unit tests
         run: pnpm run test:run
@@ -134,7 +134,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm exec prisma generate
+        run: pnpm --filter=socialcreator-web exec prisma generate
 
       - name: Build Next.js application
         run: pnpm run build

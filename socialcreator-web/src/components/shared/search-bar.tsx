@@ -1,7 +1,7 @@
 "use client";
 
-import { Search, X } from "lucide-react";
 import { cn } from "@socialcreator/utils";
+import { Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface SearchBarProps {

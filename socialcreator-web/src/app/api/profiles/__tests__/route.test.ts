@@ -32,8 +32,8 @@ vi.mock("@/lib/quota-guard", () => ({
 // ---------------------------------------------------------------------------
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { withRateLimit } from "@/lib/rate-limit-redis";
 import { checkProfileQuota } from "@/lib/quota-guard";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 import { GET, POST } from "../route";
 
 // ---------------------------------------------------------------------------

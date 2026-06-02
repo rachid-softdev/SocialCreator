@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getValidAccessToken } from "@/lib/tokens";
 import { publishContent } from "@/lib/publishers";
+import { getValidAccessToken } from "@/lib/tokens";
 
 const bulkActionSchema = z.object({
   contentIds: z.array(z.string().uuid()).min(1).max(50),
