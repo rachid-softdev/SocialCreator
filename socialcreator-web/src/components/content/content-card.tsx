@@ -4,6 +4,7 @@ import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { formatDateTime } from "@socialcreator/utils";
 import { Check, Clock, Eye, Send, X } from "lucide-react";
 import Link from "next/link";
+import { useContentStore, useUIStore } from "@/lib/stores";
 import { ContentStatusBadge } from "./content-status-badge";
 import { PlatformBadge } from "./platform-badge";
 
@@ -15,7 +16,30 @@ interface ContentCardProps {
   onPublish?: (id: string) => void;
 }
 
-export function ContentCard({ content, onApprove, onReject, onPublish }: ContentCardProps) {
+export function ContentCard({
+  content: propContent,
+  onApprove: propOnApprove,
+  onReject: propOnReject,
+  onPublish: propOnPublish,
+}: ContentCardProps) {
+  // Prefer Zustand store over props
+  const storeItem = useContentStore((s) => s.items.find((i) => i.id === propContent.id));
+  const storeUpdateItem = useContentStore((s) => s.updateItem);
+  const storeSelectItem = useContentStore((s) => s.selectItem);
+  const openModal = useUIStore((s) => s.openModal);
+
+  const content = storeItem ?? propContent;
+  const onApprove =
+    propOnApprove ?? ((id: string) => storeUpdateItem(id, { status: "APPROVED" as any }));
+  const onReject =
+    propOnReject ?? ((id: string) => storeUpdateItem(id, { status: "REJECTED" as any }));
+  const onPublish =
+    propOnPublish ??
+    ((id: string) => {
+      storeSelectItem(id);
+      openModal("publish", { contentId: id });
+    });
+
   const isDraft = content.status === "DRAFT";
   const isApproved = content.status === "APPROVED";
   const isScheduled = content.status === "SCHEDULED";

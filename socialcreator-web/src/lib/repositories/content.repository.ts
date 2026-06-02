@@ -32,6 +32,7 @@ export interface ContentPage {
 export interface IContentRepository {
   findById(id: string): Promise<GeneratedContent | null>;
   findByProfileId(profileId: string, options?: ContentFilterOptions): Promise<ContentPage>;
+  findByUserId(userId: string, options?: ContentFilterOptions): Promise<ContentPage>;
   create(data: GeneratedContentCreateInput): Promise<GeneratedContent>;
   updateStatus(id: string, status: ContentStatus): Promise<GeneratedContent>;
   delete(id: string): Promise<void>;
@@ -80,6 +81,44 @@ export class PrismaContentRepository implements IContentRepository {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: { profile: { select: { id: true, name: true } } },
+      }),
+      prisma.generatedContent.count({ where }),
+    ]);
+
+    return {
+      contents,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  async findByUserId(userId: string, options?: ContentFilterOptions): Promise<ContentPage> {
+    const page = options?.page ?? 1;
+    const pageSize = options?.pageSize ?? 20;
+    const where: Record<string, unknown> = {
+      profile: { userId },
+    };
+
+    if (options?.status) where.status = options.status;
+    if (options?.platform) where.platform = options.platform;
+
+    const [contents, total] = await Promise.all([
+      prisma.generatedContent.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          profile: { select: { id: true, name: true } },
+          run: {
+            select: {
+              id: true,
+              agent: { select: { id: true, name: true } },
+            },
+          },
+        },
       }),
       prisma.generatedContent.count({ where }),
     ]);

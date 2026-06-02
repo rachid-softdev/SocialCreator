@@ -5,13 +5,14 @@ import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { CONTENT_STATUS_LABELS, PLATFORMS } from "@socialcreator/types/profile";
 import { cn } from "@socialcreator/utils";
 import { Filter, LayoutGrid, List, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useContentStore } from "@/lib/stores";
 import { ContentCard } from "./content-card";
 import { ContentStatusBadge } from "./content-status-badge";
 import { PlatformBadge } from "./platform-badge";
 
 interface ContentListProps {
-  contents: GeneratedContentWithRelations[];
+  contents?: GeneratedContentWithRelations[];
   profileId?: string;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
@@ -25,11 +26,11 @@ interface ContentListProps {
 const STATUSES: ContentStatus[] = ["DRAFT", "APPROVED", "PUBLISHED", "FAILED", "REJECTED"];
 
 export function ContentList({
-  contents,
+  contents: propContents,
   profileId,
-  onApprove,
-  onReject,
-  onPublish,
+  onApprove: propOnApprove,
+  onReject: propOnReject,
+  onPublish: propOnPublish,
   showFilters = true,
   searchQuery,
   statusFilter: externalStatusFilter,
@@ -38,6 +39,56 @@ export function ContentList({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [internalStatusFilter, setInternalStatusFilter] = useState<ContentStatus | null>(null);
   const [internalPlatformFilter, setInternalPlatformFilter] = useState<Platform | null>(null);
+
+  // Prefer Zustand store over props for data and actions
+  const storeItems = useContentStore((s) => s.items);
+  const storeSelectItem = useContentStore((s) => s.selectItem);
+  const storeUpdateItem = useContentStore((s) => s.updateItem);
+
+  // Use props as fallback, store as primary
+  const contents = propContents ?? storeItems;
+  const onApprove =
+    propOnApprove ??
+    ((id: string) => {
+      storeSelectItem(id);
+      storeUpdateItem(id, { status: "APPROVED" as any });
+    });
+  const onReject =
+    propOnReject ??
+    ((id: string) => {
+      storeUpdateItem(id, { status: "REJECTED" as any });
+    });
+  const onPublish =
+    propOnPublish ??
+    ((id: string) => {
+      storeUpdateItem(id, { status: "PUBLISHED" as any });
+    });
+
+  // Hydrate store contents if props provided (server data → client store bridge)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only hydrate on mount with initial data
+  useEffect(() => {
+    if (propContents && propContents.length > 0) {
+      const mappedItems = propContents.map((c) => ({
+        id: c.id,
+        profileId: c.profileId,
+        platform: c.platform,
+        textContent: c.textContent,
+        mediaUrls: c.mediaUrls,
+        hashtags: c.hashtags,
+        status: c.status as any,
+        createdAt:
+          typeof c.createdAt === "string" ? c.createdAt : new Date(c.createdAt).toISOString(),
+        updatedAt:
+          typeof c.updatedAt === "string" ? c.updatedAt : new Date(c.updatedAt).toISOString(),
+        publishedAt: c.publishedAt
+          ? typeof c.publishedAt === "string"
+            ? c.publishedAt
+            : new Date(c.publishedAt).toISOString()
+          : undefined,
+      }));
+      useContentStore.setState({ items: mappedItems, isLoading: false });
+    }
+  }, []);
 
   // When external props are provided, they override internal state
   const effectiveStatusFilter =
@@ -79,10 +130,9 @@ export function ContentList({
           {/* Status Filters */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              type="button"
               onClick={() =>
-                externalStatusFilter !== undefined
-                  ? undefined
-                  : setInternalStatusFilter(null)
+                externalStatusFilter !== undefined ? undefined : setInternalStatusFilter(null)
               }
               className={cn(
                 "px-3 py-1.5 rounded-pill text-caption transition-colors",
@@ -95,13 +145,12 @@ export function ContentList({
             </button>
             {STATUSES.map((status) => (
               <button
+                type="button"
                 key={status}
                 onClick={() =>
                   externalStatusFilter !== undefined
                     ? undefined
-                    : setInternalStatusFilter(
-                        status === internalStatusFilter ? null : status,
-                      )
+                    : setInternalStatusFilter(status === internalStatusFilter ? null : status)
                 }
                 className={cn(
                   "px-3 py-1.5 rounded-pill text-caption transition-colors",
@@ -118,6 +167,7 @@ export function ContentList({
           {/* View Toggle */}
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-2 rounded-lg transition-colors",
@@ -127,6 +177,7 @@ export function ContentList({
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("list")}
               className={cn(
                 "p-2 rounded-lg transition-colors",
@@ -145,10 +196,9 @@ export function ContentList({
           <span className="text-caption text-muted">Filters:</span>
           {effectiveStatusFilter && (
             <button
+              type="button"
               onClick={() =>
-                externalStatusFilter !== undefined
-                  ? undefined
-                  : setInternalStatusFilter(null)
+                externalStatusFilter !== undefined ? undefined : setInternalStatusFilter(null)
               }
               className="inline-flex items-center gap-1 px-2 py-1 rounded-pill bg-surface-strong text-caption"
             >
@@ -158,10 +208,9 @@ export function ContentList({
           )}
           {effectivePlatformFilter && (
             <button
+              type="button"
               onClick={() =>
-                externalPlatformFilter !== undefined
-                  ? undefined
-                  : setInternalPlatformFilter(null)
+                externalPlatformFilter !== undefined ? undefined : setInternalPlatformFilter(null)
               }
               className="inline-flex items-center gap-1 px-2 py-1 rounded-pill bg-surface-strong text-caption"
             >
@@ -200,7 +249,7 @@ export function ContentList({
                   <ContentStatusBadge status={content.status} />
                 </div>
                 <span className="text-caption text-muted">
-                  {content.createdAt.toLocaleDateString()}
+                  {new Date(content.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <p className="text-body-sm text-body mt-3 line-clamp-2">{content.textContent}</p>

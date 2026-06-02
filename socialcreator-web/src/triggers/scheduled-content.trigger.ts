@@ -1,125 +1,57 @@
 /**
- * Scheduled content publisher worker
- * Checks and publishes content that's due for publishing
+ * Scheduled content publisher worker — Trigger.dev entry point
+ * Queries due content and enqueues publish jobs for each item.
+ * Actual publish work happens in the job queue handler.
  */
 
+import { enqueueJob } from "@/lib/job-queue";
+import type { PublishPayload } from "@/lib/job-queue/types";
 import logger from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
-import { recordPublish } from "@/lib/publish-guard";
-import { publishContent } from "@/lib/publishers";
-import { getValidAccessToken } from "@/lib/tokens";
+import { getRepositories } from "@/lib/repositories";
 
 /**
  * Run the scheduled content publisher
- * Processes content with status SCHEDULED and past scheduledPublishAt
+ * Finds content with status SCHEDULED and past scheduledPublishAt,
+ * enqueues a publish job for each item
  */
 export async function runScheduledContentPublisher(): Promise<{
-  published: number;
-  failed: number;
+  enqueued: number;
 }> {
   logger.info("Starting scheduled content publisher");
 
   // Find content that's due for publishing
-  const now = new Date();
-  const scheduledContent = await prisma.generatedContent.findMany({
-    where: {
-      status: "SCHEDULED",
-      scheduledPublishAt: { lte: now },
-    },
-    include: {
-      profile: {
-        include: {
-          connectedAccounts: {
-            where: { isActive: true },
-          },
-        },
-      },
-    },
-    take: 50, // Process up to 50 at a time
-  });
+  const { content: contentRepo } = getRepositories();
+  const dueContent = await contentRepo.findPendingScheduled(new Date());
 
-  let published = 0;
-  let failed = 0;
+  let enqueued = 0;
 
-  for (const content of scheduledContent) {
+  for (const content of dueContent) {
     try {
-      const account = content.profile.connectedAccounts.find(
-        (a: any) => a.platform === content.platform,
-      );
-
-      if (!account) {
-        logger.error(
-          { contentId: content.id, platform: content.platform },
-          "No connected account for content",
-        );
-        failed++;
+      if (!content.profileId) {
+        logger.warn({ contentId: content.id }, "Scheduled content has no profileId, skipping");
         continue;
       }
 
-      const decryptedAccessToken = await getValidAccessToken(account.id);
-
-      if (!decryptedAccessToken) {
-        logger.error(
-          { accountId: account.id, platform: content.platform },
-          "Failed to get valid access token for scheduled content",
-        );
-        failed++;
-        continue;
-      }
-
-      const result = await publishContent(
-        content.platform,
+      enqueueJob(
+        "publish",
         {
-          textContent: content.textContent,
-          mediaUrls: content.mediaUrls,
-          hashtags: content.hashtags,
-        },
-        {
-          accountId: account.accountId,
-          accessToken: decryptedAccessToken,
-        },
+          contentId: content.id,
+          profileId: content.profileId,
+          platform: content.platform,
+          userId: "", // Resolved by publish handler via profile lookup
+        } satisfies PublishPayload,
+        { priority: "normal", maxAttempts: 3 },
       );
-
-      if (result.success) {
-        await prisma.generatedContent.update({
-          where: { id: content.id },
-          data: {
-            status: "PUBLISHED",
-            postId: result.postId,
-            publishedAt: new Date(),
-            scheduledPublishAt: null,
-          },
-        });
-
-        // Record the publish for cap counting
-        await recordPublish(content.profileId, content.platform);
-
-        published++;
-        logger.info(
-          { contentId: content.id, postId: result.postId },
-          "Published scheduled content",
-        );
-      } else {
-        await prisma.generatedContent.update({
-          where: { id: content.id },
-          data: { status: "FAILED" },
-        });
-        failed++;
-        logger.error(
-          { contentId: content.id, error: result.error },
-          "Failed to publish scheduled content",
-        );
-      }
+      enqueued++;
     } catch (error) {
-      failed++;
-      logger.error({ contentId: content.id, err: error }, "Error publishing scheduled content");
+      logger.error({ contentId: content.id, err: error }, "Error enqueuing scheduled content");
     }
   }
 
   logger.info(
-    { scheduledFound: scheduledContent.length, published, failed },
+    { scheduledFound: dueContent.length, enqueued },
     "Scheduled content publisher completed",
   );
 
-  return { published, failed };
+  return { enqueued };
 }

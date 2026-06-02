@@ -16,6 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useAuthStore, useUIStore } from "@/lib/stores";
 
 interface SidebarProps {
   user?: {
@@ -36,8 +37,26 @@ const navItems = [
   { href: "/billing", label: "Billing", icon: CreditCard },
 ];
 
-export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
+export function Sidebar({
+  user: propUser,
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+}: SidebarProps) {
   const pathname = usePathname();
+
+  // Prefer Zustand store over props (props kept for backward compat)
+  const storeSidebarOpen = useUIStore((s) => s.sidebar === "open");
+  const storeToggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const storeUser = useAuthStore((s) => s.user);
+
+  const isOpen = propIsOpen ?? storeSidebarOpen;
+  const onClose =
+    propOnClose ??
+    (() => {
+      if (storeSidebarOpen) storeToggleSidebar();
+    });
+  const displayUser =
+    propUser ?? (storeUser ? { name: storeUser.name, image: storeUser.image } : null);
 
   return (
     <>
@@ -92,20 +111,20 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
         <div className="border-t border-hairline p-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full bg-surface-strong flex items-center justify-center text-body-strong text-muted overflow-hidden">
-              {user?.image ? (
+              {displayUser?.image ? (
                 <Image
-                  src={user.image}
-                  alt={user.name || "User"}
+                  src={displayUser.image}
+                  alt={displayUser.name || "User"}
                   width={36}
                   height={36}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                user?.name?.charAt(0).toUpperCase() || "U"
+                displayUser?.name?.charAt(0).toUpperCase() || "U"
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-body-sm text-ink truncate">{user?.name || "User"}</p>
+              <p className="text-body-sm text-ink truncate">{displayUser?.name || "User"}</p>
             </div>
           </div>
           <button
