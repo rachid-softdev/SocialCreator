@@ -41,10 +41,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
       );
     }
   } catch {
-    return NextResponse.json(
-      { error: "Invalid URL format" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
   }
 
   // Upload video from URL via UploadThing

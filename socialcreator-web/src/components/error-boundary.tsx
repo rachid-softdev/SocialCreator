@@ -48,12 +48,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render(): ReactNode {
     if (this.state.error) {
-      return (
-        <ErrorDisplay
-          error={this.state.error}
-          reset={() => this.setState({ error: null })}
-        />
-      );
+      return <ErrorDisplay error={this.state.error} reset={() => this.setState({ error: null })} />;
     }
 
     return this.props.children;
