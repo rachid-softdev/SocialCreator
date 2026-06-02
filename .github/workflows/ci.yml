@@ -101,8 +101,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter=socialcreator-web exec prisma generate
 
-      - name: Build UI package
-        run: pnpm --filter=@socialcreator/ui build
+      - name: Build upstream dependencies
+        run: pnpm exec turbo build --filter=socialcreator-web^...
 
       - name: Run Playwright tests
         run: pnpm --filter=socialcreator-web exec playwright test
