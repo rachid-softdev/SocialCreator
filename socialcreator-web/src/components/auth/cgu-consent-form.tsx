@@ -54,7 +54,11 @@ export function CGUConsentForm() {
         return;
       }
 
-      router.push("/dashboard");
+      if (data.hasProfile) {
+        router.push("/dashboard");
+      } else {
+        router.push("/onboarding/profile");
+      }
     } catch (_err) {
       setError("An error occurred. Please try again.");
     } finally {
@@ -65,7 +69,10 @@ export function CGUConsentForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 rounded-md bg-semantic-error/10 border border-semantic-error text-semantic-error text-body-sm">
+        <div
+          role="alert"
+          className="p-3 rounded-md bg-semantic-error/10 border border-semantic-error text-semantic-error text-body-sm"
+        >
           {error}
         </div>
       )}

@@ -8,6 +8,7 @@
 import type { ConnectedAccount as ConnectedAccountType } from "@prisma/client";
 import { Badge } from "@socialcreator/ui/badge";
 import { Button } from "@socialcreator/ui/button";
+import { Skeleton } from "@socialcreator/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { RefreshCw, Trash2 } from "lucide-react";
@@ -41,7 +42,35 @@ export function AccountCard({
     }
   };
 
-  const isExpired = account.expiresAt && new Date(account.expiresAt) < new Date();
+  /**
+   * Compute expiry badge based on days remaining
+   */
+  const ExpiryBadge = () => {
+    if (!account.expiresAt) return null;
+
+    const now = new Date();
+    const expiry = new Date(account.expiresAt);
+    const diffMs = expiry.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return <Badge variant="destructive">Expired</Badge>;
+    }
+
+    if (diffDays <= 7) {
+      return (
+        <Badge variant="destructive">
+          Expires in {diffDays} day{diffDays === 1 ? "" : "s"}
+        </Badge>
+      );
+    }
+
+    if (diffDays <= 30) {
+      return <Badge className="bg-yellow-500/10 text-yellow-500">Expires in {diffDays} days</Badge>;
+    }
+
+    return <Badge variant="success">Expires in {diffDays} days</Badge>;
+  };
 
   return (
     <div className="bg-card rounded-xl shadow-card p-6 border border-border/50">
@@ -52,7 +81,7 @@ export function AccountCard({
 
           {/* Account Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold text-foreground truncate">{account.accountName}</h3>
               {/* Status Badge */}
               <Badge
@@ -65,14 +94,8 @@ export function AccountCard({
               >
                 {account.isActive ? "Actif" : "Inactif"}
               </Badge>
-              {isExpired && (
-                <Badge
-                  variant="outline"
-                  className="bg-amber-500/10 text-amber-500 border-amber-500/20"
-                >
-                  Expiré
-                </Badge>
-              )}
+              {/* Expiry Badge */}
+              <ExpiryBadge />
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {getPlatformName(account.platform)}
@@ -151,19 +174,19 @@ export function AccountCard({
  */
 export function AccountCardSkeleton() {
   return (
-    <div className="bg-card rounded-xl shadow-card p-6 border border-border/50 animate-pulse">
+    <div className="rounded-xl border border-border/50 bg-card shadow-card p-6">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-muted" />
+          <Skeleton className="h-10 w-10 rounded-lg" />
           <div className="space-y-2">
-            <div className="h-4 w-32 bg-muted rounded" />
-            <div className="h-3 w-24 bg-muted rounded" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
           </div>
         </div>
-        <div className="w-8 h-8 bg-muted rounded" />
+        <Skeleton className="h-8 w-8" />
       </div>
       <div className="mt-4 pt-4 border-t border-border/50">
-        <div className="h-3 w-40 bg-muted rounded" />
+        <Skeleton className="h-3 w-40" />
       </div>
     </div>
   );

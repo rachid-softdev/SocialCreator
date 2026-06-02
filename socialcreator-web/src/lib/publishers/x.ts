@@ -47,7 +47,7 @@ export async function publishToX(
 
     if (!response.ok) {
       const errorMessage =
-        data.detail || data.title || data.errors?.[0]?.message || JSON.stringify(data);
+        data.detail || data.title || data.errors?.[0]?.message || `X API error: ${response.status}`;
       throw new Error(errorMessage);
     }
 

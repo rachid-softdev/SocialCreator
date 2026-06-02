@@ -71,7 +71,10 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 rounded-md bg-semantic-error/10 border border-semantic-error text-semantic-error text-body-sm">
+        <div
+          role="alert"
+          className="p-3 rounded-md bg-semantic-error/10 border border-semantic-error text-semantic-error text-body-sm"
+        >
           {error}
         </div>
       )}

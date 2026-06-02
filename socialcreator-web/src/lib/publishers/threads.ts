@@ -21,19 +21,23 @@ export async function publishToThreads(
 ): Promise<PublishResult> {
   try {
     const response = await fetchWithTimeout(
-      `https://graph.facebook.com/v18.0/${account.accountId}/threads`,
+      `https://graph.facebook.com/v18.0/${account.accountId}/threads?access_token=${encodeURIComponent(account.accessToken)}`,
       {
         method: "POST",
         timeout: 15000,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: content.textContent.slice(0, 500),
-          access_token: account.accessToken,
         }),
       },
     );
     const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+    if (data.error) {
+      if (data.error.code === 190) {
+        throw new Error("Access token expired. Please reconnect your Threads account.");
+      }
+      throw new Error(`Threads API error: ${response.status}`);
+    }
 
     return { success: true, postId: data.id };
   } catch (error) {

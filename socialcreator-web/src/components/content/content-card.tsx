@@ -2,7 +2,7 @@
 
 import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { formatDateTime } from "@socialcreator/utils";
-import { Check, Eye, Send, X } from "lucide-react";
+import { Check, Clock, Eye, Send, X } from "lucide-react";
 import Link from "next/link";
 import { ContentStatusBadge } from "./content-status-badge";
 import { PlatformBadge } from "./platform-badge";
@@ -15,15 +15,10 @@ interface ContentCardProps {
   onPublish?: (id: string) => void;
 }
 
-export function ContentCard({
-  content,
-  profileId,
-  onApprove,
-  onReject,
-  onPublish,
-}: ContentCardProps) {
+export function ContentCard({ content, onApprove, onReject, onPublish }: ContentCardProps) {
   const isDraft = content.status === "DRAFT";
   const isApproved = content.status === "APPROVED";
+  const isScheduled = content.status === "SCHEDULED";
 
   return (
     <div className="group bg-surface-card border border-hairline rounded-xl p-5 hover:shadow-card-hover transition-all">
@@ -32,6 +27,7 @@ export function ContentCard({
         <div className="flex items-center gap-2">
           <PlatformBadge platform={content.platform} size="sm" />
           <ContentStatusBadge status={content.status} />
+          {isScheduled && <Clock className="w-3.5 h-3.5 text-blue-600" />}
         </div>
         <span className="text-caption text-muted">{formatDateTime(content.createdAt)}</span>
       </div>
@@ -71,6 +67,7 @@ export function ContentCard({
         {isDraft && (
           <>
             <button
+              type="button"
               onClick={() => onApprove?.(content.id)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-caption bg-semantic-success/10 text-semantic-success hover:bg-semantic-success/20 transition-colors"
             >
@@ -78,6 +75,7 @@ export function ContentCard({
               Approve
             </button>
             <button
+              type="button"
               onClick={() => onReject?.(content.id)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-caption bg-semantic-error/10 text-semantic-error hover:bg-semantic-error/20 transition-colors"
             >
@@ -89,12 +87,20 @@ export function ContentCard({
 
         {isApproved && onPublish && (
           <button
+            type="button"
             onClick={() => onPublish?.(content.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-caption bg-primary text-on-primary hover:bg-primary-active transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
             Publish
           </button>
+        )}
+
+        {isScheduled && content.scheduledPublishAt && (
+          <div className="flex items-center gap-1.5 text-caption text-blue-600 ml-auto">
+            <Clock className="w-3.5 h-3.5" />
+            Scheduled for {formatDateTime(content.scheduledPublishAt)}
+          </div>
         )}
       </div>
     </div>

@@ -25,7 +25,7 @@ export function AccountList({
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(3)].map((_, i) => (
           <AccountCardSkeleton key={i} />
         ))}
       </div>
@@ -41,6 +41,7 @@ export function AccountList({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

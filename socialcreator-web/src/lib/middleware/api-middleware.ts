@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
+import { httpRequestDuration, httpRequestTotal } from "@/lib/utils/metrics";
 
 export interface ApiContext {
   userId: string;
@@ -68,12 +69,19 @@ export function withApiMiddleware(handler: ApiHandler) {
       });
       responseWithId.headers.set(REQUEST_ID_HEADER, requestId);
 
-      // 6. Logging (no PII) with request ID
+      // 6. Record HTTP metrics
+      const route = request.nextUrl.pathname;
+      const method = request.method;
+      const dur = (Date.now() - start) / 1000;
+      httpRequestDuration.observe({ method, route, status: response.status }, dur);
+      httpRequestTotal.inc({ method, route, status: response.status });
+
+      // 7. Logging (no PII) with request ID
       logger.info(
         {
           requestId,
-          method: request.method,
-          path: request.nextUrl.pathname,
+          method,
+          path: route,
           duration: Date.now() - start,
           status: response.status,
         },
@@ -82,12 +90,19 @@ export function withApiMiddleware(handler: ApiHandler) {
 
       return responseWithId;
     } catch (error) {
+      const route = request.nextUrl.pathname;
+      const method = request.method;
+
+      // Record HTTP metrics for errors too
+      httpRequestDuration.observe({ method, route, status: 500 }, (Date.now() - start) / 1000);
+      httpRequestTotal.inc({ method, route, status: 500 });
+
       logger.error(
         {
           requestId,
           err: error,
-          method: request.method,
-          path: request.nextUrl.pathname,
+          method,
+          path: route,
           duration: Date.now() - start,
         },
         "API request failed",

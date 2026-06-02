@@ -85,9 +85,16 @@ export async function publishToYouTube(
 
       if (!initResponse.ok) {
         const errorData = await initResponse.json();
-        throw new Error(
-          errorData.error?.message || `Upload initiation failed: ${initResponse.status}`,
-        );
+        if (errorData.error?.code === 401 || errorData.error?.code === 403) {
+          throw new Error("YouTube authentication expired. Please reconnect your account.");
+        }
+        if (
+          errorData.error?.code === 400 &&
+          errorData.error?.errors?.[0]?.reason === "quotaExceeded"
+        ) {
+          throw new Error("YouTube upload quota exceeded. Please try again later.");
+        }
+        throw new Error(`YouTube API error: ${initResponse.status}`);
       }
 
       // Get the upload URL from Location header
@@ -126,9 +133,10 @@ export async function publishToYouTube(
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
-        throw new Error(
-          errorData.error?.message || `Video upload failed: ${uploadResponse.status}`,
-        );
+        if (errorData.error?.code === 401 || errorData.error?.code === 403) {
+          throw new Error("YouTube authentication expired. Please reconnect your account.");
+        }
+        throw new Error(`YouTube upload error: ${uploadResponse.status}`);
       }
 
       const videoData = await uploadResponse.json();

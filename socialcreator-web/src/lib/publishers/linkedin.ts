@@ -48,7 +48,7 @@ export async function publishToLinkedIn(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.error || `HTTP ${response.status}`);
+      throw new Error(`LinkedIn API error: ${response.status}`);
     }
 
     return { success: true, postId: data.id };

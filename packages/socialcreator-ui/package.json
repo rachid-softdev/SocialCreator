@@ -10,7 +10,67 @@
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.mts"
     },
-    "./tailwind.css": "./dist/tailwind.css"
+    "./tailwind.css": "./dist/tailwind.css",
+    "./badge": {
+      "import": "./dist/badge.mjs",
+      "types": "./dist/badge.d.mts"
+    },
+    "./badge-pill": {
+      "import": "./dist/badge-pill.mjs",
+      "types": "./dist/badge-pill.d.mts"
+    },
+    "./button": {
+      "import": "./dist/button.mjs",
+      "types": "./dist/button.d.mts"
+    },
+    "./dialog": {
+      "import": "./dist/dialog.mjs",
+      "types": "./dist/dialog.d.mts"
+    },
+    "./dropdown-menu": {
+      "import": "./dist/dropdown-menu.mjs",
+      "types": "./dist/dropdown-menu.d.mts"
+    },
+    "./empty-state": {
+      "import": "./dist/empty-state.mjs",
+      "types": "./dist/empty-state.d.mts"
+    },
+    "./feature-card": {
+      "import": "./dist/feature-card.mjs",
+      "types": "./dist/feature-card.d.mts"
+    },
+    "./footer": {
+      "import": "./dist/footer.mjs",
+      "types": "./dist/footer.d.mts"
+    },
+    "./gradient-orb": {
+      "import": "./dist/gradient-orb.mjs",
+      "types": "./dist/gradient-orb.d.mts"
+    },
+    "./nav-top": {
+      "import": "./dist/nav-top.mjs",
+      "types": "./dist/nav-top.d.mts"
+    },
+    "./pricing-tier-card": {
+      "import": "./dist/pricing-tier-card.mjs",
+      "types": "./dist/pricing-tier-card.d.mts"
+    },
+    "./progress-stepper": {
+      "import": "./dist/progress-stepper.mjs",
+      "types": "./dist/progress-stepper.d.mts"
+    },
+    "./skeleton": {
+      "import": "./dist/skeleton.mjs",
+      "types": "./dist/skeleton.d.mts"
+    },
+    "./text-input": {
+      "import": "./dist/text-input.mjs",
+      "types": "./dist/text-input.d.mts"
+    },
+    "./video-card": {
+      "import": "./dist/video-card.mjs",
+      "types": "./dist/video-card.d.mts"
+    }
   },
   "files": [
     "dist"
