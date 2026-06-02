@@ -17,6 +17,9 @@ interface ContentListProps {
   onReject?: (id: string) => void;
   onPublish?: (id: string) => void;
   showFilters?: boolean;
+  searchQuery?: string;
+  statusFilter?: ContentStatus | null;
+  platformFilter?: Platform | null;
 }
 
 const STATUSES: ContentStatus[] = ["DRAFT", "APPROVED", "PUBLISHED", "FAILED", "REJECTED"];
@@ -28,14 +31,29 @@ export function ContentList({
   onReject,
   onPublish,
   showFilters = true,
+  searchQuery,
+  statusFilter: externalStatusFilter,
+  platformFilter: externalPlatformFilter,
 }: ContentListProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [statusFilter, setStatusFilter] = useState<ContentStatus | null>(null);
-  const [platformFilter, setPlatformFilter] = useState<Platform | null>(null);
+  const [internalStatusFilter, setInternalStatusFilter] = useState<ContentStatus | null>(null);
+  const [internalPlatformFilter, setInternalPlatformFilter] = useState<Platform | null>(null);
+
+  // When external props are provided, they override internal state
+  const effectiveStatusFilter =
+    externalStatusFilter !== undefined ? externalStatusFilter : internalStatusFilter;
+  const effectivePlatformFilter =
+    externalPlatformFilter !== undefined ? externalPlatformFilter : internalPlatformFilter;
 
   const filteredContents = contents.filter((content) => {
-    if (statusFilter && content.status !== statusFilter) return false;
-    if (platformFilter && content.platform !== platformFilter) return false;
+    if (effectiveStatusFilter && content.status !== effectiveStatusFilter) return false;
+    if (effectivePlatformFilter && content.platform !== effectivePlatformFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const textMatch = content.textContent.toLowerCase().includes(q);
+      const hashtagMatch = content.hashtags.some((t) => t.toLowerCase().includes(q));
+      if (!textMatch && !hashtagMatch) return false;
+    }
     return true;
   });
 
@@ -61,10 +79,14 @@ export function ContentList({
           {/* Status Filters */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
-              onClick={() => setStatusFilter(null)}
+              onClick={() =>
+                externalStatusFilter !== undefined
+                  ? undefined
+                  : setInternalStatusFilter(null)
+              }
               className={cn(
                 "px-3 py-1.5 rounded-pill text-caption transition-colors",
-                !statusFilter
+                !effectiveStatusFilter
                   ? "bg-primary text-on-primary"
                   : "bg-surface-strong text-muted hover:text-ink",
               )}
@@ -74,10 +96,16 @@ export function ContentList({
             {STATUSES.map((status) => (
               <button
                 key={status}
-                onClick={() => setStatusFilter(status === statusFilter ? null : status)}
+                onClick={() =>
+                  externalStatusFilter !== undefined
+                    ? undefined
+                    : setInternalStatusFilter(
+                        status === internalStatusFilter ? null : status,
+                      )
+                }
                 className={cn(
                   "px-3 py-1.5 rounded-pill text-caption transition-colors",
-                  statusFilter === status
+                  effectiveStatusFilter === status
                     ? "bg-primary text-on-primary"
                     : "bg-surface-strong text-muted hover:text-ink",
                 )}
@@ -112,24 +140,32 @@ export function ContentList({
       )}
 
       {/* Active Filters */}
-      {(statusFilter || platformFilter) && (
+      {(effectiveStatusFilter || effectivePlatformFilter) && (
         <div className="flex items-center gap-2">
           <span className="text-caption text-muted">Filters:</span>
-          {statusFilter && (
+          {effectiveStatusFilter && (
             <button
-              onClick={() => setStatusFilter(null)}
+              onClick={() =>
+                externalStatusFilter !== undefined
+                  ? undefined
+                  : setInternalStatusFilter(null)
+              }
               className="inline-flex items-center gap-1 px-2 py-1 rounded-pill bg-surface-strong text-caption"
             >
-              {CONTENT_STATUS_LABELS[statusFilter]}
+              {CONTENT_STATUS_LABELS[effectiveStatusFilter]}
               <X className="w-3 h-3" />
             </button>
           )}
-          {platformFilter && (
+          {effectivePlatformFilter && (
             <button
-              onClick={() => setPlatformFilter(null)}
+              onClick={() =>
+                externalPlatformFilter !== undefined
+                  ? undefined
+                  : setInternalPlatformFilter(null)
+              }
               className="inline-flex items-center gap-1 px-2 py-1 rounded-pill bg-surface-strong text-caption"
             >
-              {PLATFORMS.find((p) => p.value === platformFilter)?.label}
+              {PLATFORMS.find((p) => p.value === effectivePlatformFilter)?.label}
               <X className="w-3 h-3" />
             </button>
           )}

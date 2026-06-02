@@ -82,20 +82,9 @@ function sanitizeValue(value: unknown, depth: number): unknown {
 }
 
 /**
- * Sanitize for SQL (basic - not a replacement for parameterized queries)
- * This is a defense-in-depth measure
+ * Note: SQL injection prevention is handled by Prisma's parameterized queries.
+ * Do NOT use blacklist-based sanitization — it is trivially bypassed.
  */
-export function sanitizeForSql(input: string): string {
-  if (typeof input !== "string") {
-    return "";
-  }
-
-  // Remove common SQL injection patterns
-  return input
-    .replace(/(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi, "")
-    .replace(/(--|#|\/\*|\*\/)/g, "")
-    .slice(0, MAX_STRING_LENGTH);
-}
 
 /**
  * Sanitize HTML (for display in React)
