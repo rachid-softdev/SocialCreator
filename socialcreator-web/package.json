@@ -26,6 +26,7 @@
     "@deepgram/sdk": "^3.9.1",
     "@mux/mux-node": "^8.8.0",
     "@prisma/client": "^6.3.1",
+    "@socialcreator/config": "workspace:*",
     "@socialcreator/types": "workspace:*",
     "@socialcreator/ui": "workspace:*",
     "@socialcreator/utils": "workspace:*",
