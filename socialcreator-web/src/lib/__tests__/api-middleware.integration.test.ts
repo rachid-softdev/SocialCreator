@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Hoisted mock factories — vitest hoists these to top of file
 const { mockAuth, mockRateLimit, mockLogger } = vi.hoisted(() => ({

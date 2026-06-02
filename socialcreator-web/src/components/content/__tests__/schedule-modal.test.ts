@@ -15,7 +15,7 @@
  */
 
 import { addHours, startOfHour } from "date-fns";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // ── Mock dependencies ─────────────────────────────────────────────────────
 
@@ -255,7 +255,7 @@ describe("ScheduleModal — error handling", () => {
 
   it("should show toast when response is not ok", () => {
     const data = { error: "Past dates not allowed" };
-    const response = { ok: false };
+    const _response = { ok: false };
 
     // Simulate: if (!response.ok) throw new Error(data.error || ...)
     const errorMessage = data.error || "Failed to schedule content";

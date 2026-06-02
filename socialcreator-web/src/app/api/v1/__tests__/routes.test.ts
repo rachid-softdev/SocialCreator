@@ -131,20 +131,13 @@ vi.mock("@socialcreator/types", () => ({
 // Import all v1 routes
 // ---------------------------------------------------------------------------
 
-import {
-  DELETE as AgentDELETE,
-  GET as AgentGET,
-  PUT as AgentPUT,
-} from "@/app/api/v1/agents/[id]/route";
+import { GET as AgentGET } from "@/app/api/v1/agents/[id]/route";
 import { GET as AgentRunsGET } from "@/app/api/v1/agents/[id]/runs/route";
 import { GET as AgentsGET, POST as AgentsPOST } from "@/app/api/v1/agents/route";
 import { DELETE as ConnectedAccountDELETE } from "@/app/api/v1/connected-accounts/[id]/route";
-import {
-  GET as ConnectedAccountsGET,
-  POST as ConnectedAccountsPOST,
-} from "@/app/api/v1/connected-accounts/route";
+import { GET as ConnectedAccountsGET } from "@/app/api/v1/connected-accounts/route";
 import { GET as HealthGET } from "@/app/api/v1/health/route";
-import { DELETE as MediaAssetDELETE, GET as MediaAssetGET } from "@/app/api/v1/media/[id]/route";
+import { GET as MediaAssetGET } from "@/app/api/v1/media/[id]/route";
 import { GET as MediaGET, POST as MediaPOST } from "@/app/api/v1/media/route";
 import {
   DELETE as ProfileDELETE,

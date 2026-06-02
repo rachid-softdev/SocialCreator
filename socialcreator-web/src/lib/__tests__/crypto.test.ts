@@ -16,7 +16,7 @@ describe("crypto", () => {
    */
   function createLegacyEncryptedToken(_plaintext: string): string {
     // Produce a non-empty base64 string that will fail GCM decryption
-    return Buffer.from("legacy-mock:" + _plaintext).toString("base64");
+    return Buffer.from(`legacy-mock:${_plaintext}`).toString("base64");
   }
 
   describe("encryptToken", () => {

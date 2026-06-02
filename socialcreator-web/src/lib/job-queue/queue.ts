@@ -3,9 +3,9 @@
  * Backward compatible with existing enqueueJob from infrastructure/job-queue.ts
  */
 
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import logger from "@/lib/logger";
-import type { Job, JobOptions, JobPayload, JobPriority, JobStatus, JobType } from "./types";
+import type { Job, JobOptions, JobPayload, JobPriority, JobType } from "./types";
 
 const DEFAULT_OPTIONS = {
   priority: "normal" as JobPriority,

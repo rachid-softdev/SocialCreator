@@ -12,7 +12,6 @@ import {
   endOfMonth,
   endOfWeek,
   format,
-  isSameDay,
   isSameMonth,
   isToday,
   startOfMonth,
@@ -225,5 +224,5 @@ export function CalendarView() {
 /** Truncate text to a max length, appending "..." if needed */
 function truncateText(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen).trimEnd() + "...";
+  return `${text.slice(0, maxLen).trimEnd()}...`;
 }

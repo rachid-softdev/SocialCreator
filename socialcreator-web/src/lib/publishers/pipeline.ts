@@ -107,7 +107,7 @@ export async function runPublishPipeline(ctx: PipelineContext): Promise<PublishR
     result.platform = platform as any;
   }
 
-  if (!result || !result.success) {
+  if (!result?.success) {
     if (registration.hooks?.onError && lastError) {
       try {
         await registration.hooks.onError(publishCtx, lastError);

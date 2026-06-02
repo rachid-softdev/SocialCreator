@@ -141,7 +141,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("publish");
       expect(handler).toBeDefined();
 
-      await handler!({
+      await handler?.({
         contentId: "content-1",
         profileId: "profile-1",
         platform: "X",
@@ -164,7 +164,7 @@ describe("Production Job Handlers", () => {
 
       const handler = getJobHandler("publish");
 
-      await handler!({
+      await handler?.({
         contentId: "content-1",
         profileId: "profile-1",
         platform: "X",
@@ -189,7 +189,7 @@ describe("Production Job Handlers", () => {
 
       const handler = getJobHandler("publish");
 
-      await handler!({
+      await handler?.({
         contentId: "content-1",
         profileId: "profile-1",
         platform: "X",
@@ -217,7 +217,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("publish");
 
       await expect(
-        handler!({
+        handler?.({
           contentId: "nonexistent",
           profileId: "profile-1",
           platform: "X",
@@ -234,7 +234,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("publish");
 
       await expect(
-        handler!({
+        handler?.({
           contentId: "content-1",
           profileId: "profile-1",
           platform: "X",
@@ -252,7 +252,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("publish");
 
       await expect(
-        handler!({
+        handler?.({
           contentId: "content-1",
           profileId: "profile-1",
           platform: "X",
@@ -269,7 +269,7 @@ describe("Production Job Handlers", () => {
 
       const handler = getJobHandler("publish");
 
-      await handler!({
+      await handler?.({
         contentId: "content-1",
         profileId: "profile-1",
         platform: "X",
@@ -300,7 +300,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("agent-run");
       expect(handler).toBeDefined();
 
-      await handler!({
+      await handler?.({
         agentId: "agent-1",
         runId: "run-1",
         userId: "user-1",
@@ -320,7 +320,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("agent-run");
 
       await expect(
-        handler!({
+        handler?.({
           agentId: "nonexistent",
           runId: "run-1",
           userId: "user-1",
@@ -346,7 +346,7 @@ describe("Production Job Handlers", () => {
       const handler = getJobHandler("content-generate");
       expect(handler).toBeDefined();
 
-      await handler!({
+      await handler?.({
         profileId: "profile-1",
         platform: "X",
         brief: "test brief",

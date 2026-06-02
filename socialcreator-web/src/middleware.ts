@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { addVersionHeaders, getVersionFromUrl, resolveApiVersion } from "@/lib/api-version";
+import { addVersionHeaders, resolveApiVersion } from "@/lib/api-version";
 import { auth } from "@/lib/auth";
 
 export default auth(async function middleware(req: NextRequest) {

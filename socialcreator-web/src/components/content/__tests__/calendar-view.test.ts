@@ -27,7 +27,7 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // ── Utility function replicated from CalendarView ──────────────────────────
 
@@ -37,7 +37,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 function truncateText(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen).trimEnd() + "...";
+  return `${text.slice(0, maxLen).trimEnd()}...`;
 }
 
 // ── Event types matching the CalendarView interface ────────────────────────

@@ -4,7 +4,7 @@
  *
  * Self-contained: implements validators inline matching the design spec.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // ========== Inline types and implementation matching the design spec ==========
 
