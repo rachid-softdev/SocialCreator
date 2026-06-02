@@ -122,9 +122,9 @@ describe("publishToInstagram", () => {
       const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
       expect(body.image_url).toBe("https://example.com/image.jpg");
       expect(body.caption).toContain("#instagram #social");
-      // access_token is now passed as URL query parameter, not in body
-      const firstUrl = mockFetch.mock.calls[0][0] as string;
-      expect(firstUrl).toContain("access_token=ig-token");
+      // access_token is now passed as Authorization Bearer header
+      const headers = (mockFetch.mock.calls[0][1] as any).headers;
+      expect(headers).toHaveProperty("Authorization", "Bearer ig-token");
     });
 
     it("should pass creation_id to media_publish endpoint", async () => {

@@ -5,6 +5,8 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { errorResponse, unauthorized } from "@/lib/api-errors";
+import type { ApiVersion } from "@/lib/api-version";
+import { resolveApiVersion } from "@/lib/api-version";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { withRateLimit } from "@/lib/rate-limit-redis";
@@ -14,6 +16,7 @@ import { httpRequestDuration, httpRequestTotal } from "@/lib/utils/metrics";
 export interface ApiContext {
   userId: string;
   request: NextRequest;
+  apiVersion?: ApiVersion;
 }
 
 export type ApiHandler = (
@@ -59,7 +62,11 @@ export function withApiMiddleware(handler: ApiHandler) {
 
     // 4. Execute handler
     try {
-      const response = await handler({ userId: session.user.id, request }, resolvedParams);
+      const apiVersion = resolveApiVersion(request.nextUrl.pathname, request.headers).version;
+      const response = await handler(
+        { userId: session.user.id, request, apiVersion },
+        resolvedParams,
+      );
 
       // 5. Add request ID to response headers
       const responseWithId = new NextResponse(response.body, {
