@@ -39,9 +39,11 @@ export function useEntitlements() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/entitlements", { next: { revalidate: 60 } });
+      const response = await fetch("/api/entitlements", {
+        next: { revalidate: 60 },
+      } as RequestInit & { next?: { revalidate?: number } });
       if (!response.ok) throw new Error(`Failed: ${response.status}`);
-      setData(await response.json());
+      setData((await response.json()) as EntitlementsData);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));
     } finally {
@@ -79,8 +81,8 @@ export function useLimit(limitKey: string): LimitHookResult {
 export function useCanConsume(featureKey: string, amount = 1): boolean {
   const { data } = useEntitlements();
   if (!data) return false;
-  const limit = data.limits[featureKey];
-  const used = data.usage[featureKey];
+  const limit = data.limits[featureKey] ?? null;
+  const used = data.usage[featureKey] ?? 0;
   return limit === null || used + amount <= limit;
 }
 
@@ -148,6 +150,7 @@ export function UpgradeBanner({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

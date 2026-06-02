@@ -10,6 +10,7 @@ import { ContentEditor } from "@/components/content/content-editor";
 import { ContentStatusBadge } from "@/components/content/content-status-badge";
 import { PlatformBadge } from "@/components/content/platform-badge";
 import { PublishButton } from "@/components/content/publish-button";
+import { SchedulePanel } from "@/components/content/schedule-panel";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 
 interface ContentDetailClientProps {
@@ -25,6 +26,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
   const isDraft = content.status === "DRAFT";
   const isApproved = content.status === "APPROVED";
   const isPublished = content.status === "PUBLISHED";
+  const isScheduled = content.status === "SCHEDULED";
   const isFailed = content.status === "FAILED";
 
   const handleSave = async (data: { textContent: string; hashtags: string[] }) => {
@@ -128,6 +130,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
               <h2 className="text-title-sm text-ink">Content</h2>
               {isDraft && (
                 <button
+                  type="button"
                   onClick={() => setIsEditing(true)}
                   className="text-body-sm text-muted hover:text-ink transition-colors"
                 >
@@ -155,6 +158,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
           {isDraft && (
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={handleApprove}
                 disabled={isApproving}
                 className="inline-flex items-center gap-2 px-6 py-2 rounded-pill bg-semantic-success text-white text-button hover:bg-semantic-success/90 transition-colors disabled:opacity-50"
@@ -163,6 +167,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
                 Approve
               </button>
               <button
+                type="button"
                 onClick={handleReject}
                 disabled={isApproving}
                 className="inline-flex items-center gap-2 px-6 py-2 rounded-pill bg-semantic-error text-white text-button hover:bg-semantic-error/90 transition-colors disabled:opacity-50"
@@ -174,11 +179,19 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
           )}
 
           {isApproved && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               <PublishButton
                 contentId={content.id}
                 profileId={content.profile?.id || ""}
                 platform={content.platform}
+              />
+              <SchedulePanel
+                contentId={content.id}
+                initialSchedule={{
+                  scheduledPublishAt: content.scheduledPublishAt,
+                  scheduledTimezone: content.scheduledTimezone,
+                }}
+                onScheduled={() => router.refresh()}
               />
             </div>
           )}
@@ -194,6 +207,18 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
                 <div className="text-body-sm text-muted">Post ID: {content.postId}</div>
               )}
             </div>
+          )}
+
+          {/* Scheduled content info */}
+          {isScheduled && (
+            <SchedulePanel
+              contentId={content.id}
+              initialSchedule={{
+                scheduledPublishAt: content.scheduledPublishAt,
+                scheduledTimezone: content.scheduledTimezone,
+              }}
+              onScheduled={() => router.refresh()}
+            />
           )}
 
           {/* Failed content info */}

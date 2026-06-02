@@ -38,3 +38,11 @@ export const oauthTokenRefresh = new Counter({
   labelNames: ["platform", "status"] as const,
   registers: [register],
 });
+
+export const agentRunDuration = new Histogram({
+  name: "agent_run_duration_seconds",
+  help: "Duration of agent runs in seconds",
+  labelNames: ["status"] as const,
+  buckets: [1, 5, 10, 30, 60, 120],
+  registers: [register],
+});

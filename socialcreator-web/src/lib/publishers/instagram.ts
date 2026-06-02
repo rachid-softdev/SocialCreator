@@ -3,6 +3,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishResult } from "./index";
 
 export async function publishToInstagram(
@@ -20,9 +21,14 @@ export async function publishToInstagram(
     const caption = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
 
     if (content.mediaUrls.length > 0) {
+      const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+      if (!urlValidation.valid) {
+        return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
+      }
+
       // Upload image/video first
       const mediaResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/media?access_token=${encodeURIComponent(account.accessToken)}`,
         {
           method: "POST",
           timeout: 15000, // Meta API: 15s timeout
@@ -30,46 +36,58 @@ export async function publishToInstagram(
           body: JSON.stringify({
             image_url: content.mediaUrls[0],
             caption,
-            access_token: account.accessToken,
           }),
         },
       );
       const mediaData = await mediaResponse.json();
-      if (mediaData.error) throw new Error(mediaData.error.message);
+      if (mediaData.error) {
+        if (mediaData.error.code === 190) {
+          throw new Error("Access token expired. Please reconnect your Instagram account.");
+        }
+        throw new Error(`Instagram API error: ${mediaResponse.status}`);
+      }
 
       // Publish the container
       const containerResponse = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/media_publish`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/media_publish?access_token=${encodeURIComponent(account.accessToken)}`,
         {
           method: "POST",
           timeout: 15000,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             creation_id: mediaData.id,
-            access_token: account.accessToken,
           }),
         },
       );
       const publishData = await containerResponse.json();
-      if (publishData.error) throw new Error(publishData.error.message);
+      if (publishData.error) {
+        if (publishData.error.code === 190) {
+          throw new Error("Access token expired. Please reconnect your Instagram account.");
+        }
+        throw new Error(`Instagram API error: ${containerResponse.status}`);
+      }
 
       return { success: true, postId: publishData.id };
     } else {
       // Text-only post via Pages API
       const response = await fetchWithTimeout(
-        `https://graph.facebook.com/v18.0/${account.accountId}/feed`,
+        `https://graph.facebook.com/v18.0/${account.accountId}/feed?access_token=${encodeURIComponent(account.accessToken)}`,
         {
           method: "POST",
           timeout: 15000,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: caption,
-            access_token: account.accessToken,
           }),
         },
       );
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message);
+      if (data.error) {
+        if (data.error.code === 190) {
+          throw new Error("Access token expired. Please reconnect your Instagram account.");
+        }
+        throw new Error(`Instagram API error: ${response.status}`);
+      }
       return { success: true, postId: data.id };
     }
   } catch (error) {

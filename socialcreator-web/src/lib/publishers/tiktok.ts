@@ -131,20 +131,20 @@ export async function publishToTikTok(
 
         // Handle TikTok API errors
         if (!response.ok || data.error) {
-          const errorMessage = data.error?.message || `TikTok API error: ${response.status}`;
-
           // Map common error codes to user-friendly messages
           const errorCode = data.error?.code || "";
 
           switch (errorCode) {
             case "invalid_access_token":
+            case "access_token_expired":
               throw new Error("TikTok access token expired. Please reconnect your account.");
             case "rate_limit":
+            case "rate_limit_exceeded":
               throw new Error("Rate limit exceeded. Please try again later.");
             case "content_policy_violation":
               throw new Error("Content violates TikTok's community guidelines.");
             default:
-              throw new Error(errorMessage);
+              throw new Error(`TikTok API error: ${response.status}`);
           }
         }
 
@@ -268,7 +268,7 @@ export async function getTikTokPostStatus(
 
     return {
       status: data.status as "pending" | "processing" | "finished" | "failed",
-      error: data.error_message,
+      error: data.status === "failed" ? "Post processing failed" : undefined,
     };
   } catch {
     return null;

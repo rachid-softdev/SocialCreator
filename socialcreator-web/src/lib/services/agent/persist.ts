@@ -3,6 +3,7 @@
  */
 import type { Platform } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { contentGenerated } from "@/lib/utils/metrics";
 import type { GenerationResult } from "./execute";
 
 /**
@@ -39,6 +40,11 @@ export async function saveGeneratedContent(
       }),
     ),
   );
+
+  // Track business metric
+  for (const { platform, textContent } of results) {
+    contentGenerated.inc({ platform, type: textContent ? "text" : "media" });
+  }
 }
 
 /**

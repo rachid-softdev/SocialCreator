@@ -21,6 +21,15 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     redirect("/onboarding/cgu");
   }
 
+  // Check if user has at least one profile
+  const profileCount = await prisma.profile.count({
+    where: { userId: session.user.id },
+  });
+
+  if (profileCount === 0) {
+    redirect("/onboarding/profile");
+  }
+
   return (
     <div className="min-h-screen bg-canvas">
       {/* Desktop sidebar (hidden on mobile) */}

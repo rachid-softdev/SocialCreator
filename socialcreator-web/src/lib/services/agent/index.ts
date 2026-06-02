@@ -6,6 +6,7 @@
 
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { agentRunDuration } from "@/lib/utils/metrics";
 import { executeAgentRun } from "./execute";
 import { markRunFailed, markRunRunning, markRunSuccess, saveGeneratedContent } from "./persist";
 import { validateAgentRun } from "./validate";
@@ -34,6 +35,7 @@ export async function triggerAgentRun(params: TriggerAgentRunParams): Promise<vo
     throw new Error("Run not found");
   }
 
+  const startTime = performance.now();
   try {
     // 4. Execute: generate content for all platforms in parallel
     const results = await executeAgentRun(agent, run.brief);
@@ -43,10 +45,14 @@ export async function triggerAgentRun(params: TriggerAgentRunParams): Promise<vo
 
     // 6. Mark run as SUCCESS
     await markRunSuccess(runId);
+
+    agentRunDuration.observe({ status: "success" }, (performance.now() - startTime) / 1000);
   } catch (error) {
     // 7. On error, mark run as FAILED
     logger.error({ err: error }, "Agent run failed");
     await markRunFailed(runId, error instanceof Error ? error.message : "Unknown error");
+
+    agentRunDuration.observe({ status: "failed" }, (performance.now() - startTime) / 1000);
     throw error;
   }
 }

@@ -16,7 +16,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
     }
 
-    const _user = await prisma.user.update({
+    await prisma.user.update({
       where: { id: session.user.id },
       data: {
         cguAccepted: true,
@@ -24,7 +24,11 @@ export async function PUT(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    const profileCount = await prisma.profile.count({
+      where: { userId: session.user.id },
+    });
+
+    return NextResponse.json({ success: true, hasProfile: profileCount > 0 });
   } catch (error) {
     console.error("Error accepting CGU:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

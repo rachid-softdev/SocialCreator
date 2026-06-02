@@ -5,6 +5,7 @@
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
+import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishResult } from "./index";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
@@ -82,6 +83,11 @@ export async function publishToPinterest(
       const title = content.textContent.slice(0, 100);
       const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
 
+      const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+      if (!urlValidation.valid) {
+        return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
+      }
+
       // Create pin payload
       const pinOptions: PinterestPinOptions = {
         title: title,
@@ -124,7 +130,7 @@ export async function publishToPinterest(
           };
         }
 
-        throw new Error(errorData.error_message || `Pinterest API error: ${response.status}`);
+        throw new Error(`Pinterest API error: ${response.status}`);
       }
 
       const pinData = await response.json();
@@ -187,10 +193,9 @@ export async function createPinterestBoard(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
       return {
         success: false,
-        error: errorData.error_message || "Failed to create board",
+        error: `Failed to create board (${response.status})`,
       };
     }
 

@@ -42,7 +42,11 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
+      <div
+        className={cn("fixed inset-0 bg-black/50 z-40 lg:hidden", isOpen ? "block" : "hidden")}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
 
       {/* Sidebar */}
       <aside
@@ -62,13 +66,14 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <nav aria-label="Main navigation" className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 px-4 py-2.5 rounded-lg text-nav-link transition-colors",
                   isActive
@@ -76,7 +81,7 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
                     : "text-muted hover:text-ink hover:bg-surface-strong/50",
                 )}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-5 h-5" aria-hidden="true" />
                 {item.label}
               </Link>
             );
@@ -104,6 +109,7 @@ export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-nav-link text-muted hover:text-ink hover:bg-surface-strong/50 transition-colors"
           >
