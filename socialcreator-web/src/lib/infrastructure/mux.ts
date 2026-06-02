@@ -1,4 +1,7 @@
 import Mux from "@mux/mux-node";
+import logger from "@/lib/logger";
+
+const MUX_TIMEOUT_MS = 30_000; // 30 seconds
 
 // Lazy initialization to prevent build-time errors
 function getMuxClient() {
@@ -7,7 +10,7 @@ function getMuxClient() {
   if (!tokenId || !tokenSecret) {
     throw new Error("MUX_TOKEN_ID or MUX_TOKEN_SECRET is not configured");
   }
-  return new Mux({ tokenId, tokenSecret });
+  return new Mux({ tokenId, tokenSecret, timeout: MUX_TIMEOUT_MS });
 }
 
 export interface MuxClipResult {

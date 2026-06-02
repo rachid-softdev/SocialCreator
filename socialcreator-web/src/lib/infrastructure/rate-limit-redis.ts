@@ -8,6 +8,7 @@
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import * as fallback from "@/lib/infrastructure/rate-limit-fallback";
 import logger from "@/lib/logger";
 
 // ============================================
@@ -212,7 +213,7 @@ export function initRedis(): Redis | null {
 
   if (!url || !token) {
     logger.warn(
-      "Upstash Redis not configured. Using in-memory fallback. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment for production.",
+      "[RateLimit] Upstash Redis not configured — falling back to in-memory rate limiter (rate-limit-fallback.ts). For production, set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.",
     );
     return null;
   }
@@ -346,9 +347,9 @@ export async function checkRateLimit(
   const limiter = getRateLimiter(path);
 
   if (!limiter) {
-    // Redis not configured (dev mode) — use in-memory fallback with normal limits
-    logger.debug(`Using in-memory rate limiting for ${path}`);
-    return checkRateLimitInMemory(identifier, path, false);
+    // Redis not configured (dev mode) — use in-memory fallback from fallback module
+    logger.debug(`[RateLimit] Redis not available, using in-memory fallback for ${path}`);
+    return fallback.checkRateLimit(request, identifier);
   }
 
   try {
@@ -361,10 +362,14 @@ export async function checkRateLimit(
       reset: result.reset,
     };
   } catch (error) {
-    // On Redis error, fall back to in-memory with STRICT limits
+    // On Redis error, fall back to in-memory fallback module
     // This is fail-closed: we rate-limit MORE aggressively when degraded
-    logger.error({ err: error }, "Rate limit Redis check failed, using strict in-memory fallback");
-    return checkRateLimitInMemory(identifier, path, true);
+    logger.error(
+      { err: error },
+      "[RateLimit] Redis check failed — activating in-memory fallback (fail-closed mode). Server may be under load or Redis may be down.",
+    );
+    // Forward to fallback module for centralized in-memory rate limiting
+    return fallback.checkRateLimit(request, identifier);
   }
 }
 

@@ -23,7 +23,13 @@ yarn-error.log*
 
 # Local env files — keep ALL .env* out of git (except .env.example)
 .env*
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
 !.env.example
+!.env.local.example
+!.env.production.example
 
 # Vercel
 .vercel
