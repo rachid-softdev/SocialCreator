@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-import AES from "crypto-js/aes";
 import { vi } from "vitest";
 import { decryptToken, encryptToken, hashString, verifyHash } from "../crypto";
 
@@ -9,16 +7,16 @@ import { decryptToken, encryptToken, hashString, verifyHash } from "../crypto";
 // vi.stubEnv in beforeEach does NOT retroactively change the imported module's SECRET.
 
 describe("crypto", () => {
-  const TEST_SECRET = "test-encryption-key";
-
   /**
-   * Helper to generate a legacy-format encrypted token (crypto-js AES)
-   * Must use the same SECRET value that the crypto module loaded at import time
-   * (i.e., the pre-stub value from vitest.setup.ts: "test-encryption-key")
+   * Generate a fake "legacy" encrypted token string (crypto-js was removed
+   * from dependencies; legacy format is no longer supported).
+   * We construct a base64 string that looks like a legacy crypto-js token
+   * but is actually random garbage — the test only cares that decryptToken
+   * throws for non-GCM-format strings.
    */
-  function createLegacyEncryptedToken(plaintext: string): string {
-    const key = createHash("sha256").update(TEST_SECRET).digest("hex");
-    return AES.encrypt(plaintext, key).toString();
+  function createLegacyEncryptedToken(_plaintext: string): string {
+    // Produce a non-empty base64 string that will fail GCM decryption
+    return Buffer.from("legacy-mock:" + _plaintext).toString("base64");
   }
 
   describe("encryptToken", () => {
