@@ -21,8 +21,13 @@ test.describe("Protected Routes", () => {
   test("should allow public routes without redirect", async ({ page }) => {
     for (const route of PUBLIC_ROUTES) {
       await page.goto(route);
-      const url = page.url();
-      expect(url).not.toContain("/login");
+      const finalPath = new URL(page.url()).pathname;
+      if (route === "/") {
+        expect(finalPath).toBe("/");
+      } else {
+        // e.g., /blog should start with /blog (not /login)
+        expect(finalPath).toMatch(new RegExp(`^${route}`));
+      }
     }
   });
 });
