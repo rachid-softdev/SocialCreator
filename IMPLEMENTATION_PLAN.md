@@ -1639,4 +1639,1934 @@ Semaine 6-8 (Sprint 3) :
 
 ---
 
-*Plan généré le 2026-06-01 — OpenCode Review System*
+---
+
+# 🚀 SPRINT 4 — OAuth Onboarding Flow (semaine 1-2)
+
+---
+
+## S4.1 — Page de gestion des comptes connectés (UI)
+
+**Fichiers** : `socialcreator-web/src/app/(main)/profiles/[id]/accounts/page.tsx` (NOUVEAU), `socialcreator-web/src/components/connected-accounts/account-card.tsx` (NOUVEAU), `socialcreator-web/src/components/connected-accounts/account-list.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 3 (API v1 connected-accounts, Zustand stores)
+**Test** : Naviguer vers `/profiles/{id}/accounts` → liste des comptes connectés avec statuts
+
+### Contexte
+Les routes OAuth existent (`/api/connected-accounts/callback/[platform]`, `/api/connected-accounts/redirect/[platform]`) et le token exchange fonctionne. Mais il n'y a **aucune UI** pour :
+1. Voir la liste des comptes connectés
+2. Lancer le flux OAuth (bouton "Connect X")
+3. Voir le statut (actif/expiré/erreur)
+4. Déconnecter/reconnecter un compte
+
+### Modifications
+
+**1. Nouveau fichier** : `socialcreator-web/src/components/connected-accounts/account-card.tsx`
+
+```tsx
+"use client";
+
+import { PLATFORM_DISPLAY, type Platform } from "@socialcreator/types";
+import { Card } from "@socialcreator/ui/card";
+import { Badge } from "@socialcreator/ui/badge";
+import { Button } from "@socialcreator/ui/button";
+import {
+  Twitter,
+  Instagram,
+  Youtube,
+  Facebook,
+  Linkedin,
+  Music,
+  MessageCircle,
+  Pin,
+  Link2,
+  RefreshCw,
+  Trash2,
+  AlertCircle,
+} from "lucide-react";
+
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  X: <Twitter className="w-5 h-5" />,
+  INSTAGRAM: <Instagram className="w-5 h-5" />,
+  YOUTUBE: <Youtube className="w-5 h-5" />,
+  FACEBOOK: <Facebook className="w-5 h-5" />,
+  LINKEDIN: <Linkedin className="w-5 h-5" />,
+  TIKTOK: <Music className="w-5 h-5" />,
+  THREADS: <MessageCircle className="w-5 h-5" />,
+  PINTEREST: <Pin className="w-5 h-5" />,
+};
+
+interface AccountCardProps {
+  account: {
+    id: string;
+    platform: string;
+    accountName: string;
+    accountAvatarUrl: string | null;
+    isActive: boolean;
+    expiresAt: string | null;
+  };
+  onDisconnect: (id: string) => void;
+  onReconnect: (id: string) => void;
+}
+
+export function AccountCard({ account, onDisconnect, onReconnect }: AccountCardProps) {
+  const isExpired = account.expiresAt && new Date(account.expiresAt) < new Date();
+  const status = !account.isActive ? "inactive" : isExpired ? "expired" : "active";
+
+  const statusConfig = {
+    active: { label: "Connected", color: "bg-green-100 text-green-800" },
+    expired: { label: "Token expired", color: "bg-yellow-100 text-yellow-800" },
+    inactive: { label: "Disconnected", color: "bg-red-100 text-red-800" },
+  } as const;
+
+  return (
+    <Card className="flex items-center gap-4 p-4">
+      <div className="w-10 h-10 rounded-full bg-surface-strong flex items-center justify-center">
+        {account.accountAvatarUrl ? (
+          <img src={account.accountAvatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+        ) : (
+          PLATFORM_ICONS[account.platform] || <Link2 className="w-5 h-5" />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-body-sm text-ink font-medium truncate">{account.accountName}</p>
+        <p className="text-caption text-muted">{PLATFORM_DISPLAY[account.platform] || account.platform}</p>
+      </div>
+
+      <Badge className={statusConfig[status].color}>{statusConfig[status].label}</Badge>
+
+      <div className="flex items-center gap-2">
+        {status === "expired" && (
+          <Button variant="outline" size="sm" onClick={() => onReconnect(account.id)}>
+            <RefreshCw className="w-4 h-4" />
+            Reconnect
+          </Button>
+        )}
+        {status === "active" && (
+          <Button variant="ghost" size="sm" onClick={() => onDisconnect(account.id)} aria-label="Disconnect account">
+            <Trash2 className="w-4 h-4 text-semantic-error" />
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+}
+```
+
+**2. Nouveau fichier** : `socialcreator-web/src/components/connected-accounts/account-list.tsx`
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { AccountCard } from "./account-card";
+import { Button } from "@socialcreator/ui/button";
+import { EmptyState } from "@socialcreator/ui/empty-state";
+import { Skeleton } from "@socialcreator/ui/skeleton";
+import { useUIStore } from "@/lib/stores";
+
+interface ConnectedAccount {
+  id: string;
+  platform: string;
+  accountName: string;
+  accountAvatarUrl: string | null;
+  isActive: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+interface AccountListProps {
+  profileId: string;
+  availablePlatforms: string[];
+}
+
+export function AccountList({ profileId, availablePlatforms }: AccountListProps) {
+  const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const openModal = useUIStore((s) => s.openModal);
+
+  useEffect(() => {
+    fetch(`/api/v1/connected-accounts?profileId=${profileId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setAccounts(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [profileId]);
+
+  const handleConnect = async (platform: string) => {
+    setConnecting(platform);
+    try {
+      const res = await fetch("/api/v1/connected-accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId, platform }),
+      });
+      const data = await res.json();
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        openModal("error", { message: "Failed to initiate connection" });
+      }
+    } catch {
+      openModal("error", { message: "Network error" });
+    } finally {
+      setConnecting(null);
+    }
+  };
+
+  const handleDisconnect = async (id: string) => {
+    if (!confirm("Are you sure you want to disconnect this account?")) return;
+    try {
+      await fetch(`/api/v1/connected-accounts/${id}`, { method: "DELETE" });
+      setAccounts((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+      openModal("error", { message: "Failed to disconnect" });
+    }
+  };
+
+  if (loading) {
+    return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>;
+  }
+
+  const connectedPlatforms = new Set(accounts.map((a) => a.platform));
+  const unconnectedPlatforms = availablePlatforms.filter((p) => !connectedPlatforms.has(p));
+
+  return (
+    <div className="space-y-6">
+      {accounts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-title-sm text-ink">Connected Accounts</h3>
+          {accounts.map((account) => (
+            <AccountCard
+              key={account.id}
+              account={account}
+              onDisconnect={handleDisconnect}
+              onReconnect={() => handleConnect(account.platform)}
+            />
+          ))}
+        </div>
+      )}
+
+      {unconnectedPlatforms.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-title-sm text-ink">Available Platforms</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {unconnectedPlatforms.map((platform) => (
+              <Button
+                key={platform}
+                variant="outline"
+                onClick={() => handleConnect(platform)}
+                disabled={connecting === platform}
+                className="h-20 flex-col gap-1"
+              >
+                {connecting === platform ? "Connecting..." : `Connect ${platform}`}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {accounts.length === 0 && unconnectedPlatforms.length === 0 && (
+        <EmptyState
+          title="No platforms available"
+          description="This profile doesn't have any platforms configured."
+        />
+      )}
+    </div>
+  );
+}
+```
+
+**3. Nouvelle page** : `socialcreator-web/src/app/(main)/profiles/[id]/accounts/page.tsx`
+
+```tsx
+import { notFound } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getRepositories } from "@/lib/repositories";
+import { AccountList } from "@/components/connected-accounts/account-list";
+import { PageHeader } from "@/components/layout/page-header";
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function AccountsPage({ params }: Props) {
+  const { id } = await params;
+  const session = await auth();
+  if (!session?.user?.id) return notFound();
+
+  const { profile: profileRepo } = getRepositories();
+  const profile = await profileRepo.findById(id);
+  if (!profile || profile.userId !== session.user.id) return notFound();
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader
+        title="Connected Accounts"
+        description={`Manage social media accounts for ${profile.name}`}
+      />
+      <AccountList profileId={id} availablePlatforms={profile.platforms as string[]} />
+    </div>
+  );
+}
+```
+
+### Vérification
+1. Naviguer vers `/profiles/{id}/accounts` → voir liste des comptes connectés
+2. Cliquer "Connect X" → redirigé vers OAuth de la plateforme
+3. Après callback OAuth → retour sur la page avec le nouveau compte listé
+4. Cliquer "Disconnect" → confirmation → compte retiré de la liste
+5. Test avec token expiré → bouton "Reconnect" visible
+
+---
+
+## S4.2 — Callback OAuth avec état de succès/erreur (UI notification)
+
+**Fichiers** : `socialcreator-web/src/app/api/connected-accounts/callback/[platform]/route.ts` (MODIFIER), `socialcreator-web/src/app/(main)/profiles/[id]/accounts/page.tsx` (MODIFIER)
+**Effort** : S
+**Dépendances** : S4.1
+**Test** : Simulation d'erreur OAuth → toast d'erreur visible
+
+### Contexte
+Actuellement, le callback redirige vers `/profiles/{id}/accounts?connected=success` ou `?error=...`. Mais ces messages ne sont pas affichés dans l'interface — l'utilisateur ne voit rien.
+
+### Modifications
+
+**1. Ajouter un composant toast/sonner** dans la page accounts :
+
+```tsx
+// Dans page.tsx, ajouter après le PageHeader :
+"use client";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
+
+function OAuthNotification() {
+  const params = useSearchParams();
+
+  useEffect(() => {
+    if (params.get("connected") === "success") {
+      toast.success("Account connected successfully!");
+      // Clean URL without full page reload
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (params.get("error")) {
+      const messages: Record<string, string> = {
+        oauth_error: "Authentication failed. Please try again.",
+        missing_params: "Missing OAuth parameters.",
+        invalid_state: "Security validation failed. Please try again.",
+        profile_not_found: "Profile not found.",
+        access_denied: "Access denied.",
+        token_exchange_failed: "Failed to exchange token.",
+        callback_failed: "Connection failed. Please try again.",
+      };
+      toast.error(messages[params.get("error")!] || "An error occurred.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [params]);
+
+  return null;
+}
+```
+
+**2. Ajouter dans la page** :
+
+```tsx
+// Dans le JSX de la page :
+<OAuthNotification />
+```
+
+### Vérification
+1. Connecter un compte → redirection → toast "Account connected successfully!"
+2. Annuler OAuth → redirection avec erreur → toast d'erreur
+
+---
+
+## S4.3 — Rafraîchissement automatique des tokens expirés
+
+**Fichiers** : `socialcreator-web/src/lib/services/tokens.ts` (MODIFIER)
+**Effort** : S
+**Dépendances** : Sprint 3 (OAuth encryption déjà en place)
+**Test** : Simuler un token expiré → `getValidAccessToken` doit le rafraîchir
+
+### Contexte
+`getValidAccessToken()` rafraîchit déjà les tokens expirés dans `tokens.ts` (fonctionnalité existante de Sprint 3). Mais il manque :
+1. Un mécanisme pour **notifier l'utilisateur** quand un refresh échoue
+2. Un **cron** pour rafraîchir les tokens en arrière-plan avant expiration
+
+### Modifications
+
+**1. Ajouter une notification utilisateur** quand le refresh échoue :
+
+```tsx
+// Dans tokens.ts, getValidAccessToken(), quand le refresh échoue :
+logger.warn({ accountId, platform: account.platform }, "Token refresh failed — deactivating account");
+
+// Ajouter : création d'un événement de notification
+// (à implémenter avec une table Notification ou un webhook)
+await createNotification({
+  userId: account.userId,
+  type: "TOKEN_EXPIRED",
+  title: "Account disconnected",
+  message: `Your ${account.platform} account needs to be reconnected.`,
+  data: { accountId: account.id, platform: account.platform },
+});
+```
+
+**2. Nouveau trigger** : `socialcreator-web/src/triggers/token-refresh.trigger.ts`
+
+```tsx
+/**
+ * Token refresh scheduler
+ * Runs daily to preemptively refresh tokens before they expire
+ */
+import { getRepositories } from "@/lib/repositories";
+import { getValidAccessToken } from "@/lib/tokens";
+import logger from "@/lib/logger";
+
+export async function runTokenRefresh(): Promise<{ refreshed: number; failed: number }> {
+  const { connectedAccount: caRepo } = getRepositories();
+
+  // Find tokens expiring in the next 24 hours
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expiringSoon = await caRepo.findExpiringBefore(tomorrow);
+
+  let refreshed = 0;
+  let failed = 0;
+
+  for (const account of expiringSoon) {
+    try {
+      // This triggers refresh if needed
+      const token = await getValidAccessToken(account.id);
+      if (token) refreshed++;
+      else failed++;
+    } catch (error) {
+      failed++;
+      logger.error({ accountId: account.id, err: error }, "Token refresh failed");
+    }
+  }
+
+  logger.info({ expiringSoon: expiringSoon.length, refreshed, failed }, "Token refresh cycle completed");
+  return { refreshed, failed };
+}
+```
+
+### Vérification
+1. Simuler un token expiré → `getValidAccessToken` rafraîchit
+2. `runTokenRefresh` termine sans erreur
+3. Logger montre le nombre de tokens rafraîchis
+
+---
+
+## S4.4 — Ajouter `findExpiringBefore` au repository ConnectedAccount
+
+**Fichiers** : `socialcreator-web/src/lib/repositories/connected-account.repository.ts` (MODIFIER), `socialcreator-web/src/lib/repositories/connected-account.repository.ts` (interface + implémentation)
+**Effort** : XS
+**Dépendances** : S4.3
+**Test** : `pnpm test:run`
+
+### Modifications
+
+**1. Ajouter à l'interface** :
+
+```tsx
+// Dans IConnectedAccountRepository :
+findExpiringBefore(date: Date): Promise<ConnectedAccount[]>;
+```
+
+**2. Ajouter à l'implémentation** :
+
+```tsx
+async findExpiringBefore(date: Date): Promise<ConnectedAccount[]> {
+  const accounts = await prisma.connectedAccount.findMany({
+    where: {
+      isActive: true,
+      expiresAt: { lte: date },
+    },
+  });
+  return this.decryptSensitiveArray(accounts);
+}
+```
+
+### Vérification
+1. `pnpm test:run` — tests passent
+2. `pnpm typecheck` — OK
+
+---
+
+# 🚀 SPRINT 5 — Content Scheduling UI (semaine 3-4)
+
+---
+
+## S5.1 — Composant Calendar View pour contenu programmé
+
+**Fichiers** : `socialcreator-web/src/components/content/calendar-view.tsx` (NOUVEAU), `socialcreator-web/src/app/(main)/content/calendar/page.tsx` (NOUVEAU)
+**Effort** : L
+**Dépendances** : Sprint 3 (Zustand stores, API v1 content)
+**Test** : Naviguer vers `/content/calendar` → vue calendrier avec contenu programmé
+
+### Contexte
+Le champ `scheduledPublishAt` existe sur `GeneratedContent` et le trigger `runScheduledContentPublisher` fonctionne. Mais il n'y a **aucune UI** pour voir le planning éditorial.
+
+### Modifications
+
+**1. Nouveau fichier** : `socialcreator-web/src/components/content/calendar-view.tsx`
+
+```tsx
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@socialcreator/ui/button";
+import { ContentStatusBadge } from "./content-status-badge";
+import { PlatformBadge } from "./platform-badge";
+import { Skeleton } from "@socialcreator/ui/skeleton";
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  platform: string;
+  status: string;
+  scheduledAt: string;
+}
+
+interface CalendarViewProps {
+  profileId?: string;
+  onEventClick?: (id: string) => void;
+}
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+
+export function CalendarView({ profileId, onEventClick }: CalendarViewProps) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  // Fetch scheduled content
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      status: "SCHEDULED",
+      pageSize: "100",
+    });
+    if (profileId) params.set("profileId", profileId);
+
+    fetch(`/api/v1/content?${params}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const items = data.contents || data || [];
+        setEvents(
+          items
+            .filter((c: any) => c.scheduledPublishAt)
+            .map((c: any) => ({
+              id: c.id,
+              title: c.textContent?.substring(0, 50) || "Untitled",
+              platform: c.platform,
+              status: c.status,
+              scheduledAt: c.scheduledPublishAt,
+            })),
+        );
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [profileId, month, year]);
+
+  // Calendar grid calculation
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPad = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const days: Array<{ date: Date; events: CalendarEvent[]; isCurrentMonth: boolean }> = [];
+
+    // Previous month padding
+    for (let i = startPad - 1; i >= 0; i--) {
+      const d = new Date(year, month, -i);
+      days.push({ date: d, events: [], isCurrentMonth: false });
+    }
+
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const dayEvents = events.filter((e) => {
+        const eventDate = new Date(e.scheduledAt);
+        return eventDate.toDateString() === date.toDateString();
+      });
+      days.push({ date, events: dayEvents, isCurrentMonth: true });
+    }
+
+    // Next month padding (to fill 6 rows = 42 cells)
+    while (days.length < 42) {
+      const nextDate = new Date(year, month, days.length - startPad + 1);
+      days.push({ date: nextDate, events: [], isCurrentMonth: false });
+    }
+
+    return days;
+  }, [year, month, events]);
+
+  if (loading) {
+    return <Skeleton className="h-[600px]" />;
+  }
+
+  return (
+    <div className="bg-surface-card rounded-lg border border-hairline">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-hairline">
+        <Button variant="ghost" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <h2 className="text-title-md text-ink font-medium">
+          {MONTHS[month]} {year}
+        </h2>
+        <Button variant="ghost" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 border-b border-hairline">
+        {DAYS.map((day) => (
+          <div key={day} className="p-2 text-caption text-muted text-center font-medium">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7">
+        {calendarDays.map((day, i) => (
+          <div
+            key={i}
+            className={`min-h-[100px] p-1 border-b border-r border-hairline ${
+              !day.isCurrentMonth ? "bg-surface-strong/50" : ""
+            }`}
+          >
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 text-caption rounded-full ${
+                day.date.toDateString() === new Date().toDateString()
+                  ? "bg-primary text-on-primary"
+                  : "text-muted"
+              }`}
+            >
+              {day.date.getDate()}
+            </span>
+            <div className="space-y-1 mt-1">
+              {day.events.slice(0, 3).map((event) => (
+                <button
+                  key={event.id}
+                  type="button"
+                  onClick={() => onEventClick?.(event.id)}
+                  className="w-full text-left text-[10px] leading-tight px-1 py-0.5 rounded bg-blue-50 text-blue-700 truncate hover:bg-blue-100 transition-colors"
+                  title={event.title}
+                >
+                  {event.title}
+                </button>
+              ))}
+              {day.events.length > 3 && (
+                <span className="text-[10px] text-muted pl-1">+{day.events.length - 3} more</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**2. Nouvelle page** : `socialcreator-web/src/app/(main)/content/calendar/page.tsx`
+
+```tsx
+import { CalendarView } from "@/components/content/calendar-view";
+import { PageHeader } from "@/components/layout/page-header";
+
+export default function CalendarPage() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Content Calendar"
+        description="View and manage your scheduled content"
+      />
+      <CalendarView />
+    </div>
+  );
+}
+```
+
+**3. Ajouter le lien dans la navigation** (sidebar.tsx) :
+
+```tsx
+// Dans navItems, ajouter :
+{ href: "/content/calendar", label: "Calendar", icon: Calendar },
+```
+
+### Vérification
+1. Naviguer vers `/content/calendar` → calendrier mensuel visible
+2. Les contenus avec `scheduledPublishAt` apparaissent sur les jours correspondants
+3. Navigation mois précédent/suivant fonctionne
+4. Cliquer sur un événement → callback ou navigation
+
+---
+
+## S5.2 — Modal de programmation (Schedule Picker)
+
+**Fichiers** : `socialcreator-web/src/components/content/schedule-modal.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S5.1
+**Test** : Approuver un contenu → modal de programmation → choisir date/heure → contenu programmé
+
+### Contexte
+Actuellement, approuver un contenu le passe en `APPROVED`. Il faut une UI pour le programmer à une date ultérieure (`scheduledPublishAt`).
+
+### Modifications
+
+**1. Nouveau fichier** : `socialcreator-web/src/components/content/schedule-modal.tsx`
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@socialcreator/ui/dialog";
+import { Button } from "@socialcreator/ui/button";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { useContentStore } from "@/lib/stores";
+import { toast } from "sonner";
+
+interface ScheduleModalProps {
+  contentId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ScheduleModal({ contentId, open, onOpenChange }: ScheduleModalProps) {
+  const [scheduledAt, setScheduledAt] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return d;
+  });
+  const [saving, setSaving] = useState(false);
+  const updateItem = useContentStore((s) => s.updateItem);
+
+  const handleSchedule = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/v1/content/${contentId}/schedule`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledPublishAt: scheduledAt.toISOString() }),
+      });
+
+      if (!res.ok) throw new Error("Failed to schedule");
+
+      updateItem(contentId, {
+        status: "SCHEDULED",
+        scheduledPublishAt: scheduledAt.toISOString(),
+      } as any);
+
+      toast.success("Content scheduled!");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to schedule content");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Schedule Publication</DialogTitle>
+          <DialogDescription>
+            Choose when this content should be published automatically.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label className="text-body-sm text-ink font-medium">Date & Time</label>
+            <DateTimePicker value={scheduledAt} onChange={setScheduledAt} minDate={new Date()} />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSchedule} disabled={saving}>
+              {saving ? "Scheduling..." : "Schedule"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### Vérification
+1. Approuver un contenu → bouton "Schedule" disponible
+2. Cliquer → modal avec date/time picker
+3. Choisir une date future → "Schedule" → contenu passe en `SCHEDULED`
+4. Le contenu apparaît dans le calendrier (S5.1)
+
+---
+
+## S5.3 — Pipeline Approve → Schedule → Publish
+
+**Fichiers** : `socialcreator-web/src/app/api/v1/content/[id]/approve/route.ts` (MODIFIER), `socialcreator-web/src/app/api/v1/content/[id]/schedule/route.ts` (MODIFIER ou NOUVEAU)
+**Effort** : M
+**Dépendances** : S5.2
+**Test** : Approuver → programmer → vérifier que le trigger schedule le publie
+
+### Contexte
+Le flux actuel est : DRAFT → APPROVED (via approve) → manuellement PUBLISHED (via publish). Il faut ajouter : DRAFT → APPROVED → SCHEDULED (via schedule) → auto-PUBLISHED (via trigger).
+
+### Modifications
+
+**1. Modifier la route d'approbation** pour proposer la programmation :
+
+```tsx
+// Dans POST /api/v1/content/[id]/approve
+// Ajouter un paramètre optionnel scheduledPublishAt
+const body = await request.json();
+const schema = z.object({
+  scheduledPublishAt: z.string().datetime().optional(),
+});
+
+const { scheduledPublishAt } = schema.parse(body);
+
+await contentRepo.updateStatus(id, scheduledPublishAt ? "SCHEDULED" : "APPROVED");
+
+if (scheduledPublishAt) {
+  await contentRepo.update(id, {
+    scheduledPublishAt: new Date(scheduledPublishAt),
+  } as any);
+}
+```
+
+**2. Route de programmation** : `socialcreator-web/src/app/api/v1/content/[id]/schedule/route.ts` (si pas déjà existante)
+
+```tsx
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { withApiMiddleware } from "@/lib/api-middleware";
+import { getRepositories } from "@/lib/repositories";
+import { badRequest, notFound } from "@/lib/api-errors";
+
+const scheduleSchema = z.object({
+  scheduledPublishAt: z.string().datetime(),
+});
+
+export const PUT = withApiMiddleware(async ({ userId, params, request }) => {
+  const id = params.id as string;
+  const { content: contentRepo } = getRepositories();
+
+  const content = await contentRepo.findById(id);
+  if (!content) return notFound("Content");
+
+  const body = await request.json();
+  const parsed = scheduleSchema.safeParse(body);
+  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
+
+  const scheduledPublishAt = new Date(parsed.data.scheduledPublishAt);
+  if (scheduledPublishAt <= new Date()) {
+    return badRequest("Scheduled time must be in the future");
+  }
+
+  await contentRepo.updateStatus(id, "SCHEDULED");
+  await contentRepo.update(id, { scheduledPublishAt } as any);
+
+  return NextResponse.json({ success: true });
+});
+```
+
+### Vérification
+1. Approuver un contenu sans date → reste APPROVED
+2. Approuver avec date future → passe SCHEDULED
+3. Programmer un contenu APPROVED → SCHEDULED
+4. Le trigger `runScheduledContentPublisher` publie le contenu à l'heure programmée
+
+---
+
+# 🚀 SPRINT 6 — Multi-Platform Publish Pipeline (semaine 5-6)
+
+---
+
+## S6.1 — File d'attente de publication visible (Queue Dashboard)
+
+**Fichiers** : `socialcreator-web/src/app/(main)/content/queue/page.tsx` (NOUVEAU), `socialcreator-web/src/components/job-queue/queue-status.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 3 (job queue), Sprint 5 (content list)
+**Test** : Publier un contenu → visible dans la file d'attente
+
+### Contexte
+Le job queue (`src/lib/job-queue/`) existe et fonctionne en mémoire. Mais l'utilisateur ne voit pas l'état de publication (en cours, échoué, complété).
+
+### Modifications
+
+**1. Ajouter une API de statut de la queue** : `socialcreator-web/src/app/api/v1/queue/status/route.ts`
+
+```tsx
+import { NextResponse } from "next/server";
+import { getQueueStatus } from "@/lib/job-queue";
+
+export const GET = async () => {
+  const status = getQueueStatus();
+  return NextResponse.json(status, {
+    headers: { "Cache-Control": "no-store", "X-API-Version": "v1" },
+  });
+};
+```
+
+**2. Nouveau composant** : `socialcreator-web/src/components/job-queue/queue-status.tsx`
+
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card } from "@socialcreator/ui/card";
+import { Badge } from "@socialcreator/ui/badge";
+
+interface QueueStats {
+  pending: number;
+  running: number;
+  completed: number;
+  failed: number;
+  total: number;
+}
+
+export function QueueStatus() {
+  const [stats, setStats] = useState<QueueStats | null>(null);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/v1/queue/status");
+        const data = await res.json();
+        setStats({
+          pending: data.pending || 0,
+          running: data.running || 0,
+          completed: data.completed || 0,
+          failed: data.failed || 0,
+          total: data.total || 0,
+        });
+      } catch {
+        // Ignore
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!stats) return null;
+
+  return (
+    <div className="grid grid-cols-5 gap-4">
+      <Card className="p-4 text-center">
+        <p className="text-title-lg text-ink">{stats.pending}</p>
+        <p className="text-caption text-muted">Pending</p>
+      </Card>
+      <Card className="p-4 text-center">
+        <p className="text-title-lg text-blue-600">{stats.running}</p>
+        <p className="text-caption text-muted">Running</p>
+      </Card>
+      <Card className="p-4 text-center">
+        <p className="text-title-lg text-green-600">{stats.completed}</p>
+        <p className="text-caption text-muted">Completed</p>
+      </Card>
+      <Card className="p-4 text-center">
+        <p className="text-title-lg text-red-600">{stats.failed}</p>
+        <p className="text-caption text-muted">Failed</p>
+      </Card>
+      <Card className="p-4 text-center">
+        <p className="text-title-lg text-ink">{stats.total}</p>
+        <p className="text-caption text-muted">Total</p>
+      </Card>
+    </div>
+  );
+}
+```
+
+**3. Nouvelle page** : `socialcreator-web/src/app/(main)/content/queue/page.tsx`
+
+```tsx
+import { QueueStatus } from "@/components/job-queue/queue-status";
+import { PageHeader } from "@/components/layout/page-header";
+
+export default function QueuePage() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Publish Queue"
+        description="Monitor content publishing in real-time"
+      />
+      <QueueStatus />
+    </div>
+  );
+}
+```
+
+### Vérification
+1. Publier un contenu → `/content/queue` montre l'état
+2. Les compteurs se mettent à jour en temps réel
+3. Après publication → compteur Completed incrémenté
+
+---
+
+## S6.2 — Historique des publications (PublishLog UI)
+
+**Fichiers** : `socialcreator-web/src/app/(main)/content/history/page.tsx` (NOUVEAU), `socialcreator-web/src/components/content/publish-history.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 3 (publish-log repository)
+**Test** : Naviguer vers `/content/history` → historique des publications
+
+### Contexte
+Le `PublishLog` est créé dans `handlers.ts` (Sprint 3) mais il n'y a pas d'UI pour le consulter.
+
+### Modifications
+
+**1. API route** : `socialcreator-web/src/app/api/v1/publish-logs/route.ts`
+
+```tsx
+import { NextResponse } from "next/server";
+import { withApiMiddleware } from "@/lib/api-middleware";
+import { getRepositories } from "@/lib/repositories";
+
+export const GET = withApiMiddleware(async ({ userId, request }) => {
+  const { searchParams } = new URL(request.url);
+  const profileId = searchParams.get("profileId");
+  const page = parseInt(searchParams.get("page") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "20");
+
+  const { publishLog: publishLogRepo } = getRepositories();
+
+  if (profileId) {
+    const logs = await publishLogRepo.findByProfileId(profileId, { page, pageSize });
+    return NextResponse.json(logs);
+  }
+
+  const logs = await publishLogRepo.findByUserId(userId, { page, pageSize });
+  return NextResponse.json(logs);
+});
+```
+
+**2. Nouveau composant** : `socialcreator-web/src/components/content/publish-history.tsx`
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card } from "@socialcreator/ui/card";
+import { Badge } from "@socialcreator/ui/badge";
+import { Skeleton } from "@socialcreator/ui/skeleton";
+import { PlatformBadge } from "./platform-badge";
+import { formatDistanceToNow } from "date-fns";
+
+interface PublishLog {
+  id: string;
+  platform: string;
+  contentId: string;
+  contentHash: string;
+  success: boolean;
+  error: string | null;
+  createdAt: string;
+}
+
+export function PublishHistory({ profileId }: { profileId?: string }) {
+  const [logs, setLogs] = useState<PublishLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), pageSize: "20" });
+    if (profileId) params.set("profileId", profileId);
+
+    fetch(`/api/v1/publish-logs?${params}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setLogs(data.logs || data || []);
+        setTotalPages(data.totalPages || 1);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [profileId, page]);
+
+  if (loading) {
+    return <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>;
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted">
+        <p>No publish history yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {logs.map((log) => (
+        <Card key={log.id} className="flex items-center gap-4 p-4">
+          <PlatformBadge platform={log.platform} />
+          <div className="flex-1 min-w-0">
+            <p className="text-body-sm text-ink truncate">
+              Content published to {log.platform}
+            </p>
+            <p className="text-caption text-muted">
+              {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+            </p>
+          </div>
+          <Badge className={log.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+            {log.success ? "Success" : "Failed"}
+          </Badge>
+          {log.error && (
+            <p className="text-caption text-semantic-error max-w-[200px] truncate" title={log.error}>
+              {log.error}
+            </p>
+          )}
+        </Card>
+      ))}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 pt-4">
+          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 rounded border border-hairline text-body-sm disabled:opacity-50">
+            Previous
+          </button>
+          <span className="px-3 py-1 text-body-sm text-muted">{page} / {totalPages}</span>
+          <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 rounded border border-hairline text-body-sm disabled:opacity-50">
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Vérification
+1. Publier du contenu → `/content/history` montre l'historique
+2. Les publications réussies et échouées sont visibles
+3. Pagination fonctionne avec +20 entrées
+
+---
+
+## S6.3 — Refactor publishers : standardisation du pattern
+
+**Fichiers** : `socialcreator-web/src/lib/publishers/*.ts` (tous les 9 fichiers), `socialcreator-web/src/lib/publishers/index.ts`
+**Effort** : M
+**Dépendances** : Sprint 3 (repository pattern)
+**Test** : `pnpm test:run` — tests des publishers passent
+
+### Contexte
+Les 9 publishers ont des signatures légèrement différentes. Certains prennent des paramètres nommés, d'autres des objets. Il faut standardiser.
+
+### Modifications
+
+**1. Définir une interface commune** :
+
+```tsx
+// Dans publishers/index.ts ou publishers/types.ts
+export interface PublishInput {
+  textContent: string;
+  mediaUrls: string[];
+  hashtags: string[];
+}
+
+export interface PublishOptions {
+  accountId: string;
+  accessToken: string;
+  refreshToken?: string;
+}
+
+export interface PublishResult {
+  success: boolean;
+  postId?: string;
+  postUrl?: string;
+  error?: string;
+}
+
+export type PublisherFunction = (input: PublishInput, options: PublishOptions) => Promise<PublishResult>;
+```
+
+**2. Adapter chaque publisher** à cette interface :
+
+```tsx
+// Exemple: facebook.ts
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
+
+export async function publishToFacebook(input: PublishInput, options: PublishOptions): Promise<PublishResult> {
+  // Implementation standardisée
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${options.accountId}/feed`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${options.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: input.textContent,
+        link: input.mediaUrls[0] || undefined,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      return { success: false, error: err.error?.message || "Facebook API error" };
+    }
+
+    const data = await res.json();
+    return { success: true, postId: data.id };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Network error" };
+  }
+}
+```
+
+**3. Mettre à jour `publishContent`** dans `publishers/index.ts` pour utiliser la factory :
+
+```tsx
+const publisherMap: Record<string, PublisherFunction> = {
+  X: publishToX,
+  INSTAGRAM: publishToInstagram,
+  YOUTUBE: publishToYouTube,
+  FACEBOOK: publishToFacebook,
+  LINKEDIN: publishToLinkedIn,
+  TIKTOK: publishToTikTok,
+  THREADS: publishToThreads,
+  PINTEREST: publishToPinterest,
+};
+
+export function getPublisher(platform: string): PublisherFunction {
+  const publisher = publisherMap[platform];
+  if (!publisher) throw new Error(`Unknown platform: ${platform}`);
+  return publisher;
+}
+
+export async function publishContent(
+  platform: string,
+  input: PublishInput,
+  options: PublishOptions,
+): Promise<PublishResult> {
+  const publisher = getPublisher(platform);
+  return publisher(input, options);
+}
+```
+
+### Vérification
+1. `pnpm test:run` — tous les tests passent (y compris les tests de publishers de Sprint 3)
+2. `pnpm typecheck` — OK
+3. Tous les publishers retournent `PublishResult`
+
+---
+
+# 🚀 SPRINT 7 — Dashboard + Analytics (semaine 7-8)
+
+---
+
+## S7.1 — Page Dashboard principale
+
+**Fichiers** : `socialcreator-web/src/app/(main)/page.tsx` (MODIFIER), `socialcreator-web/src/components/dashboard/stats-card.tsx` (NOUVEAU), `socialcreator-web/src/components/dashboard/recent-activity.tsx` (NOUVEAU)
+**Effort** : L
+**Dépendances** : Sprint 5 (content list), Sprint 6 (publish history)
+**Test** : Naviguer vers `/` → dashboard avec stats et activités récentes
+
+### Contexte
+La page d'accueil actuelle est très probablement une page vide ou un placeholder. Il faut un dashboard utile.
+
+### Modifications
+
+**1. API Dashboard** : `socialcreator-web/src/app/api/v1/dashboard/route.ts`
+
+```tsx
+import { NextResponse } from "next/server";
+import { withApiMiddleware } from "@/lib/api-middleware";
+import { getRepositories } from "@/lib/repositories";
+
+export const GET = withApiMiddleware(async ({ userId }) => {
+  const { content: contentRepo, publishLog: publishLogRepo, profile: profileRepo } = getRepositories();
+
+  const profiles = await profileRepo.findByUserId(userId);
+
+  // Aggregate stats across profiles
+  const profileIds = profiles.map((p) => p.id);
+
+  const [totalContents, totalPublished, todayPublishes, recentLogs] = await Promise.all([
+    // Total content count
+    Promise.all(profileIds.map((pid) => contentRepo.findByProfileId(pid, { pageSize: 1 }))).then(
+      (results) => results.reduce((sum, r) => sum + r.total, 0),
+    ),
+    // Published count
+    Promise.all(profileIds.map((pid) => contentRepo.findByProfileId(pid, { status: "PUBLISHED", pageSize: 1 }))).then(
+      (results) => results.reduce((sum, r) => sum + r.total, 0),
+    ),
+    // Today's publishes from publishLog
+    Promise.all(profileIds.map((pid) => publishLogRepo.countPublishedToday(pid, null as any))).then(
+      (counts) => counts.reduce((sum, c) => sum + c, 0),
+    ),
+    // Recent publish logs
+    publishLogRepo.findByUserId(userId, { pageSize: 10 }),
+  ]);
+
+  return NextResponse.json({
+    stats: {
+      profiles: profiles.length,
+      totalContents,
+      totalPublished,
+      todayPublishes,
+    },
+    recentActivity: recentLogs.logs || [],
+  });
+});
+```
+
+**2. Composant StatsCard** :
+
+```tsx
+// socialcreator-web/src/components/dashboard/stats-card.tsx
+import { Card } from "@socialcreator/ui/card";
+
+interface StatsCardProps {
+  label: string;
+  value: number;
+  icon?: React.ReactNode;
+  trend?: { value: number; positive: boolean };
+}
+
+export function StatsCard({ label, value, icon, trend }: StatsCardProps) {
+  return (
+    <Card className="p-4 flex items-start justify-between">
+      <div>
+        <p className="text-caption text-muted mb-1">{label}</p>
+        <p className="text-display-sm text-ink font-semibold">{value.toLocaleString()}</p>
+        {trend && (
+          <p className={`text-caption mt-1 ${trend.positive ? "text-green-600" : "text-red-600"}`}>
+            {trend.positive ? "↑" : "↓"} {trend.value}%
+          </p>
+        )}
+      </div>
+      {icon && <div className="text-muted">{icon}</div>}
+    </Card>
+  );
+}
+```
+
+**3. Modifier la page d'accueil** :
+
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { FileText, CheckCircle, Clock, Users, Activity } from "lucide-react";
+import { Skeleton } from "@socialcreator/ui/skeleton";
+
+interface DashboardData {
+  stats: { profiles: number; totalContents: number; totalPublished: number; todayPublishes: number };
+  recentActivity: Array<{ id: string; platform: string; success: boolean; createdAt: string }>;
+}
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/dashboard")
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {});
+  }, []);
+
+  if (!data) {
+    return <div className="space-y-6"><Skeleton className="h-32" /><Skeleton className="h-64" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-title-lg text-ink font-semibold">Dashboard</h1>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsCard label="Profiles" value={data.stats.profiles} icon={<Users className="w-5 h-5" />} />
+        <StatsCard label="Total Content" value={data.stats.totalContents} icon={<FileText className="w-5 h-5" />} />
+        <StatsCard label="Published" value={data.stats.totalPublished} icon={<CheckCircle className="w-5 h-5" />} />
+        <StatsCard label="Today" value={data.stats.todayPublishes} icon={<Activity className="w-5 h-5" />} />
+      </div>
+
+      <section>
+        <h2 className="text-title-md text-ink font-medium mb-4">Recent Activity</h2>
+        {data.recentActivity.length === 0 ? (
+          <p className="text-muted">No recent activity</p>
+        ) : (
+          <div className="space-y-2">
+            {data.recentActivity.map((log) => (
+              <div key={log.id} className="flex items-center gap-3 p-3 bg-surface-card rounded-lg border border-hairline">
+                <div className={`w-2 h-2 rounded-full ${log.success ? "bg-green-500" : "bg-red-500"}`} />
+                <span className="text-body-sm text-ink">
+                  {log.success ? "Published to" : "Failed to publish on"} {log.platform}
+                </span>
+                <span className="text-caption text-muted ml-auto">
+                  {new Date(log.createdAt).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+```
+
+### Vérification
+1. `/` → dashboard avec 4 cartes de stats
+2. Les stats reflètent les vraies données
+3. "Recent Activity" montre les dernières publications
+4. Mise en page responsive
+
+---
+
+## S7.2 — Graphiques d'activité (publications par jour)
+
+**Fichiers** : `socialcreator-web/src/components/dashboard/publish-chart.tsx` (NOUVEAU), `socialcreator-web/src/app/api/v1/dashboard/chart-data/route.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S7.1
+**Test** : Dashboard → graphique en barres des 7/30 derniers jours
+
+### Contexte
+Les stats brutes sont utiles mais un graphique donne une meilleure vision des tendances.
+
+### Modifications
+
+**1. API Chart Data** :
+
+```tsx
+// socialcreator-web/src/app/api/v1/dashboard/chart-data/route.ts
+import { NextResponse } from "next/server";
+import { withApiMiddleware } from "@/lib/api-middleware";
+import { getRepositories } from "@/lib/repositories";
+
+export const GET = withApiMiddleware(async ({ userId, request }) => {
+  const { searchParams } = new URL(request.url);
+  const days = parseInt(searchParams.get("days") || "7");
+
+  const { publishLog: publishLogRepo } = getRepositories();
+  const data = await publishLogRepo.getDailyStats(userId, days);
+
+  return NextResponse.json({ data, days });
+});
+```
+
+**2. Composant PublishChart** (utilise Recharts déjà dans les dépendances) :
+
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Card } from "@socialcreator/ui/card";
+import { Skeleton } from "@socialcreator/ui/skeleton";
+
+export function PublishChart() {
+  const [data, setData] = useState<Array<{ date: string; success: number; failed: number }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/v1/dashboard/chart-data?days=7")
+      .then((r) => r.json())
+      .then((result) => setData(result.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Skeleton className="h-64" />;
+
+  return (
+    <Card className="p-4">
+      <h3 className="text-title-sm text-ink font-medium mb-4">Publications (7 days)</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-hairline)" />
+          <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="var(--color-muted)" />
+          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} stroke="var(--color-muted)" />
+          <Tooltip />
+          <Bar dataKey="success" fill="var(--color-primary)" name="Success" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="failed" fill="var(--color-semantic-error)" name="Failed" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+}
+```
+
+### Vérification
+1. Dashboard → graphique visible
+2. Barres vertes (succès) et rouges (échecs) par jour
+3. Tooltip au survol
+
+---
+
+## S7.3 — Ajouter `getDailyStats` et `findByUserId` à PublishLogRepository
+
+**Fichiers** : `socialcreator-web/src/lib/repositories/publish-log.repository.ts` (MODIFIER)
+**Effort** : S
+**Dépendances** : S7.2
+**Test** : `pnpm test:run`
+
+### Modifications
+
+```tsx
+// Dans l'interface IPublishLogRepository :
+interface PublishLogFilterOptions {
+  page?: number;
+  pageSize?: number;
+}
+
+interface PublishLogPage {
+  logs: PublishLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface DailyStatsItem {
+  date: string;
+  success: number;
+  failed: number;
+}
+
+// Ajouter :
+findByUserId(userId: string, options?: PublishLogFilterOptions): Promise<PublishLogPage>;
+getDailyStats(userId: string, days: number): Promise<DailyStatsItem[]>;
+```
+
+```tsx
+// Implémentation :
+async findByUserId(userId: string, options?: PublishLogFilterOptions): Promise<PublishLogPage> {
+  const page = options?.page ?? 1;
+  const pageSize = options?.pageSize ?? 20;
+  const where = { userId };
+
+  const [logs, total] = await Promise.all([
+    prisma.publishLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.publishLog.count({ where }),
+  ]);
+
+  return {
+    logs,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
+
+async getDailyStats(userId: string, days: number): Promise<DailyStatsItem[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const logs = await prisma.publishLog.findMany({
+    where: {
+      userId,
+      createdAt: { gte: since },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Group by date
+  const grouped: Record<string, { success: number; failed: number }> = {};
+  for (let i = 0; i < days; i++) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const key = d.toISOString().split("T")[0];
+    grouped[key] = { success: 0, failed: 0 };
+  }
+
+  for (const log of logs) {
+    const key = log.createdAt.toISOString().split("T")[0];
+    if (grouped[key]) {
+      if (log.success) grouped[key].success++;
+      else grouped[key].failed++;
+    }
+  }
+
+  return Object.entries(grouped)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, counts]) => ({ date, ...counts }));
+}
+```
+
+### Vérification
+1. `pnpm test:run` — pass
+2. `pnpm typecheck` — OK
+
+---
+
+# 🚀 SPRINT 8 — Observability (semaine 9-10)
+
+---
+
+## S8.1 — Structured error logging avec Pino
+
+**Fichiers** : `socialcreator-web/src/lib/logger.ts` (MODIFIER), `socialcreator-web/src/lib/middleware/api-middleware.ts` (MODIFIER)
+**Effort** : M
+**Dépendances** : Sprint 2 (requestId déjà en place)
+**Test** : Vérifier que les logs Pino sont structurés avec `requestId`, `err`, `duration`
+
+### Contexte
+Pino est déjà dans les dépendances et `logger.ts` exporte un logger Pino. Mais les logs ne sont pas structurés correctement — certains utilisent `console.error` au lieu de `logger.error`.
+
+### Modifications
+
+**1. Audit des `console.error`** : Remplacer tous les `console.error` par `logger.error` :
+
+```bash
+rg "console\.error" --type ts socialcreator-web/src/
+```
+
+Remplacer chaque occurrence :
+```tsx
+// AVANT :
+console.error("Error fetching profiles:", error);
+
+// APRÈS :
+logger.error({ err: error }, "Error fetching profiles");
+```
+
+**2. Configurer Pino pour production** :
+
+```tsx
+// src/lib/logger.ts
+import pino from "pino";
+
+const isDev = process.env.NODE_ENV === "development";
+
+export default pino({
+  level: process.env.LOG_LEVEL || (isDev ? "debug" : "info"),
+  ...(isDev
+    ? {
+        transport: {
+          target: "pino-pretty",
+          options: { colorize: true, translateTime: "HH:MM:ss" },
+        },
+      }
+    : {
+        // Production: JSON structured logs
+        formatters: {
+          level: (label) => ({ level: label }),
+          bindings: () => ({}),
+        },
+        timestamp: pino.stdTimeFunctions.isoTime,
+      }),
+});
+```
+
+**3. Ajouter le requestId automatiquement** :
+
+```tsx
+// Dans api-middleware.ts, avant d'appeler le handler :
+const childLogger = logger.child({ requestId });
+// Remplacer logger.info/warn/error par childLogger dans le scope de la requête
+```
+
+### Vérification
+1. `rg "console.error"` — aucune occurrence restante dans `src/`
+2. Logs en production → format JSON valide
+3. Chaque log contient `requestId`, `duration`, `err` (si erreur)
+
+---
+
+## S8.2 — Endpoint /api/health enrichi
+
+**Fichiers** : `socialcreator-web/src/app/api/health/route.ts` (MODIFIER), `socialcreator-web/src/app/api/v1/health/route.ts` (MODIFIER)
+**Effort** : XS
+**Dépendances** : S8.1
+**Test** : `curl http://localhost:3000/api/health` → status DB + uptime
+
+### Contexte
+Le endpoint `/api/health` existe (Sprint 3) mais ne retourne que `{ status: "ok" }`. Il faut enrichir pour le monitoring.
+
+### Modifications
+
+```tsx
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const start = Date.now();
+  let dbStatus = "ok";
+  let dbLatency = 0;
+
+  try {
+    const dbStart = Date.now();
+    await prisma.$queryRaw`SELECT 1`;
+    dbLatency = Date.now() - dbStart;
+  } catch {
+    dbStatus = "error";
+  }
+
+  return NextResponse.json(
+    {
+      status: dbStatus === "ok" ? "healthy" : "degraded",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      checks: {
+        database: { status: dbStatus, latencyMs: dbLatency },
+      },
+      version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+        "X-API-Version": "v1",
+      },
+    },
+  );
+}
+```
+
+### Vérification
+1. `curl /api/health` → `{ status: "healthy", checks: { database: { status: "ok" } } }`
+2. DB down → `status: "degraded"`, `database.status: "error"`
+
+---
+
+## S8.3 — Rate limiting visible + Monitoring endpoints
+
+**Fichiers** : `socialcreator-web/src/lib/middleware/rate-limit.ts` (MODIFIER), `socialcreator-web/src/app/api/v1/metrics/route.ts` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S8.1
+**Test** : `/api/v1/metrics` → Prometheus metrics incluant les stats de rate limit
+
+### Contexte
+Un rate limiting existe probablement mais n'est pas exposé dans les métriques. Il faut l'ajouter au endpoint `/api/metrics`.
+
+### Modifications
+
+**1. Ajouter des métriques de rate limiting** :
+
+```tsx
+// Dans rate-limit.ts, exporter un compteur :
+import { Counter } from "prom-client";
+
+export const rateLimitHits = new Counter({
+  name: "rate_limit_hits_total",
+  help: "Total number of rate limit hits",
+  labelNames: ["route", "userId"] as const,
+  registers: [register], // register existant dans metrics.ts
+});
+```
+
+**2. Incrémenter** quand un rate limit est atteint :
+
+```tsx
+// Dans le middleware rate-limit, quand la requête est bloquée :
+rateLimitHits.inc({ route: request.nextUrl.pathname, userId: session?.user?.id || "anonymous" });
+```
+
+**3. Vérifier que `/api/metrics` expose les nouvelles métriques** :
+
+```bash
+curl http://localhost:3000/api/metrics | grep rate_limit
+```
+
+### Vérification
+1. `curl /api/metrics | grep rate_limit` → `rate_limit_hits_total` présent
+2. Déclencher un rate limit → compteur incrémenté
+
+---
+
+## S8.4 — Documenter l'architecture et l'observabilité
+
+**Fichiers** : `docs/architecture/07-observability.md` (NOUVEAU), `docs/runbooks/monitoring.md` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S8.1, S8.2, S8.3
+**Test** : Revue du doc par l'équipe
+
+### Contexte
+Il n'y a pas de documentation centralisée sur comment monitorer l'application, où trouver les logs, comment interpréter les métriques.
+
+### Modifications
+
+**1. Nouveau fichier** : `docs/architecture/07-observability.md`
+
+```markdown
+# Observability — SocialCreator
+
+## Logs
+- **Format**: JSON structuré via Pino
+- **Niveaux**: debug, info, warn, error, fatal
+- **Champs communs**: requestId, duration, err, userId
+- **Local**: pino-pretty (couleurs, lisible)
+- **Production**: JSON brut → CloudWatch / Papertrail / etc.
+
+## Métriques (Prometheus)
+- **Endpoint**: `GET /api/metrics`
+- **Métriques clés**:
+  - `http_requests_total` — Requêtes API
+  - `http_request_duration_seconds` — Latence
+  - `content_generated_total` — Contenu généré (par plateforme)
+  - `rate_limit_hits_total` — Requêtes limitées
+  - `agent_run_duration_seconds` — Durée des runs agent
+
+## Health Check
+- **Endpoint**: `GET /api/health`
+- **Format**: `{ status, checks: { database } }`
+- **Utilisation**: Load balancer, Kubernetes probes, uptime monitoring
+
+## Alerting
+- Token refresh failure → notification utilisateur
+- Rate limit spike → investigation
+- DB connection failure → alerte immédiate
+```
+
+### Vérification
+1. Les docs sont lisibles et complètes
+2. Un nouveau développeur peut monitorer l'app sans aide
+
+---
+
+# 📋 RÉCAPITULATIF SPRINTS 4-8
+
+## Sprint 4 — OAuth Onboarding Flow (~5 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S4.1 | `src/components/connected-accounts/account-card.tsx` | **NOUVEAU** — Carte de compte connecté |
+| S4.1 | `src/components/connected-accounts/account-list.tsx` | **NOUVEAU** — Liste + boutons Connect |
+| S4.1 | `src/app/(main)/profiles/[id]/accounts/page.tsx` | **NOUVEAU** — Page de gestion |
+| S4.2 | `src/app/api/connected-accounts/callback/[platform]/route.ts` | MODIFIER — Améliorer les redirections |
+| S4.3 | `src/lib/services/tokens.ts` | MODIFIER — Notification refresh failure |
+| S4.3 | `src/triggers/token-refresh.trigger.ts` | **NOUVEAU** — Cron de rafraîchissement |
+| S4.4 | `src/lib/repositories/connected-account.repository.ts` | MODIFIER — Ajouter `findExpiringBefore` |
+
+## Sprint 5 — Content Scheduling UI (~6 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S5.1 | `src/components/content/calendar-view.tsx` | **NOUVEAU** — Calendrier mensuel |
+| S5.1 | `src/app/(main)/content/calendar/page.tsx` | **NOUVEAU** — Page calendrier |
+| S5.2 | `src/components/content/schedule-modal.tsx` | **NOUVEAU** — Modal de programmation |
+| S5.3 | `src/app/api/v1/content/[id]/approve/route.ts` | MODIFIER — Support scheduling |
+| S5.3 | `src/app/api/v1/content/[id]/schedule/route.ts` | **NOUVEAU** — Route de programmation |
+
+## Sprint 6 — Multi-Platform Publish Pipeline (~7 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S6.1 | `src/app/api/v1/queue/status/route.ts` | **NOUVEAU** — API statut queue |
+| S6.1 | `src/components/job-queue/queue-status.tsx` | **NOUVEAU** — Dashboard queue |
+| S6.1 | `src/app/(main)/content/queue/page.tsx` | **NOUVEAU** — Page queue |
+| S6.2 | `src/app/api/v1/publish-logs/route.ts` | **NOUVEAU** — API historique |
+| S6.2 | `src/components/content/publish-history.tsx` | **NOUVEAU** — Composant historique |
+| S6.2 | `src/app/(main)/content/history/page.tsx` | **NOUVEAU** — Page historique |
+| S6.3 | `src/lib/publishers/*.ts` | MODIFIER — Standardisation interface |
+
+## Sprint 7 — Dashboard + Analytics (~8 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S7.1 | `src/app/api/v1/dashboard/route.ts` | **NOUVEAU** — API dashboard |
+| S7.1 | `src/components/dashboard/stats-card.tsx` | **NOUVEAU** — Carte de stat |
+| S7.1 | `src/app/(main)/page.tsx` | MODIFIER — Dashboard complet |
+| S7.2 | `src/app/api/v1/dashboard/chart-data/route.ts` | **NOUVEAU** — API chart |
+| S7.2 | `src/components/dashboard/publish-chart.tsx` | **NOUVEAU** — Graphique Recharts |
+| S7.3 | `src/lib/repositories/publish-log.repository.ts` | MODIFIER — `getDailyStats`, `findByUserId` |
+
+## Sprint 8 — Observability (~7 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S8.1 | `src/lib/logger.ts` | MODIFIER — Config Pino production |
+| S8.1 | `src/lib/middleware/api-middleware.ts` | MODIFIER — Child logger avec requestId |
+| S8.1 | Multiples fichiers `src/` | MODIFIER — `console.error` → `logger.error` |
+| S8.2 | `src/app/api/health/route.ts` | MODIFIER — Health check enrichi |
+| S8.3 | `src/lib/middleware/rate-limit.ts` | MODIFIER — Métriques rate limit |
+| S8.4 | `docs/architecture/07-observability.md` | **NOUVEAU** — Documentation |
+| S8.4 | `docs/runbooks/monitoring.md` | **NOUVEAU** — Runbook monitoring |
+
+---
+
+# ✅ CHECKLIST DE LIVRAISON PAR SPRINT
+
+## Sprint 4
+- [ ] Page `/profiles/{id}/accounts` avec liste des comptes connectés
+- [ ] Bouton "Connect X" lance le flux OAuth
+- [ ] Callback OAuth avec toast de succès/erreur
+- [ ] Déconnexion fonctionnelle
+- [ ] `pnpm test:run` OK
+- [ ] `pnpm typecheck` OK
+
+## Sprint 5
+- [ ] Calendrier mensuel avec contenu programmé
+- [ ] Modal de programmation (date + time picker)
+- [ ] Approve → Schedule → auto-Publish fonctionnel
+- [ ] `pnpm test:run` OK
+- [ ] `pnpm typecheck` OK
+
+## Sprint 6
+- [ ] Queue dashboard avec stats en temps réel
+- [ ] Historique des publications avec pagination
+- [ ] Publishers standardisés (interface commune)
+- [ ] `pnpm test:run` OK
+- [ ] `pnpm typecheck` OK
+
+## Sprint 7
+- [ ] Dashboard avec 4 cartes de stats
+- [ ] Graphique des publications (7/30 jours)
+- [ ] Recent activity list
+- [ ] `pnpm test:run` OK
+- [ ] `pnpm typecheck` OK
+
+## Sprint 8
+- [ ] Aucun `console.error` dans `src/`
+- [ ] Logs Pino structurés en production (JSON)
+- [ ] Health check avec vérification DB
+- [ ] Métriques rate limit exposées
+- [ ] Documentation observabilité
+- [ ] `pnpm test:run` OK
+- [ ] `pnpm typecheck` OK
+
+---
+
+# 🔗 DÉPENDANCES ENTRE SPRINTS
+
+```
+Sprint 4 (OAuth) — Sprint 3 (API v1, encryption, stores)
+Sprint 5 (Scheduling) — Sprint 3 (API v1 content, triggers)
+Sprint 6 (Pipeline) — Sprint 3 (job queue, handlers), Sprint 5 (content status)
+Sprint 7 (Dashboard) — Sprint 5 (content list), Sprint 6 (publish history)
+Sprint 8 (Observability) — Sprint 2 (requestId), Sprint 7 (metrics endpoint)
+```
+
+## Ordre recommandé d'exécution
+
+```
+Sprint 4 ─┐
+Sprint 5 ─┤  (peuvent être parallèles — dépendent tous deux de Sprint 3)
+          │
+Sprint 6 ──────┤  (dépend de S5 pour le pipeline complet)
+Sprint 7 ──────┤  (dépend de S6 pour les données d'historique)
+Sprint 8 ──────────┤  (dépend de S7 pour le endpoint metrics)
+```
+
+---
+
+*Plan mis à jour le 2026-06-02 — Sprints 1-3 complétés, Sprints 4-8 détaillés*

@@ -7,6 +7,8 @@ import { decryptToken, encryptToken } from "@/lib/crypto";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { getRepositories } from "@/lib/repositories";
+import { getValidAccessToken } from "@/lib/services/tokens";
 
 interface TokenResponse {
   accessToken: string;
@@ -138,4 +140,54 @@ async function refreshOAuthToken(
     default:
       return null;
   }
+}
+
+/**
+ * Run a batch refresh for all tokens expiring within the next 24 hours.
+ * Uses the repository to find expiring tokens and getValidAccessToken to refresh them.
+ * Returns counts of successful and failed refreshes.
+ */
+export async function runTokenRefreshBatch(): Promise<{
+  refreshed: number;
+  failed: number;
+}> {
+  logger.info("Starting batch token refresh");
+
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const { connectedAccount: caRepo } = getRepositories();
+  const expiringAccounts = await caRepo.findExpiringBefore(tomorrow);
+
+  logger.info({ count: expiringAccounts.length }, "Found accounts with expiring tokens");
+
+  let refreshed = 0;
+  let failed = 0;
+
+  for (const account of expiringAccounts) {
+    try {
+      const token = await getValidAccessToken(account.id);
+      if (token) {
+        refreshed++;
+        logger.info(
+          { accountId: account.id, platform: account.platform },
+          "Token refreshed in batch",
+        );
+      } else {
+        failed++;
+        logger.warn(
+          { accountId: account.id, platform: account.platform },
+          "Token refresh returned null in batch",
+        );
+      }
+    } catch (error) {
+      failed++;
+      logger.error(
+        { err: error, accountId: account.id, platform: account.platform },
+        "Token refresh failed in batch",
+      );
+    }
+  }
+
+  logger.info({ refreshed, failed }, "Batch token refresh completed");
+
+  return { refreshed, failed };
 }

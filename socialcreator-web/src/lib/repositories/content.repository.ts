@@ -35,6 +35,7 @@ export interface IContentRepository {
   findByUserId(userId: string, options?: ContentFilterOptions): Promise<ContentPage>;
   create(data: GeneratedContentCreateInput): Promise<GeneratedContent>;
   updateStatus(id: string, status: ContentStatus): Promise<GeneratedContent>;
+  schedule(id: string, scheduledPublishAt: Date): Promise<GeneratedContent>;
   delete(id: string): Promise<void>;
   findPendingScheduled(before: Date): Promise<GeneratedContent[]>;
   countPublishedToday(profileId: string, platform: Platform): Promise<number>;
@@ -138,6 +139,13 @@ export class PrismaContentRepository implements IContentRepository {
 
   async updateStatus(id: string, status: ContentStatus): Promise<GeneratedContent> {
     return prisma.generatedContent.update({ where: { id }, data: { status } });
+  }
+
+  async schedule(id: string, scheduledPublishAt: Date): Promise<GeneratedContent> {
+    return prisma.generatedContent.update({
+      where: { id },
+      data: { status: "SCHEDULED", scheduledPublishAt },
+    });
   }
 
   async delete(id: string): Promise<void> {
