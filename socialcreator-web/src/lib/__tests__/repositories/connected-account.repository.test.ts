@@ -381,4 +381,107 @@ describe("PrismaConnectedAccountRepository — encryption", () => {
       expect(mockDecryptOAuthTokens).not.toHaveBeenCalled();
     });
   });
+
+  describe("findExpiringBefore — filters by date and active status", () => {
+    const futureDate = new Date("2025-12-31");
+    const pastDate = new Date("2024-01-01");
+
+    it("should return accounts with expiresAt ≤ given date", async () => {
+      const accounts = [
+        { ...mockAccount, id: "ca-1", expiresAt: new Date("2025-06-01") },
+        { ...mockAccount, id: "ca-2", expiresAt: new Date("2025-12-01") },
+      ];
+
+      (prisma.connectedAccount.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        accounts,
+      );
+      mockDecryptOAuthTokens.mockImplementation((token: string) => ({
+        accessToken: `decrypted-${token}`,
+        refreshToken: "decrypted-refresh",
+      }));
+
+      const result = await repo.findExpiringBefore(futureDate);
+
+      expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith({
+        where: { isActive: true, expiresAt: { lte: futureDate } },
+      });
+      expect(result).toHaveLength(2);
+      expect(result[0].accessToken).toBe("decrypted-encrypted-access-token");
+    });
+
+    it("should only return active accounts (isActive: true)", async () => {
+      (prisma.connectedAccount.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+        { ...mockAccount, id: "ca-1", isActive: true, expiresAt: new Date("2025-06-01") },
+      ]);
+
+      mockDecryptOAuthTokens.mockReturnValue({
+        accessToken: "decrypted-token",
+        refreshToken: null,
+      });
+
+      const result = await repo.findExpiringBefore(futureDate);
+
+      expect(result).toHaveLength(1);
+      // Verify the query includes isActive: true
+      expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
+    });
+
+    it("should return empty array when no accounts match the date", async () => {
+      (prisma.connectedAccount.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        [],
+      );
+
+      const result = await repo.findExpiringBefore(pastDate);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it("should return only accounts expiring on or before the given date (not after)", async () => {
+      const accounts = [{ ...mockAccount, id: "ca-1", expiresAt: new Date("2025-06-01") }];
+
+      (prisma.connectedAccount.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        accounts,
+      );
+      mockDecryptOAuthTokens.mockReturnValue({
+        accessToken: "decrypted",
+        refreshToken: null,
+      });
+
+      // Query with a date before ca-2's expiresAt
+      const result = await repo.findExpiringBefore(new Date("2025-10-01"));
+
+      expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith({
+        where: { isActive: true, expiresAt: { lte: new Date("2025-10-01") } },
+      });
+      // Only ca-1 matches (June <= Oct), ca-2 (Dec) would not be returned
+      expect(result).toHaveLength(1);
+    });
+
+    it("should decrypt tokens after retrieval", async () => {
+      const accounts = [{ ...mockAccount, id: "ca-1", expiresAt: new Date("2025-06-01") }];
+
+      (prisma.connectedAccount.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        accounts,
+      );
+
+      const decryptResult = {
+        accessToken: "plaintext-access-token",
+        refreshToken: "plaintext-refresh-token",
+      };
+      mockDecryptOAuthTokens.mockReturnValue(decryptResult);
+
+      const result = await repo.findExpiringBefore(futureDate);
+
+      expect(mockDecryptOAuthTokens).toHaveBeenCalledWith(
+        "encrypted-access-token",
+        "encrypted-refresh-token",
+      );
+      expect(result[0].accessToken).toBe("plaintext-access-token");
+      expect(result[0].refreshToken).toBe("plaintext-refresh-token");
+    });
+  });
 });

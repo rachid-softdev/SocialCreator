@@ -19,6 +19,7 @@ export interface IConnectedAccountRepository {
   findById(id: string): Promise<ConnectedAccount | null>;
   findByProfileId(profileId: string): Promise<ConnectedAccount[]>;
   findByProfileAndPlatform(profileId: string, platform: Platform): Promise<ConnectedAccount | null>;
+  findExpiringBefore(date: Date): Promise<ConnectedAccount[]>;
   create(data: CreateConnectedAccountInput): Promise<ConnectedAccount>;
   update(id: string, data: Partial<ConnectedAccount>): Promise<ConnectedAccount>;
   delete(id: string): Promise<void>;
@@ -105,6 +106,13 @@ export class PrismaConnectedAccountRepository implements IConnectedAccountReposi
       where: { profileId_platform: { profileId, platform } },
     });
     return this.decryptSensitive(account);
+  }
+
+  async findExpiringBefore(date: Date): Promise<ConnectedAccount[]> {
+    const accounts = await prisma.connectedAccount.findMany({
+      where: { isActive: true, expiresAt: { lte: date } },
+    });
+    return this.decryptSensitiveArray(accounts);
   }
 
   // ── Write methods ──────────────────────

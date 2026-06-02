@@ -16,6 +16,7 @@ export interface ContentItem {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  scheduledPublishAt?: string;
 }
 
 export interface ContentFilters {

@@ -4,6 +4,7 @@ import { cn } from "@socialcreator/utils";
 import {
   BarChart3,
   Bot,
+  Calendar,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/profiles", label: "Profiles", icon: Users },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/content", label: "Content", icon: FileText },
+  { href: "/content/calendar", label: "Calendar", icon: Calendar },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/billing", label: "Billing", icon: CreditCard },
