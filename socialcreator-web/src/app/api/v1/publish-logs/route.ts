@@ -3,7 +3,6 @@
  * Paginated publish history for the current user or a specific profile
  */
 
-import type { PublishLog } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { withApiMiddleware } from "@/lib/api-middleware";
 import { prisma } from "@/lib/prisma";
@@ -18,21 +17,23 @@ export const GET = withApiMiddleware(async ({ userId, request }) => {
 
   const { publishLog: publishLogRepo } = getRepositories();
 
-  let logs: PublishLog[] = [];
-  let total = 0;
-
   if (profileId) {
-    logs = await publishLogRepo.findByProfileId(profileId, { page, pageSize });
-    total = await prisma.publishLog.count({ where: { profileId } });
-  } else {
-    logs = await publishLogRepo.findByUserId(userId, { page, pageSize });
-    total = await prisma.publishLog.count({ where: { userId } });
+    const logs = await publishLogRepo.findByProfileId(profileId, { page, pageSize });
+    const total = await prisma.publishLog.count({ where: { profileId } });
+
+    return NextResponse.json({
+      logs,
+      totalPages: Math.ceil(total / pageSize) || 1,
+      page,
+      pageSize,
+    });
   }
 
+  const result = await publishLogRepo.findByUserId(userId, { page, pageSize });
   return NextResponse.json({
-    logs,
-    totalPages: Math.ceil(total / pageSize) || 1,
-    page,
-    pageSize,
+    logs: result.logs,
+    totalPages: result.totalPages,
+    page: result.page,
+    pageSize: result.pageSize,
   });
 });

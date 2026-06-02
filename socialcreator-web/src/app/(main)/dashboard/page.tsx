@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ActiveAgents } from "@/components/dashboard/active-agents";
+import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RecentContent } from "@/components/dashboard/recent-content";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
@@ -98,6 +99,12 @@ export default async function DashboardPage() {
           }))}
         />
       </div>
+
+      {/* Dashboard Analytics */}
+      <section>
+        <h2 className="text-title-md text-ink font-medium mb-4">Analytics</h2>
+        <DashboardStats />
+      </section>
     </div>
   );
 }
