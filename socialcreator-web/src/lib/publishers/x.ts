@@ -7,37 +7,32 @@
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToX(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string;
-    accessToken: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
+  const { textContent, mediaUrls } = input;
+  const { accessToken } = options;
   try {
     // Media upload via X API v1.1 requires multipart/form-data.
     // Skipping media upload for now; posting text-only tweet.
-    if (content.mediaUrls.length > 0) {
+    if (mediaUrls.length > 0) {
       logger.warn(
         "[X Publisher] Media upload not supported in current implementation. Posting text-only tweet.",
       );
     }
 
     const tweet: Record<string, unknown> = {
-      text: content.textContent.slice(0, 280),
+      text: textContent.slice(0, 280),
     };
 
     const response = await fetchWithTimeout("https://api.twitter.com/2/tweets", {
       method: "POST",
       timeout: 15000, // X API: 15s timeout
       headers: {
-        Authorization: `Bearer ${account.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(tweet),

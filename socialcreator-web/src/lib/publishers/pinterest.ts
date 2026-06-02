@@ -6,7 +6,7 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
-import type { PublishResult } from "./index";
+import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
 
@@ -57,18 +57,13 @@ export async function getPinterestBoards(accessToken: string): Promise<Pinterest
  * Note: Requires board_id for the account - this is different from user ID
  */
 export async function publishToPinterest(
-  content: {
-    textContent: string;
-    mediaUrls: string[];
-    hashtags: string[];
-  },
-  account: {
-    accountId: string; // This should be a board ID for pins
-    accessToken: string;
-  },
+  input: PublishInput,
+  options: PublishOptions,
 ): Promise<PublishResult> {
+  const { textContent, mediaUrls, hashtags } = input;
+  const { accountId, accessToken } = options;
   // Pinterest requires an image for pins
-  if (content.mediaUrls.length === 0) {
+  if (mediaUrls.length === 0) {
     return {
       success: false,
       error: "Pinterest requires an image for publishing. No media URLs provided.",
@@ -80,10 +75,10 @@ export async function publishToPinterest(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const title = content.textContent.slice(0, 100);
-      const description = `${content.textContent}\n\n${content.hashtags.map((t) => `#${t}`).join(" ")}`;
+      const title = textContent.slice(0, 100);
+      const description = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
 
-      const urlValidation = validateMediaUrl(content.mediaUrls[0]);
+      const urlValidation = validateMediaUrl(mediaUrls[0]);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
@@ -92,10 +87,10 @@ export async function publishToPinterest(
       const pinOptions: PinterestPinOptions = {
         title: title,
         description: description,
-        link: content.mediaUrls[0], // Link to the source
+        link: mediaUrls[0], // Link to the source
         mediaSource: {
           source_type: "image_url",
-          url: content.mediaUrls[0],
+          url: mediaUrls[0],
         },
       };
 
@@ -103,11 +98,11 @@ export async function publishToPinterest(
         method: "POST",
         timeout: 15000,
         headers: {
-          Authorization: `Bearer ${account.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          board_id: account.accountId,
+          board_id: accountId,
           ...pinOptions,
         }),
       });

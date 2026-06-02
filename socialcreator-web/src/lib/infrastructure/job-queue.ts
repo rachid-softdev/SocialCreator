@@ -16,6 +16,9 @@ interface Job {
 }
 
 const queue = new Map<string, Job>();
+const runningJobs = new Set<string>();
+let completedCount = 0;
+let failedCount = 0;
 
 export function enqueueJob(
   name: string,
@@ -34,10 +37,13 @@ export function enqueueJob(
 
   queueMicrotask(async () => {
     let lastError: Error | null = null;
+    runningJobs.add(id);
     for (let attempt = 1; attempt <= job.maxAttempts; attempt++) {
       try {
         await job.fn();
         queue.delete(id);
+        runningJobs.delete(id);
+        completedCount++;
         return;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -51,6 +57,8 @@ export function enqueueJob(
       "Job failed after all retries",
     );
     queue.delete(id);
+    runningJobs.delete(id);
+    failedCount++;
   });
 
   return id;
@@ -58,4 +66,20 @@ export function enqueueJob(
 
 export function getQueueSize(): number {
   return queue.size;
+}
+
+export function getQueueStatus(): {
+  pending: number;
+  running: number;
+  completed: number;
+  failed: number;
+  total: number;
+} {
+  return {
+    pending: queue.size,
+    running: runningJobs.size,
+    completed: completedCount,
+    failed: failedCount,
+    total: queue.size + completedCount + failedCount,
+  };
 }

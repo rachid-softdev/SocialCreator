@@ -5,6 +5,24 @@
 
 import type { Platform } from "@prisma/client";
 
+// Standardized publisher interfaces
+export interface PublishInput {
+  textContent: string;
+  mediaUrls: string[];
+  hashtags: string[];
+}
+
+export interface PublishOptions {
+  accountId: string;
+  accessToken: string;
+  refreshToken?: string;
+}
+
+export type PublisherFunction = (
+  input: PublishInput,
+  options: PublishOptions,
+) => Promise<PublishResult>;
+
 export interface PublishContent {
   textContent: string;
   mediaUrls: string[];
