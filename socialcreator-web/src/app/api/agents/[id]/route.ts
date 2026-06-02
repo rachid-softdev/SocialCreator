@@ -98,9 +98,20 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const updateData = validationResult.data;
 
+    // Build typed update object from validated fields only
+    const typedUpdate: Record<string, unknown> = {};
+    if (updateData.name !== undefined) typedUpdate.name = updateData.name;
+    if (updateData.type !== undefined) typedUpdate.type = updateData.type;
+    if (updateData.platforms !== undefined) typedUpdate.platforms = updateData.platforms;
+    if (updateData.scheduleCron !== undefined) typedUpdate.scheduleCron = updateData.scheduleCron;
+    if (updateData.isActive !== undefined) typedUpdate.isActive = updateData.isActive;
+    if (updateData.autoPublish !== undefined) typedUpdate.autoPublish = updateData.autoPublish;
+    if (updateData.maxPerDay !== undefined) typedUpdate.maxPerDay = updateData.maxPerDay;
+    if (updateData.config !== undefined) typedUpdate.config = updateData.config;
+
     const agent = await prisma.agent.update({
       where: { id },
-      data: updateData as any,
+      data: typedUpdate,
       include: {
         profile: {
           select: { id: true, name: true },

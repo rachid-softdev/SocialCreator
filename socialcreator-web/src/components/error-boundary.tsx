@@ -1,18 +1,66 @@
 /**
- * Global Error Boundary Component
- * Catches React errors and displays a user-friendly error page
+ * ErrorBoundary + ErrorDisplay Components
  *
- * Usage: Place in src/app/(main)/layout.tsx as:
- * <ErrorBoundary>
- *   <Component />
- * </ErrorBoundary>
+ * ErrorBoundary (default export):
+ *   React class component that catches errors in its children tree.
+ *   Usage: <ErrorBoundary><YourContent /></ErrorBoundary>
+ *
+ * ErrorDisplay (named export):
+ *   The fallback UI rendered when an error is caught (also usable standalone).
+ *
+ * NotFoundError / SessionExpiredError (named exports):
+ *   Specialized error UIs for 404 and session expiry.
  */
 
 "use client";
 
 import { Button } from "@socialcreator/ui/button";
 import { Home, RefreshCw } from "lucide-react";
-import { useEffect } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
+
+// ---------- ErrorBoundary (wrapper, default export) ----------
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  error: (Error & { digest?: string; statusCode?: number }) | null;
+}
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { error: error as Error & { digest?: string; statusCode?: number } };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error("Application error:", {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
+  }
+
+  render(): ReactNode {
+    if (this.state.error) {
+      return (
+        <ErrorDisplay
+          error={this.state.error}
+          reset={() => this.setState({ error: null })}
+        />
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// ---------- Error Display UI (named export for standalone use) ----------
 
 interface ErrorProps {
   error: Error & {
@@ -22,7 +70,7 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function Error({ error, reset }: ErrorProps) {
+export function ErrorDisplay({ error, reset }: ErrorProps) {
   useEffect(() => {
     // Log the error to an error reporting service
     console.error("Application error:", {
@@ -148,3 +196,5 @@ export function SessionExpiredError() {
     </div>
   );
 }
+
+export default ErrorBoundary;
