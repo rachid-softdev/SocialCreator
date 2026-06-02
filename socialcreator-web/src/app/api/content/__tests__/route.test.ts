@@ -45,7 +45,10 @@ function createGetRequest(url?: string) {
 // the URL. We patch once at the describe level to align behaviors.
 // ---------------------------------------------------------------------------
 const _origGet = URLSearchParams.prototype.get;
-vi.spyOn(URLSearchParams.prototype, "get").mockImplementation(function (this: URLSearchParams, key: string) {
+vi.spyOn(URLSearchParams.prototype, "get").mockImplementation(function (
+  this: URLSearchParams,
+  key: string,
+) {
   const result = _origGet.call(this, key);
   return result === null ? undefined : result;
 });
@@ -144,9 +147,7 @@ describe("GET /api/content", () => {
     ]);
     (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(1);
 
-    const res = await GET(
-      createGetRequest("http://localhost:3000/api/content?status=DRAFT"),
-    );
+    const res = await GET(createGetRequest("http://localhost:3000/api/content?status=DRAFT"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -162,9 +163,7 @@ describe("GET /api/content", () => {
     (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(50);
 
-    const res = await GET(
-      createGetRequest("http://localhost:3000/api/content?page=2&pageSize=10"),
-    );
+    const res = await GET(createGetRequest("http://localhost:3000/api/content?page=2&pageSize=10"));
     const data = await res.json();
 
     expect(res.status).toBe(200);

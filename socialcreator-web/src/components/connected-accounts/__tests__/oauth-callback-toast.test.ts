@@ -13,7 +13,7 @@
  * while still covering all the component's behavior.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // ── Replicate the component's ERROR_MESSAGES for contract testing ──────────
 

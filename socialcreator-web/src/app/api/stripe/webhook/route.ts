@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import logger from "@/lib/logger";
 import { handleStripeWebhook } from "@/lib/entitlements/stripe-webhook";
+import logger from "@/lib/logger";
 
 /** Maximum Stripe webhook payload size: 1 MB */
 const MAX_WEBHOOK_BODY_SIZE = 1_000_000;
@@ -37,10 +37,16 @@ export async function POST(request: Request) {
   const result = await handleStripeWebhook(body, signature);
 
   if (!result.success) {
-    logger.warn({ error: result.error, eventType: result.eventType }, "Stripe webhook processing failed");
+    logger.warn(
+      { error: result.error, eventType: result.eventType },
+      "Stripe webhook processing failed",
+    );
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  logger.info({ eventType: result.eventType, orgId: result.orgId }, "Stripe webhook processed successfully");
+  logger.info(
+    { eventType: result.eventType, orgId: result.orgId },
+    "Stripe webhook processed successfully",
+  );
   return NextResponse.json({ received: true });
 }

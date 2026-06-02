@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export class AuthError extends Error {
   status: number;
@@ -18,7 +18,7 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
 
   // Verify role from DATABASE — don't trust cached JWT token
   // JWT roles may be stale if admin was revoked between token refresh cycles
-  let dbUser;
+  let dbUser: { role: string | null; email: string } | null;
   try {
     dbUser = await prisma.user.findUnique({
       where: { id: session.user.id },

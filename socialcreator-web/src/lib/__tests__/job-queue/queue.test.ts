@@ -4,7 +4,7 @@
  *
  * Self-contained: implements the queue logic inline matching the design spec.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 // ========== Inline implementation matching the design spec ==========
 
@@ -156,11 +156,11 @@ describe("Job Queue", () => {
 
       const job = getJob(id);
       expect(job).toBeDefined();
-      expect(job!.priority).toBe("normal");
-      expect(job!.maxAttempts).toBe(3);
-      expect(job!.retryDelayMs).toBe(1000);
-      expect(job!.status).toBe("queued");
-      expect(job!.attempts).toBe(0);
+      expect(job?.priority).toBe("normal");
+      expect(job?.maxAttempts).toBe(3);
+      expect(job?.retryDelayMs).toBe(1000);
+      expect(job?.status).toBe("queued");
+      expect(job?.attempts).toBe(0);
     });
 
     it("should apply custom options", () => {
@@ -171,9 +171,9 @@ describe("Job Queue", () => {
       );
 
       const job = getJob(id);
-      expect(job!.priority).toBe("high");
-      expect(job!.maxAttempts).toBe(5);
-      expect(job!.retryDelayMs).toBe(2000);
+      expect(job?.priority).toBe("high");
+      expect(job?.maxAttempts).toBe(5);
+      expect(job?.retryDelayMs).toBe(2000);
     });
 
     it("should generate unique ids for multiple jobs", () => {
@@ -194,8 +194,8 @@ describe("Job Queue", () => {
       const id = enqueueJob("video-process", { videoAssetId: "v-1", profileId: "p-1" });
 
       const job = getJob(id);
-      expect(job!.type).toBe("video-process");
-      expect(job!.payload.videoAssetId).toBe("v-1");
+      expect(job?.type).toBe("video-process");
+      expect(job?.payload.videoAssetId).toBe("v-1");
     });
   });
 
@@ -219,16 +219,16 @@ describe("Job Queue", () => {
       );
 
       const job1 = dequeueJob();
-      expect(job1!.priority).toBe("critical");
+      expect(job1?.priority).toBe("critical");
 
       const job2 = dequeueJob();
-      expect(job2!.priority).toBe("high");
+      expect(job2?.priority).toBe("high");
 
       const job3 = dequeueJob();
-      expect(job3!.priority).toBe("normal");
+      expect(job3?.priority).toBe("normal");
 
       const job4 = dequeueJob();
-      expect(job4!.priority).toBe("low");
+      expect(job4?.priority).toBe("low");
     });
 
     it("should maintain FIFO order within the same priority", () => {
@@ -248,9 +248,9 @@ describe("Job Queue", () => {
         { priority: "normal" },
       );
 
-      expect(dequeueJob()!.id).toBe("job-1");
-      expect(dequeueJob()!.id).toBe("job-2");
-      expect(dequeueJob()!.id).toBe("job-3");
+      expect(dequeueJob()?.id).toBe("job-1");
+      expect(dequeueJob()?.id).toBe("job-2");
+      expect(dequeueJob()?.id).toBe("job-3");
     });
   });
 
@@ -265,9 +265,9 @@ describe("Job Queue", () => {
 
       const job = dequeueJob();
 
-      expect(job!.status).toBe("running");
-      expect(job!.attempts).toBe(1);
-      expect(job!.startedAt).toBeDefined();
+      expect(job?.status).toBe("running");
+      expect(job?.attempts).toBe(1);
+      expect(job?.startedAt).toBeDefined();
     });
 
     it("should only dequeue jobs with status 'queued'", () => {
@@ -287,9 +287,9 @@ describe("Job Queue", () => {
       completeJob(id, { data: "result" });
 
       const completed = getJob(id);
-      expect(completed!.status).toBe("completed");
-      expect(completed!.completedAt).toBeDefined();
-      expect(completed!.result).toStrictEqual({ data: "result" });
+      expect(completed?.status).toBe("completed");
+      expect(completed?.completedAt).toBeDefined();
+      expect(completed?.result).toStrictEqual({ data: "result" });
     });
 
     it("should fail a job and requeue if attempts remain", () => {
@@ -299,8 +299,8 @@ describe("Job Queue", () => {
       failJob(id, "Temporary error");
 
       const job = getJob(id);
-      expect(job!.status).toBe("queued");
-      expect(job!.error).toBe("Temporary error");
+      expect(job?.status).toBe("queued");
+      expect(job?.error).toBe("Temporary error");
     });
 
     it("should mark job as failed after exhausting maxAttempts", () => {
@@ -312,15 +312,15 @@ describe("Job Queue", () => {
 
       dequeueJob();
       failJob(id, "Error 1");
-      expect(getJob(id)!.status).toBe("queued");
+      expect(getJob(id)?.status).toBe("queued");
 
       dequeueJob();
       failJob(id, "Error 2");
 
       const job = getJob(id);
-      expect(job!.status).toBe("failed");
-      expect(job!.error).toBe("Error 2");
-      expect(job!.completedAt).toBeDefined();
+      expect(job?.status).toBe("failed");
+      expect(job?.error).toBe("Error 2");
+      expect(job?.completedAt).toBeDefined();
     });
 
     it("should handle completeJob for nonexistent id gracefully", () => {
@@ -333,7 +333,7 @@ describe("Job Queue", () => {
 
     it("should reinsert failed job at correct priority position when retrying", () => {
       // Enqueue a low priority job first, then a high priority job
-      const lowId = enqueueJob(
+      const _lowId = enqueueJob(
         "agent-run",
         { agentId: "a-1", runId: "r-1", userId: "u-1" },
         { priority: "low" },
@@ -346,14 +346,14 @@ describe("Job Queue", () => {
 
       // Dequeue the high priority job (first in priority order)
       const dequeued = dequeueJob();
-      expect(dequeued!.id).toBe(highId);
+      expect(dequeued?.id).toBe(highId);
 
       // Fail the high priority job — it should be reinserted at correct priority position
       failJob(highId, "Retry");
 
       // Next dequeue should return the high priority job again (it's still highest priority)
       const next = dequeueJob();
-      expect(next!.id).toBe(highId);
+      expect(next?.id).toBe(highId);
     });
 
     it("should reinsert retried job at correct priority position when re-queued", () => {
@@ -366,7 +366,7 @@ describe("Job Queue", () => {
 
       // Dequeue it (it's the only one)
       dequeueJob();
-      expect(getJob(lowId)!.status).toBe("running");
+      expect(getJob(lowId)?.status).toBe("running");
 
       // Enqueue more jobs while the first is running — mix of priorities
       const criticalId = enqueueJob(
@@ -385,15 +385,15 @@ describe("Job Queue", () => {
 
       // dequeue order should be: critical, then normal, then low (priority order)
       const job1 = dequeueJob();
-      expect(job1!.id).toBe(criticalId);
-      expect(job1!.priority).toBe("critical");
+      expect(job1?.id).toBe(criticalId);
+      expect(job1?.priority).toBe("critical");
 
       const job2 = dequeueJob();
-      expect(job2!.priority).toBe("normal");
+      expect(job2?.priority).toBe("normal");
 
       const job3 = dequeueJob();
-      expect(job3!.id).toBe(lowId);
-      expect(job3!.priority).toBe("low");
+      expect(job3?.id).toBe(lowId);
+      expect(job3?.priority).toBe("low");
     });
   });
 

@@ -3,8 +3,8 @@
  * Fetches paginated, filtered data from Prisma using URL search params
  */
 
-import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import type { ContentStatus, Platform } from "@prisma/client";
+import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -46,10 +46,7 @@ export default async function ContentPage({ searchParams }: PageProps) {
 
   // Text search on content and hashtags
   if (q) {
-    where.OR = [
-      { textContent: { contains: q, mode: "insensitive" } },
-      { hashtags: { has: q } },
-    ];
+    where.OR = [{ textContent: { contains: q, mode: "insensitive" } }, { hashtags: { has: q } }];
   }
 
   // Fetch one page of content with total count

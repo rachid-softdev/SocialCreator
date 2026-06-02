@@ -111,7 +111,7 @@ describe("Job Handlers", () => {
       registerHandler("agent-run", handler);
 
       const retrieved = getJobHandler("agent-run");
-      await retrieved!({ agentId: "a-1", runId: "r-1", userId: "u-1" });
+      await retrieved?.({ agentId: "a-1", runId: "r-1", userId: "u-1" });
 
       expect(handler).toHaveBeenCalledWith({ agentId: "a-1", runId: "r-1", userId: "u-1" });
     });
@@ -121,7 +121,7 @@ describe("Job Handlers", () => {
       registerHandler("publish", handler);
 
       const retrieved = getJobHandler("publish");
-      await expect(retrieved!({ contentId: "c-1" })).rejects.toThrow("Handler failed");
+      await expect(retrieved?.({ contentId: "c-1" })).rejects.toThrow("Handler failed");
     });
 
     it("should handle different payload types correctly", async () => {
@@ -135,20 +135,20 @@ describe("Job Handlers", () => {
       registerHandler("publish", publishHandler);
       registerHandler("video-process", videoHandler);
 
-      await getJobHandler("agent-run")!({ agentId: "a-1", runId: "r-1", userId: "u-1" });
-      await getJobHandler("content-generate")!({
+      await getJobHandler("agent-run")?.({ agentId: "a-1", runId: "r-1", userId: "u-1" });
+      await getJobHandler("content-generate")?.({
         profileId: "p-1",
         platform: "X",
         brief: "test",
         agentId: "a-1",
       });
-      await getJobHandler("publish")!({
+      await getJobHandler("publish")?.({
         contentId: "c-1",
         profileId: "p-1",
         platform: "X",
         userId: "u-1",
       });
-      await getJobHandler("video-process")!({ videoAssetId: "v-1", profileId: "p-1" });
+      await getJobHandler("video-process")?.({ videoAssetId: "v-1", profileId: "p-1" });
 
       expect(agentHandler).toHaveBeenCalled();
       expect(contentHandler).toHaveBeenCalledWith({
@@ -167,7 +167,7 @@ describe("Job Handlers", () => {
         .mockImplementation(() => new Promise<void>((resolve) => setTimeout(resolve, 10)));
       registerHandler("agent-run", handler);
 
-      const promise = getJobHandler("agent-run")!({ agentId: "a-1", runId: "r-1", userId: "u-1" });
+      const promise = getJobHandler("agent-run")?.({ agentId: "a-1", runId: "r-1", userId: "u-1" });
       await expect(promise).resolves.toBeUndefined();
     });
   });

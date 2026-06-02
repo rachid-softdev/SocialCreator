@@ -16,9 +16,7 @@ export default function MainError({
           <AlertCircle className="w-8 h-8 text-semantic-error" />
         </div>
         <h1 className="text-title-lg text-ink">Something went wrong</h1>
-        <p className="text-body-md text-muted">
-          An unexpected error occurred. Please try again.
-        </p>
+        <p className="text-body-md text-muted">An unexpected error occurred. Please try again.</p>
         <div className="flex gap-3 justify-center pt-2">
           <button
             type="button"

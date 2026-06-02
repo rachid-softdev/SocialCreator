@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiKeyManager } from "@/components/mcp/api-key-manager";
 import { McpTester } from "@/components/mcp/mcp-tester";
 
@@ -18,6 +18,18 @@ export default function ApiKeysPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiKey, setApiKey] = useState("");
 
+  const fetchKeys = useCallback(async () => {
+    try {
+      const response = await fetch("/api/api-keys");
+      const data = await response.json();
+      setKeys(data.keys || []);
+    } catch (error) {
+      console.error("Failed to fetch keys:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchKeys();
 
@@ -30,18 +42,6 @@ export default function ApiKeysPage() {
       window.history.replaceState({}, "", "/settings/api-keys");
     }
   }, [fetchKeys]);
-
-  const fetchKeys = async () => {
-    try {
-      const response = await fetch("/api/api-keys");
-      const data = await response.json();
-      setKeys(data.keys || []);
-    } catch (error) {
-      console.error("Failed to fetch keys:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCreate = async (name: string) => {
     const response = await fetch("/api/api-keys", {

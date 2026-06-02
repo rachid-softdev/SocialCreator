@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import ErrorBoundary from "@/components/error-boundary";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { Sidebar } from "@/components/layout/sidebar";
-import ErrorBoundary from "@/components/error-boundary";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 

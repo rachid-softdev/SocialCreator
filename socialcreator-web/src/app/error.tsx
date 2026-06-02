@@ -10,16 +10,14 @@ export default function RootError({
   reset: () => void;
 }) {
   return (
-    <html>
+    <html lang="en">
       <body className="min-h-screen flex items-center justify-center bg-canvas p-6">
         <div className="max-w-md text-center space-y-4">
           <div className="w-16 h-16 mx-auto rounded-full bg-semantic-error/10 flex items-center justify-center">
             <AlertCircle className="w-8 h-8 text-semantic-error" />
           </div>
           <h1 className="text-title-lg text-ink">Something went wrong</h1>
-          <p className="text-body-md text-muted">
-            An unexpected error occurred. Please try again.
-          </p>
+          <p className="text-body-md text-muted">An unexpected error occurred. Please try again.</p>
           <div className="flex gap-3 justify-center pt-2">
             <button
               type="button"

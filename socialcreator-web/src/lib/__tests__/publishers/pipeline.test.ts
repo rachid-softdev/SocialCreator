@@ -152,7 +152,7 @@ async function runPublishPipeline(ctx: PipelineContext): Promise<PublishResult> 
     result.platform = platform as any;
   }
 
-  if (!result || !result.success) {
+  if (!result?.success) {
     if (registration.hooks?.onError && lastError) {
       try {
         await registration.hooks.onError(publishCtx, lastError);
@@ -349,7 +349,7 @@ describe("Publish Pipeline", () => {
     it("should call postPublish hook on success", async () => {
       const ctx = createPipelineContext();
 
-      const result = await runPublishPipeline(ctx);
+      const _result = await runPublishPipeline(ctx);
 
       expect(mockPostPublish).toHaveBeenCalledWith(
         expect.objectContaining({ content: mockContent, account: mockAccount }),

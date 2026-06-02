@@ -3,12 +3,8 @@
  * Coexists with existing entitlements module patterns
  */
 
-import {
-  getEntitlementRepository,
-  PrismaEntitlementRepository,
-} from "@/lib/entitlements/repository";
+import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import { FeatureGateService } from "@/lib/entitlements/service";
-import type { IEntitlementRepository } from "@/lib/entitlements/types";
 import { Container } from "./container";
 import { TOKENS } from "./token";
 

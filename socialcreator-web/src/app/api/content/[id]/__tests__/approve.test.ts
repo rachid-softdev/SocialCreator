@@ -108,10 +108,9 @@ describe("POST /api/content/[id]/approve", () => {
 
   describe("input validation", () => {
     it("should return 400 for invalid content ID", async () => {
-      const res = await approvePost(
-        createRequest({ status: "APPROVED" }),
-        { params: Promise.resolve({ id: "not-a-uuid" }) },
-      );
+      const res = await approvePost(createRequest({ status: "APPROVED" }), {
+        params: Promise.resolve({ id: "not-a-uuid" }),
+      });
       const data = await res.json();
 
       expect(res.status).toBe(400);

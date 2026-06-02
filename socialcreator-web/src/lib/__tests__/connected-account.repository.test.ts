@@ -152,7 +152,7 @@ describe("PrismaConnectedAccountRepository", () => {
     it("should return empty array when no accounts are expiring before the date", async () => {
       // All accounts have expiresAt far in the future
       const cutoffDate = new Date("2025-01-01T00:00:00.000Z");
-      const futureAccount = makeMockConnectedAccount({
+      const _futureAccount = makeMockConnectedAccount({
         expiresAt: new Date("2099-12-31"),
       });
 
@@ -248,8 +248,8 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findById("ca-specific");
 
       expect(result).not.toBeNull();
-      expect(result!.id).toBe("ca-specific");
-      expect(result!.accessToken).toBe("secret-token");
+      expect(result?.id).toBe("ca-specific");
+      expect(result?.accessToken).toBe("secret-token");
       expect(prisma.connectedAccount.findUnique).toHaveBeenCalledWith({
         where: { id: "ca-specific" },
       });
@@ -318,7 +318,7 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findByProfileAndPlatform("profile-1", "INSTAGRAM");
 
       expect(result).not.toBeNull();
-      expect(result!.accessToken).toBe("platform-token");
+      expect(result?.accessToken).toBe("platform-token");
       expect(prisma.connectedAccount.findUnique).toHaveBeenCalledWith({
         where: { profileId_platform: { profileId: "profile-1", platform: "INSTAGRAM" } },
       });

@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import logger from "@/lib/logger";
 import { withRetry } from "@/lib/retry";
 
 const ANTHROPIC_TIMEOUT_MS = 60_000; // 60 seconds

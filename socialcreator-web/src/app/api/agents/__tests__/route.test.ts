@@ -122,7 +122,9 @@ describe("GET /api/agents", () => {
     (prisma.agent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([mockAgent]);
     (prisma.agentRun.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
 
-    const res = await GET(createGetRequest("http://localhost:3000/api/agents?profileId=profile-abc-123"));
+    const res = await GET(
+      createGetRequest("http://localhost:3000/api/agents?profileId=profile-abc-123"),
+    );
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -178,7 +180,9 @@ describe("POST /api/agents", () => {
   });
 
   it("should return 400 with invalid body (missing name)", async () => {
-    const res = await POST(createPostRequest({ profileId: "profile-abc-123", type: "TEXT_POST", platforms: ["X"] }));
+    const res = await POST(
+      createPostRequest({ profileId: "profile-abc-123", type: "TEXT_POST", platforms: ["X"] }),
+    );
     const data = await res.json();
 
     expect(res.status).toBe(400);
@@ -200,7 +204,9 @@ describe("POST /api/agents", () => {
       id: "profile-abc-123",
       userId: "user-abc-123",
     });
-    (prisma.agent.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockCreatedAgent);
+    (prisma.agent.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCreatedAgent,
+    );
 
     const res = await POST(createPostRequest(validAgentBody));
     const data = await res.json();

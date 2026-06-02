@@ -1,5 +1,4 @@
 import Mux from "@mux/mux-node";
-import logger from "@/lib/logger";
 
 const MUX_TIMEOUT_MS = 30_000; // 30 seconds
 

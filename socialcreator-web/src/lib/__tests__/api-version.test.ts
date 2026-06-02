@@ -5,7 +5,7 @@
  * Self-contained: defines inline types matching the design spec so tests
  * run regardless of whether the source module is implemented.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // ========== Inline implementation matching the design spec ==========
 

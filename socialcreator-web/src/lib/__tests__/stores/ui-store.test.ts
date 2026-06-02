@@ -4,7 +4,7 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { create } from "zustand";
 
 // ========== Inline types and store matching the design spec ==========

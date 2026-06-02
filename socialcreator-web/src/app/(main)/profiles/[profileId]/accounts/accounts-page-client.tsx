@@ -41,7 +41,7 @@ interface AccountsPageClientProps {
 }
 
 export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageClientProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
 
   const [accounts, setAccounts] = useState<SerializedConnectedAccount[]>(initialAccounts);
@@ -57,7 +57,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
 
   // Check for success/error from OAuth callback
   const connected = searchParams.get("connected");
-  const errorParam = searchParams.get("error");
+  const _errorParam = searchParams.get("error");
 
   // Fetch accounts
   const fetchAccounts = useCallback(async () => {

@@ -119,7 +119,7 @@ const STRICT_FALLBACK_LIMITS: Record<string, { limit: number; window: string }> 
  * Behavior: FAIL CLOSED on Redis error (applies stricter limits).
  * When Redis is simply not configured (dev mode), normal limits apply.
  */
-function checkRateLimitInMemory(
+function _checkRateLimitInMemory(
   identifier: string,
   path: string,
   useStrictLimits: boolean = false,
