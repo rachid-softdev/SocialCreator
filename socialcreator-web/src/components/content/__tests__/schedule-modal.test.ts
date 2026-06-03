@@ -134,7 +134,7 @@ describe("ScheduleModal — client-side date validation", () => {
 
 describe("ScheduleModal — hasValidDate logic", () => {
   it("should be false when scheduledDate is null", () => {
-    const scheduledDate: Date | null = null;
+    const scheduledDate = null as Date | null;
     const now = new Date();
 
     const hasValidDate = scheduledDate !== null && scheduledDate > now;
@@ -255,7 +255,6 @@ describe("ScheduleModal — error handling", () => {
 
   it("should show toast when response is not ok", () => {
     const data = { error: "Past dates not allowed" };
-    const _response = { ok: false };
 
     // Simulate: if (!response.ok) throw new Error(data.error || ...)
     const errorMessage = data.error || "Failed to schedule content";

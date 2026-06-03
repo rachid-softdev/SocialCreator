@@ -9,9 +9,9 @@ import { withApiMiddleware } from "@/lib/api-middleware";
 import { getRepositories } from "@/lib/repositories";
 
 // GET /api/v1/teams/:id
-export const GET = withApiMiddleware(async ({ userId, params }) => {
+export const GET = withApiMiddleware(async ({ userId }, params) => {
   const { team: teamRepo } = getRepositories();
-  const team = await teamRepo.findById(params.id as string);
+  const team = await teamRepo.findById(params?.id as string);
 
   if (!team) return notFound("Team");
 
@@ -32,15 +32,15 @@ export const GET = withApiMiddleware(async ({ userId, params }) => {
 });
 
 // PUT /api/v1/teams/:id
-export const PUT = withApiMiddleware(async ({ userId, request, params }) => {
+export const PUT = withApiMiddleware(async ({ userId, request }, params) => {
   const { team: teamRepo } = getRepositories();
-  const team = await teamRepo.findById(params.id as string);
+  const team = await teamRepo.findById(params?.id as string);
 
   if (!team) return notFound("Team");
   if (team.ownerId !== userId) return unauthorized();
 
   const body = await request.json();
-  const updated = await teamRepo.update(params.id as string, { name: body.name });
+  const updated = await teamRepo.update(params?.id as string, { name: body.name });
 
   return NextResponse.json(
     { team: updated },
@@ -51,14 +51,14 @@ export const PUT = withApiMiddleware(async ({ userId, request, params }) => {
 });
 
 // DELETE /api/v1/teams/:id
-export const DELETE = withApiMiddleware(async ({ userId, params }) => {
+export const DELETE = withApiMiddleware(async ({ userId }, params) => {
   const { team: teamRepo } = getRepositories();
-  const team = await teamRepo.findById(params.id as string);
+  const team = await teamRepo.findById(params?.id as string);
 
   if (!team) return notFound("Team");
   if (team.ownerId !== userId) return unauthorized();
 
-  await teamRepo.delete(params.id as string);
+  await teamRepo.delete(params?.id as string);
 
   return NextResponse.json(
     { success: true },

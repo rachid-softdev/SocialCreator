@@ -14,18 +14,6 @@ const updateContentSchema = z.object({
   scheduledTimezone: z.string().optional(),
 });
 
-// Schema for scheduling content
-const _scheduleContentSchema = z.object({
-  scheduledPublishAt: z.string().datetime(),
-  scheduledTimezone: z.string().optional().default("UTC"),
-});
-
-// Schema for bulk operations
-const _bulkActionSchema = z.object({
-  contentIds: z.array(z.string().uuid()).min(1).max(50),
-  action: z.enum(["approve", "reject", "publish", "delete"]),
-});
-
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

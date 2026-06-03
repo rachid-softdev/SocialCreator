@@ -8,7 +8,7 @@ import type { DowngradeStrategy } from "./types";
 
 // Note: PlanFeatureWithStrategy was removed — defined but never used.
 
-interface DowngradeImpact {
+export interface DowngradeImpact {
   featureKey: string;
   currentEnabled: boolean;
   currentLimit: number | null;

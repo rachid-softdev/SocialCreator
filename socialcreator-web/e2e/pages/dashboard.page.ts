@@ -13,7 +13,7 @@ export class DashboardPage extends BasePage {
     this.heading = page.locator("h1").first();
   }
 
-  async goto() {
+  override async goto() {
     await super.goto("/dashboard");
   }
 

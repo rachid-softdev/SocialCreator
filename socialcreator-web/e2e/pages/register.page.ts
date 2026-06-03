@@ -21,7 +21,7 @@ export class RegisterPage extends BasePage {
     this.submitButton = page.locator('button[type="submit"]').first();
   }
 
-  async goto() {
+  override async goto() {
     await super.goto("/register");
   }
 

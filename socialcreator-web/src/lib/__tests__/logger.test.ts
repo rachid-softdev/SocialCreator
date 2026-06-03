@@ -23,7 +23,7 @@ vi.mock("pino", () => {
       level: "silent",
     };
   });
-  mockPino.stdTimeFunctions = { isoTime: "isoTime" };
+  (mockPino as any).stdTimeFunctions = { isoTime: "isoTime" };
   return { default: mockPino };
 });
 

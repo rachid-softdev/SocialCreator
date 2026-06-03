@@ -13,7 +13,6 @@ interface UploadButtonProps {
 
 export function UploadButton({
   onFileSelect,
-  className,
   accept = "video/mp4,video/quicktime,video/webm",
   disabled = false,
 }: UploadButtonProps) {

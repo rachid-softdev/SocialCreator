@@ -83,7 +83,7 @@ export async function handleStripeWebhook(
 // ============================================
 
 async function processEvent(event: Stripe.Event): Promise<WebhookHandlerResult> {
-  const _featureGate = getFeatureGateService();
+  getFeatureGateService();
 
   switch (event.type) {
     case "customer.subscription.created":
@@ -115,7 +115,6 @@ async function handleSubscriptionCreated(
   subscription: Stripe.Subscription,
 ): Promise<WebhookHandlerResult> {
   const customerId = subscription.customer as string;
-  const _subId = subscription.id;
 
   // Find org by customer ID
   const org = await prisma.organization.findUnique({
@@ -223,7 +222,6 @@ async function handleSubscriptionDeleted(
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<WebhookHandlerResult> {
   const customerId = invoice.customer as string;
-  const _subscriptionId = invoice.subscription as string;
 
   const org = await prisma.organization.findUnique({
     where: { stripeCustomerId: customerId },

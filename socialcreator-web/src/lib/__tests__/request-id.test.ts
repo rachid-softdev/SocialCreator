@@ -115,7 +115,7 @@ describe("request-id", () => {
       const request = createMockRequest(headers);
       const headersGetSpy = vi.spyOn(request.headers, "get");
 
-      const _id = getOrCreateRequestId(request);
+      getOrCreateRequestId(request);
 
       // Should have read the header but not written to it
       expect(headersGetSpy).toHaveBeenCalledWith("x-request-id");

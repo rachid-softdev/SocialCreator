@@ -39,11 +39,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { error: error as Error & { digest?: string; statusCode?: number } };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     logger.error({ err: error, componentStack: errorInfo.componentStack }, "Application error");
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.error) {
       return <ErrorDisplay error={this.state.error} reset={() => this.setState({ error: null })} />;
     }

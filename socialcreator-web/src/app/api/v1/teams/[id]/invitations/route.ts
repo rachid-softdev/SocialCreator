@@ -11,13 +11,13 @@ import { getRepositories } from "@/lib/repositories";
 
 const inviteSchema = z.object({
   userId: z.string().min(1),
-  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]).optional(),
+  role: z.enum(["ADMIN", "EDITOR", "VIEWER"]).optional(),
 });
 
 // POST /api/v1/teams/:id/invitations — add a member
-export const POST = withApiMiddleware(async ({ userId, request, params }) => {
+export const POST = withApiMiddleware(async ({ userId, request }, params) => {
   const { team: teamRepo, teamMember: memberRepo } = getRepositories();
-  const team = await teamRepo.findById(params.id as string);
+  const team = await teamRepo.findById(params?.id as string);
 
   if (!team) return notFound("Team");
   if (team.ownerId !== userId) return unauthorized();
@@ -30,7 +30,7 @@ export const POST = withApiMiddleware(async ({ userId, request, params }) => {
   }
 
   const member = await memberRepo.addMember({
-    teamId: params.id as string,
+    teamId: params?.id as string,
     userId: validationResult.data.userId,
     role: validationResult.data.role,
   });
@@ -45,9 +45,9 @@ export const POST = withApiMiddleware(async ({ userId, request, params }) => {
 });
 
 // GET /api/v1/teams/:id/invitations — list members
-export const GET = withApiMiddleware(async ({ userId, params }) => {
+export const GET = withApiMiddleware(async ({ userId }, params) => {
   const { team: teamRepo, teamMember: memberRepo } = getRepositories();
-  const team = await teamRepo.findById(params.id as string);
+  const team = await teamRepo.findById(params?.id as string);
 
   if (!team) return notFound("Team");
 
@@ -55,7 +55,7 @@ export const GET = withApiMiddleware(async ({ userId, params }) => {
   const isMember = team.members.some((m) => m.userId === userId);
   if (!isOwner && !isMember) return unauthorized();
 
-  const members = await memberRepo.findByTeamId(params.id as string);
+  const members = await memberRepo.findByTeamId(params?.id as string);
 
   return NextResponse.json(
     { members },

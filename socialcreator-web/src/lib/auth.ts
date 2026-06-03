@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 // preventing timing-based user enumeration attacks
 const DUMMY_HASH = bcrypt.hashSync("constant-time-fallback", 10);
 
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthResult } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import logger from "./logger";
@@ -26,7 +26,7 @@ if (!googleId || !googleSecret) {
   throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables are required.");
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuthResult: NextAuthResult = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
@@ -45,7 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, _request) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -68,14 +68,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           emailVerified: user.emailVerified,
-        };
+        } as any;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
         token.cguAccepted = user.cguAccepted ?? false;
         token.role = user.role ?? "USER";
         token.roles = [user.role ?? "USER"];
@@ -115,3 +115,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, auth, signIn, signOut } = nextAuthResult;

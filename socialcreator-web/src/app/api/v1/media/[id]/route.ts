@@ -9,9 +9,9 @@ import { withApiMiddleware } from "@/lib/api-middleware";
 import { getRepositories } from "@/lib/repositories";
 
 // GET /api/v1/media/:id
-export const GET = withApiMiddleware(async ({ userId, params }) => {
+export const GET = withApiMiddleware(async ({ userId }, params) => {
   const { mediaAsset: mediaRepo, profile: profileRepo } = getRepositories();
-  const asset = await mediaRepo.findById(params.id as string);
+  const asset = await mediaRepo.findById(params?.id as string);
 
   if (!asset) return notFound("Media asset");
 
@@ -30,16 +30,16 @@ export const GET = withApiMiddleware(async ({ userId, params }) => {
 });
 
 // DELETE /api/v1/media/:id
-export const DELETE = withApiMiddleware(async ({ userId, params }) => {
+export const DELETE = withApiMiddleware(async ({ userId }, params) => {
   const { mediaAsset: mediaRepo, profile: profileRepo } = getRepositories();
-  const asset = await mediaRepo.findById(params.id as string);
+  const asset = await mediaRepo.findById(params?.id as string);
 
   if (!asset) return notFound("Media asset");
 
   const profile = await profileRepo.findById(asset.profileId);
   if (!profile || profile.userId !== userId) return unauthorized();
 
-  await mediaRepo.delete(params.id as string);
+  await mediaRepo.delete(params?.id as string);
 
   return NextResponse.json(
     { success: true },

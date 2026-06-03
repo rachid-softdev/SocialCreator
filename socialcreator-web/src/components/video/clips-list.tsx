@@ -1,6 +1,5 @@
 "use client";
 
-import type { Platform } from "@prisma/client";
 import { cn } from "@socialcreator/utils";
 import { Download, MoreVertical, Play, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -38,17 +37,6 @@ const STATUS_LABELS: Record<string, string> = {
   CREATING: "Creating",
   READY: "Ready",
   ERROR: "Error",
-};
-
-const _PLATFORM_ICONS: Record<Platform, string> = {
-  TIKTOK: "🎵",
-  INSTAGRAM: "📷",
-  YOUTUBE: "▶️",
-  FACEBOOK: "👥",
-  X: "𝕏",
-  LINKEDIN: "💼",
-  THREADS: "🧵",
-  PINTEREST: "📌",
 };
 
 function formatDuration(start: number, end: number): string {

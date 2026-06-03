@@ -3,7 +3,7 @@ import logger from "@/lib/logger";
 
 const f = createUploadthing();
 
-const uploadRouter = {
+const uploadRouter: FileRouter = {
   videoUpload: f({ video: { maxFileSize: "512MB", maxFileCount: 1 } }).onUploadComplete(
     async ({ file }) => {
       logger.info({ url: file.url }, "Upload complete");

@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { decryptToken, encryptToken, hashString, verifyHash } from "../crypto";
 
 // NOTE: crypto.ts loads SECRET from process.env.ENCRYPTION_KEY at import time.

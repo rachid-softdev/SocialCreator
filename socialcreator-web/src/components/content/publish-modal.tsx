@@ -24,7 +24,7 @@ interface PublishModalProps {
 }
 
 export function PublishModal({
-  _contentId,
+  contentId: _contentId,
   platform,
   onClose,
   onConfirm,

@@ -7,10 +7,12 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { cacheService, getEntitlementsCacheKey } from "./cache";
 import type {
+  DowngradeStrategy,
   EntitlementValue,
   ExperimentConfig,
   FeatureConfig,
   FeatureDefinition,
+  FeatureType,
   IEntitlementRepository,
   OverrideInput,
   PlanFeatureConfig,
@@ -55,11 +57,13 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
 
     if (plan) {
       for (const pf of plan.planFeatures) {
+        const pfConfig =
+          (pf.configJson as FeatureConfig & { downgradeStrategy?: DowngradeStrategy }) || {};
         featureMap.set(pf.feature.key, {
           enabled: pf.enabled,
           limitValue: pf.limitValue,
-          configJson: (pf.configJson as FeatureConfig) || {},
-          downgradeStrategy: (pf.configJson as FeatureConfig).downgradeStrategy,
+          configJson: pfConfig,
+          downgradeStrategy: pfConfig.downgradeStrategy,
         });
       }
     }

@@ -5,6 +5,7 @@ import {
   BarChart3,
   Bot,
   Calendar,
+  Clock,
   CreditCard,
   FileText,
   History,

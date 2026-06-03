@@ -62,7 +62,7 @@ describe("FeatureGateService", () => {
     service = new FeatureGateService();
 
     // Inject mock repo using internal setter
-    vi.mocked((service.repo = mockRepo));
+    (service as any).repo = mockRepo;
   });
 
   afterEach(() => {
@@ -545,7 +545,7 @@ describe("FeatureGateService", () => {
           {
             enabled: false, // After downgrade
             limitValue: 3,
-            configJson: { downgradeStrategy: "graceful" },
+            configJson: { downgradeStrategy: "graceful" } as any,
           },
         ],
       ]);
@@ -567,7 +567,7 @@ describe("FeatureGateService", () => {
 
 describe("Error creation", () => {
   it("should create FeatureNotAvailableError correctly", () => {
-    const error = createFeatureNotAvailableError("EXPORT_PDF", "free");
+    const error = createFeatureNotAvailableError("EXPORT_PDF", "free") as any;
 
     expect(error.error).toBe("FEATURE_NOT_AVAILABLE");
     expect(error.feature).toBe("EXPORT_PDF");
@@ -577,7 +577,7 @@ describe("Error creation", () => {
 
   it("should create LimitReachedError correctly", () => {
     const resetAt = new Date();
-    const error = createLimitReachedError("AI_GENERATIONS", 10, 10, resetAt);
+    const error = createLimitReachedError("AI_GENERATIONS", 10, 10, resetAt) as any;
 
     expect(error.error).toBe("LIMIT_REACHED");
     expect(error.feature).toBe("AI_GENERATIONS");
@@ -587,7 +587,7 @@ describe("Error creation", () => {
   });
 
   it("should create SubscriptionExpiredError correctly", () => {
-    const error = createSubscriptionExpiredError();
+    const error = createSubscriptionExpiredError() as any;
 
     expect(error.error).toBe("SUBSCRIPTION_EXPIRED");
     expect(error.renewUrl).toBe("/settings/billing");

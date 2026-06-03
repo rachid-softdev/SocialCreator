@@ -14,9 +14,9 @@
  * - Platform-specific task handling
  */
 
-import { prisma } from "../src/lib/prisma";
+import type { ContentStatus } from "@prisma/client";
 import cron from "cron-parser";
-import type { Platform, ContentStatus } from "@prisma/client";
+import { prisma } from "../src/lib/prisma";
 
 interface ScheduledTask {
   name: string;

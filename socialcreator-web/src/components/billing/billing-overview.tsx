@@ -30,7 +30,6 @@ export function BillingOverview({
   currentPlan,
   status,
   renewalDate,
-  customerId,
   cancelAtPeriodEnd,
   onOpenPortal,
   onChangePlan,

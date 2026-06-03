@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { addVersionHeaders } from "@/lib/api-version";
 import { withApiMiddleware } from "@/lib/middleware/api-middleware";
 
-export const GET = withApiMiddleware(async ({ userId }) => {
+export const GET = withApiMiddleware(async () => {
   const { getQueueStatus } = await import("@/lib/job-queue");
   const status = getQueueStatus();
 

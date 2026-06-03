@@ -36,19 +36,20 @@ vi.mock("next/server", () => ({
 vi.mock("@/lib/api-middleware", () => ({
   withApiMiddleware: vi.fn(
     (
-      handler: (ctx: {
-        userId: string;
-        request: { json: ReturnType<typeof vi.fn> };
-        params?: Record<string, string>;
-      }) => unknown,
+      handler: (
+        ctx: {
+          userId: string;
+          request: { json: ReturnType<typeof vi.fn> };
+        },
+        params?: Record<string, string>,
+      ) => unknown,
     ) =>
       async (_request: unknown, context?: { params?: Record<string, string> }) => {
         const params = context?.params ?? {};
-        return handler({
-          userId: "test-user-id",
-          request: { json: requestJsonMock.current },
+        return handler(
+          { userId: "test-user-id", request: { json: requestJsonMock.current } },
           params,
-        });
+        );
       },
   ),
 }));

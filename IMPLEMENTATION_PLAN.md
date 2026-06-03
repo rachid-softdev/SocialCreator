@@ -4048,4 +4048,1668 @@ Sprint 9.8 (Typecheck fixes) ───┤  (indépendant)
 
 ---
 
-*Plan mis à jour le 2026-06-03 — Sprints 1-8 complétés, Sprint 9 détaillé*
+# 🚀 SPRINT 10 — AI Content Generation (semaine 13-16)
+
+---
+
+## S10.1 — Provider LLM : abstraction OpenAI/Anthropic
+
+**Fichiers** : `src/lib/llm/provider.ts` (NOUVEAU), `src/lib/llm/types.ts` (NOUVEAU), `src/lib/llm/index.ts` (NOUVEAU), `src/lib/llm/__tests__/provider.test.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 3 (agent service), Sprint 9 (queue activée)
+**Test** : `pnpm test:run` — tests LLM provider mockés
+
+### Contexte
+`src/lib/llm.ts` existe déjà mais est un fichier unique avec une intégration basique. Il faut le structurer en module avec support multi-provider (OpenAI, Anthropic) et fallback.
+
+### Modifications
+
+**1. Définir les types** (`src/lib/llm/types.ts`) :
+
+```ts
+export type LLMProvider = "openai" | "anthropic";
+
+export interface LLMConfig {
+  provider: LLMProvider;
+  apiKey: string;
+  model: string;
+  maxTokens: number;
+  temperature: number;
+}
+
+export interface LLMMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface LLMRequest {
+  messages: LLMMessage[];
+  config?: Partial<LLMConfig>;
+}
+
+export interface LLMResponse {
+  content: string;
+  model: string;
+  usage?: { promptTokens: number; completionTokens: number; totalTokens: number };
+}
+
+export interface LLMError {
+  code: string;
+  message: string;
+  retryable: boolean;
+}
+```
+
+**2. Créer le provider** (`src/lib/llm/provider.ts`) :
+
+```ts
+// Provider LLM avec support OpenAI + Anthropic + fallback
+// OpenAI via @langchain/openai ou openai SDK
+// Anthropic via @langchain/anthropic ou @anthropic-ai/sdk
+
+export async function generateText(request: LLMRequest): Promise<LLMResponse> {
+  const config = resolveConfig(request.config);
+
+  // Tentative avec le provider principal, fallback sur le secondaire
+  const providers = [config.provider, config.provider === "openai" ? "anthropic" : "openai"];
+
+  for (const provider of providers) {
+    try {
+      return await callProvider(provider as LLMProvider, request.messages, config);
+    } catch (error) {
+      logger.warn({ err: error, provider }, "LLM provider failed, trying fallback");
+    }
+  }
+
+  throw new Error("All LLM providers failed");
+}
+```
+
+**3. Barrel export** (`src/lib/llm/index.ts`) :
+
+```ts
+export { generateText } from "./provider";
+export type { LLMConfig, LLMMessage, LLMRequest, LLMResponse, LLMProvider, LLMError } from "./types";
+```
+
+**4. Tests mockés** (`src/lib/llm/__tests__/provider.test.ts`) :
+- Tester l'appel OpenAI avec mock
+- Tester l'appel Anthropic avec mock
+- Tester le fallback automatique si le provider principal échoue
+- Tester la gestion d'erreur (rate limit, timeout, auth)
+- Tester la configuration par défaut
+
+### Vérification
+1. `pnpm test:run` — nouveaux tests LLM passent
+2. Provider principal → réponse générée
+3. Provider principal down → fallback automatique
+
+---
+
+## S10.2 — Templates de prompt par plateforme
+
+**Fichiers** : `src/lib/content/prompts/index.ts` (NOUVEAU), `src/lib/content/prompts/platforms/x.ts` (NOUVEAU), `src/lib/content/prompts/platforms/linkedin.ts` (NOUVEAU), `src/lib/content/prompts/platforms/instagram.ts` (NOUVEAU), `src/lib/content/prompts/platforms/tiktok.ts` (NOUVEAU), `src/lib/content/prompts/platforms/facebook.ts` (NOUVEAU), `src/lib/content/prompts/platforms/threads.ts` (NOUVEAU), `src/lib/content/prompts/platforms/pinterest.ts` (NOUVEAU), `src/lib/content/prompts/platforms/youtube.ts` (NOUVEAU), `src/lib/content/prompts/__tests__/prompts.test.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S10.1
+**Test** : Tests unitaires des templates
+
+### Contexte
+Chaque plateforme a son propre format, ton et limites (char max, hashtags, médias). Les templates doivent produire un prompt system + user optimisé pour chaque plateforme.
+
+### Modifications
+
+**1. Template system commun** :
+
+```ts
+const SYSTEM_PROMPT_BASE = `You are a professional social media content creator.
+Generate engaging, platform-optimized content based on the brief provided.
+Follow the specific format, tone, and constraints for the target platform.
+Use the brand voice: professional but approachable, authentic, value-driven.
+Avoid: clickbait, misleading claims, overused hashtags, generic advice.`;
+```
+
+**2. Templates par plateforme** (exemple X/Twitter) :
+
+```ts
+// src/lib/content/prompts/platforms/x.ts
+export const X_PROMPT = {
+  system: `${SYSTEM_PROMPT_BASE}
+Platform: X (Twitter)
+Style: Concise, witty, opinion-led
+Max length: 280 characters (hard limit)
+Hashtags: 1-2 max
+Tone: Conversational, thought-leadership
+Best practices: Hook in first 50 chars, add value, encourage engagement
+Structure: Hook → Insight → CTA (optional)`,
+  
+  buildUserPrompt(brief: string, keywords?: string[]): string {
+    return `Create an X post about: ${brief}
+${keywords?.length ? `Include these keywords naturally: ${keywords.join(", ")}` : ""}
+Remember: max 280 characters, 1-2 hashtags max.`;
+  },
+};
+```
+
+**3. Template LinkedIn** :
+
+```ts
+export const LINKEDIN_PROMPT = {
+  system: `${SYSTEM_PROMPT_BASE}
+Platform: LinkedIn
+Style: Professional, insightful, story-driven
+Max length: 3000 characters
+Hashtags: 3-5 max
+Tone: Authoritative, personal, industry-aware
+Best practices: Start with a hook, use line breaks, share lessons/insights
+Structure: Hook → Context → Insight → Lesson → CTA`,
+  
+  buildUserPrompt(brief: string, keywords?: string[]): string {
+    return `Create a LinkedIn post about: ${brief}
+${keywords?.length ? `Include these keywords: ${keywords.join(", ")}` : ""}
+Format with line breaks, 3-5 hashtags, professional tone.`;
+  },
+};
+```
+
+**4. Barrel + resolveur** :
+
+```ts
+// src/lib/content/prompts/index.ts
+import { Platform } from "@prisma/client";
+import { X_PROMPT } from "./platforms/x";
+import { LINKEDIN_PROMPT } from "./platforms/linkedin";
+import { INSTAGRAM_PROMPT } from "./platforms/instagram";
+// ... autres plateformes
+
+const promptMap: Record<string, typeof X_PROMPT> = {
+  X: X_PROMPT,
+  LINKEDIN: LINKEDIN_PROMPT,
+  INSTAGRAM: INSTAGRAM_PROMPT,
+  TIKTOK: TIKTOK_PROMPT,
+  FACEBOOK: FACEBOOK_PROMPT,
+  THREADS: THREADS_PROMPT,
+  PINTEREST: PINTEREST_PROMPT,
+  YOUTUBE: YOUTUBE_PROMPT,
+};
+
+export function getPromptForPlatform(platform: Platform) {
+  const prompt = promptMap[platform];
+  if (!prompt) throw new Error(`No prompt template for platform: ${platform}`);
+  return prompt;
+}
+```
+
+**5. Tests** :
+- Chaque template produit un system prompt valide
+- `buildUserPrompt` inclut le brief et les keywords
+- `getPromptForPlatform` retourne le bon template
+- Plateforme inconnue → erreur
+- Respect des limites (char max X: 280, LinkedIn: 3000, etc.)
+
+### Vérification
+1. `pnpm test:run` — tests templates passent
+2. Chaque plateforme a un template distinct
+3. Les limites de caractères sont respectées
+
+---
+
+## S10.3 — Handler LLM pour le job-queue
+
+**Fichiers** : `src/lib/job-queue/handlers.ts` (MODIFIER), `src/lib/content/generator.ts` (NOUVEAU), `src/lib/content/__tests__/generator.test.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S10.1, S10.2
+**Test** : Job enqueue → handler LLM → contenu généré en base
+
+### Contexte
+Le handler `content-generate` actuel crée un dummy content :
+```ts
+textContent: `Generated content for ${payload.platform}: ${payload.brief}`,
+```
+Il faut le remplacer par un vrai appel LLM avec les templates.
+
+### Modifications
+
+**1. Service de génération** (`src/lib/content/generator.ts`) :
+
+```ts
+import { generateText } from "@/lib/llm";
+import { getPromptForPlatform } from "@/lib/content/prompts";
+import { getRepositories } from "@/lib/repositories";
+import type { Platform } from "@prisma/client";
+
+export interface GenerateContentInput {
+  profileId: string;
+  platform: Platform;
+  brief: string;
+  keywords?: string[];
+  agentId?: string;
+}
+
+export async function generateAndSaveContent(input: GenerateContentInput) {
+  const { content: contentRepo } = getRepositories();
+  const prompt = getPromptForPlatform(input.platform);
+
+  const response = await generateText({
+    messages: [
+      { role: "system", content: prompt.system },
+      { role: "user", content: prompt.buildUserPrompt(input.brief, input.keywords) },
+    ],
+    config: { temperature: 0.7, maxTokens: 1024 },
+  });
+
+  // Analyser la réponse : extraire textContent, hashtags, mediaUrls
+  const parsed = parseLLMResponse(response.content, input.platform);
+
+  // Sauvegarder en DRAFT
+  const content = await contentRepo.create({
+    profileId: input.profileId,
+    platform: input.platform,
+    textContent: parsed.textContent,
+    mediaUrls: parsed.mediaUrls,
+    hashtags: parsed.hashtags,
+    status: "DRAFT",
+    runId: input.agentId ? crypto.randomUUID() : null,
+  });
+
+  logger.info(
+    { contentId: content.id, platform: input.platform, tokens: response.usage },
+    "AI content generated and saved",
+  );
+
+  return content;
+}
+```
+
+**2. Mettre à jour le handler** (`src/lib/job-queue/handlers.ts`) :
+
+```ts
+// Remplacer le handler "content-generate" existant
+registerHandler("content-generate", async (payload: ContentGeneratePayload) => {
+  logger.info(
+    { profileId: payload.profileId, platform: payload.platform, brief: payload.brief },
+    "Processing AI content generation",
+  );
+
+  const result = await generateAndSaveContent({
+    profileId: payload.profileId,
+    platform: payload.platform,
+    brief: payload.brief,
+    agentId: payload.agentId,
+  });
+
+  logger.info({ contentId: result.id }, "AI content generated successfully");
+});
+```
+
+**3. Tests** (`src/lib/content/__tests__/generator.test.ts`) :
+- Mock LLM generateText
+- Mock repository
+- Vérifier que le contenu généré est sauvegardé en DRAFT
+- Tester le parsing de la réponse LLM (extraction hashtags, urls)
+- Tester la gestion d'erreur LLM
+
+### Vérification
+1. `pnpm test:run` — tests générateur passent
+2. Enqueue d'un job content-generate → contenu créé en base
+3. Le contenu utilise le vrai LLM (pas de dummy text)
+
+---
+
+## S10.4 — API de génération de contenu
+
+**Fichiers** : `src/app/api/v1/content/generate/route.ts` (NOUVEAU), `src/lib/validations/generate.ts` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S10.3
+**Test** : `curl POST /api/v1/content/generate` → body avec generatedContent[]
+
+### Contexte
+Il faut une API pour déclencher la génération depuis l'UI. L'API accepte un brief + plateforme(s) et enqueue un job. Elle peut être synchrone (pour une seule génération) ou asynchrone (via la queue).
+
+### Modifications
+
+**1. Validation Zod** :
+
+```ts
+// src/lib/validations/generate.ts
+import { z } from "zod";
+
+export const GenerateContentSchema = z.object({
+  profileId: z.string().min(1),
+  platform: z.enum(["X", "LINKEDIN", "INSTAGRAM", "TIKTOK", "FACEBOOK", "THREADS", "PINTEREST", "YOUTUBE"]),
+  brief: z.string().min(10, "Brief must be at least 10 characters").max(2000),
+  keywords: z.array(z.string()).max(10).optional(),
+  count: z.number().int().min(1).max(5).optional().default(1),
+});
+```
+
+**2. Route API** :
+
+```ts
+// src/app/api/v1/content/generate/route.ts
+import { NextResponse } from "next/server";
+import { withApiMiddleware } from "@/lib/middleware/api-middleware";
+import { generateAndSaveContent } from "@/lib/content/generator";
+import { GenerateContentSchema } from "@/lib/validations/generate";
+
+export const POST = withApiMiddleware(async ({ userId, request }) => {
+  const body = await request.json();
+  const parsed = GenerateContentSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 422 },
+    );
+  }
+
+  const { profileId, platform, brief, keywords, count } = parsed.data;
+
+  // Vérifier l'appartenance du profile
+  const { profile: profileRepo } = await import("@/lib/repositories");
+  const profile = await profileRepo.findById(profileId);
+  if (!profile || profile.userId !== userId) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const content = await generateAndSaveContent({ profileId, platform, brief, keywords });
+    results.push(content);
+  }
+
+  return NextResponse.json({ generated: results }, { status: 201 });
+});
+```
+
+### Vérification
+1. `POST /api/v1/content/generate` avec body valide → 201 + generatedContent[]
+2. `POST /api/v1/content/generate` avec brief < 10 chars → 422
+3. `POST /api/v1/content/generate` sur profile d'un autre user → 404
+4. `pnpm test:run` — tests API passent
+
+---
+
+## S10.5 — UI de génération : panneau de configuration
+
+**Fichiers** : `src/components/content/generation-panel.tsx` (NOUVEAU), `src/components/content/generation-result.tsx` (NOUVEAU), `src/app/(main)/content/generate/page.tsx` (NOUVEAU), `src/components/content/__tests__/generation-panel.test.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S10.4
+**Test** : Rendu UI, soumission du formulaire, affichage des résultats
+
+### Contexte
+Interface utilisateur pour la génération de contenu : sélection du profil + plateforme, saisie du brief, bouton de génération, et affichage des résultats (avec possibilité de modifier avant de publier).
+
+### Modifications
+
+**1. Composant GenerationPanel** :
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { Card } from "@socialcreator/ui/card";
+import { Button } from "@socialcreator/ui/button";
+import { Textarea } from "@socialcreator/ui/textarea";
+import { Select, SelectItem } from "@socialcreator/ui/select";
+import { Spinner } from "@socialcreator/ui/spinner";
+import { GenerationResult } from "./generation-result";
+import type { Platform } from "@prisma/client";
+
+interface Profile { id: string; name: string; platform: Platform; }
+
+export function GenerationPanel({ profiles }: { profiles: Profile[] }) {
+  const [selectedProfile, setSelectedProfile] = useState("");
+  const [brief, setBrief] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [error, setError] = useState("");
+
+  async function handleGenerate() {
+    if (!selectedProfile || !brief) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/v1/content/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId: selectedProfile, platform: profiles.find(p => p.id === selectedProfile)?.platform, brief }),
+      });
+      if (!res.ok) { const err = await res.json(); setError(err.error || "Generation failed"); return; }
+      const data = await res.json();
+      setResults(data.generated);
+    } catch { setError("Network error"); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 space-y-4">
+        <h2 className="text-title-md font-semibold">Generate Content</h2>
+
+        <Select value={selectedProfile} onChange={setSelectedProfile} label="Profile">
+          {profiles.map(p => (
+            <SelectItem key={p.id} value={p.id}>{p.name} ({p.platform})</SelectItem>
+          ))}
+        </Select>
+
+        <Textarea
+          value={brief}
+          onChange={setBrief}
+          label="Content Brief"
+          placeholder="Describe what you want to post..."
+          rows={4}
+          maxLength={2000}
+        />
+
+        <Button onClick={handleGenerate} disabled={loading || !selectedProfile || !brief}>
+          {loading ? <Spinner /> : "Generate"}
+        </Button>
+
+        {error && <p className="text-semantic-error text-body-sm">{error}</p>}
+      </Card>
+
+      {results.map(r => <GenerationResult key={r.id} content={r} />)}
+    </div>
+  );
+}
+```
+
+**2. Composant GenerationResult** :
+
+```tsx
+// Affiche le contenu généré avec options : éditer, régénérer, publier, programmée
+// Champs : textContent éditable, hashtags en tags, mediaUrls, status badge
+// Actions : Save as Draft, Schedule, Publish, Regenerate
+```
+
+**3. Page dédiée** (`/content/generate`) :
+
+```tsx
+export default function GeneratePage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  useEffect(() => {
+    fetch("/api/v1/profiles").then(r => r.json()).then(setProfiles);
+  }, []);
+  return <GenerationPanel profiles={profiles} />;
+}
+```
+
+### Vérification
+1. Rendu du panneau avec sélecteur de profil + textarea
+2. Soumission → loading state → résultats affichés
+3. Gestion des erreurs (réseau, validation)
+4. `pnpm test:run` — tests UI passent
+
+---
+
+## S10.6 — Éditeur de contenu généré (brouillon → publication)
+
+**Fichiers** : `src/components/content/content-editor.tsx` (NOUVEAU), `src/app/api/v1/content/[id]/route.ts` (MODIFIER — ajouter PUT), `src/components/content/__tests__/content-editor.test.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S10.5 (UI génération)
+**Test** : Éditer un contenu généré → sauvegarder → publier
+
+### Contexte
+Le contenu généré par LLM est rarement parfait. Il faut permettre à l'utilisateur de modifier le texte, les hashtags, ajouter des médias, puis programmer ou publier.
+
+### Modifications
+
+**1. ContentEditor** :
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card } from "@socialcreator/ui/card";
+import { Button } from "@socialcreator/ui/button";
+import { Textarea } from "@socialcreator/ui/textarea";
+import { Input } from "@socialcreator/ui/input";
+
+interface ContentEditorProps {
+  content: {
+    id: string;
+    textContent: string;
+    hashtags: string[];
+    mediaUrls: string[];
+    platform: string;
+    status: string;
+  };
+  onSave?: (content: typeof content) => void;
+}
+
+export function ContentEditor({ content: initial, onSave }: ContentEditorProps) {
+  const [text, setText] = useState(initial.textContent);
+  const [hashtags, setHashtags] = useState(initial.hashtags.join(" "));
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/v1/content/${initial.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          textContent: text,
+          hashtags: hashtags.split(" ").filter(Boolean),
+        }),
+      });
+      if (!res.ok) return;
+      const updated = await res.json();
+      onSave?.(updated);
+      router.refresh();
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <Card className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-title-sm font-semibold">Edit Content</h3>
+        <span className="text-caption text-muted">{initial.platform} · {text.length} chars</span>
+      </div>
+
+      <Textarea value={text} onChange={setText} rows={6} maxLength={3000} />
+      <Input value={hashtags} onChange={setHashtags} label="Hashtags" placeholder="#tag1 #tag2" />
+
+      <div className="flex gap-2">
+        <Button onClick={handleSave} loading={saving}>Save Draft</Button>
+        <Button variant="primary" onClick={() => { /* schedule modal */ }}>Schedule</Button>
+        <Button variant="primary" onClick={() => { /* publish */ }}>Publish Now</Button>
+      </div>
+    </Card>
+  );
+}
+```
+
+**2. API PUT** : Ajouter la méthode PUT à la route existante `src/app/api/v1/content/[id]/route.ts` pour mettre à jour content + hashtags.
+
+### Vérification
+1. Contenu généré → éditable → sauvegardé
+2. Hashtags modifiables
+3. Status badges: DRAFT → SCHEDULED → PUBLISHED
+4. `pnpm test:run` — tests éditeur passent
+
+---
+
+## S10.7 — Rate limiting et quota LLM
+
+**Fichiers** : `src/lib/llm/rate-limiter.ts` (NOUVEAU), `src/lib/llm/__tests__/rate-limiter.test.ts` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S10.1
+**Test** : Appels API LLM limités par utilisateur/temps
+
+### Contexte
+Les appels LLM coûtent de l'argent. Il faut limiter le nombre de générations par utilisateur (ex: 50/jour pour le plan gratuit, illimité pour le plan pro). Le système d'entitlements existe déjà dans `src/lib/entitlements/`.
+
+### Modifications
+
+**1. Rate limiter LLM** :
+
+```ts
+// src/lib/llm/rate-limiter.ts
+import { getRedis } from "@/lib/infrastructure/redis";
+
+const FREE_TIER_DAILY_LIMIT = 50;
+const PRO_TIER_DAILY_LIMIT = 500;
+
+export async function checkGenerationQuota(userId: string, plan: string): Promise<{
+  allowed: boolean;
+  remaining: number;
+  resetAt: Date;
+}> {
+  const redis = getRedis();
+  if (!redis) return { allowed: true, remaining: 999, resetAt: new Date() };
+
+  const key = `llm:quota:${userId}:${new Date().toISOString().split("T")[0]}`;
+  const current = await redis.incr(key);
+  
+  if (current === 1) await redis.expire(key, 86400); // 24h TTL
+
+  const limit = plan === "pro" ? PRO_TIER_DAILY_LIMIT : FREE_TIER_DAILY_LIMIT;
+  const allowed = current <= limit;
+
+  return { allowed, remaining: Math.max(0, limit - current), resetAt: new Date(Date.now() + 86400000) };
+}
+```
+
+**2. Intégrer dans le handler** :
+
+```ts
+// Dans handler content-generate, avant l'appel LLM :
+const quota = await checkGenerationQuota(userId, userPlan);
+if (!quota.allowed) {
+  throw new Error(`Daily generation quota exceeded. Remaining: ${quota.remaining}`);
+}
+```
+
+### Vérification
+1. Quota non dépassé → génération autorisée
+2. Quota dépassé → erreur "quota exceeded"
+3. Reset quotidien fonctionnel
+4. `pnpm test:run` — tests rate-limiter passent
+
+---
+
+## S10.8 — Génération multiple (batch par planning)
+
+**Fichiers** : `src/app/api/v1/content/generate/batch/route.ts` (NOUVEAU), `src/lib/content/batch-generator.ts` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S10.4
+**Test** : `POST /api/v1/content/generate/batch` → génère X contenus pour Y plateformes
+
+### Contexte
+L'utilisateur veut générer du contenu pour une semaine : 7 posts X, 3 LinkedIn, 5 Instagram en un clic. Le batch generator enqueue des jobs individuels et retourne un status.
+
+### Modifications
+
+**1. Batch Generator** :
+
+```ts
+// src/lib/content/batch-generator.ts
+export interface BatchRequest {
+  profileId: string;
+  platforms: Platform[];
+  briefs: string[]; // Un brief par jour de la semaine
+}
+
+export async function enqueueBatchGeneration(input: BatchRequest): Promise<string[]> {
+  const contentIds: string[] = [];
+
+  for (const platform of input.platforms) {
+    for (const brief of input.briefs) {
+      const id = enqueueJob("content-generate", {
+        profileId: input.profileId,
+        platform,
+        brief,
+      } satisfies ContentGeneratePayload, { priority: "normal" });
+      contentIds.push(id);
+    }
+  }
+
+  return contentIds;
+}
+```
+
+**2. Route batch** :
+
+```ts
+// POST /api/v1/content/generate/batch
+// Body: { profileId, platforms: ["X", "LINKEDIN"], briefs: ["brief1", "brief2", ...] }
+// Response: { enqueued: number, jobIds: string[] }
+```
+
+### Vérification
+1. Batch de 10 contenus → 10 jobs enqueués
+2. Status de chaque job traçable via queue
+3. `pnpm test:run` — tests batch passent
+
+---
+
+# 📋 RÉCAPITULATIF SPRINT 10
+
+## Sprint 10 — AI Content Generation (~25 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S10.1 | `src/lib/llm/provider.ts` | **NOUVEAU** — Provider LLM OpenAI/Anthropic |
+| S10.1 | `src/lib/llm/types.ts` | **NOUVEAU** — Types LLM |
+| S10.1 | `src/lib/llm/index.ts` | **NOUVEAU** — Barrel |
+| S10.1 | `src/lib/llm/__tests__/provider.test.ts` | **NOUVEAU** — Tests provider |
+| S10.2 | `src/lib/content/prompts/platforms/*.ts` | **NOUVEAU** — 8 templates plateforme |
+| S10.2 | `src/lib/content/prompts/index.ts` | **NOUVEAU** — Resolveur de templates |
+| S10.2 | `src/lib/content/prompts/__tests__/prompts.test.ts` | **NOUVEAU** — Tests templates |
+| S10.3 | `src/lib/content/generator.ts` | **NOUVEAU** — Service génération |
+| S10.3 | `src/lib/job-queue/handlers.ts` | MODIFIER — Handler content-generate LLM |
+| S10.3 | `src/lib/content/__tests__/generator.test.ts` | **NOUVEAU** — Tests générateur |
+| S10.4 | `src/app/api/v1/content/generate/route.ts` | **NOUVEAU** — API génération |
+| S10.4 | `src/lib/validations/generate.ts` | **NOUVEAU** — Validation Zod |
+| S10.5 | `src/components/content/generation-panel.tsx` | **NOUVEAU** — UI génération |
+| S10.5 | `src/components/content/generation-result.tsx` | **NOUVEAU** — UI résultat |
+| S10.5 | `src/app/(main)/content/generate/page.tsx` | **NOUVEAU** — Page génération |
+| S10.6 | `src/components/content/content-editor.tsx` | **NOUVEAU** — Éditeur |
+| S10.6 | `src/app/api/v1/content/[id]/route.ts` | MODIFIER — PUT update |
+| S10.7 | `src/lib/llm/rate-limiter.ts` | **NOUVEAU** — Rate limiter LLM |
+| S10.7 | `src/lib/llm/__tests__/rate-limiter.test.ts` | **NOUVEAU** — Tests rate limiter |
+| S10.8 | `src/app/api/v1/content/generate/batch/route.ts` | **NOUVEAU** — API batch |
+| S10.8 | `src/lib/content/batch-generator.ts` | **NOUVEAU** — Batch service |
+| — | `src/app/(main)/sidebar.tsx` | MODIFIER — Ajouter lien "Generate" |
+
+---
+
+# ✅ CHECKLIST SPRINT 10
+
+- [ ] Provider LLM fonctionnel avec fallback Anthropic ↔ OpenAI
+- [ ] Template de prompt par plateforme (8 plateformes)
+- [ ] Handler content-generate utilise le vrai LLM
+- [ ] API `POST /api/v1/content/generate` — 201 avec generatedContent
+- [ ] UI GenerationPanel avec sélecteur profil + brief + bouton
+- [ ] ContentEditor : modifier hashtags, text, sauvegarder
+- [ ] Quota LLM : 50/jour free, 500/jour pro
+- [ ] Batch generation : 1 clic = semaine de contenu
+- [ ] `pnpm test:run` — 80+ files pass
+- [ ] `pnpm typecheck` — 0 erreurs dans les fichiers modifiés
+
+---
+
+# 🚀 SPRINT 11 — Advanced Analytics (semaine 17-19)
+
+---
+
+## S11.1 — Dashboard analytics enrichi avec Zeitgeist
+
+**Fichiers** : `src/app/api/v1/analytics/insights/route.ts` (NOUVEAU), `src/lib/analytics/insights.ts` (NOUVEAU), `src/components/dashboard/insights-grid.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 7 (dashboard basique)
+**Test** : Dashboard avec métriques avancées (engagement, reach, trend)
+
+### Contexte
+Le dashboard actuel (Sprint 7) montre 4 stats basiques (profiles, total content, published, today). Il faut ajouter des KPIs plus poussés : engagement rate, reach, best time to post, content mix, etc. Les données sont déjà dans `PublishLog`, `Analytics` et `Content`.
+
+### Modifications
+
+**1. Service d'insights** (`src/lib/analytics/insights.ts`) :
+
+```ts
+export interface AnalyticsInsights {
+  overview: {
+    totalPublished: number;
+    totalDrafts: number;
+    totalFailed: number;
+    successRate: number;
+  };
+  engagement: {
+    avgEngagementRate: number;
+    topPlatform: Platform | null;
+    bestTimeToPost: string; // ex: "14:00-16:00"
+    trendingKeywords: string[];
+  };
+  publishing: {
+    frequencyPerDay: number;
+    mostActiveDay: string; // ex: "Wednesday"
+    peakHour: number;
+    platformMix: Record<Platform, number>;
+  };
+  comparison: {
+    vsLastWeek: number; // % change
+    vsLastMonth: number;
+    trend: "up" | "down" | "stable";
+  };
+}
+
+export async function getAnalyticsInsights(userId: string, days: number = 30): Promise<AnalyticsInsights> {
+  // Aggréger depuis PublishLog, Analytics, Content
+  const { publishLog: plRepo, analytics: aRepo, content: cRepo } = getRepositories();
+  
+  const publishLogs = await plRepo.findByUserId(userId, { pageSize: 1000 });
+  const analyticEvents = await aRepo.findByUserId(userId, days);
+  const contents = await cRepo.findByUserId(userId);
+  
+  return {
+    overview: computeOverview(publishLogs, contents),
+    engagement: computeEngagement(analyticEvents, publishLogs),
+    publishing: computePublishingFrequency(publishLogs),
+    comparison: computeComparison(publishLogs, days),
+  };
+}
+```
+
+**2. Route API** : `GET /api/v1/analytics/insights?days=30` — retourne AnalyticsInsights
+
+**3. Composant InsightsGrid** (grille de cartes avec métriques + tendances)
+
+### Vérification
+1. Dashboard enrichi avec 12+ indicateurs
+2. Tendances (vs semaine dernière, vs mois dernier)
+3. `pnpm test:run` — tests insights passent
+
+---
+
+## S11.2 — Export CSV des analytics
+
+**Fichiers** : `src/app/api/v1/analytics/export/csv/route.ts` (NOUVEAU), `src/lib/analytics/export-csv.ts` (NOUVEAU)
+**Effort** : S
+**Dépendances** : S11.1
+**Test** : `GET /api/v1/analytics/export/csv?from=2026-01-01&to=2026-06-01` → CSV valide
+
+### Contexte
+Les utilisateurs veulent exporter leurs stats pour les partager ou les analyser dans Excel/Google Sheets.
+
+### Modifications
+
+**1. Service d'export CSV** :
+
+```ts
+// src/lib/analytics/export-csv.ts
+export async function exportPublishLogsCSV(userId: string, from: Date, to: Date): Promise<string> {
+  const { publishLog } = getRepositories();
+  const logs = await publishLog.findByUserId(userId, { pageSize: 10000 });
+
+  const headers = ["Date", "Platform", "Status", "Content ID", "Error"];
+  const rows = logs.logs
+    .filter(l => l.createdAt >= from && l.createdAt <= to)
+    .map(l => [
+      l.createdAt.toISOString(),
+      l.platform,
+      l.success ? "Published" : "Failed",
+      l.contentId,
+      l.error || "",
+    ].join(","));
+
+  return [headers.join(","), ...rows].join("\n");
+}
+```
+
+**2. Route** :
+
+```ts
+// GET /api/v1/analytics/export/csv?from=...&to=...
+// Headers: Content-Type: text/csv, Content-Disposition: attachment; filename="analytics.csv"
+```
+
+### Vérification
+1. CSV valide téléchargeable
+2. Filtre par date fonctionnel
+3. `pnpm test:run` — tests export passent
+
+---
+
+## S11.3 — Export PDF des rapports
+
+**Fichiers** : `src/app/api/v1/analytics/export/pdf/route.ts` (NOUVEAU), `src/lib/analytics/export-pdf.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S11.2
+**Test** : `GET /api/v1/analytics/export/pdf` → PDF bien formaté
+
+### Contexte
+Le CSV c'est bien, mais les managers veulent un rapport PDF présentable avec graphiques, tableaux et synthèse.
+
+### Modifications
+
+**1. Service PDF** (utilisation de `@react-pdf/renderer` ou `puppeteer`) :
+
+```ts
+// src/lib/analytics/export-pdf.ts
+// Générer un rapport PDF avec :
+// - Header : période, nom de l'utilisateur
+// - Section 1 : KPIs clés (total posts, taux de succès, engagement rate)
+// - Section 2 : Graphique barres (publications par jour)
+// - Section 3 : Top plateformes (pie chart)
+// - Section 4 : Tendances vs période précédente
+// - Footer : généré le, page X/Y
+```
+
+**2. Route** : `GET /api/v1/analytics/export/pdf?from=...&to=...` → PDF streamé
+
+**Choix technique** : utiliser `@react-pdf/renderer` (render côté serveur, pas de dépendance lourde) plutôt que Puppeteer (plus lourd mais plus flexible).
+
+### Vérification
+1. PDF téléchargeable avec sections complètes
+2. Graphiques visibles
+3. `pnpm test:run` — tests PDF passent
+
+---
+
+## S11.4 — Métriques par plateforme (comparaison)
+
+**Fichiers** : `src/app/api/v1/analytics/platforms/route.ts` (NOUVEAU), `src/components/analytics/platform-comparison.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S11.1
+**Test** : Comparaison X vs LinkedIn vs Instagram en un coup d'œil
+
+### Contexte
+L'utilisateur publie sur plusieurs plateformes. Il veut savoir laquelle performe le mieux, où investir son temps, et quel type de contenu fonctionne où.
+
+### Modifications
+
+**1. API comparaison** : `GET /api/v1/analytics/platforms?days=30`
+
+```ts
+// Retourne :
+{
+  platforms: {
+    X: { posts: 45, successRate: 93%, avgEngagement: 2.1% },
+    LINKEDIN: { posts: 12, successRate: 100%, avgEngagement: 4.5% },
+    INSTAGRAM: { posts: 30, successRate: 87%, avgEngagement: 3.2% },
+  },
+  bestPerformer: "LINKEDIN",
+  recommendations: ["Increase LinkedIn posting frequency", "Review Instagram failures"]
+}
+```
+
+**2. Composant PlatformComparison** : Tableau comparatif + highlights
+
+### Vérification
+1. Comparaison claire X vs LinkedIn vs Instagram etc.
+2. Recommandations automatiques générées
+3. `pnpm test:run` — OK
+
+---
+
+## S11.5 — Meilleur moment de publication (ML léger)
+
+**Fichiers** : `src/lib/scheduling/optimizer.ts` (MODIFIER), `src/app/api/v1/analytics/best-time/route.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 5 (scheduling)
+**Test** : Recommandation du meilleur créneau basé sur l'historique
+
+### Contexte
+Le module `src/lib/scheduling/optimizer.ts` existe déjà avec des heuristiques basiques. Il faut le nourrir avec les vraies données d'engagement pour produire des recommandations personnalisées.
+
+### Modifications
+
+**1. Analyser l'historique de publications** :
+
+```ts
+// 1. Récupérer les PublishLog avec success=true
+// 2. Grouper par heure de publication (tranches de 2h)
+// 3. Calculer le taux de succès + engagement par créneau
+// 4. Retourner le top 3 créneaux par plateforme
+
+export interface BestTimeSlot {
+  platform: Platform;
+  dayOfWeek: string; // "Monday"
+  startHour: number; // 14
+  endHour: number; // 16
+  confidence: number; // 0-1 basé sur le volume de données
+}
+
+export async function getBestTimeSlots(userId: string): Promise<BestTimeSlot[]> {
+  // Aggréger les données d'engagement par jour + heure
+  // Retourner les meilleurs créneaux avec un score de confiance
+}
+```
+
+**2. Route API** : `GET /api/v1/analytics/best-time` → crénaux recommandés
+
+### Vérification
+1. Recommandation basée sur l'historique réel (pas des heuristiques)
+2. Score de confiance basé sur le volume de données
+3. `pnpm test:run` — tests optimizer passent
+
+---
+
+# 📋 RÉCAPITULATIF SPRINT 11
+
+## Sprint 11 — Advanced Analytics (~18 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S11.1 | `src/lib/analytics/insights.ts` | **NOUVEAU** — Service insights |
+| S11.1 | `src/app/api/v1/analytics/insights/route.ts` | **NOUVEAU** — API insights |
+| S11.1 | `src/components/dashboard/insights-grid.tsx` | **NOUVEAU** — UI insights |
+| S11.2 | `src/lib/analytics/export-csv.ts` | **NOUVEAU** — Export CSV |
+| S11.2 | `src/app/api/v1/analytics/export/csv/route.ts` | **NOUVEAU** — API CSV |
+| S11.3 | `src/lib/analytics/export-pdf.ts` | **NOUVEAU** — Export PDF |
+| S11.3 | `src/app/api/v1/analytics/export/pdf/route.ts` | **NOUVEAU** — API PDF |
+| S11.4 | `src/app/api/v1/analytics/platforms/route.ts` | **NOUVEAU** — API comparaison |
+| S11.4 | `src/components/analytics/platform-comparison.tsx` | **NOUVEAU** — UI comparaison |
+| S11.5 | `src/lib/scheduling/optimizer.ts` | MODIFIER — ML léger |
+| S11.5 | `src/app/api/v1/analytics/best-time/route.ts` | **NOUVEAU** — API best time |
+
+---
+
+# ✅ CHECKLIST SPRINT 11
+
+- [ ] Dashboard enrichi avec 12+ indicateurs et tendances
+- [ ] Export CSV fonctionnel avec filtre date
+- [ ] Export PDF avec graphiques et sections
+- [ ] Comparaison plateforme X vs LinkedIn vs Instagram
+- [ ] Meilleur moment de publication basé sur données réelles
+- [ ] `pnpm test:run` — 85+ files pass
+
+---
+
+# 🚀 SPRINT 12 — Team Collaboration (semaine 20-25)
+
+---
+
+## S12.1 — Backend équipes : CRUD + invitations
+
+**Fichiers** : `src/app/api/teams/[teamId]/route.ts` (MODIFIER), `src/app/api/teams/[teamId]/invite/route.ts` (MODIFIER), `src/lib/services/team.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Sprint 4 (auth), Sprint 3 (repositories)
+**Test** : Créer une équipe → inviter → membre accepte → accès partagé
+
+### Contexte
+Le schéma Prisma a déjà `Team`, `TeamMember`, `TeamRole` mais les routes API sont incomplètes. Il faut finaliser le CRUD, les invitations par email, et les rôles (owner, admin, member, viewer).
+
+### Modifications
+
+**1. Service Team** :
+
+```ts
+// src/lib/services/team.ts
+export type TeamRole = "owner" | "admin" | "member" | "viewer";
+
+export async function createTeam(name: string, userId: string): Promise<Team> {
+  // Créer l'équipe + ajouter le créateur comme owner
+}
+
+export async function inviteMember(teamId: string, email: string, role: TeamRole, invitedBy: string): Promise<void> {
+  // Vérifier que l'inviteur a les droits (admin+)
+  // Créer une invitation (expire dans 7 jours)
+  // Envoyer un email (ou notification in-app)
+}
+
+export async function acceptInvite(token: string, userId: string): Promise<void> {
+  // Valider le token, vérifier expiration
+  // Ajouter le membre à l'équipe
+}
+
+export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
+  // Retourner les membres avec leurs rôles
+}
+
+export async function updateMemberRole(teamId: string, memberId: string, role: TeamRole, updatedBy: string): Promise<void> {
+  // Vérifier les permissions, mettre à jour le rôle
+}
+
+export async function removeMember(teamId: string, memberId: string, removedBy: string): Promise<void> {
+  // Vérifier les permissions (admin+, ne pas pouvoir retirer un owner)
+}
+```
+
+### Vérification
+1. Création équipe → OK
+2. Invitation par email → token généré
+3. Acceptation invitation → membre ajouté
+4. Gestion des rôles fonctionnelle
+5. `pnpm test:run` — tests team service passent
+
+---
+
+## S12.2 — Middleware de permissions par équipe
+
+**Fichiers** : `src/lib/middleware/team-permissions.ts` (NOUVEAU), `src/lib/middleware/__tests__/team-permissions.test.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S12.1
+**Test** : `withTeamAccess` bloque les accès non autorisés
+
+### Contexte
+Actuellement, `ownership.ts` vérifie que l'utilisateur est le propriétaire. Avec les équipes, il faut aussi permettre aux membres d'accéder aux resources. Il faut un middleware `withTeamAccess` qui checke si l'utilisateur est owner OU membre de l'équipe qui possède la resource.
+
+### Modifications
+
+**1. Middleware withTeamAccess** :
+
+```ts
+// src/lib/middleware/team-permissions.ts
+type Permission = "read" | "write" | "admin";
+
+const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
+  owner: ["read", "write", "admin"],
+  admin: ["read", "write", "admin"],
+  member: ["read", "write"],
+  viewer: ["read"],
+};
+
+export async function withTeamAccess(
+  teamId: string,
+  userId: string,
+  requiredPermission: Permission,
+): Promise<{ allowed: boolean; role?: TeamRole }> {
+  // 1. Vérifier si l'utilisateur est owner via ownership.ts
+  // 2. Sinon, vérifier s'il est membre de l'équipe
+  // 3. Vérifier que son rôle permet la permission demandée
+  // 4. Retourner { allowed, role }
+}
+
+// Version middleware pour API routes :
+export function requireTeamAccess(requiredPermission: Permission) {
+  return async (handler: Function) => {
+    return withApiMiddleware(async ({ userId, request, params }) => {
+      const teamId = params.teamId;
+      const { allowed } = await withTeamAccess(teamId, userId, requiredPermission);
+      if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return handler({ userId, request, params });
+    });
+  };
+}
+```
+
+### Vérification
+1. Owner → accès total
+2. Viewer → lecture seule
+3. Non-membre → 403
+4. `pnpm test:run` — tests permissions passent
+
+---
+
+## S12.3 — Partage de profils et contenus entre membres
+
+**Fichiers** : `src/app/api/v1/teams/[teamId]/profiles/route.ts` (NOUVEAU), `src/app/api/v1/teams/[teamId]/content/route.ts` (NOUVEAU), `src/lib/services/team-content.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S12.2
+**Test** : Membre peut voir/modifier les profils et contenus de l'équipe
+
+### Contexte
+Actuellement, chaque profil appartient à un seul utilisateur (`Profile.userId`). En mode équipe, un profil doit pouvoir être partagé (avec des permissions par membre). Il faut soit : (a) ajouter `teamId` optionnel sur Profile, soit (b) créer une table `TeamProfile`.
+
+### Modifications
+
+**1. Partager un profil avec l'équipe** :
+
+```ts
+// POST /api/v1/teams/:teamId/profiles/:profileId/share
+// Body: { permission: "read" | "write" }
+// Vérifier que le user est owner du profil
+// Ajouter le profil à l'équipe avec la permission donnée
+```
+
+**2. Lister les contenus de l'équipe** :
+
+```ts
+// GET /api/v1/teams/:teamId/content
+// Retourne les contenus des profils partagés avec l'équipe
+// Filtrable par statut, plateforme, date
+// Paginé
+```
+
+**3. Workflow review** :
+```ts
+// Un membre crée un brouillon → un autre membre le review → approbation → publication
+// Ajouter status "IN_REVIEW" à Content
+// Ajouter reviewedBy, reviewedAt sur Content
+```
+
+### Vérification
+1. Profil partagé visible par tous les membres
+2. Membre avec permission write peut créer/modifier du contenu
+3. Workflow review complet
+4. `pnpm test:run` — tests partage passent
+
+---
+
+## S12.4 — UI équipe : page de gestion
+
+**Fichiers** : `src/app/(main)/settings/teams/page.tsx` (MODIFIER), `src/components/teams/team-list.tsx` (NOUVEAU), `src/components/teams/team-settings.tsx` (NOUVEAU), `src/components/teams/member-list.tsx` (NOUVEAU), `src/components/teams/invite-dialog.tsx` (NOUVEAU)
+**Effort** : L
+**Dépendances** : S12.1
+**Test** : UI de gestion d'équipe complète
+
+### Contexte
+La page `/settings/teams` existe mais est basique. Il faut une UI complète avec :
+- Liste des équipes
+- Création d'équipe
+- Gestion des membres (liste, rôles, retrait)
+- Invitation par email
+- Paramètres de l'équipe (nom, avatar)
+
+### Vérification
+1. CRUD équipe complet depuis l'UI
+2. Invitation par email fonctionnelle
+3. Gestion des rôles (promouvoir, rétrograder)
+4. `pnpm test:run` — tests UI passent
+
+---
+
+## S12.5 — Notifications en temps réel (WebSocket/SSE)
+
+**Fichiers** : `src/lib/notifications/index.ts` (NOUVEAU), `src/lib/notifications/channels.ts` (NOUVEAU), `src/app/api/v1/notifications/route.ts` (NOUVEAU), `src/components/notifications/notification-bell.tsx` (NOUVEAU)
+**Effort** : L
+**Dépendances** : S12.3
+**Test** : Invitation reçue → notification en temps réel
+
+### Contexte
+Les actions d'équipe (invitation, nouveau contenu à review, approbation) doivent notifier les membres concernés en temps réel.
+
+### Modifications
+
+**1. SSE endpoint** : `GET /api/v1/notifications/stream` — Server-Sent Events
+
+```ts
+// Connexion SSE persistante
+// À chaque événement (invitation, review request, etc.), envoyer un event SSE
+// Le client recoit la notification et met à jour l'UI
+
+export async function handleSSE(request: Request, userId: string) {
+  const stream = new ReadableStream({
+    start(controller) {
+      // Envoyer les notifications non lues au démarrage
+      // Puis écouter les nouveaux événements via un EventEmitter
+      // Heartbeat toutes les 30s pour garder la connexion ouverte
+    },
+    cancel() {
+      // Nettoyer l'écouteur d'événements
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
+```
+
+**2. NotificationBell** : icône de cloche avec badge (nombre de notifications non lues) + dropdown avec la liste
+
+**3. Types de notifications** :
+- `team_invite` : "Vous avez été invité à rejoindre l'équipe X"
+- `content_review` : "Un contenu est en attente de votre review"
+- `content_approved` : "Votre contenu a été approuvé"
+- `member_joined` : "X a rejoint l'équipe"
+- `schedule_reminder` : "Un contenu sera publié dans 1h"
+
+### Vérification
+1. Connexion SSE établie
+2. Notification reçue en temps réel
+3. Badge mis à jour
+4. `pnpm test:run` — tests notifications passent
+
+---
+
+## S12.6 — Workflow de review : approuver/rejeter le contenu d'équipe
+
+**Fichiers** : `src/app/api/v1/content/[id]/review/route.ts` (NOUVEAU), `src/components/content/review-panel.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S12.3, S12.5
+**Test** : Content DRAFT → IN_REVIEW → APPROVED/REJECTED → PUBLISHED
+
+### Contexte
+Dans une équipe, un membre crée du contenu, un autre le review et l'approuve avant publication. Il faut un workflow avec status `IN_REVIEW` et `REJECTED` en plus des status existants.
+
+### Modifications
+
+**1. Route de review** :
+
+```ts
+// POST /api/v1/content/:id/review
+// Body: { action: "approve" | "reject", comment?: string }
+// Vérifier que le user a permission write sur l'équipe du profil
+// Si approve : status → "APPROVED" (prêt pour schedule/publish)
+// Si reject : status → "REJECTED" + commentaire sauvegardé
+// Notifier le créateur via SSE
+```
+
+**2. ReviewPanel** : composant qui s'affiche pour les utilisateurs ayant le droit de review
+- Affiche le contenu en lecture seule
+- Boutons Approve / Reject avec champ commentaire
+- Timeline des reviews (qui a fait quoi, quand)
+
+### Vérification
+1. Création → DRAFT
+2. Soumission pour review → IN_REVIEW
+3. Approbation → APPROVED
+4. Rejet → REJECTED avec commentaire
+5. Notification au créateur
+6. `pnpm test:run` — tests review passent
+
+---
+
+## S12.7 — Tableau de bord équipe vs individuel
+
+**Fichiers** : `src/app/api/v1/dashboard/team/route.ts` (NOUVEAU), `src/components/dashboard/team-stats.tsx` (NOUVEAU)
+**Effort** : M
+**Dépendances** : S12.3, Sprint 7 (dashboard)
+**Test** : Dashboard équipe vs dashboard perso
+
+### Contexte
+Chaque membre voit son dashboard perso. Les admins voient en plus un dashboard équipe avec les stats agrégées de tous les membres.
+
+### Modifications
+
+**1. API dashboard équipe** :
+
+```ts
+// GET /api/v1/dashboard/team?teamId=xxx
+// Stats agrégées de tous les membres :
+// - Total content published (équipe)
+// - Par membre : X posts, Y% success rate
+// - Content en attente de review
+// - Prochaines publications programmées
+// - Activité récente (membre X a publié sur Y)
+```
+
+**2. TeamStats** : composant avec :
+- Cards de stats agrégées
+- Tableau des membres avec leurs KPIs individuels
+- File d'attente des contenus à review
+- Timeline d'activité récente
+
+### Vérification
+1. Admin voit les stats de toute l'équipe
+2. Membre voit uniquement ses stats
+3. File de review visible
+4. `pnpm test:run` — tests dashboard équipe passent
+
+---
+
+# 📋 RÉCAPITULATIF SPRINT 12
+
+## Sprint 12 — Team Collaboration (~40 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S12.1 | `src/lib/services/team.ts` | **NOUVEAU** — Service team CRUD |
+| S12.1 | Routes `/api/teams/*` | MODIFIER — Finaliser API |
+| S12.2 | `src/lib/middleware/team-permissions.ts` | **NOUVEAU** — Permissions middleware |
+| S12.3 | `src/lib/services/team-content.ts` | **NOUVEAU** — Partage de contenu |
+| S12.3 | Routes `/api/v1/teams/*/profiles` | **NOUVEAU** — API partage profils |
+| S12.3 | Routes `/api/v1/teams/*/content` | **NOUVEAU** — API contenu équipe |
+| S12.4 | UI components (`team-list`, `team-settings`, etc.) | **NOUVEAU** — 4-5 composants |
+| S12.5 | `src/lib/notifications/*` | **NOUVEAU** — SSE + notifications |
+| S12.5 | `src/components/notifications/notification-bell.tsx` | **NOUVEAU** — UI notifications |
+| S12.6 | `src/app/api/v1/content/[id]/review/route.ts` | **NOUVEAU** — API review |
+| S12.6 | `src/components/content/review-panel.tsx` | **NOUVEAU** — UI review |
+| S12.7 | `src/app/api/v1/dashboard/team/route.ts` | **NOUVEAU** — Dashboard équipe |
+| S12.7 | `src/components/dashboard/team-stats.tsx` | **NOUVEAU** — Stats équipe |
+
+---
+
+# ✅ CHECKLIST SPRINT 12
+
+- [ ] CRUD équipe complet (créer, inviter, gérer rôles)
+- [ ] Middleware permissions (owner/admin/member/viewer)
+- [ ] Partage de profils entre membres d'équipe
+- [ ] UI gestion d'équipe complète
+- [ ] Notifications temps réel (SSE)
+- [ ] Workflow review (DRAFT → IN_REVIEW → APPROVED/REJECTED)
+- [ ] Dashboard équipe avec stats agrégées
+- [ ] `pnpm test:run` — 95+ files pass
+
+---
+
+# 🔧 TECHNICAL DEBT — En parallèle des sprints
+
+---
+
+## TD1 — Fixer les erreurs typecheck préexistantes
+
+**Fichiers** : Multiples — ~30 fichiers test sans imports vitest, ~400 erreurs
+**Effort** : 2-3 jours
+**Priorité** : 🔴 Haute
+
+### Contexte
+Le typecheck (`pnpm typecheck`) est cassé depuis le début du projet. Les erreurs sont principalement :
+- Fichiers de test qui utilisent `describe`, `it`, `expect` sans les importer de `vitest`
+- Fichiers de test qui utilisent `vi.fn`/`vi.mock` sans l'importer
+- Quelques erreurs de types dans `prisma/seed.ts`, `scripts/`, `e2e/`
+
+### Modifications
+
+**1. Ajouter les imports vitest manquants** (~15 fichiers) :
+
+```ts
+// AVANT : (aucun import)
+describe("crypto", () => { ... });
+
+// APRÈS :
+import { describe, expect, it } from "vitest";
+describe("crypto", () => { ... });
+```
+
+Fichiers concernés : `crypto.test.ts`, `prompts.test.ts`, `stripe.test.ts`, `tokens.test.ts`, `utils.test.ts`, `publish-guard.test.ts`, `publish-guard-functions.test.ts`, `validations.test.ts`, `auth.test.ts`, `agent-runner.test.ts`, `video-pipeline.test.ts`, `di/container.test.ts`, `request-id.test.ts`, `validate-url.test.ts`, `retry.test.ts`, `api-errors.test.ts`, `api-version.test.ts`, `rate-limit-redis.test.ts`
+
+**2. Ajouter le type test aux tsconfig** ou utiliser un `tsconfig.test.json` séparé.
+
+### Vérification
+1. `pnpm typecheck` — 0 erreurs
+2. `pnpm test:run` — tous les tests passent toujours
+
+---
+
+## TD2 — Migration queue Redis (BullMQ)
+
+**Fichiers** : `src/lib/job-queue/queue.ts` (MODIFIER), `src/lib/job-queue/worker.ts` (MODIFIER), `src/lib/job-queue/types.ts` (MODIFIER), `src/instrumentation.ts` (MODIFIER)
+**Effort** : 3-5 jours
+**Priorité** : 🟡 Moyenne
+
+### Contexte
+La queue est actuellement en mémoire : les jobs sont perdus au redémarrage du serveur. Pour la production, il faut une queue persistante. BullMQ + Redis est le standard.
+
+### Modifications
+
+**1. Définir l'interface Queue** pour permettre le swap in-memory ↔ Redis :
+
+```ts
+// Abstraction pour permettre le swap entre in-memory et Redis
+export interface QueueBackend {
+  enqueue(job: Omit<Job, "id">): Promise<string>;
+  dequeue(): Promise<Job | null>;
+  complete(id: string, result?: unknown): Promise<void>;
+  fail(id: string, error: string): Promise<void>;
+  getStatus(): Promise<QueueStatus>;
+  getJob(id: string): Promise<Job | undefined>;
+}
+```
+
+**2. Implémentation Redis** avec BullMQ :
+
+```ts
+// src/lib/job-queue/backends/redis.ts
+import { Queue as BullQueue, Worker as BullWorker } from "bullmq";
+
+export class RedisQueueBackend implements QueueBackend {
+  private queue: BullQueue;
+  private worker: BullWorker | null = null;
+
+  constructor() {
+    this.queue = new BullQueue("socialcreator", {
+      connection: { host: process.env.REDIS_HOST, port: Number(process.env.REDIS_PORT) },
+      defaultJobOptions: { attempts: 3, backoff: { type: "exponential", delay: 1000 } },
+    });
+  }
+
+  async enqueue(job: Omit<Job, "id">): Promise<string> {
+    const bullJob = await this.queue.add(job.type, job.payload, {
+      priority: PRIORITY_MAP[job.priority],
+      attempts: job.maxAttempts,
+    });
+    return bullJob.id ?? randomUUID();
+  }
+  // ...
+}
+```
+
+**3. Factory** pour choisir le backend selon la configuration :
+
+```ts
+export function createQueueBackend(): QueueBackend {
+  if (process.env.REDIS_HOST) {
+    return new RedisQueueBackend();
+  }
+  return new InMemoryQueueBackend();
+}
+```
+
+### Vérification
+1. Queue Redis fonctionnelle
+2. Jobs persistés après redémarrage
+3. Fallback in-memory si Redis non configuré
+4. `pnpm test:run` — tous les tests passent
+
+---
+
+## TD3 — Body size limit sécurisé
+
+**Fichiers** : `src/lib/middleware/api-middleware.ts` (MODIFIER)
+**Effort** : 1 jour
+**Priorité** : 🟡 Moyenne
+
+### Contexte
+Le body size check utilise le header `Content-Length` qui est contrôlé par le client. Un attaquant peut envoyer un petit header avec un gros body pour contourner la limite.
+
+### Modifications
+
+**Remplacer par une consommation réelle du body** :
+
+```ts
+// AVANT (vulnérable) :
+if (request.body) {
+  const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+  if (contentLength > MAX_BODY_SIZE) {
+    return errorResponse(413, "Request body too large");
+  }
+}
+
+// APRÈS (sécurisé) :
+const MAX_BODY_SIZE = 100 * 1024; // 100 KB
+
+export async function consumeBodyWithLimit(request: Request): Promise<string> {
+  const text = await request.text();
+  if (text.length > MAX_BODY_SIZE) {
+    throw new AppError(413, "Request body too large");
+  }
+  return text;
+}
+```
+
+### Vérification
+1. Body < 100KB → passe
+2. Body > 100KB → 413
+3. `Content-Length` falsifié → toujours bloqué
+4. `pnpm test:run` — OK
+
+---
+
+## TD4 — Health endpoint : retirer version/revision
+
+**Fichiers** : `src/lib/observability/health.ts` (MODIFIER), `src/lib/observability/__tests__/health.test.ts` (MODIFIER)
+**Effort** : 0.5 jour
+**Priorité** : 🟢 Basse
+
+### Contexte
+Le health endpoint expose `version` (package.json) et `revision` (git SHA), ce qui permet le fingerprinting de version pour cibler des CVEs.
+
+### Modifications
+
+**Supprimer `version` et `revision` de la réponse** :
+
+```ts
+// AVANT :
+return {
+  status: dbStatus === "ok" ? "healthy" : "degraded",
+  timestamp: new Date().toISOString(),
+  uptime: process.uptime(),
+  version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
+  revision: process.env.GIT_REVISION || "unknown",
+  checks: { database: { status: dbStatus, latencyMs: dbLatency } },
+};
+
+// APRÈS :
+return {
+  status: dbStatus === "ok" ? "healthy" : "degraded",
+  timestamp: new Date().toISOString(),
+  checks: { database: { status: dbStatus, latencyMs: dbLatency } },
+};
+```
+
+### Vérification
+1. `GET /api/health` → plus de `version`/`revision`
+2. Tests mis à jour
+3. `pnpm test:run` — OK
+
+---
+
+## TD5 — Tests repository (9/11 manquants)
+
+**Fichiers** : `src/lib/repositories/__tests__/*.repository.test.ts` (NOUVEAU — 9 fichiers)
+**Effort** : 1-2 jours
+**Priorité** : 🟢 Basse
+
+### Contexte
+Seuls `content.repository` et `connected-account.repository` ont des tests. Les 9 autres repositories (profile, agent, publishLog, analytics, team, teamMember, notification, videoAsset, media) sont à 0% de couverture.
+
+### Modifications
+
+Pour chaque repository, créer un test qui :
+1. CRUD de base (create → read → update → delete)
+2. Méthodes spécifiques (findByUserId, findByStatus, etc.)
+3. Gestion des erreurs (not found, doublons, contraintes)
+4. Utiliser Prisma mock ou SQLite in-memory
+
+```ts
+// Pattern pour chaque test :
+import { describe, expect, it, beforeEach } from "vitest";
+import { createTestRepository } from "./test-utils";
+
+describe("ProfileRepository", () => {
+  let repo: ProfileRepository;
+
+  beforeEach(() => {
+    repo = createTestRepository().profile;
+  });
+
+  it("should create a profile", async () => {
+    const profile = await repo.create({
+      userId: "test-user",
+      platform: "X",
+      handle: "@test",
+    });
+    expect(profile.id).toBeDefined();
+    expect(profile.platform).toBe("X");
+  });
+
+  it("should find profile by id", async () => {
+    const created = await repo.create({ userId: "user-1", platform: "X", handle: "@test" });
+    const found = await repo.findById(created.id);
+    expect(found?.id).toBe(created.id);
+  });
+
+  it("should return null for non-existent profile", async () => {
+    const found = await repo.findById("non-existent");
+    expect(found).toBeNull();
+  });
+
+  it("should find profiles by userId", async () => {
+    // Créer 2 profils pour user-1, 1 pour user-2
+    // findByUserId(user-1) → 2 profils
+  });
+});
+```
+
+### Vérification
+1. 9 nouveaux fichiers de test
+2. Tests CRUD + spécifiques pour chaque repository
+3. `pnpm test:run` — 86+ files pass
+
+---
+
+# 🔗 SCHÉMA DES DÉPENDANCES COMPLET
+
+```
+Sprint 1  (Security + Mobile)
+Sprint 2  (Architecture Patterns)
+Sprint 3  (API v1, Queue, Encryption, SSRF)
+Sprint 4  (OAuth Onboarding) ─ Sprint 3
+Sprint 5  (Scheduling UI) ─── Sprint 3
+Sprint 6  (Publish Pipeline) ─ Sprint 3, Sprint 5
+Sprint 7  (Dashboard) ─────── Sprint 5, Sprint 6
+Sprint 8  (Observability) ─── Sprint 2, Sprint 7
+Sprint 9  (Security) ──────── Sprint 6, Sprint 7, Sprint 8
+Sprint 10 (AI Content Gen) ── Sprint 3, Sprint 9
+Sprint 11 (Analytics) ─────── Sprint 7, Sprint 10 (optional)
+Sprint 12 (Team) ──────────── Sprint 4, Sprint 5, Sprint 10
+```
+
+## Ordre recommandé d'exécution
+
+```
+Sprint 10 (AI Content Gen) ──────┐  (indépendant — peut commencer immédiatement)
+Sprint 11 (Analytics) ───────────┤  (indépendant — peut être parallèle)
+                                │
+Sprint 12 (Team Collaboration) ───────┤  (dépend de S10 pour le contenu partagé)
+
+Technical Debt (en parallèle des sprints ci-dessus) :
+  TD1 (typecheck) ── peut être fait à tout moment (max 3 jours)
+  TD3 (body size) ── peut être fait à tout moment (1 jour)
+  TD4 (health) ───── peut être fait à tout moment (0.5 jour)
+  TD2 (Redis queue) ── avant mise en production réelle
+  TD5 (repo tests) ─── peut être fait à tout moment (1-2 jours)
+```
+
+```
+Semaine 13-16 : Sprint 10 — AI Content Generation
+Semaine 17-19 : Sprint 11 — Advanced Analytics
+Semaine 20-25 : Sprint 12 — Team Collaboration
+Between sprints : TD1 (typecheck) + TD3 (body size) + TD4 (health)
+```
+
+---
+
+*Plan mis à jour le 2026-06-03 — Sprints 1-9 complétés, Sprints 10-12 + Technical Debt détaillés*

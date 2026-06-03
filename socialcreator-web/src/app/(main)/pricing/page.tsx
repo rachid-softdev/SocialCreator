@@ -3,7 +3,7 @@ import { PricingTable } from "@/components/billing/pricing-table";
 import { auth } from "@/lib/auth";
 
 export default async function PricingPage() {
-  const _session = await auth();
+  await auth();
 
   const faqs = [
     {

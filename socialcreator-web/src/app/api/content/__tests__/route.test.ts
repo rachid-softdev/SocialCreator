@@ -50,7 +50,7 @@ vi.spyOn(URLSearchParams.prototype, "get").mockImplementation(function (
   key: string,
 ) {
   const result = _origGet.call(this, key);
-  return result === null ? undefined : result;
+  return (result === null ? undefined : result) as unknown as string | null;
 });
 
 // ---------------------------------------------------------------------------

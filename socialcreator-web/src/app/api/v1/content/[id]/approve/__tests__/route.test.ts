@@ -28,10 +28,10 @@ vi.mock("next/server", () => ({
 // Mock withApiMiddleware — wraps handler to pass userId and params directly
 vi.mock("@/lib/api-middleware", () => ({
   withApiMiddleware: vi.fn(
-    (handler: (ctx: { userId: string; params?: Record<string, string> }) => unknown) =>
+    (handler: (ctx: { userId: string }, params?: Record<string, string>) => unknown) =>
       async (_request: unknown, context?: { params?: Record<string, string> }) => {
         const params = context?.params ?? {};
-        return handler({ userId: "test-user-id", params });
+        return handler({ userId: "test-user-id" }, params);
       },
   ),
 }));

@@ -13,12 +13,7 @@ interface ScheduleConfigProps {
   onSave: (schedule: string | null) => Promise<void>;
 }
 
-export function ScheduleConfig({
-  agentId,
-  initialSchedule,
-  isActive = true,
-  onSave,
-}: ScheduleConfigProps) {
+export function ScheduleConfig({ initialSchedule, isActive = true, onSave }: ScheduleConfigProps) {
   const [schedule, setSchedule] = useState(initialSchedule || "");
   const [isEnabled, setIsEnabled] = useState(!!initialSchedule);
   const [isSaving, setIsSaving] = useState(false);

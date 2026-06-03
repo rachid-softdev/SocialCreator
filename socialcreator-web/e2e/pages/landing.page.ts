@@ -17,7 +17,7 @@ export class LandingPage extends BasePage {
     this.registerLink = page.locator('a[href="/register"]').first();
   }
 
-  async goto() {
+  override async goto() {
     await super.goto("/");
   }
 

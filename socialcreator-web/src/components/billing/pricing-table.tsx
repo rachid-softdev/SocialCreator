@@ -11,15 +11,6 @@ interface PricingTableProps {
   currentPlan?: PlanKey;
 }
 
-interface PlanWithPrice {
-  name: string;
-  price: number;
-  profiles: number;
-  addOnPrice: number;
-  addOnProfiles: number;
-  features: string[];
-}
-
 export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
   const [loading, setLoading] = useState(true);
   const [planPrices, setPlanPrices] = useState<Record<PaidPlanKey, number>>({

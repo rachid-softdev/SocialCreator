@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+
 /**
  * Reusable test utilities for API route tests
  *

@@ -62,7 +62,7 @@ export function AnalyticsDashboard({
       ]);
 
       if (analyticsRes.ok) {
-        const _data = await analyticsRes.json();
+        await analyticsRes.json();
         // Would update charts data here
       }
 

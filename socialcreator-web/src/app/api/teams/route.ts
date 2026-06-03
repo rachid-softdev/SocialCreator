@@ -18,10 +18,6 @@ const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
-const _updateTeamSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-});
-
 // GET /api/teams
 export async function GET(_request: Request) {
   try {

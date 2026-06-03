@@ -189,8 +189,8 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
               <SchedulePanel
                 contentId={content.id}
                 initialSchedule={{
-                  scheduledPublishAt: content.scheduledPublishAt,
-                  scheduledTimezone: content.scheduledTimezone,
+                  scheduledPublishAt: content.scheduledPublishAt ?? undefined,
+                  scheduledTimezone: content.scheduledTimezone ?? undefined,
                 }}
                 onScheduled={() => router.refresh()}
               />
@@ -215,8 +215,8 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
             <SchedulePanel
               contentId={content.id}
               initialSchedule={{
-                scheduledPublishAt: content.scheduledPublishAt,
-                scheduledTimezone: content.scheduledTimezone,
+                scheduledPublishAt: content.scheduledPublishAt ?? undefined,
+                scheduledTimezone: content.scheduledTimezone ?? undefined,
               }}
               onScheduled={() => router.refresh()}
             />

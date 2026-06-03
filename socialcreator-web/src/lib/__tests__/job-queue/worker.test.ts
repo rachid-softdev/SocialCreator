@@ -97,11 +97,11 @@ function resetWorkerState(): void {
 // ========== Tests ==========
 
 describe("Worker", () => {
-  let mockDequeue: ReturnType<typeof vi.fn>;
-  let mockComplete: ReturnType<typeof vi.fn>;
-  let mockFail: ReturnType<typeof vi.fn>;
-  let mockGetActiveCount: ReturnType<typeof vi.fn>;
-  let mockGetHandler: ReturnType<typeof vi.fn>;
+  let mockDequeue: any;
+  let mockComplete: any;
+  let mockFail: any;
+  let mockGetActiveCount: any;
+  let mockGetHandler: any;
 
   function makeJob(overrides: Partial<Job> = {}): Job {
     return {

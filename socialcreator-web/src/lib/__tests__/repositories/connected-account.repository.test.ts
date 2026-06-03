@@ -51,16 +51,8 @@ describe("PrismaConnectedAccountRepository — encryption", () => {
     accountName: "Test Account",
     accountAvatarUrl: null,
     isActive: true,
-    tokenType: null,
-    scope: null,
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
-  };
-
-  const _decryptedAccount: ConnectedAccount = {
-    ...mockAccount,
-    accessToken: "plaintext-access-token",
-    refreshToken: "plaintext-refresh-token",
   };
 
   beforeEach(() => {

@@ -152,7 +152,7 @@ describe("PrismaConnectedAccountRepository", () => {
     it("should return empty array when no accounts are expiring before the date", async () => {
       // All accounts have expiresAt far in the future
       const cutoffDate = new Date("2025-01-01T00:00:00.000Z");
-      const _futureAccount = makeMockConnectedAccount({
+      makeMockConnectedAccount({
         expiresAt: new Date("2099-12-31"),
       });
 

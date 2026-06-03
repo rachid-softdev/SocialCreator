@@ -28,6 +28,7 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(() => new Map()),
 }));
 
+import { NextResponse } from "next/server";
 import { withApiMiddleware } from "../api-middleware";
 
 describe("API Middleware", () => {
@@ -41,7 +42,7 @@ describe("API Middleware", () => {
     });
 
     it("should return a function (wrapped handler)", () => {
-      const handler = async () => new Response("ok", { status: 200 });
+      const handler = async () => new NextResponse("ok", { status: 200 });
       const wrapped = withApiMiddleware(handler);
       expect(typeof wrapped).toBe("function");
     });

@@ -138,8 +138,8 @@ describe("DI Container", () => {
       const factory = vi.fn(() => ({ id: ++counter }));
 
       container.register("test", factory, "transient");
-      const instance1 = container.resolve("test");
-      const instance2 = container.resolve("test");
+      const instance1 = container.resolve("test") as { id: number };
+      const instance2 = container.resolve("test") as { id: number };
 
       expect(instance1).not.toBe(instance2);
       expect(instance1.id).toBe(1);
@@ -168,8 +168,8 @@ describe("DI Container", () => {
       const scope1 = container.createScope("scope-1");
       const scope2 = container.createScope("scope-2");
 
-      const instance1 = scope1.resolve("scoped");
-      const instance2 = scope2.resolve("scoped");
+      const instance1 = scope1.resolve("scoped") as { value: number };
+      const instance2 = scope2.resolve("scoped") as { value: number };
 
       expect(instance1).not.toBe(instance2);
       expect(instance1.value).toBe(1);
@@ -357,8 +357,8 @@ describe("DI Container", () => {
       const scope1 = container.createScope();
       const scope2 = container.createScope();
 
-      const inst1 = scope1.resolve("test");
-      const inst2 = scope2.resolve("test");
+      const inst1 = scope1.resolve("test") as { id: number };
+      const inst2 = scope2.resolve("test") as { id: number };
 
       expect(inst1.id).toBe(1);
       expect(inst2.id).toBe(2);
