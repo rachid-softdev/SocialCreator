@@ -1,10 +1,16 @@
 /**
  * Enhanced in-process priority queue with status tracking
  * Backward compatible with existing enqueueJob from infrastructure/job-queue.ts
+ *
+ * This module provides BOTH synchronous (in-memory only) and asynchronous
+ * (QueueBackend) job queue APIs. The sync API is used by existing callers
+ * and tests. The async API delegates to the configured QueueBackend
+ * (InMemoryQueueBackend by default, Redis/BullMQ when configured).
  */
 
 import { randomUUID } from "node:crypto";
 import logger from "@/lib/logger";
+import { createQueueBackend } from "./backend";
 import type { Job, JobOptions, JobPayload, JobPriority, JobType } from "./types";
 
 const DEFAULT_OPTIONS = {
@@ -24,6 +30,8 @@ const MAX_QUEUE_SIZE = 10_000;
 
 let jobQueue: Job[] = [];
 const activeJobs = new Set<string>();
+
+// ── Synchronous API (in-memory only, backward compat) ──────────
 
 /**
  * Enqueue a new job with priority-based insertion
@@ -150,6 +158,28 @@ export function getJob(id: string): Job | undefined {
 }
 
 /**
+ * Retry a failed job — reset it to queued status with fresh attempts
+ * Returns true if the job was found and reset, false otherwise
+ */
+export function retryJob(id: string): boolean {
+  const job = jobQueue.find((j) => j.id === id);
+  if (!job || job.status !== "failed") return false;
+  job.status = "queued";
+  job.attempts = 0;
+  job.error = undefined;
+  job.startedAt = undefined;
+  job.completedAt = undefined;
+  return true;
+}
+
+/**
+ * Get all jobs sorted by createdAt descending (sync in-memory version)
+ */
+export function getJobs(): Job[] {
+  return [...jobQueue].sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/**
  * Get queue status summary
  */
 export function getQueueStatus() {
@@ -198,4 +228,79 @@ function trimArchive(): void {
         (j.completedAt && j.completedAt > cutoff),
     );
   }
+}
+
+// ── Async API (QueueBackend, for production use) ───────────────
+
+let backendInitialized = false;
+
+function getBackend() {
+  if (!backendInitialized) {
+    backendInitialized = true;
+  }
+  return createQueueBackend();
+}
+
+/**
+ * Async version of enqueueJob that uses the configured QueueBackend.
+ * When Redis/BullMQ is configured, jobs are persisted and survive restarts.
+ */
+export async function enqueueJobAsync<T extends JobPayload>(
+  type: JobType,
+  payload: T,
+  options: JobOptions & { delayMs?: number } = {},
+): Promise<string> {
+  const backend = getBackend();
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const job: Omit<Job, "id"> = {
+    type,
+    payload,
+    priority: opts.priority,
+    status: "queued",
+    attempts: 0,
+    maxAttempts: opts.maxAttempts,
+    retryDelayMs: opts.retryDelayMs,
+    createdAt: Date.now(),
+  };
+
+  if (options.delayMs && options.delayMs > 0) {
+    return backend.schedule(job, options.delayMs);
+  }
+
+  return backend.enqueue(job);
+}
+
+/**
+ * Async version of dequeueJob.
+ */
+export async function dequeueJobAsync(): Promise<Job | null> {
+  return getBackend().dequeue();
+}
+
+/**
+ * Async version of completeJob.
+ */
+export async function completeJobAsync(id: string, result?: unknown): Promise<void> {
+  return getBackend().complete(id, result);
+}
+
+/**
+ * Async version of failJob.
+ */
+export async function failJobAsync(id: string, error: string): Promise<void> {
+  return getBackend().fail(id, error);
+}
+
+/**
+ * Async version of getQueueStatus.
+ */
+export async function getQueueStatusAsync() {
+  return getBackend().getStatus();
+}
+
+/**
+ * Async version of getJobs — delegates to QueueBackend.list()
+ */
+export async function getJobsAsync(): Promise<Job[]> {
+  return getBackend().list();
 }

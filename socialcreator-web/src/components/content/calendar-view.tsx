@@ -19,12 +19,16 @@ import {
   subMonths,
 } from "date-fns";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CalendarEventDetail } from "@/components/calendar/calendar-event-detail";
+import { CalendarPlatformFilter } from "@/components/calendar/calendar-platform-filter";
+import { TodayScheduleList } from "@/components/calendar/today-schedule-list";
 import logger from "@/lib/logger";
 
 export interface CalendarEvent {
   id: string;
   title: string;
+  textContent: string;
   platform: string;
   status: string;
   scheduledAt: string;
@@ -37,6 +41,14 @@ export function CalendarView() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [platformFilter, setPlatformFilter] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
+
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +56,13 @@ export function CalendarView() {
     async function fetchEvents() {
       setLoading(true);
       try {
-        const response = await fetch("/api/v1/content?status=SCHEDULED&pageSize=500");
+        const params = new URLSearchParams({
+          from: calendarStart.toISOString(),
+          to: calendarEnd.toISOString(),
+        });
+        if (platformFilter) params.set("platform", platformFilter);
+
+        const response = await fetch(`/api/v1/content/scheduled-range?${params.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch scheduled content");
         const data = await response.json();
 
@@ -53,6 +71,7 @@ export function CalendarView() {
           const mapped: CalendarEvent[] = contents.map((c: any) => ({
             id: c.id,
             title: truncateText(c.textContent || "Untitled", 60),
+            textContent: c.textContent || "",
             platform: c.platform,
             status: c.status,
             scheduledAt: c.scheduledPublishAt,
@@ -72,7 +91,7 @@ export function CalendarView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentDate, platformFilter]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -84,6 +103,24 @@ export function CalendarView() {
   const goToPrevMonth = () => setCurrentDate((d) => subMonths(d, 1));
   const goToNextMonth = () => setCurrentDate((d) => addMonths(d, 1));
   const goToToday = () => setCurrentDate(new Date());
+
+  function handleEventClick(event: CalendarEvent, e: React.MouseEvent) {
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const containerRect = calendarRef.current?.getBoundingClientRect();
+
+    setPopoverPosition({
+      top: rect.bottom - (containerRect?.top ?? 0),
+      left: rect.left - (containerRect?.left ?? 0),
+    });
+    setSelectedEvent(event);
+  }
+
+  // Compute platform counts for the filter from current events
+  const platformCounts: Record<string, number> = {};
+  for (const event of events) {
+    platformCounts[event.platform] = (platformCounts[event.platform] ?? 0) + 1;
+  }
 
   // Build a map of date -> events for quick lookup
   const eventsByDate = new Map<string, CalendarEvent[]>();
@@ -126,7 +163,19 @@ export function CalendarView() {
   }
 
   return (
-    <div className="bg-surface-card border border-hairline rounded-xl overflow-hidden">
+    <div
+      ref={calendarRef}
+      className="bg-surface-card border border-hairline rounded-xl relative"
+    >
+      {/* Platform Filter */}
+      <div className="px-6 py-4 border-b border-hairline">
+        <CalendarPlatformFilter
+          selected={platformFilter}
+          onChange={setPlatformFilter}
+          counts={platformCounts}
+        />
+      </div>
+
       {/* Calendar Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-hairline">
         <h2 className="text-title-md text-ink font-display">{format(currentDate, "MMMM yyyy")}</h2>
@@ -200,13 +249,15 @@ export function CalendarView() {
               {/* Events */}
               <div className="space-y-1">
                 {dayEvents.slice(0, MAX_EVENTS_VISIBLE).map((event) => (
-                  <div
+                  <button
+                    type="button"
                     key={event.id}
-                    className="px-1.5 py-0.5 rounded text-[11px] leading-tight truncate bg-primary/10 text-primary-dark cursor-default"
+                    onClick={(e) => handleEventClick(event, e)}
+                    className="block w-full text-left px-1.5 py-0.5 rounded text-[11px] leading-tight truncate bg-primary/10 text-primary-dark hover:bg-primary/20 transition-colors"
                     title={event.title}
                   >
                     {event.title}
-                  </div>
+                  </button>
                 ))}
                 {extraCount > 0 && (
                   <div className="px-1.5 text-[11px] text-muted font-medium">
@@ -217,6 +268,20 @@ export function CalendarView() {
             </div>
           );
         })}
+      </div>
+
+      {/* Event Detail Popover */}
+      {selectedEvent && (
+        <CalendarEventDetail
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          position={popoverPosition}
+        />
+      )}
+
+      {/* Today's Schedule */}
+      <div className="border-t border-hairline p-6">
+        <TodayScheduleList events={events} />
       </div>
     </div>
   );

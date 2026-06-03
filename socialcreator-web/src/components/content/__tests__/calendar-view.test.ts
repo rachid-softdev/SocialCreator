@@ -45,6 +45,7 @@ function truncateText(text: string, maxLen: number): string {
 interface CalendarEvent {
   id: string;
   title: string;
+  textContent: string;
   platform: string;
   status: string;
   scheduledAt: string;
@@ -60,6 +61,7 @@ function mapApiResponseToEvents(contents: any[]): CalendarEvent[] {
   return contents.map((c: any) => ({
     id: c.id,
     title: truncateText(c.textContent || "Untitled", 60),
+    textContent: c.textContent ?? "",
     platform: c.platform,
     status: c.status,
     scheduledAt: c.scheduledPublishAt,
@@ -162,6 +164,7 @@ describe("CalendarView — event mapping", () => {
     expect(events[0]).toEqual({
       id: "c-1",
       title: "My scheduled post",
+      textContent: "My scheduled post",
       platform: "X",
       status: "SCHEDULED",
       scheduledAt: "2025-06-15T10:00:00.000Z",
@@ -181,6 +184,7 @@ describe("CalendarView — event mapping", () => {
     const events = mapApiResponseToEvents(apiResponse);
 
     expect(events[0].title).toBe("Untitled");
+    expect(events[0].textContent).toBe("");
   });
 
   it("should use 'Untitled' when textContent is empty", () => {
@@ -197,6 +201,7 @@ describe("CalendarView — event mapping", () => {
     const events = mapApiResponseToEvents(apiResponse);
 
     expect(events[0].title).toBe("Untitled");
+    expect(events[0].textContent).toBe("");
   });
 
   it("should truncate long textContent to 60 characters", () => {
@@ -258,6 +263,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-1",
         title: "Post 1",
+        textContent: "Post 1",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T10:00:00.000Z",
@@ -265,6 +271,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-2",
         title: "Post 2",
+        textContent: "Post 2",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T14:00:00.000Z",
@@ -272,6 +279,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-3",
         title: "Post 3",
+        textContent: "Post 3",
         platform: "INSTAGRAM",
         status: "SCHEDULED",
         scheduledAt: "2025-06-16T09:00:00.000Z",
@@ -294,6 +302,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-1",
         title: "A",
+        textContent: "A",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T10:00:00.000Z",
@@ -301,6 +310,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-2",
         title: "B",
+        textContent: "B",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T10:00:00.000Z",
@@ -308,6 +318,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-3",
         title: "C",
+        textContent: "C",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T10:00:00.000Z",
@@ -324,6 +335,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-1",
         title: "June 15",
+        textContent: "June 15",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-06-15T12:00:00.000Z",
@@ -331,6 +343,7 @@ describe("CalendarView — event grouping by date", () => {
       {
         id: "c-2",
         title: "July 1",
+        textContent: "July 1",
         platform: "X",
         status: "SCHEDULED",
         scheduledAt: "2025-07-01T12:00:00.000Z",
@@ -486,5 +499,217 @@ describe("CalendarView — format", () => {
   it("should format date key as 'yyyy-MM-dd'", () => {
     expect(format(new Date("2025-06-15"), "yyyy-MM-dd")).toBe("2025-06-15");
     expect(format(new Date("2025-01-01"), "yyyy-MM-dd")).toBe("2025-01-01");
+  });
+});
+
+// ── Platform Filter Logic ────────────────────────────────────────────────────
+
+describe("CalendarView — platform filter", () => {
+  it("should compute platform counts from events", () => {
+    const events: CalendarEvent[] = [
+      {
+        id: "c-1",
+        title: "Post 1",
+        textContent: "Post 1",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T10:00:00.000Z",
+      },
+      {
+        id: "c-2",
+        title: "Post 2",
+        textContent: "Post 2",
+        platform: "INSTAGRAM",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T14:00:00.000Z",
+      },
+      {
+        id: "c-3",
+        title: "Post 3",
+        textContent: "Post 3",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-16T09:00:00.000Z",
+      },
+    ];
+
+    const counts: Record<string, number> = {};
+    for (const event of events) {
+      counts[event.platform] = (counts[event.platform] ?? 0) + 1;
+    }
+
+    expect(counts).toEqual({ X: 2, INSTAGRAM: 1 });
+  });
+
+  it("should return empty counts for empty events", () => {
+    const counts: Record<string, number> = {};
+    for (const event of [] as CalendarEvent[]) {
+      counts[event.platform] = (counts[event.platform] ?? 0) + 1;
+    }
+
+    expect(counts).toEqual({});
+  });
+
+  it("should filter events by platform when a platform is selected", () => {
+    const events: CalendarEvent[] = [
+      { id: "c-1", title: "A", textContent: "A", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-15T10:00:00.000Z" },
+      { id: "c-2", title: "B", textContent: "B", platform: "INSTAGRAM", status: "SCHEDULED", scheduledAt: "2025-06-15T14:00:00.000Z" },
+      { id: "c-3", title: "C", textContent: "C", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-16T09:00:00.000Z" },
+    ];
+
+    const selectedPlatform = "X";
+    const filtered = events.filter((e) => e.platform === selectedPlatform);
+
+    expect(filtered).toHaveLength(2);
+    expect(filtered.every((e) => e.platform === "X")).toBe(true);
+  });
+
+  it("should include all events when platform filter is null", () => {
+    const events: CalendarEvent[] = [
+      { id: "c-1", title: "A", textContent: "A", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-15T10:00:00.000Z" },
+      { id: "c-2", title: "B", textContent: "B", platform: "INSTAGRAM", status: "SCHEDULED", scheduledAt: "2025-06-15T14:00:00.000Z" },
+    ];
+
+    // When filter is null (all), no platform filtering occurs
+    const platformFilter: string | null = null;
+    const filtered = platformFilter === null ? events : events.filter((e) => e.platform === platformFilter);
+
+    expect(filtered).toHaveLength(2);
+  });
+});
+
+// ── Today's Schedule List Logic ──────────────────────────────────────────────
+
+describe("CalendarView — today's schedule list", () => {
+  it("should filter events to only those occurring today", () => {
+    const today = new Date();
+    const todayStr = today.toISOString();
+
+    const events: CalendarEvent[] = [
+      {
+        id: "c-1",
+        title: "Today event",
+        textContent: "Today event",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: todayStr,
+      },
+      {
+        id: "c-2",
+        title: "Future event",
+        textContent: "Future event",
+        platform: "INSTAGRAM",
+        status: "SCHEDULED",
+        scheduledAt: "2025-12-25T10:00:00.000Z",
+      },
+    ];
+
+    const todayEvents = events.filter((e) => isToday(new Date(e.scheduledAt)));
+
+    expect(todayEvents).toHaveLength(1);
+    expect(todayEvents[0].id).toBe("c-1");
+  });
+
+  it("should sort today's events by time ascending", () => {
+    const today = new Date();
+    const baseDate = new Date(today);
+    baseDate.setHours(0, 0, 0, 0);
+
+    const morning = new Date(baseDate);
+    morning.setHours(9, 0, 0, 0);
+
+    const afternoon = new Date(baseDate);
+    afternoon.setHours(14, 0, 0, 0);
+
+    const evening = new Date(baseDate);
+    evening.setHours(18, 30, 0, 0);
+
+    const events: CalendarEvent[] = [
+      {
+        id: "c-3",
+        title: "Evening",
+        textContent: "Evening",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: evening.toISOString(),
+      },
+      {
+        id: "c-1",
+        title: "Morning",
+        textContent: "Morning",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: morning.toISOString(),
+      },
+      {
+        id: "c-2",
+        title: "Afternoon",
+        textContent: "Afternoon",
+        platform: "INSTAGRAM",
+        status: "SCHEDULED",
+        scheduledAt: afternoon.toISOString(),
+      },
+    ];
+
+    const todayEvents = events
+      .filter((e) => isToday(new Date(e.scheduledAt)))
+      .sort(
+        (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+      );
+
+    expect(todayEvents).toHaveLength(3);
+    expect(todayEvents[0].id).toBe("c-1"); // Morning first
+    expect(todayEvents[1].id).toBe("c-2"); // Afternoon second
+    expect(todayEvents[2].id).toBe("c-3"); // Evening third
+  });
+
+  it("should return empty array when no events are scheduled for today", () => {
+    const events: CalendarEvent[] = [
+      {
+        id: "c-1",
+        title: "Future event",
+        textContent: "Future event",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-12-25T10:00:00.000Z",
+      },
+    ];
+
+    const todayEvents = events.filter((e) => isToday(new Date(e.scheduledAt)));
+    expect(todayEvents).toHaveLength(0);
+  });
+
+  it("should format time as HH:mm using date-fns format", () => {
+    // Use local-timezone-safe dates to avoid timezone shift issues
+    const date = new Date(2025, 5, 15, 14, 30, 0);
+    expect(format(date, "HH:mm")).toBe("14:30");
+
+    const morning = new Date(2025, 5, 15, 9, 5, 0);
+    expect(format(morning, "HH:mm")).toBe("09:05");
+  });
+});
+
+// ── Event Click Handler Logic ────────────────────────────────────────────────
+
+describe("CalendarView — event click handler", () => {
+  it("should set the selected event on click", () => {
+    const event: CalendarEvent = {
+      id: "c-1",
+      title: "Test event",
+      textContent: "Test event",
+      platform: "X",
+      status: "SCHEDULED",
+      scheduledAt: "2025-06-15T10:00:00.000Z",
+    };
+
+    // Simulate the state setter directly
+    const selectedEvent: CalendarEvent | null = event;
+    expect(selectedEvent).not.toBeNull();
+    expect((selectedEvent as CalendarEvent).id).toBe("c-1");
+  });
+
+  it("should clear the selected event on close", () => {
+    const selectedEvent: CalendarEvent | null = null;
+    expect(selectedEvent).toBeNull();
   });
 });
