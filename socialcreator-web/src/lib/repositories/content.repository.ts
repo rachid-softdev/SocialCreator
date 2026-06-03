@@ -34,6 +34,7 @@ export interface IContentRepository {
   findByProfileId(profileId: string, options?: ContentFilterOptions): Promise<ContentPage>;
   findByUserId(userId: string, options?: ContentFilterOptions): Promise<ContentPage>;
   create(data: GeneratedContentCreateInput): Promise<GeneratedContent>;
+  update(id: string, data: UpdateContentInput): Promise<GeneratedContent>;
   updateStatus(id: string, status: ContentStatus): Promise<GeneratedContent>;
   schedule(id: string, scheduledPublishAt: Date): Promise<GeneratedContent>;
   delete(id: string): Promise<void>;
@@ -46,6 +47,17 @@ type GeneratedContentCreateInput = Omit<
   Parameters<typeof prisma.generatedContent.create>[0]["data"],
   "id"
 >;
+
+export type UpdateContentInput = Partial<{
+  textContent: string;
+  hashtags: string[];
+  mediaUrls: string[];
+  status: ContentStatus;
+  postId: string;
+  scheduledPublishAt: Date;
+  scheduledTimezone: string;
+  rejectedAt: Date;
+}>;
 
 // ============================================
 // Prisma Implementation
@@ -135,6 +147,10 @@ export class PrismaContentRepository implements IContentRepository {
 
   async create(data: GeneratedContentCreateInput): Promise<GeneratedContent> {
     return prisma.generatedContent.create({ data: data as any });
+  }
+
+  async update(id: string, data: UpdateContentInput): Promise<GeneratedContent> {
+    return prisma.generatedContent.update({ where: { id }, data: data as any });
   }
 
   async updateStatus(id: string, status: ContentStatus): Promise<GeneratedContent> {

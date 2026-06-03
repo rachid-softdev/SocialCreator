@@ -16,3 +16,9 @@ if (!("NEXTAUTH_SECRET" in process.env)) {
 if (!("NEXTAUTH_URL" in process.env)) {
   process.env.NEXTAUTH_URL = "http://localhost:3000";
 }
+if (!("ANTHROPIC_API_KEY" in process.env)) {
+  process.env.ANTHROPIC_API_KEY = "test-anthropic-key-for-testing";
+}
+if (!("OPENAI_API_KEY" in process.env)) {
+  process.env.OPENAI_API_KEY = "test-openai-key-for-testing";
+}

@@ -22,6 +22,7 @@ describe("Job Queue", () => {
   describe("enqueueJob", () => {
     it("should return a string ID", () => {
       const id = enqueueJob("content-generate", {
+        userId: "u1",
         profileId: "p1",
         platform: "X",
         brief: "test",
@@ -33,12 +34,14 @@ describe("Job Queue", () => {
 
     it("should generate unique IDs for consecutive calls", () => {
       const id1 = enqueueJob("content-generate", {
+        userId: "u1",
         profileId: "p1",
         platform: "X",
         brief: "test",
         agentId: "a1",
       });
       const id2 = enqueueJob("content-generate", {
+        userId: "u2",
         profileId: "p2",
         platform: "INSTAGRAM",
         brief: "test2",
@@ -59,6 +62,7 @@ describe("Job Queue", () => {
 
     it("should reflect number of queued jobs after enqueue", () => {
       enqueueJob("content-generate", {
+        userId: "u1",
         profileId: "p1",
         platform: "X",
         brief: "test",
@@ -69,6 +73,7 @@ describe("Job Queue", () => {
 
     it("should reduce to 0 when queued jobs are dequeued", () => {
       enqueueJob("content-generate", {
+        userId: "u1",
         profileId: "p1",
         platform: "X",
         brief: "test",
