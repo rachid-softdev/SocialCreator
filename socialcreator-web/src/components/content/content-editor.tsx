@@ -5,7 +5,7 @@ import type { GeneratedContentWithRelations } from "@socialcreator/types/agent";
 import { PLATFORM_CONSTRAINTS } from "@socialcreator/types/agent";
 import { PLATFORMS } from "@socialcreator/types/profile";
 import { cn } from "@socialcreator/utils";
-import { Eye, Hash, Save, X } from "lucide-react";
+import { Calendar, Eye, Hash, Save, Send, X } from "lucide-react";
 import { useState } from "react";
 import { MultiPlatformPreview } from "./platform-preview";
 
@@ -41,6 +41,31 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
   };
 
   const isOverLimit = textContent.length > constraints.maxChars;
+
+  // ── API-based actions ──────────────────────────────────────
+
+  const handleSaveDraft = async () => {
+    try {
+      const res = await fetch(`/api/v1/content/${content.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ textContent, hashtags }),
+      });
+      if (res.ok) {
+        onSave({ textContent, hashtags });
+      }
+    } catch {
+      // Silent failure — the parent can handle error display
+    }
+  };
+
+  const handleSchedule = () => {
+    // @todo Open schedule modal
+  };
+
+  const handlePublishNow = () => {
+    // @todo Publish directly
+  };
 
   return (
     <div className="space-y-6">
@@ -153,14 +178,44 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
         >
           Cancel
         </button>
-        <button
-          onClick={handleSave}
-          disabled={isSaving || isOverLimit}
-          className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="flex items-center gap-2 ml-auto">
+          {content.status === "DRAFT" && (
+            <>
+              <button
+                onClick={handleSaveDraft}
+                disabled={isSaving || isOverLimit}
+                className="flex items-center gap-2 px-4 py-2 rounded-pill text-body-sm text-ink bg-surface-strong hover:bg-hairline transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? "Saving..." : "Save Draft"}
+              </button>
+              <button
+                onClick={handleSchedule}
+                className="flex items-center gap-2 px-4 py-2 rounded-pill text-body-sm text-ink bg-surface-strong hover:bg-hairline transition-colors"
+              >
+                <Calendar className="w-4 h-4" />
+                Schedule
+              </button>
+              <button
+                onClick={handlePublishNow}
+                className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Publish Now
+              </button>
+            </>
+          )}
+          {content.status !== "DRAFT" && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving || isOverLimit}
+              className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

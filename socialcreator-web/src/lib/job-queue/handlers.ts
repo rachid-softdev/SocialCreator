@@ -55,20 +55,21 @@ registerHandler("content-generate", async (payload: ContentGeneratePayload) => {
     "Processing content-generate job",
   );
 
-  const { content: contentRepo } = getRepositories();
+  const { generateAndSaveContent } = await import("@/lib/content/generator");
 
-  // Create a DRAFT content entry
-  const content = await contentRepo.create({
+  const results = await generateAndSaveContent({
     profileId: payload.profileId,
     platform: payload.platform,
-    textContent: `Generated content for ${payload.platform}: ${payload.brief}`,
-    mediaUrls: [],
-    hashtags: [],
-    status: "DRAFT",
-    runId: null,
+    brief: payload.brief,
+    keywords: payload.keywords,
+    brandVoice: payload.brandVoice,
+    count: payload.count,
   });
 
-  logger.info({ contentId: content.id }, "Content generated successfully");
+  logger.info(
+    { count: results.length, platform: payload.platform },
+    "Content generated successfully via LLM",
+  );
 });
 
 registerHandler("publish", async (payload: PublishPayload) => {

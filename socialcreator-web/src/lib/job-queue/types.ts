@@ -16,10 +16,14 @@ export interface AgentRunPayload {
 }
 
 export interface ContentGeneratePayload {
+  userId: string;
   profileId: string;
   platform: Platform;
   brief: string;
   agentId: string;
+  keywords?: string[];
+  brandVoice?: string;
+  count?: number;
 }
 
 export interface PublishPayload {

@@ -45,6 +45,10 @@ vi.mock("@/lib/validate-url", () => ({
   validateMediaUrlWithDns: (...args: unknown[]) => validateMediaUrlWithDnsMock(...args),
 }));
 
+vi.mock("@/lib/content/generator", () => ({
+  generateAndSaveContent: vi.fn(),
+}));
+
 // Import the module under test (this registers handlers)
 import { getJobHandler } from "@/lib/job-queue/handlers";
 import logger from "@/lib/logger";
@@ -330,37 +334,40 @@ describe("Production Job Handlers", () => {
   });
 
   describe("content-generate handler", () => {
-    it("should use repositories for content creation", async () => {
-      const repos = mockGetRepositories();
-      repos.content.create.mockResolvedValue({
-        id: "new-content-1",
-        profileId: "profile-1",
-        platform: "X",
-        textContent: "Generated content for X: test brief",
-        mediaUrls: [],
-        hashtags: [],
-        status: "DRAFT",
-        runId: null,
-      });
+    it("should call generateAndSaveContent with correct payload", async () => {
+      const { generateAndSaveContent } = await import("@/lib/content/generator");
+      (generateAndSaveContent as ReturnType<typeof vi.fn>).mockResolvedValue([
+        {
+          id: "new-content-1",
+          platform: "X",
+          textContent: "Generated content",
+          hashtags: [],
+          status: "DRAFT",
+        },
+      ]);
 
       const handler = getJobHandler("content-generate");
       expect(handler).toBeDefined();
 
       await handler?.({
+        userId: "user-1",
         profileId: "profile-1",
         platform: "X",
         brief: "test brief",
         agentId: "agent-1",
+        keywords: ["ai"],
+        brandVoice: "Professional",
+        count: 2,
       });
 
-      expect(repos.content.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          profileId: "profile-1",
-          platform: "X",
-          textContent: expect.stringContaining("test brief"),
-          status: "DRAFT",
-        }),
-      );
+      expect(generateAndSaveContent).toHaveBeenCalledWith({
+        profileId: "profile-1",
+        platform: "X",
+        brief: "test brief",
+        keywords: ["ai"],
+        brandVoice: "Professional",
+        count: 2,
+      });
     });
   });
 
