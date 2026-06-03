@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 
@@ -83,7 +84,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       reason: reason || null,
     });
   } catch (error) {
-    console.error("Error rejecting content:", error);
+    logger.error({ err: error }, "Error rejecting content");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

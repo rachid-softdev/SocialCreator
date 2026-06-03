@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { canDeleteTeam } from "@/lib/team-permissions";
 
@@ -52,7 +53,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       message: "Team deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting team:", error);
+    logger.error({ err: error }, "Error deleting team");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

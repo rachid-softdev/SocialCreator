@@ -2,16 +2,16 @@
  * Tests for job queue
  * - enqueueJob() returns a string ID
  * - getQueueSize() returns a number
- * - Jobs execute and are removed from queue on completion
- * - Failed jobs are retried
+ * - Jobs are tracked in the queue until processed
+ * - Queued count reflects pending jobs
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enqueueJob, getQueueSize } from "../job-queue";
+import { clearQueue, dequeueJob, enqueueJob, getQueueSize } from "../job-queue";
 
 describe("Job Queue", () => {
   beforeEach(() => {
-    // Clear any pending jobs between tests
+    clearQueue();
     vi.useFakeTimers();
   });
 
@@ -21,14 +21,29 @@ describe("Job Queue", () => {
 
   describe("enqueueJob", () => {
     it("should return a string ID", () => {
-      const id = enqueueJob("test-job", vi.fn());
+      const id = enqueueJob("content-generate", {
+        profileId: "p1",
+        platform: "X",
+        brief: "test",
+        agentId: "a1",
+      });
       expect(typeof id).toBe("string");
       expect(id.length).toBeGreaterThan(0);
     });
 
     it("should generate unique IDs for consecutive calls", () => {
-      const id1 = enqueueJob("job-1", vi.fn());
-      const id2 = enqueueJob("job-2", vi.fn());
+      const id1 = enqueueJob("content-generate", {
+        profileId: "p1",
+        platform: "X",
+        brief: "test",
+        agentId: "a1",
+      });
+      const id2 = enqueueJob("content-generate", {
+        profileId: "p2",
+        platform: "INSTAGRAM",
+        brief: "test2",
+        agentId: "a2",
+      });
       expect(id1).not.toBe(id2);
     });
   });
@@ -42,22 +57,27 @@ describe("Job Queue", () => {
       expect(getQueueSize()).toBe(0);
     });
 
-    it("should reflect number of pending jobs when async execution is pending", () => {
-      // Jobs are removed from the queue map immediately when they start executing
-      // inside queueMicrotask, so synchronously the queue shows 1 before the microtask runs
-      const _id = enqueueJob("pending-job", vi.fn());
-      // The job is still in the queue until the microtask processes it
+    it("should reflect number of queued jobs after enqueue", () => {
+      enqueueJob("content-generate", {
+        profileId: "p1",
+        platform: "X",
+        brief: "test",
+        agentId: "a1",
+      });
       expect(getQueueSize()).toBe(1);
     });
 
-    it("should reduce size as jobs complete", async () => {
-      const fn = vi.fn().mockResolvedValue(undefined);
-      enqueueJob("quick-job", fn);
+    it("should reduce to 0 when queued jobs are dequeued", () => {
+      enqueueJob("content-generate", {
+        profileId: "p1",
+        platform: "X",
+        brief: "test",
+        agentId: "a1",
+      });
+      expect(getQueueSize()).toBe(1);
 
-      // Wait for microtask to process
-      await vi.runAllTimersAsync();
-
-      // After processing, the job should be removed
+      const job = dequeueJob();
+      expect(job).not.toBeNull();
       expect(getQueueSize()).toBe(0);
     });
   });

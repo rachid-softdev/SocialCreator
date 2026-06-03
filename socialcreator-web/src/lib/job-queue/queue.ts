@@ -20,7 +20,9 @@ const PRIORITY_ORDER: Record<JobPriority, number> = {
   low: 3,
 };
 
-const jobQueue: Job[] = [];
+const MAX_QUEUE_SIZE = 10_000;
+
+let jobQueue: Job[] = [];
 const activeJobs = new Set<string>();
 
 /**
@@ -31,6 +33,10 @@ export function enqueueJob<T extends JobPayload>(
   payload: T,
   options: JobOptions = {},
 ): string {
+  if (jobQueue.length >= MAX_QUEUE_SIZE) {
+    throw new Error(`Queue is full (max ${MAX_QUEUE_SIZE} jobs)`);
+  }
+
   const id = randomUUID();
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const job: Job = {
@@ -89,6 +95,8 @@ export function completeJob(id: string, result?: unknown): void {
   activeJobs.delete(id);
 
   logger.debug({ jobId: id, type: job.type }, "Job completed");
+
+  trimArchive();
 }
 
 /**
@@ -130,6 +138,8 @@ export function failJob(id: string, error: string): void {
       "Job failed after all retries",
     );
   }
+
+  trimArchive();
 }
 
 /**
@@ -153,8 +163,39 @@ export function getQueueStatus() {
 }
 
 /**
+ * Get number of currently queued jobs (backward compat with old getQueueSize)
+ */
+export function getQueueSize(): number {
+  return jobQueue.filter((j) => j.status === "queued").length;
+}
+
+/**
  * Get number of currently active (running) jobs
  */
 export function getActiveCount(): number {
   return activeJobs.size;
+}
+
+/**
+ * Clear all jobs from the queue (for testing)
+ */
+export function clearQueue(): void {
+  jobQueue.length = 0;
+  activeJobs.clear();
+}
+
+const MAX_ARCHIVE_SIZE = 5_000;
+function trimArchive(): void {
+  const completedCount = jobQueue.filter(
+    (j) => j.status === "completed" || j.status === "failed",
+  ).length;
+  if (completedCount > MAX_ARCHIVE_SIZE) {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h
+    jobQueue = jobQueue.filter(
+      (j) =>
+        j.status === "queued" ||
+        j.status === "running" ||
+        (j.completedAt && j.completedAt > cutoff),
+    );
+  }
 }

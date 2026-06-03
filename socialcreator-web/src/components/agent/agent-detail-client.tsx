@@ -10,6 +10,7 @@ import { RunList } from "@/components/agent/run-list";
 import { ContentList } from "@/components/content/content-list";
 import { PlatformBadge } from "@/components/content/platform-badge";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import logger from "@/lib/logger";
 import { AgentRunModal } from "./agent-run-modal";
 
 interface AgentDetailClientProps {
@@ -54,7 +55,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
         setIsActive(!isActive);
       }
     } catch (error) {
-      console.error("Error toggling agent:", error);
+      logger.error({ err: error }, "Error toggling agent");
     }
   };
 
@@ -69,7 +70,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
         setRunsTotalPages(data.totalPages);
       }
     } catch (error) {
-      console.error("Error fetching runs:", error);
+      logger.error({ err: error }, "Error fetching runs");
     } finally {
       setIsLoadingRuns(false);
     }
@@ -243,7 +244,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
                   router.refresh();
                 }
               } catch (error) {
-                console.error("Error rerunning:", error);
+                logger.error({ err: error }, "Error rerunning");
               }
             }}
           />

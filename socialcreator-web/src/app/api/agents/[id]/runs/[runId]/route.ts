@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
@@ -62,7 +63,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error("Error fetching run:", error);
+    logger.error({ err: error }, "Error fetching run");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -119,21 +120,21 @@ export async function POST(_request: Request, { params }: RouteParams) {
           userId: session.user.id,
           profileId: agent.profileId,
         }).catch((err) => {
-          console.error("Failed to enqueue agent run:", err);
+          logger.error({ err }, "Failed to enqueue agent run");
         });
       } else {
         const { triggerAgentRun } = await import("@/lib/agent-runner");
         triggerAgentRun({ agentId: id, runId: newRun.id }).catch((err) => {
-          console.error("Failed to trigger agent run:", err);
+          logger.error({ err }, "Failed to trigger agent run");
         });
       }
     } catch (err) {
-      console.error("Error triggering agent run:", err);
+      logger.error({ err }, "Error triggering agent run");
     }
 
     return NextResponse.json({ runId: newRun.id, status: newRun.status }, { status: 201 });
   } catch (error) {
-    console.error("Error rerunning agent:", error);
+    logger.error({ err: error }, "Error rerunning agent");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

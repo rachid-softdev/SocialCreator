@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
+import logger from "@/lib/logger";
 
 interface EditProfileFormProps {
   profile: {
@@ -64,7 +65,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
 
       router.push("/profiles");
     } catch (error) {
-      console.error("Error deleting profile:", error);
+      logger.error({ err: error }, "Error deleting profile");
       setIsDeleting(false);
     }
   };

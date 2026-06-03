@@ -7,6 +7,7 @@
 import type { Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { buildAuthUrl } from "@/lib/oauth/auth-url";
 import { prisma } from "@/lib/prisma";
 
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ redirectUrl });
   } catch (error) {
-    console.error("Error generating OAuth redirect URL:", error);
+    logger.error({ err: error }, "Error generating OAuth redirect URL");
     return NextResponse.json({ error: "Failed to generate OAuth URL" }, { status: 500 });
   }
 }

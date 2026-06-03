@@ -3565,8 +3565,487 @@ Sprint 5 ─┤  (peuvent être parallèles — dépendent tous deux de Sprint 3
 Sprint 6 ──────┤  (dépend de S5 pour le pipeline complet)
 Sprint 7 ──────┤  (dépend de S6 pour les données d'historique)
 Sprint 8 ──────────┤  (dépend de S7 pour le endpoint metrics)
+Sprint 9 ───────────────┤  (dépend de S8 pour observabilité, S7+S6 pour queue)
 ```
 
 ---
 
-*Plan mis à jour le 2026-06-02 — Sprints 1-3 complétés, Sprints 4-8 détaillés*
+# 🚀 SPRINT 9 — Security Hardening + Queue Activation (semaine 11-12)
+
+---
+
+## S9.1 — Authentifier les endpoints de métriques et monitoring
+
+**Fichiers** : `src/app/api/metrics/route.ts` (MODIFIER), `src/app/api/v1/queue/status/route.ts` (MODIFIER), `src/lib/utils/metrics.ts` (MODIFIER), `src/lib/middleware/api-middleware.ts` (MODIFIER)
+**Effort** : M
+**Dépendances** : Sprint 8 (observabilité)
+**Test** : `curl /api/metrics` → 401 sans auth, 200 avec auth
+
+### Contexte
+Audit de sécurité (Sprint 9 planning) a révélé 3 High-severity findings :
+- **H-01**: `/api/metrics` est **non authentifié** et expose des resource IDs dans les labels Prometheus
+- **H-02**: `/api/v1/queue/status` est **non authentifié**, expose les métriques opérationnelles
+- **H-03**: Les labels Prometheus utilisent `request.nextUrl.pathname` (IDs de ressources en clair → cardinalité infinie + fuite de données)
+
+### Modifications
+
+**1. Ajouter l'auth à `/api/metrics`** :
+
+```tsx
+// src/app/api/metrics/route.ts
+import { register } from "@/lib/utils/metrics";
+import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  // 🔒 Authentification requise
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const metrics = await register.metrics();
+  return new NextResponse(metrics, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+```
+
+**2. Sanitiser les labels Prometheus** :
+
+```tsx
+// src/lib/middleware/api-middleware.ts (dans le helper de métriques)
+// AVANT : request.nextUrl.pathname
+// APRÈS : pattern généralisé (/api/v1/content/[id])
+function sanitizeRoute(pathname: string): string {
+  return pathname.replace(/\/[a-z0-9]{24,}(?:\/|$)/gi, "/[id]$1");
+}
+```
+
+**3. Ajouter l'auth à `/api/v1/queue/status`** :
+
+```tsx
+// src/app/api/v1/queue/status/route.ts
+import { withApiMiddleware } from "@/lib/middleware/api-middleware";
+
+export const GET = withApiMiddleware(async ({ userId }) => {
+  const { getQueueStatus } = await import("@/lib/job-queue");
+  const status = getQueueStatus();
+
+  return NextResponse.json(status, {
+    headers: { "Cache-Control": "no-store" },
+  });
+});
+```
+
+### Vérification
+1. `curl /api/metrics` sans cookie → 401
+2. `curl /api/metrics` avec session → 200, métriques Prometheus
+3. `curl /api/v1/queue/status` sans cookie → 401
+4. Labels Prometheus ne contiennent plus d'IDs de ressources
+5. `pnpm test:run` OK
+
+---
+
+## S9.2 — Éliminer tous les `console.*` restants
+
+**Fichiers** : Multiples — 135+ occurrences dans `src/`
+**Effort** : M
+**Dépendances** : Sprint 8 (logger Pino en place)
+**Test** : `rg "console\.(error|warn|log|debug)" --type ts src/` → 0 occurrences
+
+### Contexte
+Sprint 8 avait pour objectif d'éliminer les `console.error`, mais 135+ appels `console.*` persistent dans :
+- `entitlements/cache.ts` (~22 appels)
+- Routes API (`api/content/*/route.ts`)
+- `components/error-boundary.tsx`
+- Divers services et composants
+
+### Modifications
+
+**1. Remplacer systématiquement** :
+
+```bash
+# Pattern pour chaque occurrence :
+# AVANT :
+console.error("Error:", error);
+console.warn("Warning:", msg);
+console.log("Debug:", data);
+console.debug("Trace:", x);
+
+# APRÈS :
+logger.error({ err: error }, "Error message");
+logger.warn({ ...context }, "Warning message");
+logger.info({ ...context }, "Info message");
+logger.debug({ ...context }, "Debug message");
+```
+
+**2. Cas particuliers** :
+- `console.log` de résultats d'appels API → `logger.info`
+- `console.warn` de cache → `logger.warn`
+- `console.error` dans error-boundary → `logger.error`
+- `console.debug` de dev → `logger.debug`
+
+### Vérification
+1. `rg "console\.(error|warn|log|debug)" --type ts src/` — 0 occurrences
+2. `rg "console\.(error|warn|log|debug)" --type tsx src/` — 0 occurrences (sauf erreurs légitimes dans les tests)
+3. `pnpm test:run` OK
+
+---
+
+## S9.3 — Activer le worker de queue via `instrumentation.ts`
+
+**Fichiers** : `socialcreator-web/src/instrumentation.ts` (NOUVEAU), `src/lib/job-queue/worker.ts` (MODIFIER)
+**Effort** : S
+**Dépendances** : S9.1, S9.2
+**Test** : Logs au démarrage → "Job worker started"
+
+### Contexte
+Le nouveau job-queue avec handler registry, types typés et file prioritaire existe depuis Sprint 5/6 mais `startWorker()` n'est **jamais appelé**. Les jobs sont enqueués mais jamais exécutés.
+
+Next.js 14+ supporte `instrumentation.ts` comme standard pour l'initialisation serveur.
+
+### Modifications
+
+**1. Nouveau fichier : `src/instrumentation.ts`** :
+
+```tsx
+// src/instrumentation.ts
+import { startWorker } from "@/lib/job-queue";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    startWorker();
+  }
+}
+```
+
+**2. Vérifier `next.config.js`** : `instrumentationHook: true` doit être activé.
+
+### Vérification
+1. Logs au démarrage : `"Job worker started"`
+2. Enqueuer un job → le handler s'exécute
+3. `pnpm test:run` OK
+
+---
+
+## S9.4 — Nettoyage du code mort : supprimer `infrastructure/job-queue.ts`
+
+**Fichiers** : `src/lib/infrastructure/job-queue.ts` (SUPPRIMER), `src/lib/infrastructure/trigger.ts` (MODIFIER)
+**Effort** : XS
+**Dépendances** : Module resolution fix (déjà fait)
+**Test** : `pnpm typecheck` — 0 erreurs
+
+### Contexte
+La vieille queue (`infrastructure/job-queue.ts`) est devenue du code mort après le fix de résolution de module (Sprint 9 planning). Le nouveau barrel `job-queue.ts` pointe maintenant vers `./job-queue/index`.
+
+### Modifications
+
+**1. Supprimer `src/lib/infrastructure/job-queue.ts`** :
+```bash
+Remove-Item -LiteralPath "src/lib/infrastructure/job-queue.ts"
+```
+
+**2. Vérifier que `infrastructure/trigger.ts` n'importe plus l'ancienne queue**.
+
+### Vérification
+1. `pnpm typecheck` — 0 nouvelles erreurs
+2. `pnpm test:run` — tous les tests passent
+
+---
+
+## S9.5 — Hardening de la queue (taille max, timeout, type safety)
+
+**Fichiers** : `src/lib/job-queue/queue.ts` (MODIFIER), `src/lib/job-queue/worker.ts` (MODIFIER), `src/lib/job-queue/handlers.ts` (MODIFIER)
+**Effort** : S
+**Dépendances** : S9.4
+**Test** : `pnpm test:run`
+
+### Contexte
+Review de code a identifié :
+
+- **M-02**: Queue non bornée → risque OOM
+- **L-04**: Pas de timeout dans le worker → jobs bloquants
+- **M-01**: `(payload: any)` dans handler registry → perte de type safety
+- **m6**: Archive de jobs jamais nettoyée
+
+### Modifications
+
+**1. Ajouter MAX_QUEUE_SIZE** :
+
+```tsx
+// Dans queue.ts
+const MAX_QUEUE_SIZE = 10_000;
+
+export function enqueueJob<T extends JobPayload>(...): string {
+  if (jobQueue.length >= MAX_QUEUE_SIZE) {
+    throw new Error(`Queue full (max ${MAX_QUEUE_SIZE} jobs)`);
+  }
+  // ... existing logic
+}
+```
+
+**2. Timeout dans le worker** :
+
+```tsx
+// Dans worker.ts
+const JOB_TIMEOUT_MS = 30_000;
+
+async function processJob(job: Job): Promise<void> {
+  const handler = getJobHandler(job.type);
+  if (!handler) { failJob(job.id, `No handler for type: ${job.type}`); return; }
+
+  try {
+    await Promise.race([
+      handler(job.payload as any),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Job timed out")), JOB_TIMEOUT_MS),
+      ),
+    ]);
+    completeJob(job.id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    failJob(job.id, message);
+  }
+}
+```
+
+**3. Typer handler registry** :
+
+```tsx
+// Dans handlers.ts — AVANT :
+const handlerRegistry = new Map<JobType, (payload: any) => Promise<void>>();
+
+// APRÈS :
+const handlerRegistry = new Map<JobType, (payload: JobPayload) => Promise<void>>();
+
+// Worker.ts aussi : enlever le "as any"
+await handler(job.payload);  // plutôt que handler(job.payload as any)
+```
+
+**4. Nettoyage périodique des vieux jobs** :
+
+```tsx
+// Ajouter à queue.ts
+const MAX_ARCHIVE_SIZE = 5_000;
+
+function trimArchive(): void {
+  const completedCount = jobQueue.filter(j => j.status === "completed" || j.status === "failed").length;
+  if (completedCount > MAX_ARCHIVE_SIZE) {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h
+    jobQueue = jobQueue.filter(j =>
+      j.status === "queued" || j.status === "running" ||
+      (j.completedAt && j.completedAt > cutoff)
+    );
+  }
+}
+```
+
+### Vérification
+1. `pnpm typecheck` — 0 erreurs
+2. `pnpm test:run` — 73 files pass
+3. Queue pleine → `enqueueJob` lance une erreur
+
+---
+
+## S9.6 — Rate limiting per-user pour les routes authentifiées
+
+**Fichiers** : `src/lib/middleware/api-middleware.ts` (MODIFIER)
+**Effort** : XS
+**Dépendances** : Aucune
+**Test** : `pnpm test:run`
+
+### Contexte
+Le rate limiting utilise l'IP comme identifiant, même pour les routes authentifiées (M-03). Plusieurs utilisateurs derrière un NAT partagent le même bucket, et un attaquant peut contourner avec des IPs rotatives.
+
+### Modifications
+
+```tsx
+// Dans api-middleware.ts, remplacer :
+const rateLimitResult = await withRateLimit(request);
+
+// Par :
+const rateLimitResult = await withRateLimit(request, {
+  userId: session?.user?.id,
+});
+```
+
+### Vérification
+1. `pnpm test:run` — OK
+2. Utilisateur authentifié → rate limit basé sur userId, pas IP
+
+---
+
+## S9.7 — Ajouter les tests OAuth manquants
+
+**Fichiers** : `src/lib/oauth/__tests__/auth-url.test.ts` (NOUVEAU), `src/lib/oauth/__tests__/encryption.test.ts` (NOUVEAU), `src/lib/oauth/__tests__/token-exchange.test.ts` (NOUVEAU)
+**Effort** : M
+**Dépendances** : Aucune
+**Test** : `pnpm test:run` — nouveaux tests passent
+
+### Contexte
+Le module OAuth (7 fichiers, ~1000 lignes) est 0% couvert par les tests. C'est le chemin le plus critique pour la sécurité (token exchange, encryption, refresh).
+
+### Modifications
+
+**1. Tester le chiffrement des tokens** :
+
+```tsx
+// src/lib/oauth/__tests__/encryption.test.ts
+import { describe, expect, it } from "vitest";
+import { encryptToken, decryptToken } from "../encryption";
+
+describe("OAuth Token Encryption", () => {
+  it("should encrypt and decrypt a token correctly", () => {
+    const token = "my-secret-access-token-12345";
+    const encrypted = encryptToken(token);
+    expect(encrypted).not.toBe(token);
+    expect(encrypted).toContain(":"); // iv:ciphertext format
+
+    const decrypted = decryptToken(encrypted);
+    expect(decrypted).toBe(token);
+  });
+
+  it("should produce different ciphertexts for same plaintext (IV)", () => {
+    const token = "constant-token";
+    const encrypted1 = encryptToken(token);
+    const encrypted2 = encryptToken(token);
+    expect(encrypted1).not.toBe(encrypted2);
+  });
+
+  it("should throw on invalid ciphertext", () => {
+    expect(() => decryptToken("invalid:format")).toThrow();
+  });
+});
+```
+
+**2. Tester les auth URLs** :
+
+```tsx
+// src/lib/oauth/__tests__/auth-url.test.ts
+describe("OAuth Auth URLs", () => {
+  it("should generate valid X/Twitter auth URL", () => { /* ... */ });
+  it("should include state parameter for CSRF protection", () => { /* ... */ });
+  it("should use correct scopes per platform", () => { /* ... */ });
+});
+```
+
+**3. Tester le token exchange** :
+
+```tsx
+// src/lib/oauth/__tests__/token-exchange.test.ts
+describe("OAuth Token Exchange", () => {
+  it("should validate code before exchange", () => { /* ... */ });
+  it("should handle provider error response", () => { /* ... */ });
+  it("should persist tokens after exchange", () => { /* ... */ });
+});
+```
+
+### Vérification
+1. `pnpm test:run` — nouveaux tests OAuth passent
+2. Coverage OAuth > 70%
+
+---
+
+## S9.8 — Correction des erreurs typecheck restantes
+
+**Fichiers** : `src/lib/infrastructure/stripe.ts`, `src/lib/job-queue/handlers.ts`, `src/lib/observability/__tests__/logger.test.ts`, `src/lib/scheduling/optimizer.ts`, `src/lib/services/cgu-guard.ts`, `src/lib/services/publish-guard.ts`, `src/lib/utils/crypto.ts`
+**Effort** : S
+**Dépendances** : Aucune
+**Test** : `pnpm typecheck` — 0 erreurs
+
+### Contexte
+Typecheck révèle ~10 erreurs préexistantes dans des fichiers non liés aux changements des sprints récents. Ces erreurs doivent être corrigées pour rétablir `pnpm typecheck` propre.
+
+### Modifications
+
+| Fichier | Erreur | Correction |
+|---------|--------|------------|
+| `stripe.ts` | `string \| null` non assignable à `string` | Ajouter `?? ""` ou `String()` |
+| `handlers.ts:173` | `processVideoPipeline` inexistant | Vérifier l'import ou ajouter un guard |
+| `logger.test.ts` | Types implicits `any` | Ajouter les annotations de type |
+| `logger.test.ts:38` | `stdTimeFunctions` sur mock | Étendre le type du mock |
+| `optimizer.ts:206` | `_dayOfWeek` non utilisé | Supprimer le préfixe `_` ou utiliser la variable |
+| `cgu-guard.ts:50` | `_cguAccepted` non utilisé | Supprimer ou utiliser |
+| `publish-guard.ts:67` | `{}` non assignable à `string` | Corriger le typage |
+| `crypto.ts:31` | `string \| undefined` non assignable | Ajouter un default |
+
+### Vérification
+1. `pnpm typecheck` — 0 erreurs
+2. `pnpm test:run` — 73 files pass
+
+---
+
+# 📋 RÉCAPITULATIF SPRINT 9
+
+## Sprint 9 — Security Hardening + Queue Activation (~15 fichiers)
+
+| ID | Fichier | Action |
+|----|---------|--------|
+| S9.1 | `src/app/api/metrics/route.ts` | MODIFIER — Auth + label sanitization |
+| S9.1 | `src/app/api/v1/queue/status/route.ts` | MODIFIER — Auth middleware |
+| S9.1 | `src/lib/middleware/api-middleware.ts` | MODIFIER — Sanitize route labels |
+| S9.2 | Multiples fichiers `src/` | MODIFIER — `console.*` → `logger.*` |
+| S9.3 | `src/instrumentation.ts` | **NOUVEAU** — Worker startup |
+| S9.4 | `src/lib/infrastructure/job-queue.ts` | **SUPPRIMER** — Dead code |
+| S9.5 | `src/lib/job-queue/queue.ts` | MODIFIER — MAX_QUEUE_SIZE, archive trim |
+| S9.5 | `src/lib/job-queue/worker.ts` | MODIFIER — Job timeout, remove `as any` |
+| S9.5 | `src/lib/job-queue/handlers.ts` | MODIFIER — `any` → `JobPayload` |
+| S9.6 | `src/lib/middleware/api-middleware.ts` | MODIFIER — Rate limit per-user |
+| S9.7 | `src/lib/oauth/__tests__/*.test.ts` | **NOUVEAU** — 3 fichiers de test |
+| S9.8 | `src/lib/infrastructure/stripe.ts` | MODIFIER — Null checks |
+| S9.8 | `src/lib/scheduling/optimizer.ts` | MODIFIER — Unused variable |
+| S9.8 | `src/lib/services/cgu-guard.ts` | MODIFIER — Unused variable |
+| S9.8 | `src/lib/services/publish-guard.ts` | MODIFIER — Type mismatch |
+| S9.8 | `src/lib/utils/crypto.ts` | MODIFIER — Null check |
+
+---
+
+# ✅ CHECKLIST DE LIVRAISON PAR SPRINT
+
+## Sprint 9
+- [ ] `/api/metrics` authentifié — 401 sans session
+- [ ] Labels Prometheus sanitisés (pas d'IDs dans les labels)
+- [ ] `/api/v1/queue/status` authentifié
+- [ ] Aucun `console.*` dans `src/` (sauf tests)
+- [ ] `startWorker()` appelé via `instrumentation.ts`
+- [ ] `infrastructure/job-queue.ts` supprimé
+- [ ] MAX_QUEUE_SIZE (10K) + timeout jobs (30s)
+- [ ] Handler registry typé (`JobPayload` au lieu de `any`)
+- [ ] Rate limiting per-user pour routes authentifiées
+- [ ] Tests OAuth (>70% coverage)
+- [ ] `pnpm typecheck` — 0 erreurs
+- [ ] `pnpm test:run` — 73+ files pass
+
+---
+
+# 🔗 DÉPENDANCES ENTRE SPRINTS
+
+```
+Sprint 9 (Security + Queue Activation) — Sprint 8 (observability, logger),
+  Sprint 7 (metrics endpoint), Sprint 6 (job queue)
+```
+
+## Ordre recommandé d'exécution
+
+```
+Sprint 9.1 (Metrics auth) ─┐
+Sprint 9.2 (Console sweep) ─┤  (peuvent être parallélisés)
+Sprint 9.6 (Rate limit) ────┤
+                           │
+Sprint 9.3 (Worker) ─────────┤  (dépend de 9.1-9.2 pour logger)
+Sprint 9.4 (Dead code) ─────┤  (dépend du fix module resolution, déjà fait)
+Sprint 9.5 (Hardening) ─────┤  (dépend de 9.3 pour le worker)
+                           │
+Sprint 9.7 (OAuth tests) ───────┤  (indépendant)
+Sprint 9.8 (Typecheck fixes) ───┤  (indépendant)
+```
+
+---
+
+*Plan mis à jour le 2026-06-03 — Sprints 1-8 complétés, Sprint 9 détaillé*

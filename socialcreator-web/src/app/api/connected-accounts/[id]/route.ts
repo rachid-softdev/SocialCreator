@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { decryptToken } from "@/lib/crypto";
+import logger from "@/lib/logger";
 import { revokeToken } from "@/lib/oauth/revoke";
 import { verifyConnectedAccountOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
@@ -46,7 +47,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       createdAt: account.createdAt.toISOString(),
     });
   } catch (error) {
-    console.error("Error fetching connected account:", error);
+    logger.error({ err: error }, "Error fetching connected account");
     return NextResponse.json({ error: "Failed to fetch connected account" }, { status: 500 });
   }
 }
@@ -78,7 +79,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       const accessToken = decryptToken(account.accessToken);
       tokenRevoked = await revokeToken(account.platform as any, accessToken);
     } catch (error) {
-      console.warn("Failed to revoke token on platform:", error);
+      logger.warn({ err: error }, "Failed to revoke token on platform");
       // Continue with deletion even if revocation fails
     }
 
@@ -92,7 +93,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       tokenRevoked,
     });
   } catch (error) {
-    console.error("Error deleting connected account:", error);
+    logger.error({ err: error }, "Error deleting connected account");
     return NextResponse.json({ error: "Failed to delete connected account" }, { status: 500 });
   }
 }

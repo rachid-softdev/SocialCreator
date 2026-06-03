@@ -7,6 +7,7 @@ import { Filter, Grid, List, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import logger from "@/lib/logger";
 
 interface VideoAsset {
   id: string;
@@ -64,7 +65,7 @@ export default function AllVideosPage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        console.error("Failed to fetch profiles:", error);
+        logger.error({ err: error }, "Failed to fetch profiles");
       }
     };
 
@@ -100,7 +101,7 @@ export default function AllVideosPage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        console.error("Failed to fetch videos:", error);
+        logger.error({ err: error }, "Failed to fetch videos");
       } finally {
         if (!signal.aborted) {
           setIsLoading(false);

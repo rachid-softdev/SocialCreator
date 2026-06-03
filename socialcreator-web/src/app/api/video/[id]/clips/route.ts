@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { createMuxClip, getMuxStreamUrl, getMuxThumbnailUrl } from "@/lib/mux";
 import { prisma } from "@/lib/prisma";
 
@@ -82,7 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ clips });
   } catch (error) {
-    console.error("Error creating clips:", error);
+    logger.error({ err: error }, "Error creating clips");
     return NextResponse.json({ error: "Clip creation failed" }, { status: 500 });
   }
 }

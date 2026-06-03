@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiKeyManager } from "@/components/mcp/api-key-manager";
 import { McpTester } from "@/components/mcp/mcp-tester";
+import logger from "@/lib/logger";
 
 interface ApiKey {
   id: string;
@@ -24,7 +25,7 @@ export default function ApiKeysPage() {
       const data = await response.json();
       setKeys(data.keys || []);
     } catch (error) {
-      console.error("Failed to fetch keys:", error);
+      logger.error({ err: error }, "Failed to fetch keys");
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +137,7 @@ curl -X POST https://socialcreator.com/api/mcp \\
 })
 
 const data = await response.json()
-console.log(data.result)`}
+logger.info({ data: data.result }, "API result")`}
           </pre>
         </div>
 

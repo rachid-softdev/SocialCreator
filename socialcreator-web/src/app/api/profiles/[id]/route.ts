@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { verifyProfileOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
@@ -45,7 +46,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ profile: result.data });
   } catch (error) {
-    console.error("Error fetching profile:", error);
+    logger.error({ err: error }, "Error fetching profile");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -82,7 +83,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ profile });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    logger.error({ err: error }, "Error updating profile");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -108,7 +109,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting profile:", error);
+    logger.error({ err: error }, "Error deleting profile");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

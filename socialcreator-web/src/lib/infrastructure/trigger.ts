@@ -6,4 +6,4 @@
  * See: src/lib/job-queue.ts
  */
 
-export { enqueueJob, getQueueSize } from "./job-queue";
+export { enqueueJob, getQueueSize } from "@/lib/job-queue";

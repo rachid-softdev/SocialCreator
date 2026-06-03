@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const uploadMediaSchema = z.object({
@@ -75,7 +76,7 @@ export async function GET(request: Request) {
       totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
-    console.error("Error fetching media:", error);
+    logger.error({ err: error }, "Error fetching media");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ media }, { status: 201 });
   } catch (error) {
-    console.error("Error uploading media:", error);
+    logger.error({ err: error }, "Error uploading media");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

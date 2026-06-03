@@ -1,1 +1,1 @@
-export * from "./infrastructure/job-queue";
+export * from "./job-queue/index";

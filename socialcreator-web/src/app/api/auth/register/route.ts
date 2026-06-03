@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error({ err: error }, "Registration error");
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }

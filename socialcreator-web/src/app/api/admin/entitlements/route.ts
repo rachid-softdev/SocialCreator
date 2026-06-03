@@ -11,6 +11,7 @@ import { z } from "zod";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import type { OverrideInput } from "@/lib/entitlements/types";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const ALLOWED_SORT_FIELDS = ["key", "name", "sortOrder", "createdAt", "isActive"] as const;
@@ -97,7 +98,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Invalid resource" }, { status: 400 });
     }
   } catch (error) {
-    console.error("[Admin Entitlements] GET error:", error);
+    logger.error({ err: error }, "[Admin Entitlements] GET error");
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[Admin Entitlements] POST error:", error);
+    logger.error({ err: error }, "[Admin Entitlements] POST error");
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

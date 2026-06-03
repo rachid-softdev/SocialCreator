@@ -4,7 +4,7 @@ import { cn } from "@socialcreator/utils";
 import { useEffect, useState } from "react";
 
 interface QueueStatusData {
-  pending: number;
+  queued: number;
   running: number;
   completed: number;
   failed: number;
@@ -18,7 +18,7 @@ interface StatCard {
 }
 
 const statCards: StatCard[] = [
-  { label: "Pending", key: "pending", color: "text-blue" },
+  { label: "Queued", key: "queued", color: "text-blue" },
   { label: "Running", key: "running", color: "text-blue" },
   { label: "Completed", key: "completed", color: "text-green" },
   { label: "Failed", key: "failed", color: "text-red" },

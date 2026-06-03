@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getDowngradeService } from "@/lib/entitlements/downgrade";
+import logger from "@/lib/logger";
 
 export async function GET(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   try {
@@ -30,7 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
       features: affected,
     });
   } catch (error) {
-    console.error("[Downgrade Preview] GET error:", error);
+    logger.error({ err: error }, "[Downgrade Preview] GET error");
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

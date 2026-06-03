@@ -5,17 +5,15 @@
 
 import { NextResponse } from "next/server";
 import { addVersionHeaders } from "@/lib/api-version";
-import { getQueueStatus } from "@/lib/job-queue";
+import { withApiMiddleware } from "@/lib/middleware/api-middleware";
 
-// GET /api/v1/queue/status
-export async function GET() {
+export const GET = withApiMiddleware(async ({ userId }) => {
+  const { getQueueStatus } = await import("@/lib/job-queue");
   const status = getQueueStatus();
 
   const response = NextResponse.json(status, {
-    headers: {
-      "Cache-Control": "no-store",
-    },
+    headers: { "Cache-Control": "no-store" },
   });
   addVersionHeaders(response, "v1");
   return response;
-}
+});

@@ -12,6 +12,7 @@ import type { Platform } from "@prisma/client";
 import { startOfDayUTC } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -145,7 +146,7 @@ export async function GET(request: Request) {
       },
     );
   } catch (error) {
-    console.error("Error fetching analytics:", error);
+    logger.error({ err: error }, "Error fetching analytics");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

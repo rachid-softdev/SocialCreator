@@ -170,6 +170,6 @@ registerHandler("publish", async (payload: PublishPayload) => {
 registerHandler("video-process", async (payload: VideoProcessPayload) => {
   logger.info({ videoAssetId: payload.videoAssetId }, "Processing video-process job");
 
-  const { processVideoPipeline } = await import("@/lib/services/video-pipeline");
-  await processVideoPipeline(payload.videoAssetId);
+  const { runVideoPipeline } = await import("@/lib/services/video-pipeline");
+  await runVideoPipeline(payload.videoAssetId, payload.profileId, []);
 });

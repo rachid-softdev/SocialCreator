@@ -14,6 +14,7 @@
  */
 
 import type { Platform } from "@prisma/client";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getValidAccessToken } from "@/lib/tokens";
 
@@ -115,7 +116,10 @@ export async function syncProfileAnalytics(profileId: string): Promise<{
         platformsSynced++;
       }
     } catch (error) {
-      console.error(`Failed to sync ${account.platform} for profile ${profileId}:`, error);
+      logger.error(
+        { err: error, platform: account.platform, profileId },
+        "Failed to sync analytics for profile",
+      );
     }
   }
 
@@ -185,7 +189,7 @@ async function fetchMetaInsights(
       followers: 0, // Nécessite un appel séparé
     };
   } catch (error) {
-    console.error("Meta insights error:", error);
+    logger.error({ err: error }, "Meta insights error");
     return null;
   }
 }
@@ -222,7 +226,7 @@ async function fetchYouTubeInsights(
       followers: parseInt(stats.subscriberCount, 10) || 0,
     };
   } catch (error) {
-    console.error("YouTube insights error:", error);
+    logger.error({ err: error }, "YouTube insights error");
     return null;
   }
 }
@@ -256,7 +260,7 @@ async function fetchLinkedInInsights(
       followers: 0,
     };
   } catch (error) {
-    console.error("LinkedIn insights error:", error);
+    logger.error({ err: error }, "LinkedIn insights error");
     return null;
   }
 }
@@ -286,7 +290,7 @@ async function fetchPinterestInsights(
       followers: data.analytics?.monthly_follower || 0,
     };
   } catch (error) {
-    console.error("Pinterest insights error:", error);
+    logger.error({ err: error }, "Pinterest insights error");
     return null;
   }
 }

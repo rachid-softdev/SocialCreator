@@ -3,6 +3,7 @@
  * Interface + Prisma Implementation
  */
 
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { cacheService, getEntitlementsCacheKey } from "./cache";
 import type {
@@ -344,7 +345,7 @@ export class PrismaEntitlementRepository implements IEntitlementRepository {
       // this the same as hitting the limit. Acceptable because:
       //   1. Usage tracking is best-effort (non-critical path)
       //   2. Returning false is the safe default (deny rather than over-consume)
-      console.error("[Entitlements] Failed to consume usage:", error);
+      logger.error({ err: error }, "[Entitlements] Failed to consume usage");
       return { success: false, currentCount: 0 };
     }
   }

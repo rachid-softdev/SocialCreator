@@ -49,6 +49,8 @@ const rootLogger: Logger = pino({
       "*.idempotencyKey",
       "ip",
       "*.ip",
+      "*.error",
+      "err.stack",
     ],
     censor: "[REDACTED]",
   },

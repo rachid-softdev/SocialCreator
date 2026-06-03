@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -19,7 +20,7 @@ export async function GET() {
       cguAccepted: user?.cguAccepted ?? false,
     });
   } catch (error) {
-    console.error("Error checking CGU status:", error);
+    logger.error({ err: error }, "Error checking CGU status");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Composable API middleware for routes
- * Applies: body-size-limit → rate-limiting → auth → request-id → error handling
+ * Applies: body-size-limit ? rate-limiting ? auth ? request-id ? error handling
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -27,6 +27,15 @@ export type ApiHandler = (
 /** Maximum request body size in bytes (100 KB) */
 const MAX_BODY_SIZE = 100_000;
 
+/**
+ * Sanitize route pathname by replacing resource IDs (24+ char hex strings) with [id].
+ * This prevents unbounded Prometheus label cardinality and data leakage.
+ */
+function sanitizeRoute(pathname: string): string {
+  // Replace resource IDs (24+ char hex strings) with [id]
+  return pathname.replace(/\/[a-z0-9]{24,}(?:\/|$)/gi, "/[id]");
+}
+
 export function withApiMiddleware(handler: ApiHandler) {
   return async (
     request: NextRequest,
@@ -50,18 +59,20 @@ export function withApiMiddleware(handler: ApiHandler) {
       }
     }
 
-    // 2. Rate limiting
-    const rateLimitResult = await withRateLimit(request);
-    if (rateLimitResult) return rateLimitResult;
-
-    // 3. Auth check
+    // 2. Auth check (needed before rate limiting so we can identify the user)
     const session = await auth();
     if (!session?.user?.id) {
       return unauthorized();
     }
 
+    // 3. Rate limiting (per-user)
+    const rateLimitResult = await withRateLimit(request, {
+      userId: session.user.id,
+    });
+    if (rateLimitResult) return rateLimitResult;
+
     // 4. Execute handler (with request context)
-    const route = request.nextUrl.pathname;
+    const route = sanitizeRoute(request.nextUrl.pathname);
     const method = request.method;
     try {
       const apiVersion = resolveApiVersion(route, request.headers).version;

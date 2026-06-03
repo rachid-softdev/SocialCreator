@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function PUT(request: Request) {
@@ -30,7 +31,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, hasProfile: profileCount > 0 });
   } catch (error) {
-    console.error("Error accepting CGU:", error);
+    logger.error({ err: error }, "Error accepting CGU");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

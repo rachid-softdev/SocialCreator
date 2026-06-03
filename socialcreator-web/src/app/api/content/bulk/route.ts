@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { publishContent } from "@/lib/publishers";
 import { getValidAccessToken } from "@/lib/tokens";
@@ -206,7 +207,7 @@ export async function POST(request: Request) {
       results,
     });
   } catch (error) {
-    console.error("Error in bulk operation:", error);
+    logger.error({ err: error }, "Error in bulk operation");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

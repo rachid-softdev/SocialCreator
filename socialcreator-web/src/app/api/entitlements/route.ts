@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getFeatureGateService } from "@/lib/entitlements/service";
+import logger from "@/lib/logger";
 
 export async function GET(_request: Request) {
   try {
@@ -43,7 +44,7 @@ export async function GET(_request: Request) {
       },
     });
   } catch (error) {
-    console.error("[Entitlements] GET error:", error);
+    logger.error({ err: error }, "[Entitlements] GET error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

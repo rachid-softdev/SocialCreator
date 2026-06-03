@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const createTeamSchema = z.object({
@@ -57,7 +58,7 @@ export async function GET(_request: Request) {
 
     return NextResponse.json({ teams });
   } catch (error) {
-    console.error("Error fetching teams:", error);
+    logger.error({ err: error }, "Error fetching teams");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ team }, { status: 201 });
   } catch (error) {
-    console.error("Error creating team:", error);
+    logger.error({ err: error }, "Error creating team");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

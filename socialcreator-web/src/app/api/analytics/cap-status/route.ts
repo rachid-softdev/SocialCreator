@@ -5,6 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { getProfileCapStatus } from "@/lib/publish-guard";
 
 export async function GET(request: Request) {
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(capStatus);
   } catch (error) {
-    console.error("Error getting cap status:", error);
+    logger.error({ err: error }, "Error getting cap status");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

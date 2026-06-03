@@ -3,6 +3,7 @@
 import { FileText, Layers, Send, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StatsCard } from "@/components/dashboard/stats-card";
+import logger from "@/lib/logger";
 
 interface DashboardStats {
   stats: {
@@ -26,7 +27,7 @@ export function DashboardStats() {
         const json: DashboardStats = await res.json();
         setData(json);
       } catch (err) {
-        console.error("Dashboard stats fetch error:", err);
+        logger.error({ err }, "Dashboard stats fetch error");
       } finally {
         setLoading(false);
       }

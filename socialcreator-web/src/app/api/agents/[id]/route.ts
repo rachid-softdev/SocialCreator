@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { verifyAgentOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
@@ -67,7 +68,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error("Error fetching agent:", error);
+    logger.error({ err: error }, "Error fetching agent");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -121,7 +122,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ agent });
   } catch (error) {
-    console.error("Error updating agent:", error);
+    logger.error({ err: error }, "Error updating agent");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -152,7 +153,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting agent:", error);
+    logger.error({ err: error }, "Error deleting agent");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

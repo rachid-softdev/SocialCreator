@@ -7,6 +7,7 @@
 import type { Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import {
   exchangeCodeForToken,
   getRedirectUri,
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Handle OAuth errors
     if (error) {
-      console.error("OAuth error:", error, errorDescription);
+      logger.error({ err: error, errorDescription }, "OAuth error");
       return NextResponse.redirect(
         new URL(
           `/profiles?error=oauth_error&message=${encodeURIComponent(errorDescription || error)}`,
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         state,
       );
     } catch (tokenError) {
-      console.error("Token exchange error:", tokenError);
+      logger.error({ err: tokenError }, "Token exchange error");
       return NextResponse.redirect(
         new URL(`/profiles/${profileId}/accounts?error=token_exchange_failed`),
       );
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
       userInfo = await getUserInfo(platformUpper as OAuthProvider, tokenResponse.access_token);
     } catch (userInfoError) {
-      console.error("User info error:", userInfoError);
+      logger.error({ err: userInfoError }, "User info error");
       // Continue with available info, use fallback values
       userInfo = {
         accountId: "unknown",
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Redirect to the accounts page with success
     return NextResponse.redirect(new URL(`/profiles/${profileId}/accounts?connected=success`));
   } catch (error) {
-    console.error("OAuth callback error:", error);
+    logger.error({ err: error }, "OAuth callback error");
     // Try to extract profileId from state for redirect
     try {
       const { searchParams } = new URL(request.url);

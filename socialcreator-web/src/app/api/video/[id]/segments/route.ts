@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { generateContent } from "@/lib/llm";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const SEGMENT_PROMPT = `Voici le transcript d'une vidéo.
@@ -68,7 +69,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
         segments = parsed;
       }
     } catch (parseError) {
-      console.error("Failed to parse segments:", parseError);
+      logger.error({ err: parseError }, "Failed to parse segments");
       return NextResponse.json(
         { error: "Failed to parse segments from AI response" },
         { status: 500 },
@@ -86,7 +87,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ segments });
   } catch (error) {
-    console.error("Error identifying segments:", error);
+    logger.error({ err: error }, "Error identifying segments");
     return NextResponse.json({ error: "Segment identification failed" }, { status: 500 });
   }
 }

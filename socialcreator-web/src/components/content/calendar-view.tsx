@@ -20,6 +20,7 @@ import {
 } from "date-fns";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import logger from "@/lib/logger";
 
 export interface CalendarEvent {
   id: string;
@@ -60,7 +61,7 @@ export function CalendarView() {
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load calendar events";
-        console.error("Failed to load calendar events:", err);
+        logger.error({ err }, "Failed to load calendar events");
         if (!cancelled) setFetchError(message);
       } finally {
         if (!cancelled) setLoading(false);

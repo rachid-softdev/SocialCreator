@@ -14,7 +14,7 @@ const mockGetRequestId = vi.fn();
 
 // Mock pino to capture constructor options and child logger bindings
 vi.mock("pino", () => {
-  const mockChild = vi.fn((bindings: any) => {
+  const mockChild = vi.fn<any, any>((bindings: any) => {
     capturedChildBindings.push(bindings);
     return {
       info: vi.fn(),
@@ -25,17 +25,19 @@ vi.mock("pino", () => {
     };
   });
 
-  const mockPino = vi.fn((opts: any) => {
-    capturedPinoOptions.push(opts);
-    return {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
-      child: mockChild,
-    };
-  });
-  mockPino.stdTimeFunctions = { isoTime: "isoTime" };
+  const mockPino = Object.assign(
+    vi.fn((opts: any) => {
+      capturedPinoOptions.push(opts);
+      return {
+        info: vi.fn(),
+        error: vi.fn(),
+        warn: vi.fn(),
+        debug: vi.fn(),
+        child: mockChild,
+      };
+    }),
+    { stdTimeFunctions: { isoTime: "isoTime" as const } },
+  );
   return { default: mockPino };
 });
 

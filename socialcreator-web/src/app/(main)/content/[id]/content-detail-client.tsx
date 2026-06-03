@@ -12,6 +12,7 @@ import { PlatformBadge } from "@/components/content/platform-badge";
 import { PublishButton } from "@/components/content/publish-button";
 import { SchedulePanel } from "@/components/content/schedule-panel";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import logger from "@/lib/logger";
 
 interface ContentDetailClientProps {
   content: GeneratedContentWithRelations;
@@ -43,7 +44,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
         setIsEditing(false);
       }
     } catch (error) {
-      console.error("Error saving:", error);
+      logger.error({ err: error }, "Error saving");
     } finally {
       setIsSaving(false);
     }
@@ -60,7 +61,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error("Error approving:", error);
+      logger.error({ err: error }, "Error approving");
     } finally {
       setIsApproving(false);
     }
@@ -77,7 +78,7 @@ export function ContentDetailClient({ content }: ContentDetailClientProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error("Error rejecting:", error);
+      logger.error({ err: error }, "Error rejecting");
     } finally {
       setIsApproving(false);
     }

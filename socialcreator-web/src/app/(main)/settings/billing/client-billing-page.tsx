@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type Stripe from "stripe";
 import { SubscriptionStatus } from "@/components/billing/subscription-status";
+import logger from "@/lib/logger";
 import { getPlanData, type PlanKey } from "@/lib/stripe";
 
 interface ClientBillingPageProps {
@@ -42,7 +43,7 @@ export function ClientBillingPage({
         alert(data.error);
       }
     } catch (error) {
-      console.error("Failed to open portal:", error);
+      logger.error({ err: error }, "Failed to open portal");
       alert("Failed to open billing portal");
     } finally {
       setIsLoadingPortal(false);

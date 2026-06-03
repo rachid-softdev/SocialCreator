@@ -1,6 +1,7 @@
 import { analyticsIngestSchema } from "@socialcreator/types";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(analytics, { status: 201 });
   } catch (error) {
-    console.error("Analytics ingest error:", error);
+    logger.error({ err: error }, "Analytics ingest error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getFeatureGateService } from "@/lib/entitlements/service";
+import logger from "@/lib/logger";
 
 export async function GET(request: Request) {
   try {
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[Debug Entitlements] GET error:", error);
+    logger.error({ err: error }, "[Debug Entitlements] GET error");
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

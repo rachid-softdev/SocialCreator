@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getFeatureGateService } from "@/lib/entitlements/service";
+import logger from "@/lib/logger";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   try {
@@ -17,7 +18,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ or
 
     return NextResponse.json({ success: true, orgId });
   } catch (error) {
-    console.error("[Cache Invalidate] POST error:", error);
+    logger.error({ err: error }, "[Cache Invalidate] POST error");
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
