@@ -43,11 +43,7 @@ function statusColor(status: string): string {
 
 const MAX_PREVIEW_CHARS = 100;
 
-export function CalendarEventDetail({
-  event,
-  onClose,
-  position,
-}: CalendarEventDetailProps) {
+export function CalendarEventDetail({ event, onClose, position }: CalendarEventDetailProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -73,7 +69,8 @@ export function CalendarEventDetail({
 
   const fullText = event.textContent || event.title || "Untitled";
   const isTruncatable = fullText.length > MAX_PREVIEW_CHARS;
-  const displayText = expanded || !isTruncatable ? fullText : `${fullText.slice(0, MAX_PREVIEW_CHARS).trimEnd()}...`;
+  const displayText =
+    expanded || !isTruncatable ? fullText : `${fullText.slice(0, MAX_PREVIEW_CHARS).trimEnd()}...`;
 
   const formattedTime = format(new Date(event.scheduledAt), "MMM d, yyyy 'at' h:mm a");
 
@@ -85,9 +82,7 @@ export function CalendarEventDetail({
     >
       {/* Text content */}
       <div className="mb-3">
-        <p className="text-body-sm text-ink whitespace-pre-wrap break-words">
-          {displayText}
-        </p>
+        <p className="text-body-sm text-ink whitespace-pre-wrap break-words">{displayText}</p>
         {isTruncatable && (
           <button
             type="button"

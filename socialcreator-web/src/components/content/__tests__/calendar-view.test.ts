@@ -552,9 +552,30 @@ describe("CalendarView — platform filter", () => {
 
   it("should filter events by platform when a platform is selected", () => {
     const events: CalendarEvent[] = [
-      { id: "c-1", title: "A", textContent: "A", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-15T10:00:00.000Z" },
-      { id: "c-2", title: "B", textContent: "B", platform: "INSTAGRAM", status: "SCHEDULED", scheduledAt: "2025-06-15T14:00:00.000Z" },
-      { id: "c-3", title: "C", textContent: "C", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-16T09:00:00.000Z" },
+      {
+        id: "c-1",
+        title: "A",
+        textContent: "A",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T10:00:00.000Z",
+      },
+      {
+        id: "c-2",
+        title: "B",
+        textContent: "B",
+        platform: "INSTAGRAM",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T14:00:00.000Z",
+      },
+      {
+        id: "c-3",
+        title: "C",
+        textContent: "C",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-16T09:00:00.000Z",
+      },
     ];
 
     const selectedPlatform = "X";
@@ -566,13 +587,28 @@ describe("CalendarView — platform filter", () => {
 
   it("should include all events when platform filter is null", () => {
     const events: CalendarEvent[] = [
-      { id: "c-1", title: "A", textContent: "A", platform: "X", status: "SCHEDULED", scheduledAt: "2025-06-15T10:00:00.000Z" },
-      { id: "c-2", title: "B", textContent: "B", platform: "INSTAGRAM", status: "SCHEDULED", scheduledAt: "2025-06-15T14:00:00.000Z" },
+      {
+        id: "c-1",
+        title: "A",
+        textContent: "A",
+        platform: "X",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T10:00:00.000Z",
+      },
+      {
+        id: "c-2",
+        title: "B",
+        textContent: "B",
+        platform: "INSTAGRAM",
+        status: "SCHEDULED",
+        scheduledAt: "2025-06-15T14:00:00.000Z",
+      },
     ];
 
     // When filter is null (all), no platform filtering occurs
     const platformFilter: string | null = null;
-    const filtered = platformFilter === null ? events : events.filter((e) => e.platform === platformFilter);
+    const filtered =
+      platformFilter === null ? events : events.filter((e) => e.platform === platformFilter);
 
     expect(filtered).toHaveLength(2);
   });
@@ -653,9 +689,7 @@ describe("CalendarView — today's schedule list", () => {
 
     const todayEvents = events
       .filter((e) => isToday(new Date(e.scheduledAt)))
-      .sort(
-        (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-      );
+      .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
     expect(todayEvents).toHaveLength(3);
     expect(todayEvents[0].id).toBe("c-1"); // Morning first

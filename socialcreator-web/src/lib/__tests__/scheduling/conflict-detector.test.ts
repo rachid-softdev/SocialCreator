@@ -7,7 +7,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ========== Inline types matching source ==========
 
-type Platform = "INSTAGRAM" | "TIKTOK" | "LINKEDIN" | "YOUTUBE" | "X" | "FACEBOOK" | "THREADS" | "PINTEREST";
+type Platform =
+  | "INSTAGRAM"
+  | "TIKTOK"
+  | "LINKEDIN"
+  | "YOUTUBE"
+  | "X"
+  | "FACEBOOK"
+  | "THREADS"
+  | "PINTEREST";
 
 interface ConflictWarning {
   type: "time_conflict" | "daily_cap";

@@ -163,10 +163,7 @@ export function CalendarView() {
   }
 
   return (
-    <div
-      ref={calendarRef}
-      className="bg-surface-card border border-hairline rounded-xl relative"
-    >
+    <div ref={calendarRef} className="bg-surface-card border border-hairline rounded-xl relative">
       {/* Platform Filter */}
       <div className="px-6 py-4 border-b border-hairline">
         <CalendarPlatformFilter

@@ -29,9 +29,7 @@ export class RedisQueueBackend implements QueueBackend {
   }
 
   async enqueue(_job: Omit<Job, "id">): Promise<string> {
-    throw new Error(
-      "RedisQueueBackend requires bullmq. Install it with: pnpm add bullmq ioredis",
-    );
+    throw new Error("RedisQueueBackend requires bullmq. Install it with: pnpm add bullmq ioredis");
   }
 
   async dequeue(): Promise<Job | null> {

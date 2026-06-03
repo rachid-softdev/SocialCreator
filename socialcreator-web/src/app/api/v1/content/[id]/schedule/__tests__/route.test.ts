@@ -154,7 +154,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
       mockScheduleContentRepo.update.mockResolvedValue(updatedContent);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(mockScheduleContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockScheduleProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
@@ -243,9 +246,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       );
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          warnings: expect.arrayContaining([
-            expect.objectContaining({ type: "time_conflict" }),
-          ]),
+          warnings: expect.arrayContaining([expect.objectContaining({ type: "time_conflict" })]),
         }),
         expect.anything(),
       );
@@ -263,7 +264,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
     it("should return 400 when scheduledPublishAt is missing from body", async () => {
       requestJsonMock.current = vi.fn().mockResolvedValue({});
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -274,7 +278,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: "not-a-date",
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -285,7 +292,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: 123456,
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -302,7 +312,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2025-06-01T12:00:00.000Z"));
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Scheduled time must be in the future");
       expect(response).toEqual({
@@ -329,7 +342,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: futureDate.toISOString(),
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(response).toEqual({ status: 200 });
       expect(mockScheduleContentRepo.update).toHaveBeenCalled();
@@ -346,7 +362,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only DRAFT or APPROVED content can be scheduled");
       expect(response).toEqual({
@@ -362,7 +381,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only DRAFT or APPROVED content can be scheduled");
       expect(response).toEqual({
@@ -378,7 +400,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only DRAFT or APPROVED content can be scheduled");
       expect(response).toEqual({
@@ -392,7 +417,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
     it("should return 404 when content is not found", async () => {
       mockScheduleContentRepo.findById.mockResolvedValue(null);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "nonexistent" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "nonexistent" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -405,7 +433,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -417,7 +448,10 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(null);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -487,7 +521,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
 
   describe("happy path", () => {
     it("should cancel schedule for SCHEDULED content", async () => {
-      const content = makeMockContent({ status: "SCHEDULED", scheduledPublishAt: new Date("2099-12-31") });
+      const content = makeMockContent({
+        status: "SCHEDULED",
+        scheduledPublishAt: new Date("2099-12-31"),
+      });
       const profile = makeMockProfile();
       const cancelledContent = {
         ...content,
@@ -499,7 +536,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
       mockScheduleContentRepo.cancelSchedule.mockResolvedValue(cancelledContent);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(mockScheduleContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockScheduleProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
@@ -519,7 +559,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
 
   describe("validation errors", () => {
     it("should return 400 when content ID is missing", async () => {
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: {} });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: {} },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Content ID is required");
       expect(response).toEqual({ status: 400, error: "Content ID is required" });
@@ -532,7 +575,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only SCHEDULED content can be unscheduled");
       expect(response).toEqual({
@@ -548,7 +594,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only SCHEDULED content can be unscheduled");
     });
@@ -560,7 +609,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only SCHEDULED content can be unscheduled");
     });
@@ -570,7 +622,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
     it("should return 404 when content is not found", async () => {
       mockScheduleContentRepo.findById.mockResolvedValue(null);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "nonexistent" } });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "nonexistent" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -583,7 +638,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -595,7 +653,10 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(null);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
