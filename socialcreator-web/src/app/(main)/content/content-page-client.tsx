@@ -11,6 +11,7 @@ import { ContentList } from "@/components/content/content-list";
 import { PageHeader } from "@/components/layout/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { SearchBar } from "@/components/shared/search-bar";
+import logger from "@/lib/logger";
 
 interface ContentPageClientProps {
   initialContents: GeneratedContentWithRelations[];
@@ -98,7 +99,7 @@ export const ContentPageClient = memo(function ContentPageClient({
         setSelectedContent(null);
       }
     } catch (error) {
-      console.error("Error approving:", error);
+      logger.error({ err: error }, "Error approving");
     } finally {
       setIsApproving(false);
     }
@@ -118,7 +119,7 @@ export const ContentPageClient = memo(function ContentPageClient({
         setSelectedContent(null);
       }
     } catch (error) {
-      console.error("Error rejecting:", error);
+      logger.error({ err: error }, "Error rejecting");
     } finally {
       setIsApproving(false);
     }

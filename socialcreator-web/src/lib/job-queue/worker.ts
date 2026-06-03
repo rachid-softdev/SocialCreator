@@ -10,6 +10,7 @@ import type { Job } from "./types";
 
 const POLL_INTERVAL_MS = 500;
 const MAX_CONCURRENT = 3;
+const JOB_TIMEOUT_MS = 30_000;
 
 let running = false;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -62,7 +63,12 @@ async function processJob(job: Job): Promise<void> {
   }
 
   try {
-    await handler(job.payload as any);
+    await Promise.race([
+      handler(job.payload),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Job timed out")), JOB_TIMEOUT_MS),
+      ),
+    ]);
     completeJob(job.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

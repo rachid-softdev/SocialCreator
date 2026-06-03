@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { transcribeVideo } from "@/lib/deepgram";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -51,7 +52,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ transcript });
   } catch (error) {
-    console.error("Error transcribing video:", error);
+    logger.error({ err: error }, "Error transcribing video");
 
     // Update status to ERROR
     await prisma.videoAsset.update({

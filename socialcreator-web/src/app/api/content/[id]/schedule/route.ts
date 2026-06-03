@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { canPublish } from "@/lib/publish-guard";
 
@@ -101,7 +102,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       warning,
     });
   } catch (error) {
-    console.error("Error scheduling content:", error);
+    logger.error({ err: error }, "Error scheduling content");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -143,7 +144,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ content: updatedContent });
   } catch (error) {
-    console.error("Error canceling schedule:", error);
+    logger.error({ err: error }, "Error canceling schedule");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

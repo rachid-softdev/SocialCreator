@@ -15,6 +15,7 @@
 import { hashContent } from "@socialcreator/utils";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { canPublish, recordPublish } from "@/lib/publish-guard";
 import { getPublisher } from "@/lib/publishers";
@@ -164,7 +165,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
       );
     }
   } catch (error) {
-    console.error("Error publishing content:", error);
+    logger.error({ err: error }, "Error publishing content");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

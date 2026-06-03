@@ -14,6 +14,7 @@ import { TextInput } from "@socialcreator/ui/text-input";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import logger from "@/lib/logger";
 
 export function TeamDialog() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export function TeamDialog() {
         setError("Failed to create team");
       }
     } catch (err) {
-      console.error("Failed to create team:", err);
+      logger.error({ err }, "Failed to create team");
       setError("Failed to create team");
     } finally {
       setLoading(false);

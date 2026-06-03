@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { generateContent } from "@/lib/llm";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { buildGenerationPrompt, buildSystemPrompt } from "@/lib/prompts";
 
@@ -127,7 +128,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ contents });
   } catch (error) {
-    console.error("Error generating content:", error);
+    logger.error({ err: error }, "Error generating content");
     return NextResponse.json({ error: "Content generation failed" }, { status: 500 });
   }
 }

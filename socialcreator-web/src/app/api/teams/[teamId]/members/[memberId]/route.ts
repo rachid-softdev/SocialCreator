@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { canModifyMemberRole, canRemoveMember } from "@/lib/team-permissions";
 
@@ -62,7 +63,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       member,
     });
   } catch (error) {
-    console.error("Error updating member role:", error);
+    logger.error({ err: error }, "Error updating member role");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -102,7 +103,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       message: "Member removed from team",
     });
   } catch (error) {
-    console.error("Error removing member:", error);
+    logger.error({ err: error }, "Error removing member");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -203,7 +203,6 @@ function getDefaultNextSlot(platform: Platform): {
   reason: string;
 } {
   const now = new Date();
-  const _dayOfWeek = now.getDay();
   const hour = now.getHours();
 
   // Heuristiques par plateforme

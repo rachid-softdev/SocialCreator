@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const inviteSchema = z.object({
@@ -66,7 +67,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ members });
   } catch (error) {
-    console.error("Error fetching team members:", error);
+    logger.error({ err: error }, "Error fetching team members");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -141,7 +142,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {
-    console.error("Error inviting team member:", error);
+    logger.error({ err: error }, "Error inviting team member");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -190,7 +191,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error removing team member:", error);
+    logger.error({ err: error }, "Error removing team member");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -253,7 +254,7 @@ export async function PUT(
 
     return NextResponse.json({ member: updatedMember });
   } catch (error) {
-    console.error("Error updating member role:", error);
+    logger.error({ err: error }, "Error updating member role");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

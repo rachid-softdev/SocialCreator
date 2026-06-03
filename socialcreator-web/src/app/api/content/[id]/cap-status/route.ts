@@ -6,6 +6,7 @@
 import type { Platform } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { checkDailyCap } from "@/lib/publish-guard";
 
 interface RouteParams {
@@ -45,7 +46,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     return NextResponse.json(capStatus);
   } catch (error) {
-    console.error("Error getting cap status:", error);
+    logger.error({ err: error }, "Error getting cap status");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

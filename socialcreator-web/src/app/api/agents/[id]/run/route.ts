@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const createRunSchema = z.object({
@@ -74,23 +75,23 @@ export async function POST(request: Request, { params }: RouteParams) {
           userId: session.user.id,
           profileId: agent.profileId,
         }).catch((err) => {
-          console.error("Failed to enqueue agent run:", err);
+          logger.error({ err }, "Failed to enqueue agent run");
         });
       } else {
         // Development: Run synchronously
         const { triggerAgentRun } = await import("@/lib/agent-runner");
         triggerAgentRun({ agentId: id, runId: run.id }).catch((err) => {
-          console.error("Failed to trigger agent run:", err);
+          logger.error({ err }, "Failed to trigger agent run");
         });
       }
     } catch (err) {
-      console.error("Error triggering agent run:", err);
+      logger.error({ err }, "Error triggering agent run");
       // Don't fail the request - the run is created and can be retried
     }
 
     return NextResponse.json({ runId: run.id, status: run.status }, { status: 201 });
   } catch (error) {
-    console.error("Error creating agent run:", error);
+    logger.error({ err: error }, "Error creating agent run");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -141,7 +142,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
-    console.error("Error fetching agent runs:", error);
+    logger.error({ err: error }, "Error fetching agent runs");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

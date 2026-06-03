@@ -14,6 +14,7 @@ import { MuxPlayer } from "@/components/video/mux-player";
 import { TranscriptViewer } from "@/components/video/transcript-viewer";
 import { VideoTimeline } from "@/components/video/video-timeline";
 import { VideoUpload } from "@/components/video/video-upload";
+import logger from "@/lib/logger";
 
 interface VideoAsset {
   id: string;
@@ -363,8 +364,8 @@ export default function VideoPipelinePage() {
 
                 <ClipsList
                   clips={clips}
-                  onPreview={(clip) => console.log("Preview", clip)}
-                  onDelete={(clip) => console.log("Delete", clip)}
+                  onPreview={(clip) => logger.info({ clip }, "Preview")}
+                  onDelete={(clip) => logger.info({ clip }, "Delete")}
                 />
 
                 {currentStep === 4 && (

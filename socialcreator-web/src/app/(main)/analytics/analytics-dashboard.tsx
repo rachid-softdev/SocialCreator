@@ -8,6 +8,7 @@ import { ContentStatusBadge } from "@/components/content/content-status-badge";
 import { PlatformBadge } from "@/components/content/platform-badge";
 import { PublishStats } from "@/components/dashboard/publish-stats";
 import { PageHeader } from "@/components/layout/page-header";
+import logger from "@/lib/logger";
 
 interface AnalyticsDashboardProps {
   profiles: { id: string; name: string }[];
@@ -70,7 +71,7 @@ export function AnalyticsDashboard({
         setCapStatus(data);
       }
     } catch (error) {
-      console.error("Failed to load analytics:", error);
+      logger.error({ err: error }, "Failed to load analytics");
     } finally {
       setIsLoading(false);
     }

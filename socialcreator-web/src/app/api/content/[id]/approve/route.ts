@@ -1,6 +1,7 @@
 import { approveContentSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 import { isValidUuid } from "@/lib/sanitize";
@@ -74,7 +75,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ content: updatedContent });
   } catch (error) {
-    console.error("Error approving content:", error);
+    logger.error({ err: error }, "Error approving content");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

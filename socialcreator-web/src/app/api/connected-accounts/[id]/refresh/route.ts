@@ -6,6 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { type OAuthProvider, refreshAccessToken } from "@/lib/oauth";
 import { prisma } from "@/lib/prisma";
 import { updateAccountToken } from "@/lib/tokens";
@@ -70,7 +71,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         : null,
     });
   } catch (error) {
-    console.error("Error refreshing token:", error);
+    logger.error({ err: error }, "Error refreshing token");
     return NextResponse.json({ error: "Failed to refresh token" }, { status: 500 });
   }
 }

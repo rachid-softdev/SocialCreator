@@ -3,6 +3,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { AlertTriangle, CreditCard, Key, User } from "lucide-react";
 import { useState } from "react";
+import logger from "@/lib/logger";
 
 interface SettingsFormProps {
   onSave?: (data: { name: string; email: string }) => Promise<void>;
@@ -31,7 +32,7 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
     try {
       await onSave?.({ name, email });
     } catch (error) {
-      console.error("Save error:", error);
+      logger.error({ err: error }, "Save error");
     } finally {
       setIsSaving(false);
     }
@@ -42,7 +43,7 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
     try {
       await onDeleteAccount?.();
     } catch (error) {
-      console.error("Delete error:", error);
+      logger.error({ err: error }, "Delete error");
     } finally {
       setIsDeleting(false);
     }

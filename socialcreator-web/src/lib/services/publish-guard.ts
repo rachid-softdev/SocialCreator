@@ -63,7 +63,7 @@ export async function peekDailyCap(
   if (redis) {
     try {
       const key = getCapKey(profileId, platform);
-      const val = await redis.get(key);
+      const val = await redis.get<string>(key);
       const count = val ? parseInt(val, 10) : 0;
 
       return { allowed: count < max, count, max };

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { createBillingPortal } from "@/lib/stripe";
 
@@ -23,7 +24,7 @@ export async function POST() {
     const url = await createBillingPortal(user.stripeCustomerId);
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("Stripe portal error:", error);
+    logger.error({ err: error }, "Stripe portal error");
     return NextResponse.json({ error: "Failed to create billing portal session" }, { status: 500 });
   }
 }

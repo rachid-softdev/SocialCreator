@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import logger from "@/lib/logger";
 import { getPlanData, type PlanKey } from "@/lib/stripe";
 
 interface BillingOverviewProps {
@@ -97,7 +98,7 @@ export function BillingOverview({
     try {
       await onOpenPortal();
     } catch (error) {
-      console.error("Failed to open portal:", error);
+      logger.error({ err: error }, "Failed to open portal");
     } finally {
       setIsLoadingPortal(false);
     }
@@ -108,7 +109,7 @@ export function BillingOverview({
     try {
       onChangePlan(plan);
     } catch (error) {
-      console.error("Failed to change plan:", error);
+      logger.error({ err: error }, "Failed to change plan");
     } finally {
       setIsChangingPlan(false);
     }

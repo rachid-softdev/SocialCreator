@@ -65,13 +65,6 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
       }),
     );
 
-    // Map Stripe prices to our plans
-    const _priceMapping: Record<string, PaidPlanKey> = {
-      starter: "starter",
-      pro: "pro",
-      team: "team",
-    };
-
     const activePrices: Record<PaidPlanKey, number> = {
       starter: 5000, // fallback
       pro: 7000, // fallback
@@ -348,7 +341,7 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
 
   try {
     const subscription = await withRetry(() =>
-      stripe.subscriptions.retrieve(user.stripeSubscriptionId),
+      stripe.subscriptions.retrieve(user.stripeSubscriptionId!),
     );
 
     // Vérifier si la subscription va être annulée
@@ -419,7 +412,7 @@ export async function getInvoices(userId: string): Promise<Stripe.Invoice[]> {
 
   const invoices = await withRetry(() =>
     stripe.invoices.list({
-      customer: user.stripeCustomerId,
+      customer: user.stripeCustomerId!,
       limit: 10,
     }),
   );

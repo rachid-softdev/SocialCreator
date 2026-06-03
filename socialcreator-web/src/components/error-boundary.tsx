@@ -17,6 +17,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { Home, RefreshCw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
+import logger from "@/lib/logger";
 
 // ---------- ErrorBoundary (wrapper, default export) ----------
 
@@ -39,11 +40,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("Application error:", {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-    });
+    logger.error({ err: error, componentStack: errorInfo.componentStack }, "Application error");
   }
 
   render(): ReactNode {
@@ -68,12 +65,10 @@ interface ErrorProps {
 export function ErrorDisplay({ error, reset }: ErrorProps) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Application error:", {
-      message: error.message,
-      stack: error.stack,
-      digest: error.digest,
-      statusCode: error.statusCode,
-    });
+    logger.error(
+      { err: error, digest: error.digest, statusCode: error.statusCode },
+      "Application error",
+    );
   }, [error]);
 
   const isAuthError = error.message?.includes("Unauthorized") || error.statusCode === 401;

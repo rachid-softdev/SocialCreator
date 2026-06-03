@@ -13,6 +13,7 @@
  */
 
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export interface CguCheckOptions {
@@ -47,7 +48,6 @@ export async function requireCguAccepted(
 
   // Quick check via session token
   // Note: In NextAuth v5, the token contains additional info
-  const _cguAccepted = (session as any).user?.cguAccepted || false;
 
   // For certain actions, require that the user has really accepted the CGU
   // Perform a DB check to confirm
@@ -63,11 +63,7 @@ export async function requireCguAccepted(
     const url = new URL(request.url);
 
     // Audit log
-    console.warn("CGU not accepted", {
-      userId: session.user.id,
-      pathname: url.pathname,
-      timestamp: new Date().toISOString(),
-    });
+    logger.warn({ userId: session.user.id, pathname: url.pathname }, "CGU not accepted");
 
     throw {
       status: 403,

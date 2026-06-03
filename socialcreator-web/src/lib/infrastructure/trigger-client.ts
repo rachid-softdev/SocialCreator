@@ -3,7 +3,7 @@
  * Replaced Trigger.dev with in-process job queue for async execution
  */
 
-import { triggerAgentRun } from "@/lib/agent-runner";
+import type { AgentRunPayload } from "@/lib/job-queue";
 import { enqueueJob } from "@/lib/job-queue";
 
 export interface AgentRunJobPayload {
@@ -20,10 +20,12 @@ export interface AgentRunJobPayload {
 export async function enqueueAgentRun(payload: AgentRunJobPayload): Promise<void> {
   enqueueJob(
     "agent-run",
-    async () => {
-      await triggerAgentRun({ runId: payload.runId, agentId: payload.agentId });
-    },
-    { maxAttempts: 2, retryDelay: 5000 },
+    {
+      agentId: payload.agentId,
+      runId: payload.runId,
+      userId: payload.userId,
+    } satisfies AgentRunPayload,
+    { maxAttempts: 2, retryDelayMs: 5000 },
   );
 }
 

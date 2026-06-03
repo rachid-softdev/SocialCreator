@@ -3,6 +3,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
+import logger from "@/lib/logger";
 import { getPlanData, type PaidPlanKey, type PlanKey } from "@/lib/stripe";
 
 interface PricingTableProps {
@@ -35,7 +36,7 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
         const prices = await fetchActivePrices();
         setPlanPrices(prices);
       } catch (error) {
-        console.error("Failed to fetch prices:", error);
+        logger.error({ err: error }, "Failed to fetch prices");
         // Fallback to static prices on error
       } finally {
         setLoading(false);

@@ -4,12 +4,14 @@
 
 export { getJobHandler, registerHandler } from "./handlers";
 export {
+  clearQueue,
   completeJob,
   dequeueJob,
   enqueueJob,
   failJob,
   getActiveCount,
   getJob,
+  getQueueSize,
   getQueueStatus,
 } from "./queue";
 export type {

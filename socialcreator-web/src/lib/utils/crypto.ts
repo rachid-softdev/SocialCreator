@@ -28,7 +28,9 @@ const IV_LENGTH = 16;
  * Uses SHA-256 to get a consistent 32-byte hex key
  */
 function deriveKey(): Buffer {
-  return createHash("sha256").update(SECRET).digest();
+  return createHash("sha256")
+    .update(SECRET ?? "")
+    .digest();
 }
 
 /**

@@ -4,6 +4,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
@@ -39,7 +40,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting media:", error);
+    logger.error({ err: error }, "Error deleting media");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

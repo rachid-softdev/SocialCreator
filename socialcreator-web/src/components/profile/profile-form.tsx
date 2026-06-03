@@ -8,6 +8,7 @@ import { cn } from "@socialcreator/utils";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import logger from "@/lib/logger";
 import { BrandVoiceEditor } from "./brand-voice-editor";
 import { ContentBankEditor } from "./content-bank-editor";
 
@@ -62,7 +63,7 @@ export function ProfileForm({ initialData, onSubmit, isLoading = false }: Profil
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      logger.error({ err: error }, "Error submitting form");
       setErrors({ submit: "Failed to save profile. Please try again." });
     }
   };

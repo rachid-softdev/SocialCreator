@@ -3,6 +3,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { AlertTriangle, Check, Copy, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import logger from "@/lib/logger";
 
 interface ApiKey {
   id: string;
@@ -56,7 +57,7 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
         },
       ]);
     } catch (error) {
-      console.error("Failed to create key:", error);
+      logger.error({ err: error }, "Failed to create key");
     } finally {
       setIsCreating(false);
     }
@@ -77,7 +78,7 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
         prev.map((k) => (k.id === id ? { ...k, revokedAt: new Date().toISOString() } : k)),
       );
     } catch (error) {
-      console.error("Failed to revoke key:", error);
+      logger.error({ err: error }, "Failed to revoke key");
     } finally {
       setRevokingId(null);
     }

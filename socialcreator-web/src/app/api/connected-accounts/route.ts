@@ -7,6 +7,7 @@
 import type { Platform } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { buildAuthUrl } from "@/lib/oauth/auth-url";
 import { prisma } from "@/lib/prisma";
 import { connectAccountSchema } from "@/lib/validations";
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching connected accounts:", error);
+    logger.error({ err: error }, "Error fetching connected accounts");
     return NextResponse.json({ error: "Failed to fetch connected accounts" }, { status: 500 });
   }
 }
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ redirectUrl });
   } catch (error) {
-    console.error("Error initiating OAuth flow:", error);
+    logger.error({ err: error }, "Error initiating OAuth flow");
     return NextResponse.json({ error: "Failed to initiate OAuth flow" }, { status: 500 });
   }
 }

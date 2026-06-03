@@ -4,6 +4,7 @@
  */
 
 import { Redis } from "@upstash/redis";
+import logger from "@/lib/logger";
 import type { ICacheService } from "./types";
 
 // ============================================
@@ -92,7 +93,7 @@ export function getEntitlementsRedis(): Redis | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    console.warn("[Entitlements] Redis not configured, using memory fallback only");
+    logger.warn({}, "[Entitlements] Redis not configured, using memory fallback only");
     return null;
   }
 
@@ -131,18 +132,18 @@ export const cacheService: ICacheService = {
           return value;
         }
       } catch (error) {
-        console.warn("[Entitlements] Redis get failed, falling back to memory:", error);
+        logger.warn({ err: error }, "[Entitlements] Redis get failed, falling back to memory");
       }
     }
 
     // Fallback to memory cache
     const cached = memoryCache.get(key);
     if (cached !== null) {
-      console.debug("[Entitlements] Cache hit (memory):", key);
+      logger.debug({ key }, "[Entitlements] Cache hit (memory)");
       return cached as T;
     }
 
-    console.debug("[Entitlements] Cache miss:", key);
+    logger.debug({ key }, "[Entitlements] Cache miss");
     return null;
   },
 
@@ -158,9 +159,9 @@ export const cacheService: ICacheService = {
     if (redis) {
       try {
         await redis.set(key, JSON.stringify(value), { ex: ttlSeconds });
-        console.debug("[Entitlements] Cache set (both):", key, "TTL:", ttlSeconds);
+        logger.debug({ key, ttlSeconds }, "[Entitlements] Cache set (both)");
       } catch (error) {
-        console.warn("[Entitlements] Redis set failed:", error);
+        logger.warn({ err: error }, "[Entitlements] Redis set failed");
       }
     }
   },
@@ -177,9 +178,9 @@ export const cacheService: ICacheService = {
     if (redis) {
       try {
         await redis.del(key);
-        console.debug("[Entitlements] Cache invalidated:", key);
+        logger.debug({ key }, "[Entitlements] Cache invalidated");
       } catch (error) {
-        console.warn("[Entitlements] Redis invalidate failed:", error);
+        logger.warn({ err: error }, "[Entitlements] Redis invalidate failed");
       }
     }
   },
@@ -196,10 +197,10 @@ export const cacheService: ICacheService = {
         const keys = await redis.keys(pattern);
         if (keys.length > 0) {
           await redis.del(...keys);
-          console.debug("[Entitlements] Pattern invalidated:", pattern, "keys:", keys.length);
+          logger.debug({ pattern, keyCount: keys.length }, "[Entitlements] Pattern invalidated");
         }
       } catch (error) {
-        console.warn("[Entitlements] Redis pattern invalidate failed:", error);
+        logger.warn({ err: error }, "[Entitlements] Redis pattern invalidate failed");
       }
     }
 
@@ -214,7 +215,7 @@ export const cacheService: ICacheService = {
   async publishInvalidation(orgId: string): Promise<void> {
     const redis = getEntitlementsRedis();
     if (!redis) {
-      console.warn("[Entitlements] Cannot publish - Redis not configured");
+      logger.warn({}, "[Entitlements] Cannot publish - Redis not configured");
       return;
     }
 
@@ -223,9 +224,9 @@ export const cacheService: ICacheService = {
     try {
       // Publish to all subscribers
       await redis.publish(INVALIDATION_CHANNEL, JSON.stringify({ orgId, key }));
-      console.debug("[Entitlements] Published invalidation for org:", orgId);
+      logger.debug({ orgId }, "[Entitlements] Published invalidation for org");
     } catch (error) {
-      console.warn("[Entitlements] Failed to publish invalidation:", error);
+      logger.warn({ err: error }, "[Entitlements] Failed to publish invalidation");
     }
   },
 };
@@ -238,7 +239,7 @@ export async function subscribeToInvalidations(
 ): Promise<() => void> {
   const redis = getEntitlementsRedis();
   if (!redis) {
-    console.warn("[Entitlements] Cannot subscribe - Redis not configured");
+    logger.warn({}, "[Entitlements] Cannot subscribe - Redis not configured");
     return () => {};
   }
 
@@ -248,7 +249,7 @@ export async function subscribeToInvalidations(
   // const subscriber = new Redis({ url: ..., token: ... })
   // await subscriber.subscribe(INVALIDATION_CHANNEL)
 
-  console.log("[Entitlements] Pub/sub ready - invalidation events will be published");
+  logger.info({}, "[Entitlements] Pub/sub ready - invalidation events will be published");
 
   // Return no-op cleanup for now
   return () => {};
@@ -259,7 +260,7 @@ export async function subscribeToInvalidations(
  */
 export function clearMemoryCache(): void {
   memoryCache.clear();
-  console.debug("[Entitlements] Memory cache cleared");
+  logger.debug({}, "[Entitlements] Memory cache cleared");
 }
 
 /**

@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { canModifyMemberRole } from "@/lib/team-permissions";
 
@@ -101,7 +102,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Error inviting team member:", error);
+    logger.error({ err: error }, "Error inviting team member");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

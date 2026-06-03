@@ -4,6 +4,7 @@
  * No if(plan === "PRO") in endpoints - use these instead
  */
 
+import logger from "@/lib/logger";
 import {
   createFeatureNotAvailableError,
   createLimitReachedError,
@@ -275,7 +276,7 @@ export function expressRequireFeature(featureKey: string) {
         next();
       })
       .catch((err) => {
-        console.error("[Entitlements] Middleware error:", err);
+        logger.error({ err }, "[Entitlements] Middleware error");
         res.status(500).json({ error: "Internal server error" });
       });
   };
@@ -307,7 +308,7 @@ export function expressConsumeFeature(featureKey: string, amount: number = 1) {
         next();
       })
       .catch((err) => {
-        console.error("[Entitlements] Middleware error:", err);
+        logger.error({ err }, "[Entitlements] Middleware error");
         res.status(500).json({ error: "Internal server error" });
       });
   };
