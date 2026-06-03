@@ -8,7 +8,7 @@ import { errorResponse, unauthorized } from "@/lib/api-errors";
 import type { ApiVersion } from "@/lib/api-version";
 import { resolveApiVersion } from "@/lib/api-version";
 import { auth } from "@/lib/auth";
-import logger from "@/lib/logger";
+import { createRequestLogger, runWithContext } from "@/lib/observability";
 import { withRateLimit } from "@/lib/rate-limit-redis";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
 import { httpRequestDuration, httpRequestTotal } from "@/lib/utils/metrics";
@@ -60,12 +60,13 @@ export function withApiMiddleware(handler: ApiHandler) {
       return unauthorized();
     }
 
-    // 4. Execute handler
+    // 4. Execute handler (with request context)
+    const route = request.nextUrl.pathname;
+    const method = request.method;
     try {
-      const apiVersion = resolveApiVersion(request.nextUrl.pathname, request.headers).version;
-      const response = await handler(
-        { userId: session.user.id, request, apiVersion },
-        resolvedParams,
+      const apiVersion = resolveApiVersion(route, request.headers).version;
+      const response = await runWithContext({ requestId, method, path: route }, () =>
+        handler({ userId: session.user.id, request, apiVersion }, resolvedParams),
       );
 
       // 5. Add request ID to response headers
@@ -77,39 +78,42 @@ export function withApiMiddleware(handler: ApiHandler) {
       responseWithId.headers.set(REQUEST_ID_HEADER, requestId);
 
       // 6. Record HTTP metrics
-      const route = request.nextUrl.pathname;
-      const method = request.method;
       const dur = (Date.now() - start) / 1000;
       httpRequestDuration.observe({ method, route, status: response.status }, dur);
       httpRequestTotal.inc({ method, route, status: response.status });
 
-      // 7. Logging (no PII) with request ID
-      logger.info(
+      // 7. Logging (no PII) with request context
+      const reqLogger = createRequestLogger({
+        requestId,
+        method,
+        path: route,
+        userId: session.user.id,
+      });
+      const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+      reqLogger.info(
         {
-          requestId,
-          method,
-          path: route,
           duration: Date.now() - start,
           status: response.status,
+          contentLength: contentLength > 0 ? contentLength : undefined,
         },
         "API request completed",
       );
 
       return responseWithId;
     } catch (error) {
-      const route = request.nextUrl.pathname;
-      const method = request.method;
-
       // Record HTTP metrics for errors too
       httpRequestDuration.observe({ method, route, status: 500 }, (Date.now() - start) / 1000);
       httpRequestTotal.inc({ method, route, status: 500 });
 
-      logger.error(
+      const reqLogger = createRequestLogger({
+        requestId,
+        method,
+        path: route,
+        userId: session.user.id,
+      });
+      reqLogger.error(
         {
-          requestId,
           err: error,
-          method,
-          path: route,
           duration: Date.now() - start,
         },
         "API request failed",

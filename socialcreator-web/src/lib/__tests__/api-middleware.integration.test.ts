@@ -21,6 +21,10 @@ const { mockAuth, mockRateLimit, mockLogger } = vi.hoisted(() => ({
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }));
 vi.mock("@/lib/rate-limit-redis", () => ({ withRateLimit: mockRateLimit }));
 vi.mock("@/lib/logger", () => ({ default: mockLogger }));
+vi.mock("@/lib/observability", () => ({
+  createRequestLogger: vi.fn(() => mockLogger),
+  runWithContext: vi.fn((_ctx, fn) => fn()),
+}));
 
 // Import after mocks
 import { auth } from "@/lib/auth";
@@ -113,11 +117,10 @@ describe("API Middleware Integration", () => {
 
     await wrapped(request);
 
+    // request-scoped logger has requestId, method, path bound at creation;
+    // the info() call only includes dynamic fields
     expect(mockLoggerInfo).toHaveBeenCalledWith(
       expect.objectContaining({
-        requestId: expect.any(String),
-        method: "GET",
-        path: "/api/test",
         duration: expect.any(Number),
         status: 200,
       }),
@@ -140,7 +143,7 @@ describe("API Middleware Integration", () => {
     expect(response.status).toBe(500);
     expect(mockLoggerError).toHaveBeenCalledWith(
       expect.objectContaining({
-        requestId: expect.any(String),
+        duration: expect.any(Number),
         err: expect.any(Error),
       }),
       "API request failed",

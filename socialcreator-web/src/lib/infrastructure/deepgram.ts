@@ -51,7 +51,9 @@ export interface TranscriptResult {
 
 export async function transcribeVideo(videoUrl: string): Promise<TranscriptResult> {
   const deepgram = getDeepgramClient();
-  const result = await withTimeout(
+  // Note: No retry on preRecorded — it's a non-idempotent write operation.
+  // Retrying could create duplicate transcription jobs with duplicate billing.
+  const result: any = await withTimeout(
     deepgram.transcription.preRecorded(
       { url: videoUrl },
       {
@@ -76,7 +78,8 @@ export async function getTranscriptWithTimestamps(videoUrl: string): Promise<{
   words: Array<{ word: string; start: number; end: number }>;
 }> {
   const deepgram = getDeepgramClient();
-  const result = await withTimeout(
+  // Note: No retry on preRecorded — non-idempotent write (see transcribeVideo).
+  const result: any = await withTimeout(
     deepgram.transcription.preRecorded(
       { url: videoUrl },
       {

@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getHealth } from "@/lib/observability/health";
+import { runWithContext } from "@/lib/observability/request-context";
+import { generateRequestId } from "@/lib/observability/request-id";
 
 export async function GET() {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    return NextResponse.json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      checks: { database: "ok" },
-    });
-  } catch {
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        timestamp: new Date().toISOString(),
-        checks: { database: "failed" },
-      },
-      { status: 503 },
-    );
-  }
+  const requestId = generateRequestId();
+
+  return runWithContext({ requestId, method: "GET", path: "/api/health" }, async () => {
+    const result = await getHealth();
+    const httpStatus = result.status === "healthy" ? 200 : 503;
+
+    return NextResponse.json(result, { status: httpStatus });
+  });
 }
