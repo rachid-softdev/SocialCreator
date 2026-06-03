@@ -11,8 +11,11 @@ export {
   failJob,
   getActiveCount,
   getJob,
+  getJobs,
+  getJobsAsync,
   getQueueSize,
   getQueueStatus,
+  retryJob,
 } from "./queue";
 export type {
   AgentRunPayload,

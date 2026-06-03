@@ -2,6 +2,11 @@
  * Scheduled content publisher worker — Trigger.dev entry point
  * Queries due content and enqueues publish jobs for each item.
  * Actual publish work happens in the job queue handler.
+ *
+ * @deprecated As of Sprint 11, use SchedulerService (src/lib/services/scheduler/scheduler-service.ts)
+ * which runs in-process via instrumentation.ts and uses the async QueueBackend.
+ * This Trigger.dev trigger is kept for backward compatibility but is no longer
+ * the primary scheduling path.
  */
 
 import { enqueueJob } from "@/lib/job-queue";

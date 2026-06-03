@@ -2,6 +2,10 @@
  * Async content publishing worker — Trigger.dev entry point
  * Thin orchestrator: validates content exists, then enqueues to job queue.
  * Actual publish work happens in the job queue handler.
+ *
+ * @deprecated As of Sprint 11, the job queue worker (src/lib/job-queue/worker.ts)
+ * handles publish jobs directly via enqueueJobAsync. This Trigger.dev trigger is
+ * kept for backward compatibility but is no longer the primary publishing path.
  */
 
 import { z } from "zod";

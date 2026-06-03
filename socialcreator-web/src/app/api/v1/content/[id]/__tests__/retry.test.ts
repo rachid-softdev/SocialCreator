@@ -1,22 +1,26 @@
 /**
- * Tests for POST /api/v1/content/:id/approve
+ * Tests for POST /api/v1/content/:id/retry
  *
  * Verifies:
- * - Happy path: DRAFT → APPROVED status transition
- * - 404 when content not found
- * - 404 when profile not owned by user
- * - 400 when content is not DRAFT
+ * - Happy path: FAILED → APPROVED status transition and re-enqueue
  * - 400 when content ID is missing
+ * - 400 when content is not FAILED
+ * - 404 when content not found or not owned by user
+ * - enqueueJob is called with high priority
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// ── Hoisted mocks (vi.mock factories are hoisted, so variables must be vi.hoisted) ──
+// ── Hoisted mocks ──────────────────────────────────────────────────────────
 
 const { mockJson, mockContentRepo, mockProfileRepo } = vi.hoisted(() => ({
   mockJson: vi.fn(),
-  mockContentRepo: { findById: vi.fn(), updateStatus: vi.fn() },
+  mockContentRepo: { findById: vi.fn(), resetToApproved: vi.fn() },
   mockProfileRepo: { findById: vi.fn() },
+}));
+
+const { mockEnqueueJob } = vi.hoisted(() => ({
+  mockEnqueueJob: vi.fn(),
 }));
 
 vi.mock("next/server", () => ({
@@ -25,7 +29,6 @@ vi.mock("next/server", () => ({
   },
 }));
 
-// Mock withApiMiddleware — wraps handler to pass userId and params directly
 vi.mock("@/lib/api-middleware", () => ({
   withApiMiddleware: vi.fn(
     (handler: (ctx: { userId: string }, params?: Record<string, string>) => unknown) =>
@@ -36,7 +39,6 @@ vi.mock("@/lib/api-middleware", () => ({
   ),
 }));
 
-// Mock api-errors as simple objects
 vi.mock("@/lib/api-errors", () => ({
   badRequest: vi.fn((msg: string) => ({ status: 400, error: msg })),
   notFound: vi.fn((resource?: string) => ({
@@ -45,7 +47,6 @@ vi.mock("@/lib/api-errors", () => ({
   })),
 }));
 
-// Mock repositories — use cached instances so route handler sees the same mocks
 vi.mock("@/lib/repositories", () => ({
   getRepositories: vi.fn(() => ({
     content: mockContentRepo,
@@ -53,10 +54,14 @@ vi.mock("@/lib/repositories", () => ({
   })),
 }));
 
+vi.mock("@/lib/job-queue", () => ({
+  enqueueJob: mockEnqueueJob,
+}));
+
 // ── Imports (after mocks) ──────────────────────────────────────────────────
 
 import { badRequest, notFound } from "@/lib/api-errors";
-import { POST } from "../route";
+import { POST } from "../retry/route";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -68,7 +73,7 @@ function makeMockContent(overrides: Record<string, unknown> = {}) {
     textContent: "Test post",
     mediaUrls: [],
     hashtags: [],
-    status: "DRAFT",
+    status: "FAILED",
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     publishedAt: null,
@@ -89,29 +94,39 @@ function makeMockProfile(overrides: Record<string, unknown> = {}) {
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 
-describe("POST /api/v1/content/:id/approve", () => {
+describe("POST /api/v1/content/:id/retry", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockJson.mockReturnValue({ status: 200 });
   });
 
   describe("happy path", () => {
-    it("should approve draft content and return the updated content", async () => {
-      const content = makeMockContent({ status: "DRAFT" });
+    it("should reset FAILED content to APPROVED and re-enqueue", async () => {
+      const content = makeMockContent({ status: "FAILED" });
       const profile = makeMockProfile();
       const updatedContent = { ...content, status: "APPROVED" };
 
       mockContentRepo.findById.mockResolvedValue(content);
       mockProfileRepo.findById.mockResolvedValue(profile);
-      mockContentRepo.updateStatus.mockResolvedValue(updatedContent);
+      mockContentRepo.resetToApproved.mockResolvedValue(updatedContent);
 
       const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
-      expect(mockContentRepo.updateStatus).toHaveBeenCalledWith("content-1", "APPROVED");
+      expect(mockContentRepo.resetToApproved).toHaveBeenCalledWith("content-1");
+      expect(mockEnqueueJob).toHaveBeenCalledWith(
+        "publish",
+        {
+          contentId: "content-1",
+          profileId: content.profileId,
+          platform: content.platform,
+          userId: "test-user-id",
+        },
+        { priority: "high" },
+      );
       expect(mockJson).toHaveBeenCalledWith(
-        { content: updatedContent },
+        { content: updatedContent, reEnqueued: true },
         expect.objectContaining({
           headers: expect.objectContaining({
             "Cache-Control": "private, no-store",
@@ -123,7 +138,7 @@ describe("POST /api/v1/content/:id/approve", () => {
     });
   });
 
-  describe("error cases", () => {
+  describe("validation errors", () => {
     it("should return 400 when content ID is missing", async () => {
       const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: {} });
 
@@ -131,6 +146,48 @@ describe("POST /api/v1/content/:id/approve", () => {
       expect(response).toEqual({ status: 400, error: "Content ID is required" });
     });
 
+    it("should return 400 when content is not FAILED", async () => {
+      const content = makeMockContent({ status: "DRAFT" });
+      const profile = makeMockProfile();
+
+      mockContentRepo.findById.mockResolvedValue(content);
+      mockProfileRepo.findById.mockResolvedValue(profile);
+
+      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+
+      expect(badRequest).toHaveBeenCalledWith("Only FAILED content can be retried");
+      expect(response).toEqual({
+        status: 400,
+        error: "Only FAILED content can be retried",
+      });
+    });
+
+    it("should return 400 when content is APPROVED (not FAILED)", async () => {
+      const content = makeMockContent({ status: "APPROVED" });
+      const profile = makeMockProfile();
+
+      mockContentRepo.findById.mockResolvedValue(content);
+      mockProfileRepo.findById.mockResolvedValue(profile);
+
+      await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+
+      expect(badRequest).toHaveBeenCalledWith("Only FAILED content can be retried");
+    });
+
+    it("should return 400 when content is PUBLISHED", async () => {
+      const content = makeMockContent({ status: "PUBLISHED" });
+      const profile = makeMockProfile();
+
+      mockContentRepo.findById.mockResolvedValue(content);
+      mockProfileRepo.findById.mockResolvedValue(profile);
+
+      await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+
+      expect(badRequest).toHaveBeenCalledWith("Only FAILED content can be retried");
+    });
+  });
+
+  describe("ownership checks", () => {
     it("should return 404 when content is not found", async () => {
       mockContentRepo.findById.mockResolvedValue(null);
 
@@ -163,63 +220,6 @@ describe("POST /api/v1/content/:id/approve", () => {
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
-    });
-
-    it("should return 400 when content is not DRAFT (PUBLISHED)", async () => {
-      const content = makeMockContent({ status: "PUBLISHED" });
-      const profile = makeMockProfile();
-
-      mockContentRepo.findById.mockResolvedValue(content);
-      mockProfileRepo.findById.mockResolvedValue(profile);
-
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
-
-      expect(badRequest).toHaveBeenCalledWith("Only draft content can be approved");
-      expect(response).toEqual({ status: 400, error: "Only draft content can be approved" });
-    });
-
-    it("should return 400 when content is APPROVED (already approved)", async () => {
-      const content = makeMockContent({ status: "APPROVED" });
-      const profile = makeMockProfile();
-
-      mockContentRepo.findById.mockResolvedValue(content);
-      mockProfileRepo.findById.mockResolvedValue(profile);
-
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
-
-      expect(badRequest).toHaveBeenCalledWith("Only draft content can be approved");
-      expect(response).toEqual({ status: 400, error: "Only draft content can be approved" });
-    });
-
-    it("should return 400 when content is SCHEDULED", async () => {
-      const content = makeMockContent({ status: "SCHEDULED" });
-      const profile = makeMockProfile();
-
-      mockContentRepo.findById.mockResolvedValue(content);
-      mockProfileRepo.findById.mockResolvedValue(profile);
-
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
-
-      expect(badRequest).toHaveBeenCalledWith("Only draft content can be approved");
-      expect(response).toEqual({ status: 400, error: "Only draft content can be approved" });
-    });
-  });
-
-  describe("ownership edge cases", () => {
-    it("should verify profile.userId matches session userId", async () => {
-      const content = makeMockContent();
-      const profile = makeMockProfile({ userId: "test-user-id" });
-
-      mockContentRepo.findById.mockResolvedValue(content);
-      mockProfileRepo.findById.mockResolvedValue(profile);
-      mockContentRepo.updateStatus.mockResolvedValue({
-        ...content,
-        status: "APPROVED",
-      });
-
-      await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
-
-      expect(mockContentRepo.updateStatus).toHaveBeenCalled();
     });
   });
 });

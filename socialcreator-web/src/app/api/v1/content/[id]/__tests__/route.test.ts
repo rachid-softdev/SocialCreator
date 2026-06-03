@@ -112,7 +112,7 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ textContent: "Updated text", hashtags: ["#updated"] }),
       };
 
-      await (PUT as unknown as Function)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
 
       expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
@@ -144,7 +144,7 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ status: "APPROVED" }),
       };
 
-      await (PUT as unknown as Function)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
 
       expect(mockContentRepo.update).toHaveBeenCalledWith("content-1", { status: "APPROVED" });
     });
@@ -154,7 +154,7 @@ describe("PUT /api/v1/content/:id", () => {
     it("should return 400 when content ID is missing", async () => {
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as Function)(request, { params: {} });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: {} });
 
       expect(badRequest).toHaveBeenCalledWith("Content ID is required");
     });
@@ -164,7 +164,7 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as Function)(request, { params: { id: "nonexistent" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "nonexistent" } });
 
       expect(notFound).toHaveBeenCalledWith("Content");
     });
@@ -178,7 +178,7 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as Function)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
 
       expect(notFound).toHaveBeenCalledWith("Content");
     });
