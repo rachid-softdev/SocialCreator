@@ -9,7 +9,7 @@ import { withApiMiddleware } from "@/lib/api-middleware";
 import { getRepositories } from "@/lib/repositories";
 
 // POST /api/v1/content/:id/approve
-export const POST = withApiMiddleware(async ({ userId, params }) => {
+export const POST = withApiMiddleware(async ({ userId }, params) => {
   const id = params?.id as string;
   if (!id) return badRequest("Content ID is required");
 

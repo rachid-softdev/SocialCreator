@@ -10,9 +10,9 @@ import { getRepositories } from "@/lib/repositories";
 import { getValidAccessToken } from "@/lib/services/tokens";
 
 // POST /api/v1/connected-accounts/:id/refresh
-export const POST = withApiMiddleware(async ({ userId, params }) => {
+export const POST = withApiMiddleware(async ({ userId }, params) => {
   const { connectedAccount: caRepo, profile: profileRepo } = getRepositories();
-  const account = await caRepo.findById(params.id as string);
+  const account = await caRepo.findById(params?.id as string);
 
   if (!account) return notFound("Connected account");
 

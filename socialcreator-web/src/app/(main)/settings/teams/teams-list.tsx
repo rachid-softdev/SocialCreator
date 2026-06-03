@@ -44,7 +44,7 @@ const roleColors = {
   VIEWER: "bg-gray-500/10 text-gray-600",
 };
 
-export function TeamsList({ teams, currentUserId, profileCount }: TeamsListProps) {
+export function TeamsList({ teams, currentUserId }: TeamsListProps) {
   const [openTeams, setOpenTeams] = useState<Set<string>>(new Set());
 
   if (teams.length === 0) {

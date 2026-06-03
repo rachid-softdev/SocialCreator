@@ -5,7 +5,40 @@
 
 "use client";
 
-import { useFeature } from "@socialcreator/ui/hooks";
+import { useEffect, useState } from "react";
+
+/**
+ * Local hook to check feature availability via the entitlements API.
+ * Caches the feature map across calls within the same component tree.
+ */
+function useFeature(feature: string): { enabled: boolean; isLoading: boolean } {
+  const [state, setState] = useState<{ enabled: boolean; isLoading: boolean }>({
+    enabled: false,
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/entitlements")
+      .then((res) => (res.ok ? res.json() : { features: {} }))
+      .then((data) => {
+        if (!cancelled) {
+          const enabled = data.features?.[feature] === true;
+          setState({ enabled, isLoading: false });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setState({ enabled: false, isLoading: false });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [feature]);
+
+  return state;
+}
 
 interface FeatureGuardProps {
   /**
@@ -59,7 +92,13 @@ export function FeatureGuard({
 /**
  * Upgrade prompt component
  */
-function UpgradePrompt({ feature, children }: { feature: string; children?: React.ReactNode }) {
+function UpgradePrompt({
+  feature: _feature,
+  children,
+}: {
+  feature: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="relative">
       {children}

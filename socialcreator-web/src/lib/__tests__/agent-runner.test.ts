@@ -1,4 +1,5 @@
 import type { Platform } from "@prisma/client";
+import { describe, expect, it } from "vitest";
 import { buildGenerationPrompt, buildSystemPrompt } from "../prompts";
 
 describe("agent-runner utilities", () => {

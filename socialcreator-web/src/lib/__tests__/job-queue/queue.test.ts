@@ -333,11 +333,7 @@ describe("Job Queue", () => {
 
     it("should reinsert failed job at correct priority position when retrying", () => {
       // Enqueue a low priority job first, then a high priority job
-      const _lowId = enqueueJob(
-        "agent-run",
-        { agentId: "a-1", runId: "r-1", userId: "u-1" },
-        { priority: "low" },
-      );
+      enqueueJob("agent-run", { agentId: "a-1", runId: "r-1", userId: "u-1" }, { priority: "low" });
       const highId = enqueueJob(
         "agent-run",
         { agentId: "a-2", runId: "r-2", userId: "u-1" },

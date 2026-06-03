@@ -17,7 +17,6 @@ interface MuxPlayerProps {
 export function MuxPlayer({
   playbackId,
   startTime = 0,
-  endTime,
   hook,
   className,
   autoPlay = false,

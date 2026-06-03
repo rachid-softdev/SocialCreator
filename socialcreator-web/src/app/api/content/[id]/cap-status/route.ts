@@ -7,14 +7,10 @@ import type { Platform } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
-import { checkDailyCap } from "@/lib/publish-guard";
-
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
+import { peekDailyCap } from "@/lib/publish-guard";
 
 // GET /api/content/[id]/cap-status?profileId=xxx&platform=xxx
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: Request) {
   try {
     const session = await auth();
 
@@ -22,7 +18,6 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get("profileId");
     const platform = searchParams.get("platform") as Platform;
@@ -42,7 +37,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const capStatus = await checkDailyCap(profileId, platform);
+    const capStatus = await peekDailyCap(profileId, platform);
 
     return NextResponse.json(capStatus);
   } catch (error) {

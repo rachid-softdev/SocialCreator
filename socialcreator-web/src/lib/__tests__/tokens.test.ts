@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { decryptToken, encryptToken, generateSecureToken, hashString, maskString } from "../crypto";
 
 describe("crypto utilities", () => {

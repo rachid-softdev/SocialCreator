@@ -81,7 +81,7 @@ describe("Rate Limit Redis", () => {
     });
 
     it("should use NextRequest.ip when available", () => {
-      const request = new Request("http://localhost/api/test") as { ip?: string };
+      const request = new Request("http://localhost/api/test") as Request & { ip?: string };
       request.ip = "192.168.1.1";
       const id = getIdentifier(request);
       expect(id).toBe("ip:192.168.1.1");

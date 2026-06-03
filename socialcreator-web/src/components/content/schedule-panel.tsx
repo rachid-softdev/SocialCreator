@@ -76,7 +76,6 @@ export function SchedulePanel({ contentId, initialSchedule, onScheduled }: Sched
   const handleCancel = useCallback(async () => {
     const prevState = state;
     setState({ status: "cancelling" });
-    setErrorMessage(null);
 
     try {
       const response = await fetch(`/api/content/${contentId}/schedule`, {
@@ -95,12 +94,11 @@ export function SchedulePanel({ contentId, initialSchedule, onScheduled }: Sched
       setSelectedTz("UTC");
       onScheduled();
     } catch {
-      setState({
-        status:
-          prevState.status === "scheduled"
-            ? prevState
-            : { status: "error", message: "Network error occurred" },
-      });
+      if (prevState.status === "scheduled") {
+        setState(prevState);
+      } else {
+        setState({ status: "error", message: "Network error occurred" });
+      }
     }
   }, [contentId, onScheduled, state]);
 

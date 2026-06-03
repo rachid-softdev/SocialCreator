@@ -553,13 +553,13 @@ describe("v1 API Routes", () => {
         id: "tm-1",
         teamId: "t-1",
         userId: "u-2",
-        role: "MEMBER",
+        role: "EDITOR",
       });
 
       const res = await TeamInvitationsPOST(
         createRequest("/api/v1/teams/t-1/invitations", {
           method: "POST",
-          body: { userId: "u-2", role: "MEMBER" },
+          body: { userId: "u-2", role: "EDITOR" },
         }),
         createParams({ id: "t-1" }),
       );

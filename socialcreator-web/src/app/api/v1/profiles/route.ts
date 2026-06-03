@@ -72,7 +72,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
     userId,
     name,
     brandVoice: brandVoice || "",
-    contentBank: contentBank || null,
+    contentBank: contentBank ?? undefined,
     platforms: platforms || [],
   });
 

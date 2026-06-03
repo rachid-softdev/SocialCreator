@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { getPlanData, PLANS, type PlanKey } from "../stripe";
 
 describe("stripe", () => {

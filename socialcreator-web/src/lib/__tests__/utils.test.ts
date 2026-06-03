@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { formatDate, hashContent, startOfDayUTC } from "../utils";
 
 describe("utils", () => {

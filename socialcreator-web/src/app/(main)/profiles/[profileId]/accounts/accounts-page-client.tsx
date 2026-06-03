@@ -42,7 +42,7 @@ interface AccountsPageClientProps {
 }
 
 export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageClientProps) {
-  const _router = useRouter();
+  useRouter();
   const searchParams = useSearchParams();
 
   const [accounts, setAccounts] = useState<SerializedConnectedAccount[]>(initialAccounts);
@@ -58,7 +58,6 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
 
   // Check for success/error from OAuth callback
   const connected = searchParams.get("connected");
-  const _errorParam = searchParams.get("error");
 
   // Fetch accounts
   const fetchAccounts = useCallback(async () => {
@@ -119,7 +118,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
     }
   };
 
-  const unconnectedPlatforms = getUnconnectedPlatforms(accounts);
+  const unconnectedPlatforms = getUnconnectedPlatforms(accounts as any);
 
   const breadcrumbItems = [
     { label: "Profils", href: "/profiles" },
@@ -165,7 +164,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
       {/* Connected Accounts List */}
       <div className="mt-8">
         <AccountList
-          accounts={accounts}
+          accounts={accounts as any}
           isLoading={isLoading}
           onRefresh={handleRefresh}
           onDisconnect={(accountId) => {
@@ -188,7 +187,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
       <ConnectModal
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
-        accounts={accounts}
+        accounts={accounts as any}
         profileId={profileId}
         onConnected={fetchAccounts}
       />
@@ -200,7 +199,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
         onConfirm={() =>
           disconnectAccount ? handleDisconnect(disconnectAccount.id) : Promise.resolve()
         }
-        platform={disconnectAccount?.platform || "INSTAGRAM"}
+        platform={(disconnectAccount?.platform || "INSTAGRAM") as any}
         accountName={disconnectAccount?.accountName || ""}
         isLoading={isDisconnecting}
       />

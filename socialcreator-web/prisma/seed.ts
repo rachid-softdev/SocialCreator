@@ -10,9 +10,6 @@ async function main() {
         email: "admin@socialcreator.com",
         name: "Admin",
         role: "ADMIN",
-        userRoles: {
-          create: [{ role: "ADMIN" }, { role: "USER" }],
-        },
       },
     });
     console.log("Admin user created:", admin.email);

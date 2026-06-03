@@ -141,10 +141,12 @@ export default function AllVideosPage() {
               <h1 className="text-title-md text-ink">All Videos</h1>
               <p className="text-caption text-muted mt-0.5">Manage your video library</p>
             </div>
-            <Button href="/profiles">
-              <Plus className="w-4 h-4" />
-              New Video
-            </Button>
+            <Link href="/profiles">
+              <Button>
+                <Plus className="w-4 h-4" />
+                New Video
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -245,10 +247,12 @@ export default function AllVideosPage() {
             <p className="text-caption text-muted mb-6">
               Upload a video to start creating social content
             </p>
-            <Button href="/profiles">
-              <Plus className="w-4 h-4" />
-              Upload Video
-            </Button>
+            <Link href="/profiles">
+              <Button>
+                <Plus className="w-4 h-4" />
+                Upload Video
+              </Button>
+            </Link>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

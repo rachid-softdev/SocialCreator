@@ -82,8 +82,6 @@ export function PublishButton({
     }
   };
 
-  const capPercentage = capStatus ? (capStatus.count / capStatus.max) * 100 : 0;
-  const _isNearCap = capPercentage >= 75;
   const isAtCap = capStatus && !capStatus.allowed;
 
   // If at cap, show disabled state

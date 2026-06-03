@@ -44,12 +44,6 @@ interface Clip {
   segment: Segment;
 }
 
-interface GeneratedContent {
-  platform: Platform;
-  textContent: string;
-  hashtags: string[];
-}
-
 const PIPELINE_STEPS = [
   { id: "upload", label: "Upload", icon: "📤" },
   { id: "transcribe", label: "Transcription", icon: "📝" },
@@ -217,7 +211,7 @@ export default function VideoPipelinePage() {
         throw new Error("Content generation failed");
       }
 
-      const { contents } = await response.json();
+      await response.json();
       // Contents are stored in database, navigate to content list
       router.push(`/content?profileId=${profileId}`);
     } catch (err) {

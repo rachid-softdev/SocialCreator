@@ -14,7 +14,7 @@ const scheduleSchema = z.object({
 });
 
 // PUT /api/v1/content/:id/schedule
-export const PUT = withApiMiddleware(async ({ userId, request, params }) => {
+export const PUT = withApiMiddleware(async ({ userId, request }, params) => {
   const id = params?.id as string;
   if (!id) return badRequest("Content ID is required");
 

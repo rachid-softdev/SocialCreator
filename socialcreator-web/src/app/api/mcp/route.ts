@@ -52,10 +52,6 @@ const RunAgentSchema = z.object({
   brief: z.string().min(1),
 });
 
-const _GetRunStatusSchema = z.object({
-  run_id: z.string(),
-});
-
 export async function POST(request: NextRequest) {
   // 1. AUTHENTICATE FIRST — before rate limiting or any processing
   //    This prevents unauthenticated requests from consuming rate-limit capacity

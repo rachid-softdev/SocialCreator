@@ -49,7 +49,7 @@ export function AgentRunModal({
         throw new Error(data.error || "Failed to start run");
       }
 
-      const { runId, status } = await response.json();
+      await response.json();
 
       // Close modal and refresh
       onClose();

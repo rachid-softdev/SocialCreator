@@ -96,7 +96,7 @@ describe("MCP Auth", () => {
       vi.mocked(prisma.apiKey.findFirst).mockResolvedValue({
         id: "key-id-1",
         userId: "user-id-1",
-      });
+      } as any);
       vi.mocked(prisma.apiKey.update).mockResolvedValue({} as any);
 
       const result = await authenticateMcpRequest();
@@ -137,7 +137,7 @@ describe("MCP Auth", () => {
       vi.mocked(prisma.apiKey.findFirst).mockResolvedValue({
         id: "key-id-1",
         userId: "user-id-1",
-      });
+      } as any);
       vi.mocked(prisma.apiKey.update).mockResolvedValue({} as any);
 
       await authenticateMcpRequest();

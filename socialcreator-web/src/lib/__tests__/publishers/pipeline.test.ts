@@ -349,7 +349,7 @@ describe("Publish Pipeline", () => {
     it("should call postPublish hook on success", async () => {
       const ctx = createPipelineContext();
 
-      const _result = await runPublishPipeline(ctx);
+      await runPublishPipeline(ctx);
 
       expect(mockPostPublish).toHaveBeenCalledWith(
         expect.objectContaining({ content: mockContent, account: mockAccount }),
