@@ -2,4 +2,4 @@ export {
   generateRequestId,
   getOrCreateRequestId,
   REQUEST_ID_HEADER,
-} from "./observability/request-id";
+} from "@/lib/middleware/request-id";

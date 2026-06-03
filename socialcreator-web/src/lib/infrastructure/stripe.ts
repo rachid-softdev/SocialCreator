@@ -1,6 +1,7 @@
 import Stripe from "stripe";
-import logger from "@/lib/logger";
+import { getLogger } from "@/lib/observability";
 import { prisma } from "@/lib/prisma";
+import { withRetry } from "@/lib/retry";
 
 const STRIPE_TIMEOUT_MS = 15_000; // 15 seconds
 
@@ -19,6 +20,8 @@ export function getStripe(): Stripe {
 }
 
 export { STRIPE_TIMEOUT_MS };
+
+const stripeLogger = getLogger("stripe");
 
 // ============================================
 // Dynamic Price Fetching from Stripe
@@ -40,25 +43,27 @@ const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> {
   // Return cached prices if still valid
   if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION_MS) {
-    logger.debug("[Stripe] Using cached prices");
+    stripeLogger.debug("[Stripe] Using cached prices");
     return priceCache.prices;
   }
 
   // Check if Stripe is configured
   if (!process.env.STRIPE_SECRET_KEY) {
-    logger.warn("[Stripe] STRIPE_SECRET_KEY not set, using static prices");
+    stripeLogger.warn("[Stripe] STRIPE_SECRET_KEY not set, using static prices");
     return getStaticPrices();
   }
 
   try {
     const stripe = getStripe();
 
-    // Fetch active prices from Stripe
-    const prices = await stripe.prices.list({
-      active: true,
-      type: "recurring",
-      limit: 10,
-    });
+    // Fetch active prices from Stripe (with retry)
+    const prices = await withRetry(() =>
+      stripe.prices.list({
+        active: true,
+        type: "recurring",
+        limit: 10,
+      }),
+    );
 
     // Map Stripe prices to our plans
     const _priceMapping: Record<string, PaidPlanKey> = {
@@ -97,10 +102,10 @@ export async function fetchActivePrices(): Promise<Record<PaidPlanKey, number>> 
       timestamp: Date.now(),
     };
 
-    logger.info({ prices: activePrices }, "[Stripe] Successfully fetched dynamic prices");
+    stripeLogger.info({ prices: activePrices }, "[Stripe] Successfully fetched dynamic prices");
     return activePrices;
   } catch (error) {
-    logger.error({ err: error }, "[Stripe] Failed to fetch prices, using static");
+    stripeLogger.error({ err: error }, "[Stripe] Failed to fetch prices, using static");
     priceCache = {
       prices: getStaticPrices(),
       timestamp: Date.now(),
@@ -342,7 +347,9 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
   let cancelAtPeriodEnd = false;
 
   try {
-    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+    const subscription = await withRetry(() =>
+      stripe.subscriptions.retrieve(user.stripeSubscriptionId),
+    );
 
     // Vérifier si la subscription va être annulée
     cancelAtPeriodEnd = subscription.cancel_at_period_end;
@@ -372,7 +379,7 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
       plan = null;
     }
   } catch (error) {
-    logger.error({ err: error }, "Failed to fetch Stripe subscription");
+    stripeLogger.error({ err: error }, "Failed to fetch Stripe subscription");
     // En cas d'erreur, on retourne les info de base
   }
 
@@ -410,10 +417,12 @@ export async function getInvoices(userId: string): Promise<Stripe.Invoice[]> {
 
   if (!user?.stripeCustomerId) return [];
 
-  const invoices = await stripe.invoices.list({
-    customer: user.stripeCustomerId,
-    limit: 10,
-  });
+  const invoices = await withRetry(() =>
+    stripe.invoices.list({
+      customer: user.stripeCustomerId,
+      limit: 10,
+    }),
+  );
 
   return invoices.data;
 }

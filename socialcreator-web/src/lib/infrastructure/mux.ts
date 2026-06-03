@@ -1,4 +1,7 @@
 import Mux from "@mux/mux-node";
+import { withRetry } from "@/lib/retry";
+
+// withRetry is used on getMuxAsset and deleteMuxAsset (read + idempotent operations only)
 
 const MUX_TIMEOUT_MS = 30_000; // 30 seconds
 
@@ -29,6 +32,8 @@ export async function createMuxClip(
   endTime: number,
 ): Promise<MuxClipResult> {
   const mux = getMuxClient();
+  // Note: No retry on create — it's a non-idempotent write operation.
+  // Retrying could create duplicate assets with duplicate billing.
   const asset = await mux.video.assets.create({
     input: [
       {
@@ -49,7 +54,7 @@ export async function createMuxClip(
 
 export async function getMuxAsset(assetId: string): Promise<MuxAssetResult> {
   const mux = getMuxClient();
-  const asset = await mux.video.assets.retrieve(assetId);
+  const asset = await withRetry(() => mux.video.assets.retrieve(assetId));
   return {
     status: asset.status,
     playbackId: asset.playback_ids?.[0]?.id,
@@ -67,5 +72,5 @@ export function getMuxThumbnailUrl(playbackId: string, time?: number): string {
 
 export async function deleteMuxAsset(assetId: string): Promise<void> {
   const mux = getMuxClient();
-  await mux.video.assets.delete(assetId);
+  await withRetry(() => mux.video.assets.delete(assetId));
 }
