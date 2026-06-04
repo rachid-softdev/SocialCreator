@@ -275,19 +275,29 @@ function EntitlementsContent() {
               </select>
             </div>
 
-            <TextInput
-              label="Scope ID"
-              placeholder="orgId ou userId"
-              value={newOverride.scopeId}
-              onChange={(e) => setNewOverride({ ...newOverride, scopeId: e.target.value })}
-            />
+            <div className="space-y-2">
+              <label htmlFor="override-scope-id" className="text-body-sm font-medium">
+                Scope ID
+              </label>
+              <TextInput
+                id="override-scope-id"
+                placeholder="orgId ou userId"
+                value={newOverride.scopeId}
+                onChange={(e) => setNewOverride({ ...newOverride, scopeId: e.target.value })}
+              />
+            </div>
 
-            <TextInput
-              label="Feature Key"
-              placeholder="ex: advanced_analytics"
-              value={newOverride.featureKey}
-              onChange={(e) => setNewOverride({ ...newOverride, featureKey: e.target.value })}
-            />
+            <div className="space-y-2">
+              <label htmlFor="override-feature-key" className="text-body-sm font-medium">
+                Feature Key
+              </label>
+              <TextInput
+                id="override-feature-key"
+                placeholder="ex: advanced_analytics"
+                value={newOverride.featureKey}
+                onChange={(e) => setNewOverride({ ...newOverride, featureKey: e.target.value })}
+              />
+            </div>
 
             <div className="space-y-2">
               <label htmlFor="override-enabled" className="text-body-sm font-medium">
@@ -306,12 +316,17 @@ function EntitlementsContent() {
               </select>
             </div>
 
-            <TextInput
-              label="Raison (obligatoire)"
-              placeholder="Pourquoi cet override est créé ?"
-              value={newOverride.reason}
-              onChange={(e) => setNewOverride({ ...newOverride, reason: e.target.value })}
-            />
+            <div className="space-y-2">
+              <label htmlFor="override-reason" className="text-body-sm font-medium">
+                Raison (obligatoire)
+              </label>
+              <TextInput
+                id="override-reason"
+                placeholder="Pourquoi cet override est créé ?"
+                value={newOverride.reason}
+                onChange={(e) => setNewOverride({ ...newOverride, reason: e.target.value })}
+              />
+            </div>
           </div>
 
           <DialogFooter>
