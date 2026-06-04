@@ -50,6 +50,13 @@ export function CalendarView() {
 
   const calendarRef = useRef<HTMLDivElement>(null);
 
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const calendarStart = startOfWeek(monthStart);
+  const calendarEnd = endOfWeek(monthEnd);
+  const fromISO = calendarStart.toISOString();
+  const toISO = calendarEnd.toISOString();
+
   useEffect(() => {
     let cancelled = false;
 
@@ -57,8 +64,8 @@ export function CalendarView() {
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          from: calendarStart.toISOString(),
-          to: calendarEnd.toISOString(),
+          from: fromISO,
+          to: toISO,
         });
         if (platformFilter) params.set("platform", platformFilter);
 
@@ -91,12 +98,7 @@ export function CalendarView() {
     return () => {
       cancelled = true;
     };
-  }, [currentDate, platformFilter]);
-
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
+  }, [platformFilter, fromISO, toISO]);
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 

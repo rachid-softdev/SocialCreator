@@ -233,7 +233,8 @@ describe("Queue: getJobs (sync)", () => {
     });
 
     // Complete one
-    const j1 = jobQueue.find((j) => j.id === id1)!;
+    const j1 = jobQueue.find((j) => j.id === id1);
+    if (!j1) throw new Error("Job not found");
     j1.status = "completed";
     j1.completedAt = Date.now();
 

@@ -46,16 +46,16 @@ describe("OAuth Auth URL", () => {
 
       const parsed = parseState(state);
       expect(parsed).not.toBeNull();
-      expect(parsed!.platform).toBe("FACEBOOK");
-      expect(parsed!.profileId).toBe("profile-1");
-      expect(parsed!.timestamp).toBeGreaterThan(0);
+      expect(parsed?.platform).toBe("FACEBOOK");
+      expect(parsed?.profileId).toBe("profile-1");
+      expect(parsed?.timestamp).toBeGreaterThan(0);
     });
 
     it("should include codeVerifier when provided", () => {
       const state = generateState("X", "profile-2", "my-verifier");
       const parsed = parseState(state);
       expect(parsed).not.toBeNull();
-      expect(parsed!.codeVerifier).toBe("my-verifier");
+      expect(parsed?.codeVerifier).toBe("my-verifier");
     });
 
     it("should return null for tampered state (decryption fails)", () => {
@@ -181,7 +181,7 @@ describe("OAuth Auth URL", () => {
     it("should include the state parameter as an encrypted token", () => {
       const url = buildAuthUrl("FACEBOOK", "profile-1");
       const parsed = new URL(url);
-      const stateParam = parsed.searchParams.get("state")!;
+      const stateParam = parsed.searchParams.get("state") ?? "";
 
       // State should be an AES-256-GCM encrypted string (iv:tag:ciphertext format)
       expect(stateParam).toContain(":");
@@ -189,8 +189,8 @@ describe("OAuth Auth URL", () => {
       // Should be parseable
       const state = parseState(stateParam);
       expect(state).not.toBeNull();
-      expect(state!.platform).toBe("FACEBOOK");
-      expect(state!.profileId).toBe("profile-1");
+      expect(state?.platform).toBe("FACEBOOK");
+      expect(state?.profileId).toBe("profile-1");
     });
 
     it("should use correct redirect URI format per platform", () => {

@@ -127,8 +127,11 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
         <div className="space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-body-sm text-ink mb-2">Agent Name</label>
+            <label htmlFor="agent-name" className="block text-body-sm text-ink mb-2">
+              Agent Name
+            </label>
             <input
+              id="agent-name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
@@ -139,10 +142,11 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
 
           {/* Type Selection */}
           <div>
-            <label className="block text-body-sm text-ink mb-3">Agent Type</label>
+            <span className="block text-body-sm text-ink mb-3">Agent Type</span>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {AGENT_TYPES.map(({ value, icon: Icon, label }) => (
                 <button
+                  type="button"
                   key={value}
                   onClick={() => setFormData((prev) => ({ ...prev, type: value }))}
                   className={cn(
@@ -169,13 +173,14 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
         <div className="space-y-6">
           {/* Platforms */}
           <div>
-            <label className="block text-body-sm text-ink mb-3">
+            <span className="block text-body-sm text-ink mb-3">
               Target Platforms
               <span className="text-muted ml-2">(select at least one)</span>
-            </label>
+            </span>
             <div className="flex flex-wrap gap-3">
               {PLATFORMS.map(({ value, icon, label }) => (
                 <button
+                  type="button"
                   key={value}
                   onClick={() => togglePlatform(value as Platform)}
                   className={cn(
@@ -194,11 +199,12 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
 
           {/* Schedule */}
           <div>
-            <label className="block text-body-sm text-ink mb-2">
+            <label htmlFor="agent-schedule" className="block text-body-sm text-ink mb-2">
               Schedule (Cron Expression)
               <span className="text-muted ml-2">(optional)</span>
             </label>
             <input
+              id="agent-schedule"
               type="text"
               value={formData.scheduleCron}
               onChange={(e) => setFormData((prev) => ({ ...prev, scheduleCron: e.target.value }))}
@@ -217,6 +223,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
               <p className="text-caption text-muted">Automatically approve generated content</p>
             </div>
             <button
+              type="button"
               onClick={() => setFormData((prev) => ({ ...prev, autoPublish: !prev.autoPublish }))}
               className={cn(
                 "w-12 h-6 rounded-full transition-colors relative",
@@ -234,10 +241,11 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
 
           {/* Max Per Day */}
           <div>
-            <label className="block text-body-sm text-ink mb-2">
+            <label htmlFor="agent-max-per-day" className="block text-body-sm text-ink mb-2">
               Max runs per day: {formData.maxPerDay}
             </label>
             <input
+              id="agent-max-per-day"
               type="range"
               min="1"
               max="8"
@@ -266,6 +274,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
       <div className="flex items-center justify-between pt-4 border-t border-hairline">
         {!isEdit && step > 1 && (
           <button
+            type="button"
             onClick={() => setStep(1)}
             className="px-4 py-2 rounded-pill text-body-sm text-ink hover:bg-surface-strong transition-colors"
           >
@@ -276,6 +285,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
         {!isEdit ? (
           step < 2 ? (
             <button
+              type="button"
               onClick={() => setStep(2)}
               className="px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors"
             >
@@ -283,6 +293,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
               className="px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"
@@ -292,6 +303,7 @@ export function AgentForm({ profileId, initialData, isEdit, agentId }: AgentForm
           )
         ) : (
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"

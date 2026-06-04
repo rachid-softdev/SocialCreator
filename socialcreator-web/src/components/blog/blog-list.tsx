@@ -72,6 +72,7 @@ export function BlogList({ posts, initialPage = 1, postsPerPage = 6 }: BlogListP
       {totalPages > 1 && (
         <nav className="flex items-center justify-center gap-2 mt-12">
           <button
+            type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page === 1}
             className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-hairline text-muted hover:bg-surface-strong disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -83,6 +84,7 @@ export function BlogList({ posts, initialPage = 1, postsPerPage = 6 }: BlogListP
           <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
               <button
+                type="button"
                 key={pageNum}
                 onClick={() => goToPage(pageNum)}
                 className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-body-sm transition-colors ${
@@ -97,6 +99,7 @@ export function BlogList({ posts, initialPage = 1, postsPerPage = 6 }: BlogListP
           </div>
 
           <button
+            type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page === totalPages}
             className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-hairline text-muted hover:bg-surface-strong disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

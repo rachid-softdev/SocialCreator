@@ -93,7 +93,7 @@ vi.mock("@/lib/scheduling/conflict-detector", () => ({
 // ── Imports (after mocks) ──────────────────────────────────────────────────
 
 import { badRequest, notFound } from "@/lib/api-errors";
-import { PUT, DELETE } from "../route";
+import { DELETE, PUT } from "../route";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -154,7 +154,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
       mockScheduleContentRepo.update.mockResolvedValue(updatedContent);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -186,7 +186,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
       mockScheduleContentRepo.update.mockResolvedValue({ ...content, status: "SCHEDULED" });
 
-      await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: any[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(mockScheduleContentRepo.update).toHaveBeenCalled();
     });
@@ -209,7 +209,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledTimezone: "America/New_York",
       });
 
-      await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: any[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(mockScheduleContentRepo.update).toHaveBeenCalledWith("content-1", {
         status: "SCHEDULED",
@@ -237,7 +237,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         ],
       });
 
-      await (PUT as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: any[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(mockCheckScheduleConflicts).toHaveBeenCalledWith(
         content.profileId,
@@ -255,7 +255,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
 
   describe("validation errors", () => {
     it("should return 400 when content ID is missing", async () => {
-      const response = await (PUT as unknown as (...args: never[]) => unknown)({}, { params: {} });
+      const response = await (PUT as unknown as (...args: any[]) => unknown)({}, { params: {} });
 
       expect(badRequest).toHaveBeenCalledWith("Content ID is required");
       expect(response).toEqual({ status: 400, error: "Content ID is required" });
@@ -264,7 +264,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
     it("should return 400 when scheduledPublishAt is missing from body", async () => {
       requestJsonMock.current = vi.fn().mockResolvedValue({});
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -278,7 +278,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: "not-a-date",
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -292,7 +292,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: 123456,
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -312,7 +312,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2025-06-01T12:00:00.000Z"));
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -342,7 +342,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
         scheduledPublishAt: futureDate.toISOString(),
       });
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -362,7 +362,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -381,7 +381,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -400,7 +400,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -417,7 +417,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
     it("should return 404 when content is not found", async () => {
       mockScheduleContentRepo.findById.mockResolvedValue(null);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "nonexistent" } },
       );
@@ -433,7 +433,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -448,7 +448,7 @@ describe("PUT /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(null);
 
-      const response = await (PUT as unknown as (...args: never[]) => unknown)(
+      const response = await (PUT as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -536,7 +536,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
       mockScheduleContentRepo.cancelSchedule.mockResolvedValue(cancelledContent);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -559,10 +559,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
 
   describe("validation errors", () => {
     it("should return 400 when content ID is missing", async () => {
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
-        {},
-        { params: {} },
-      );
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)({}, { params: {} });
 
       expect(badRequest).toHaveBeenCalledWith("Content ID is required");
       expect(response).toEqual({ status: 400, error: "Content ID is required" });
@@ -575,7 +572,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -594,10 +591,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      await (DELETE as unknown as (...args: never[]) => unknown)(
-        {},
-        { params: { id: "content-1" } },
-      );
+      await (DELETE as unknown as (...args: any[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(badRequest).toHaveBeenCalledWith("Only SCHEDULED content can be unscheduled");
     });
@@ -609,10 +603,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      await (DELETE as unknown as (...args: never[]) => unknown)(
-        {},
-        { params: { id: "content-1" } },
-      );
+      await (DELETE as unknown as (...args: any[]) => unknown)({}, { params: { id: "content-1" } });
 
       expect(badRequest).toHaveBeenCalledWith("Only SCHEDULED content can be unscheduled");
     });
@@ -622,7 +613,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
     it("should return 404 when content is not found", async () => {
       mockScheduleContentRepo.findById.mockResolvedValue(null);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "nonexistent" } },
       );
@@ -638,7 +629,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );
@@ -653,7 +644,7 @@ describe("DELETE /api/v1/content/:id/schedule", () => {
       mockScheduleContentRepo.findById.mockResolvedValue(content);
       mockScheduleProfileRepo.findById.mockResolvedValue(null);
 
-      const response = await (DELETE as unknown as (...args: never[]) => unknown)(
+      const response = await (DELETE as unknown as (...args: any[]) => unknown)(
         {},
         { params: { id: "content-1" } },
       );

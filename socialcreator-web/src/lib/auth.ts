@@ -75,7 +75,7 @@ const nextAuthResult: NextAuthResult = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id!;
+        token.id = user.id ?? "";
         token.cguAccepted = user.cguAccepted ?? false;
         token.role = user.role ?? "USER";
         token.roles = [user.role ?? "USER"];

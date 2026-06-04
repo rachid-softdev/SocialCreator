@@ -96,6 +96,7 @@ export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
       {/* Actions dropdown */}
       <div className="absolute top-4 right-4">
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             setShowDropdown(!showDropdown);
@@ -114,6 +115,7 @@ export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
               Edit
             </Link>
             <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 if (confirm("Are you sure you want to delete this profile?")) {

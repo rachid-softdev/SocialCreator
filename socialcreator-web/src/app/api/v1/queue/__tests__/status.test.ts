@@ -52,7 +52,7 @@ describe("GET /api/v1/queue/status", () => {
   describe("happy path", () => {
     it("should return queue status counts", async () => {
       const request = { url: "http://localhost/api/v1/queue/status" };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       // First arg should be the status data
       expect(mockJson).toHaveBeenCalledWith(
@@ -73,14 +73,14 @@ describe("GET /api/v1/queue/status", () => {
       // addVersionHeaders should have been called to set the API version
       expect(mockHeaders.set).toHaveBeenCalledWith("X-API-Version", "v1");
 
-      expect(response.status).toBe(200);
+      expect((response as any).status).toBe(200);
     });
 
     it("should return valid status shape", async () => {
       const request = { url: "http://localhost/api/v1/queue/status" };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
-      const statusArg = mockJson.mock.calls[0][0];
+      const statusArg = mockJson.mock.calls[0][0] as Record<string, unknown>;
       expect(statusArg).toHaveProperty("queued");
       expect(statusArg).toHaveProperty("running");
       expect(statusArg).toHaveProperty("completed");

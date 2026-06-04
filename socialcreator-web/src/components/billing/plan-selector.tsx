@@ -14,7 +14,8 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>(currentPlan || "starter");
   const [additionalProfiles, setAdditionalProfiles] = useState(0);
 
-  const plan = getPlanData(selectedPlan)!;
+  const plan = getPlanData(selectedPlan);
+  if (!plan) return null;
 
   const totalPrice = (plan?.price ?? 0) + (plan?.addOnPrice ?? 0) * additionalProfiles;
 
@@ -42,6 +43,7 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
 
             return (
               <button
+                type="button"
                 key={planKey}
                 onClick={() => {
                   setSelectedPlan(planKey);
@@ -70,6 +72,7 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
 
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => setAdditionalProfiles(Math.max(0, additionalProfiles - 1))}
               disabled={additionalProfiles <= 0}
               className="w-10 h-10 rounded-full border border-hairline flex items-center justify-center hover:bg-surface-strong disabled:opacity-50 disabled:cursor-not-allowed"
@@ -80,6 +83,7 @@ export function PlanSelector({ onSubmit, currentPlan }: PlanSelectorProps) {
             <div className="text-xl font-semibold w-12 text-center">{additionalProfiles}</div>
 
             <button
+              type="button"
               onClick={() => setAdditionalProfiles(additionalProfiles + 1)}
               className="w-10 h-10 rounded-full border border-hairline flex items-center justify-center hover:bg-surface-strong"
             >

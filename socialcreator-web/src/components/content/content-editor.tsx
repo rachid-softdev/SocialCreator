@@ -82,7 +82,11 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
             </p>
           </div>
         </div>
-        <button onClick={onCancel} className="p-2 rounded-lg hover:bg-surface-strong text-muted">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="p-2 rounded-lg hover:bg-surface-strong text-muted"
+        >
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -90,12 +94,15 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
       {/* Text Editor */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-body-sm text-ink">Content</label>
+          <label htmlFor="content-text" className="text-body-sm text-ink">
+            Content
+          </label>
           <span className={cn("text-caption", isOverLimit ? "text-semantic-error" : "text-muted")}>
             {textContent.length}/{constraints.maxChars}
           </span>
         </div>
         <textarea
+          id="content-text"
           value={textContent}
           onChange={(e) => setTextContent(e.target.value)}
           className={cn(
@@ -115,7 +122,9 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
 
       {/* Hashtags */}
       <div>
-        <label className="text-body-sm text-ink mb-2 block">Hashtags</label>
+        <label htmlFor="hashtag-input" className="text-body-sm text-ink mb-2 block">
+          Hashtags
+        </label>
         <div className="flex flex-wrap gap-2 mb-3">
           {hashtags.map((tag) => (
             <span
@@ -124,6 +133,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
             >
               #{tag}
               <button
+                type="button"
                 onClick={() => handleRemoveHashtag(tag)}
                 className="hover:text-semantic-error"
               >
@@ -134,6 +144,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
         </div>
         <div className="flex gap-2">
           <input
+            id="hashtag-input"
             type="text"
             value={newHashtag}
             onChange={(e) => setNewHashtag(e.target.value)}
@@ -142,6 +153,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
             className="flex-1 px-4 py-2 rounded-md bg-surface-card border border-hairline-strong text-body-md text-ink placeholder:text-muted-soft focus:outline-none focus:border-primary"
           />
           <button
+            type="button"
             onClick={handleAddHashtag}
             className="px-4 py-2 rounded-md bg-surface-strong text-body-sm text-ink hover:bg-hairline transition-colors"
           >
@@ -152,6 +164,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
 
       {/* Preview Toggle */}
       <button
+        type="button"
         onClick={() => setShowPreview(!showPreview)}
         className="flex items-center gap-2 text-body-sm text-muted hover:text-ink transition-colors"
       >
@@ -173,6 +186,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-hairline">
         <button
+          type="button"
           onClick={onCancel}
           className="px-4 py-2 rounded-pill text-body-sm text-muted hover:bg-surface-strong transition-colors"
         >
@@ -182,6 +196,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
           {content.status === "DRAFT" && (
             <>
               <button
+                type="button"
                 onClick={handleSaveDraft}
                 disabled={isSaving || isOverLimit}
                 className="flex items-center gap-2 px-4 py-2 rounded-pill text-body-sm text-ink bg-surface-strong hover:bg-hairline transition-colors disabled:opacity-50"
@@ -190,6 +205,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
                 {isSaving ? "Saving..." : "Save Draft"}
               </button>
               <button
+                type="button"
                 onClick={handleSchedule}
                 className="flex items-center gap-2 px-4 py-2 rounded-pill text-body-sm text-ink bg-surface-strong hover:bg-hairline transition-colors"
               >
@@ -197,6 +213,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
                 Schedule
               </button>
               <button
+                type="button"
                 onClick={handlePublishNow}
                 className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors"
               >
@@ -207,6 +224,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
           )}
           {content.status !== "DRAFT" && (
             <button
+              type="button"
               onClick={handleSave}
               disabled={isSaving || isOverLimit}
               className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"

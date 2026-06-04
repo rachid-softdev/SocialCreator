@@ -117,6 +117,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Upload Zone */}
       <div
+        role="none"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         className={cn(
@@ -201,6 +202,7 @@ export function VideoUpload({ profileId, onUploadComplete, className }: VideoUpl
               <p className="text-caption text-muted mt-1">{error}</p>
             </div>
             <button
+              type="button"
               onClick={() => setState("idle")}
               className="mt-2 px-4 py-2 rounded-pill border border-hairline-strong text-ink hover:bg-surface-strong transition-colors text-button"
             >

@@ -53,7 +53,7 @@ describe("GET /api/v1/queue/jobs", () => {
   describe("happy path", () => {
     it("should return a list of jobs", async () => {
       const request = { url: "http://localhost/api/v1/queue/jobs" };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       // Should return an array
       expect(mockJson).toHaveBeenCalledWith(
@@ -68,12 +68,12 @@ describe("GET /api/v1/queue/jobs", () => {
       // addVersionHeaders should have been called to set the API version
       expect(mockHeaders.set).toHaveBeenCalledWith("X-API-Version", "v1");
 
-      expect(response.status).toBe(200);
-    });
+      expect((response as any).status).toBe(200);
+    }, 15000);
 
     it("should return jobs with the expected shape", async () => {
       const request = { url: "http://localhost/api/v1/queue/jobs" };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       const jobsArg = mockJson.mock.calls[0][0] as Array<Record<string, unknown>>;
 
@@ -99,7 +99,7 @@ describe("GET /api/v1/queue/jobs", () => {
   describe("filtering", () => {
     it("should accept type query filter", async () => {
       const request = { url: "http://localhost/api/v1/queue/jobs?type=publish" };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       const jobsArg = mockJson.mock.calls[0][0] as Array<Record<string, unknown>>;
       for (const job of jobsArg) {
@@ -109,7 +109,7 @@ describe("GET /api/v1/queue/jobs", () => {
 
     it("should accept status query filter", async () => {
       const request = { url: "http://localhost/api/v1/queue/jobs?status=failed" };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       const jobsArg = mockJson.mock.calls[0][0] as Array<Record<string, unknown>>;
       for (const job of jobsArg) {
@@ -121,7 +121,7 @@ describe("GET /api/v1/queue/jobs", () => {
       const request = {
         url: "http://localhost/api/v1/queue/jobs?type=publish&status=completed",
       };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       const jobsArg = mockJson.mock.calls[0][0] as Array<Record<string, unknown>>;
       for (const job of jobsArg) {

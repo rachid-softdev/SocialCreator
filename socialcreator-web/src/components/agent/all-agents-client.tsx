@@ -62,6 +62,7 @@ export function AllAgentsClient({ initialAgents, profiles }: AllAgentsClientProp
       {profiles.length > 1 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           <button
+            type="button"
             onClick={() => setSelectedProfile(null)}
             className={`px-4 py-2 rounded-pill text-body-sm transition-colors ${
               !selectedProfile
@@ -73,6 +74,7 @@ export function AllAgentsClient({ initialAgents, profiles }: AllAgentsClientProp
           </button>
           {profiles.map((profile) => (
             <button
+              type="button"
               key={profile.id}
               onClick={() => setSelectedProfile(profile.id)}
               className={`px-4 py-2 rounded-pill text-body-sm transition-colors ${

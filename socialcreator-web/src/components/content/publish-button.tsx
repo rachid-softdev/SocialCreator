@@ -97,6 +97,7 @@ export function PublishButton({
   return (
     <>
       <button
+        type="button"
         onClick={() => setShowModal(true)}
         disabled={isLoading}
         className={cn(

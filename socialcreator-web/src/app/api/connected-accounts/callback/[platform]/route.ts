@@ -80,7 +80,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const redirectUri = getRedirectUri(platformUpper as OAuthProvider);
 
     // Exchange code for tokens
-    let tokenResponse;
+    let tokenResponse: {
+      access_token: string;
+      refresh_token?: string;
+      expires_in?: number;
+    } | null = null;
     try {
       tokenResponse = await exchangeCodeForToken(
         platformUpper as OAuthProvider,
@@ -96,7 +100,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get user info from the platform
-    let userInfo;
+    let userInfo: { accountId: string; accountName: string; accountAvatarUrl: string | null };
     try {
       userInfo = await getUserInfo(platformUpper as OAuthProvider, tokenResponse.access_token);
     } catch (userInfoError) {

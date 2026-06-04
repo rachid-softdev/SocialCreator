@@ -92,6 +92,7 @@ export function ScheduleConfig({ initialSchedule, isActive = true, onSave }: Sch
         </div>
 
         <button
+          type="button"
           onClick={handleToggle}
           disabled={isSaving}
           className={cn(
@@ -113,9 +114,12 @@ export function ScheduleConfig({ initialSchedule, isActive = true, onSave }: Sch
       {isEnabled && (
         <div className="space-y-4">
           <div>
-            <label className="block text-caption text-muted mb-2">Cron Expression</label>
+            <label htmlFor="cron-expression" className="block text-caption text-muted mb-2">
+              Cron Expression
+            </label>
             <div className="flex gap-2">
               <input
+                id="cron-expression"
                 type="text"
                 value={schedule}
                 onChange={handleScheduleChange}
@@ -183,7 +187,7 @@ export function ScheduleConfig({ initialSchedule, isActive = true, onSave }: Sch
       {/* Presets */}
       {isEnabled && (
         <div>
-          <label className="block text-caption text-muted mb-2">Presets</label>
+          <span className="block text-caption text-muted mb-2">Presets</span>
           <div className="flex flex-wrap gap-2">
             {[
               { label: "Every hour", value: "0 * * * *" },
@@ -193,6 +197,7 @@ export function ScheduleConfig({ initialSchedule, isActive = true, onSave }: Sch
               { label: "Weekdays 9am", value: "0 9 * * 1-5" },
             ].map((preset) => (
               <button
+                type="button"
                 key={preset.value}
                 onClick={() => setSchedule(preset.value)}
                 className={cn(

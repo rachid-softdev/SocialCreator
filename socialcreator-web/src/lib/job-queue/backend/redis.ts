@@ -23,11 +23,6 @@ import type { QueueBackend, QueueStatus } from "./types";
  */
 
 export class RedisQueueBackend implements QueueBackend {
-  constructor() {
-    // When bullmq is installed, initialize:
-    // this.queue = new BullQueue("socialcreator", { connection: { ... } });
-  }
-
   async enqueue(_job: Omit<Job, "id">): Promise<string> {
     throw new Error("RedisQueueBackend requires bullmq. Install it with: pnpm add bullmq ioredis");
   }

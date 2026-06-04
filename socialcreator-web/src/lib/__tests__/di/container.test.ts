@@ -52,7 +52,7 @@ class Container {
         if (!registration.scopedInstances) registration.scopedInstances = new Map();
         if (!registration.scopedInstances.has(origin.scopeId))
           registration.scopedInstances.set(origin.scopeId, registration.factory());
-        return registration.scopedInstances.get(origin.scopeId)!;
+        return registration.scopedInstances.get(origin.scopeId) as T;
       }
       return this.resolveFromRegistration<T>(registration);
     }
@@ -85,7 +85,7 @@ class Container {
         if (!registration.scopedInstances) registration.scopedInstances = new Map();
         if (!registration.scopedInstances.has(this.scopeId))
           registration.scopedInstances.set(this.scopeId, registration.factory());
-        return registration.scopedInstances.get(this.scopeId)!;
+        return registration.scopedInstances.get(this.scopeId) as T;
     }
   }
 }

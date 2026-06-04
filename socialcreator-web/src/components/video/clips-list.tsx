@@ -66,12 +66,13 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
         const statusLabel = STATUS_LABELS[status] || status;
 
         return (
-          <div
+          <button
+            type="button"
             key={clip.assetId}
             onMouseEnter={() => setHoveredClip(clip.assetId)}
             onMouseLeave={() => setHoveredClip(null)}
             className={cn(
-              "bg-surface-card rounded-xl overflow-hidden border border-hairline transition-all duration-200",
+              "w-full text-left bg-surface-card rounded-xl overflow-hidden border border-hairline transition-all duration-200",
               hoveredClip === clip.assetId && "shadow-soft",
             )}
           >
@@ -87,6 +88,7 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
                 )}
               >
                 <button
+                  type="button"
                   onClick={() => onPreview?.(clip)}
                   className="w-14 h-14 rounded-full bg-surface-card/90 flex items-center justify-center hover:bg-surface-card transition-colors"
                 >
@@ -116,7 +118,10 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
                   hoveredClip === clip.assetId ? "opacity-100" : "opacity-0",
                 )}
               >
-                <button className="w-8 h-8 rounded-full bg-surface-card/90 flex items-center justify-center hover:bg-surface-card transition-colors">
+                <button
+                  type="button"
+                  className="w-8 h-8 rounded-full bg-surface-card/90 flex items-center justify-center hover:bg-surface-card transition-colors"
+                >
                   <MoreVertical className="w-4 h-4 text-ink" />
                 </button>
               </div>
@@ -134,6 +139,7 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => onPreview?.(clip)}
                     className="p-2 rounded-lg text-muted hover:text-ink hover:bg-surface-strong transition-colors"
                     title="Preview"
@@ -141,12 +147,14 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
                     <Play className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     className="p-2 rounded-lg text-muted hover:text-ink hover:bg-surface-strong transition-colors"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => onDelete?.(clip)}
                     className="p-2 rounded-lg text-muted hover:text-semantic-error hover:bg-semantic-error/10 transition-colors"
                     title="Delete"
@@ -156,7 +164,7 @@ export function ClipsList({ clips, onPreview, onDelete, className }: ClipsListPr
                 </div>
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

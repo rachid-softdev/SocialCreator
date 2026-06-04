@@ -112,7 +112,7 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ textContent: "Updated text", hashtags: ["#updated"] }),
       };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+      await (PUT as unknown as (...args: any[]) => unknown)(request, {
         params: { id: "content-1" },
       });
 
@@ -146,7 +146,7 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ status: "APPROVED" }),
       };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+      await (PUT as unknown as (...args: any[]) => unknown)(request, {
         params: { id: "content-1" },
       });
 
@@ -158,7 +158,7 @@ describe("PUT /api/v1/content/:id", () => {
     it("should return 400 when content ID is missing", async () => {
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: {} });
+      await (PUT as unknown as (...args: any[]) => unknown)(request, { params: {} });
 
       expect(badRequest).toHaveBeenCalledWith("Content ID is required");
     });
@@ -168,7 +168,7 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+      await (PUT as unknown as (...args: any[]) => unknown)(request, {
         params: { id: "nonexistent" },
       });
 
@@ -184,7 +184,7 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+      await (PUT as unknown as (...args: any[]) => unknown)(request, {
         params: { id: "content-1" },
       });
 

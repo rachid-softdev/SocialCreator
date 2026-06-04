@@ -208,6 +208,9 @@ export async function getPlanDataWithDynamicPrice(plan: PlanKey): Promise<{
   };
 }
 
+export function getPlanData(plan: "free"): null;
+export function getPlanData(plan: PaidPlanKey): (typeof PLANS)[PaidPlanKey];
+export function getPlanData(plan: PlanKey): (typeof PLANS)[PaidPlanKey] | null;
 export function getPlanData(plan: PlanKey) {
   if (plan === "free") return null;
   return PLANS[plan];
@@ -262,7 +265,7 @@ export async function createCheckoutSession(
     metadata: { userId, plan, additionalProfiles: additionalProfiles.toString() },
   });
 
-  return { sessionId: session.id, url: session.url! };
+  return { sessionId: session.id, url: session.url ?? "" };
 }
 
 export async function createBillingPortal(customerId: string): Promise<string> {
@@ -335,14 +338,13 @@ export async function getPlanDetails(userId: string): Promise<PlanDetails> {
 
   // Récupérer la subscription depuis Stripe pour avoir les détails complets
   const stripe = getStripe();
+  const subscriptionId: string = user.stripeSubscriptionId;
   let plan: PlanKey | null = null;
   let renewalDate: Date | null = null;
   let cancelAtPeriodEnd = false;
 
   try {
-    const subscription = await withRetry(() =>
-      stripe.subscriptions.retrieve(user.stripeSubscriptionId!),
-    );
+    const subscription = await withRetry(() => stripe.subscriptions.retrieve(subscriptionId));
 
     // Vérifier si la subscription va être annulée
     cancelAtPeriodEnd = subscription.cancel_at_period_end;
@@ -409,10 +411,11 @@ export async function getInvoices(userId: string): Promise<Stripe.Invoice[]> {
   });
 
   if (!user?.stripeCustomerId) return [];
+  const customerId: string = user.stripeCustomerId;
 
   const invoices = await withRetry(() =>
     stripe.invoices.list({
-      customer: user.stripeCustomerId!,
+      customer: customerId,
       limit: 10,
     }),
   );

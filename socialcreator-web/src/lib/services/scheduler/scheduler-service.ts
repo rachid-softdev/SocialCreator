@@ -16,7 +16,7 @@ export interface SchedulerOptions {
 
 export function createScheduler(options?: SchedulerOptions) {
   let timer: ReturnType<typeof setInterval> | null = null;
-  let enqueuedIds = new Set<string>();
+  const enqueuedIds = new Set<string>();
   const pollInterval = options?.pollIntervalMs ?? 30_000;
 
   async function tick(): Promise<void> {

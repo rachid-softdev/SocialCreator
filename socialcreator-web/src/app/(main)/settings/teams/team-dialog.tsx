@@ -81,8 +81,11 @@ export function TeamDialog() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-body-sm font-medium">Team name</label>
+            <label htmlFor="team-name" className="text-body-sm font-medium">
+              Team name
+            </label>
             <TextInput
+              id="team-name"
               placeholder="My Team"
               value={teamName}
               onChange={(e) => {

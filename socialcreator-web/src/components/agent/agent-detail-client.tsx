@@ -118,6 +118,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
         <div className="flex items-center gap-3">
           {/* Toggle Active */}
           <button
+            type="button"
             onClick={handleToggleActive}
             className={cn(
               "relative w-12 h-6 rounded-full transition-colors",
@@ -134,6 +135,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
 
           {/* Run Agent */}
           <button
+            type="button"
             onClick={() => setShowRunModal(true)}
             disabled={!isActive}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -148,6 +150,7 @@ export function AgentDetailClient({ agent, profileId }: AgentDetailClientProps) 
       <div className="flex items-center gap-1 border-b border-hairline">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(

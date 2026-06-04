@@ -51,6 +51,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg border border-hairline text-body-sm",
@@ -73,6 +74,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
         <div className="absolute top-full right-0 mt-1 z-10 w-48 rounded-lg border border-hairline bg-surface-card shadow-card py-1">
           {RANGES.map((range) => (
             <button
+              type="button"
               key={range.value}
               onClick={() => handleSelect(range.value)}
               className={cn(
@@ -87,6 +89,7 @@ export function DateRangePicker({ value = "30d", onChange }: DateRangePickerProp
           <div className="border-t border-hairline my-1" />
 
           <button
+            type="button"
             onClick={() => handleSelect("custom")}
             className={cn(
               "w-full px-3 py-2 text-left text-body-sm hover:bg-surface-strong transition-colors",

@@ -123,7 +123,7 @@ describe("POST /api/v1/content/generate", () => {
 
       const request = { json: async () => validBody };
 
-      await (POST as unknown as (...args: never[]) => unknown)(request);
+      await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -146,7 +146,7 @@ describe("POST /api/v1/content/generate", () => {
         json: async () => ({ ...validBody, brief: "Short" }),
       };
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)(request);
+      const response = await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(response).toEqual(expect.objectContaining({ status: 400 }));
     });
@@ -156,7 +156,7 @@ describe("POST /api/v1/content/generate", () => {
         json: async () => ({ ...validBody, platform: "SNAPCHAT" }),
       };
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)(request);
+      const response = await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(response).toEqual(expect.objectContaining({ status: 400 }));
     });
@@ -171,7 +171,7 @@ describe("POST /api/v1/content/generate", () => {
 
       const { notFound } = await import("@/lib/api-errors");
 
-      await (POST as unknown as (...args: never[]) => unknown)(request);
+      await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(notFound).toHaveBeenCalledWith("Profile");
     });
@@ -183,7 +183,7 @@ describe("POST /api/v1/content/generate", () => {
 
       const { notFound } = await import("@/lib/api-errors");
 
-      await (POST as unknown as (...args: never[]) => unknown)(request);
+      await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(notFound).toHaveBeenCalledWith("Profile");
     });
@@ -202,7 +202,7 @@ describe("POST /api/v1/content/generate", () => {
 
       const request = { json: async () => validBody };
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)(request);
+      const response = await (POST as unknown as (...args: any[]) => unknown)(request);
 
       expect(response).toEqual(expect.objectContaining({ status: 402 }));
     });

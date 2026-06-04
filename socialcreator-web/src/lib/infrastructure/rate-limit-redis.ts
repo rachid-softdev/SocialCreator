@@ -166,7 +166,7 @@ const limiterCache = new Map<string, Ratelimit>();
 function getRateLimiter(path: string): Ratelimit | null {
   // Check cache first
   if (limiterCache.has(path)) {
-    return limiterCache.get(path)!;
+    return limiterCache.get(path) ?? null;
   }
 
   // Get config for path

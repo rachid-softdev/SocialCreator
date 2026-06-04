@@ -3,8 +3,8 @@
  * Creates the appropriate backend based on configuration
  */
 
-import type { QueueBackend } from "./types";
 import { InMemoryQueueBackend } from "./in-memory";
+import type { QueueBackend } from "./types";
 
 let backendInstance: QueueBackend | null = null;
 
@@ -38,5 +38,5 @@ export function resetBackend(): void {
   backendInstance = null;
 }
 
-export type { QueueBackend } from "./types";
 export { InMemoryQueueBackend } from "./in-memory";
+export type { QueueBackend } from "./types";

@@ -47,7 +47,7 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {(["starter", "pro", "team"] as PaidPlanKey[]).map((planKey) => {
-        const plan = getPlanData(planKey)!;
+        const plan = getPlanData(planKey);
         const price = planPrices[planKey];
         const isCurrent = currentPlan === planKey;
         const isPro = planKey === "pro";

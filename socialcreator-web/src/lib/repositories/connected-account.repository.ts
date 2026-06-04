@@ -136,7 +136,7 @@ export class PrismaConnectedAccountRepository implements IConnectedAccountReposi
       },
     });
 
-    return this.decryptSensitive(saved)!;
+    return this.decryptSensitive(saved) as ConnectedAccount;
   }
 
   async update(id: string, data: Partial<ConnectedAccount>): Promise<ConnectedAccount> {
@@ -147,7 +147,7 @@ export class PrismaConnectedAccountRepository implements IConnectedAccountReposi
       data: encrypted as any,
     });
 
-    return this.decryptSensitive(saved)!;
+    return this.decryptSensitive(saved) as ConnectedAccount;
   }
 
   async delete(id: string): Promise<void> {

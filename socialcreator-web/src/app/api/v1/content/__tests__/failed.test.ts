@@ -83,7 +83,7 @@ describe("GET /api/v1/content/failed", () => {
       });
 
       const request = { url: "http://localhost/api/v1/content/failed" };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockContentRepo.findByUserId).toHaveBeenCalledWith("test-user-id", {
         status: "FAILED",
@@ -118,7 +118,7 @@ describe("GET /api/v1/content/failed", () => {
       });
 
       const request = { url: "http://localhost/api/v1/content/failed?page=2&pageSize=10" };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockContentRepo.findByUserId).toHaveBeenCalledWith("test-user-id", {
         status: "FAILED",
@@ -139,7 +139,7 @@ describe("GET /api/v1/content/failed", () => {
       });
 
       const request = { url: "http://localhost/api/v1/content/failed" };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockJson).toHaveBeenCalledWith(
         {

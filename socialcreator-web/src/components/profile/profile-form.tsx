@@ -109,7 +109,7 @@ export function ProfileForm({ initialData, onSubmit, isLoading = false }: Profil
 
       {/* Platforms */}
       <div className="space-y-3">
-        <label className="block text-body-sm text-body">Platforms</label>
+        <span className="block text-body-sm text-body">Platforms</span>
         <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((platform) => (
             <button

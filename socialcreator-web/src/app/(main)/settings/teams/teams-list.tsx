@@ -24,6 +24,7 @@ import {
   Users,
   UserX,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -283,10 +284,13 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
                   <h4 className="text-caption uppercase text-muted mb-2">Owner</h4>
                   <div className="flex items-center gap-2">
                     {team.owner.image ? (
-                      <img
+                      <Image
                         src={team.owner.image}
                         alt={team.owner.name || ""}
+                        width={24}
+                        height={24}
                         className="w-6 h-6 rounded-full"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-muted" />
@@ -304,10 +308,13 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
                         <div key={member.id} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {member.user.image ? (
-                              <img
+                              <Image
                                 src={member.user.image}
                                 alt={member.user.name || ""}
+                                width={24}
+                                height={24}
                                 className="w-6 h-6 rounded-full"
+                                unoptimized
                               />
                             ) : (
                               <div className="w-6 h-6 rounded-full bg-muted" />
@@ -401,8 +408,11 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-body-sm font-medium">Email address</label>
+              <label htmlFor="invite-email" className="text-body-sm font-medium">
+                Email address
+              </label>
               <TextInput
+                id="invite-email"
                 type="email"
                 placeholder="colleague@example.com"
                 value={inviteEmail}
@@ -416,8 +426,11 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-body-sm font-medium">Role</label>
+              <label htmlFor="invite-role" className="text-body-sm font-medium">
+                Role
+              </label>
               <select
+                id="invite-role"
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value)}
                 className="w-full bg-surface-card border border-hairline rounded-lg px-3 py-2 text-body-sm"

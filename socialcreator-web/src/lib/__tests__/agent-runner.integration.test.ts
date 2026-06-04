@@ -84,7 +84,6 @@ vi.mock("@/lib/logger", () => ({
   default: mockLogger,
 }));
 
-import { generateContent } from "@/lib/llm";
 import { prisma } from "@/lib/prisma";
 import { contentGenerated } from "@/lib/utils/metrics";
 

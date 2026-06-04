@@ -96,6 +96,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
       {/* Actions dropdown */}
       <div className="absolute top-4 right-4">
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             setShowDropdown(!showDropdown);
@@ -107,6 +108,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
         {showDropdown && (
           <div className="absolute right-0 top-8 w-40 bg-surface-card border border-hairline rounded-lg shadow-card z-10">
             <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 onEdit?.(agent.id);
@@ -118,6 +120,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
               Edit
             </button>
             <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 if (confirm("Are you sure you want to delete this agent?")) {

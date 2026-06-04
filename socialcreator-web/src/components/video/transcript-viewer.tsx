@@ -81,10 +81,11 @@ export function TranscriptViewer({
             {wordGroups.map((group, groupIndex) => (
               <span key={groupIndex} className="inline">
                 {group.words.map((w, wordIndex) => (
-                  <span
+                  <button
+                    type="button"
                     key={wordIndex}
                     className={cn(
-                      "cursor-pointer transition-colors duration-150",
+                      "inline cursor-pointer transition-colors duration-150 font-inherit text-inherit",
                       "hover:text-gradient-mint hover:bg-gradient-mint/10 px-0.5 py-0.5 -mx-0.5 rounded",
                       hoveredTime !== null &&
                         Math.abs(hoveredTime - w.start) < 0.5 &&
@@ -96,7 +97,7 @@ export function TranscriptViewer({
                     title={`${formatTime(w.start)} - ${formatTime(w.end)}`}
                   >
                     {w.word}{" "}
-                  </span>
+                  </button>
                 ))}
               </span>
             ))}
@@ -114,6 +115,7 @@ export function TranscriptViewer({
             .slice(0, 20)
             .map((w, i) => (
               <button
+                type="button"
                 key={i}
                 onClick={() => handleWordClick(w.start)}
                 className="px-2 py-1 rounded text-caption text-muted hover:text-ink hover:bg-surface-strong transition-colors"

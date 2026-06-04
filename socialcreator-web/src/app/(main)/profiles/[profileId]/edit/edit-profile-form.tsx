@@ -104,6 +104,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
           This action cannot be undone.
         </p>
         <button
+          type="button"
           onClick={handleDelete}
           disabled={isDeleting}
           className="flex items-center gap-2 px-4 py-2 rounded-pill border border-semantic-error text-semantic-error text-body-strong hover:bg-semantic-error/10 transition-colors disabled:opacity-50"

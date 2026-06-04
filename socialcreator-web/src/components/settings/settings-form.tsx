@@ -55,6 +55,7 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
       <div className="flex border-b border-hairline">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 px-4 py-3 text-body-sm transition-colors ${
@@ -74,8 +75,11 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
         {activeTab === "general" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-caption font-medium mb-2">Name</label>
+              <label htmlFor="settings-name" className="block text-caption font-medium mb-2">
+                Name
+              </label>
               <input
+                id="settings-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -85,8 +89,11 @@ export function SettingsForm({ onSave, onDeleteAccount }: SettingsFormProps) {
             </div>
 
             <div>
-              <label className="block text-caption font-medium mb-2">Email</label>
+              <label htmlFor="settings-email" className="block text-caption font-medium mb-2">
+                Email
+              </label>
               <input
+                id="settings-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
