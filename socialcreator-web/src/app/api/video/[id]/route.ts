@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
+import { verifyVideoAssetOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,23 +14,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     const { id } = await params;
 
-    // Get video asset and verify ownership
-    const videoAsset = await prisma.videoAsset.findUnique({
-      where: { id },
-    });
-
-    if (!videoAsset) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-
-    // Verify ownership through profile
-    const profile = await prisma.profile.findFirst({
-      where: { id: videoAsset.profileId, userId: session.user.id },
-    });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
+    // Verify ownership
+    const result = await verifyVideoAssetOwnership(session.user.id, id);
+    if (!result.valid) return result.error;
+    const videoAsset = result.data;
 
     return NextResponse.json({ videoAsset });
   } catch (error) {
@@ -48,23 +36,9 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     const { id } = await params;
 
-    // Get video asset and verify ownership
-    const videoAsset = await prisma.videoAsset.findUnique({
-      where: { id },
-    });
-
-    if (!videoAsset) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-
-    // Verify ownership through profile
-    const profile = await prisma.profile.findFirst({
-      where: { id: videoAsset.profileId, userId: session.user.id },
-    });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
+    // Verify ownership
+    const result = await verifyVideoAssetOwnership(session.user.id, id);
+    if (!result.valid) return result.error;
 
     // Delete video asset
     await prisma.videoAsset.delete({

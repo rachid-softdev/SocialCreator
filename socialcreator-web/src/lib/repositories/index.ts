@@ -17,8 +17,16 @@ export { PrismaConnectedAccountRepository } from "./connected-account.repository
 export type { ContentFilterOptions, ContentPage, IContentRepository } from "./content.repository";
 // Implementation exports
 export { PrismaContentRepository } from "./content.repository";
+export type { IInvitationRepository } from "./invitation.repository";
+export { PrismaInvitationRepository } from "./invitation.repository";
 export type { IMediaAssetRepository } from "./media-asset.repository";
 export { PrismaMediaAssetRepository } from "./media-asset.repository";
+export type {
+  INotificationRepository,
+  NotificationListOptions,
+  NotificationPage,
+} from "./notification.repository";
+export { PrismaNotificationRepository } from "./notification.repository";
 export type { IProfileRepository, ProfileWithRelations } from "./profile.repository";
 export { PrismaProfileRepository } from "./profile.repository";
 export type { IPublishLogRepository } from "./publish-log.repository";

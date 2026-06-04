@@ -93,6 +93,7 @@ vi.mock("@/lib/logger", () => ({
 
 import { generateContent } from "@/lib/llm";
 import { prisma } from "@/lib/prisma";
+import { contentGenerated } from "@/lib/utils/metrics";
 
 // ============================================
 // Tests: validate.ts
@@ -289,6 +290,25 @@ describe("Agent Runner - persist.ts", () => {
           status: "DRAFT",
         },
       });
+
+      // Metrics should be incremented for each generated content
+      expect(contentGenerated.inc).toHaveBeenCalledTimes(4);
+      expect(contentGenerated.inc).toHaveBeenCalledWith({
+        platform: "instagram",
+        type: "text",
+      });
+      expect(contentGenerated.inc).toHaveBeenCalledWith({
+        platform: "linkedin",
+        type: "text",
+      });
+      expect(contentGenerated.inc).toHaveBeenCalledWith({
+        platform: "instagram",
+        type: "agent",
+      });
+      expect(contentGenerated.inc).toHaveBeenCalledWith({
+        platform: "linkedin",
+        type: "agent",
+      });
     });
 
     it("should handle empty results gracefully", async () => {
@@ -296,6 +316,9 @@ describe("Agent Runner - persist.ts", () => {
 
       const { saveGeneratedContent } = await import("../services/agent/persist");
       await expect(saveGeneratedContent("run-1", "profile-1", [])).resolves.not.toThrow();
+
+      // No metrics should be incremented for empty results
+      expect(contentGenerated.inc).not.toHaveBeenCalled();
     });
   });
 });
@@ -354,6 +377,15 @@ describe("Agent Runner - triggerAgentRun (orchestrator)", () => {
         data: expect.objectContaining({ status: "SUCCESS" }),
       }),
     );
+
+    // Metrics: contentGenerated.inc should be called (from saveGeneratedContent)
+    expect(contentGenerated.inc).toHaveBeenCalled();
+    // agentRunDuration.observe should be called on success
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+    expect(agentRunDuration.observe).toHaveBeenCalledWith(
+      { status: "success" },
+      expect.any(Number),
+    );
   });
 
   it("should mark run as FAILED when execution throws", async () => {
@@ -373,6 +405,10 @@ describe("Agent Runner - triggerAgentRun (orchestrator)", () => {
         }),
       }),
     );
+
+    // Metrics: agentRunDuration.observe should be called with failed status
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+    expect(agentRunDuration.observe).toHaveBeenCalledWith({ status: "failed" }, expect.any(Number));
   });
 
   it("should soft-fail when CGU not accepted (returns null)", async () => {
@@ -392,6 +428,11 @@ describe("Agent Runner - triggerAgentRun (orchestrator)", () => {
     // Should NOT proceed to execute or save
     expect(generateContent).not.toHaveBeenCalled();
     expect(prisma.$transaction).not.toHaveBeenCalled();
+
+    // No metrics should be incremented
+    expect(contentGenerated.inc).not.toHaveBeenCalled();
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+    expect(agentRunDuration.observe).not.toHaveBeenCalled();
   });
 
   it("should throw when run is not found after marking running", async () => {

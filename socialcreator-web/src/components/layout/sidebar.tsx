@@ -19,6 +19,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useAuthStore, useUIStore } from "@/lib/stores";
 
 interface SidebarProps {
@@ -113,6 +114,19 @@ export function Sidebar({
           })}
         </nav>
 
+        {/* Notifications */}
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/settings/teams"
+              className="flex items-center gap-3 px-4 py-2 rounded-lg text-nav-link text-muted hover:text-ink hover:bg-surface-strong/50 transition-colors flex-1"
+            >
+              <Users className="w-5 h-5" />
+              Teams
+            </Link>
+          </div>
+        </div>
+
         {/* User section */}
         <div className="border-t border-hairline p-4">
           <div className="flex items-center gap-3 mb-3">
@@ -132,6 +146,7 @@ export function Sidebar({
             <div className="flex-1 min-w-0">
               <p className="text-body-sm text-ink truncate">{displayUser?.name || "User"}</p>
             </div>
+            <NotificationBell />
           </div>
           <button
             type="button"

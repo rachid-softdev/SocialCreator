@@ -3,7 +3,7 @@
  * User settings and preferences
  */
 
-import { Bell, CreditCard, HelpCircle, Link2, Shield, User } from "lucide-react";
+import { Bell, CreditCard, HelpCircle, Link2, Shield, User, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
@@ -40,6 +40,12 @@ export default async function SettingsPage() {
       href: "/profiles",
     },
     {
+      title: "Équipes",
+      description: "Collaborez avec votre équipe et gérez les accès",
+      icon: Users,
+      href: "/settings/teams",
+    },
+    {
       title: "Abonnement",
       description: "Gérez votre abonnement et vos facturations",
       icon: CreditCard,
@@ -51,7 +57,6 @@ export default async function SettingsPage() {
       description: "Configurez vos préférences de notification",
       icon: Bell,
       href: "/settings/notifications",
-      comingSoon: true,
     },
     {
       title: "Sécurité",
