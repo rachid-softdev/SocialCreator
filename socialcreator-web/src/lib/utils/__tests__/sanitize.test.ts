@@ -166,7 +166,7 @@ describe("sanitizeFilename", () => {
   });
 
   it("should limit length to 255 characters", () => {
-    const longName = "a".repeat(300) + ".txt";
+    const longName = `${"a".repeat(300)}.txt`;
     const result = sanitizeFilename(longName);
     expect(result).toHaveLength(255);
   });
@@ -215,7 +215,7 @@ describe("sanitizeUrl", () => {
   });
 
   it("should limit length to 2048 characters", () => {
-    const longUrl = "https://example.com/" + "a".repeat(3000);
+    const longUrl = `https://example.com/${"a".repeat(3000)}`;
     const result = sanitizeUrl(longUrl);
     expect(result).toHaveLength(2048);
   });
@@ -283,16 +283,16 @@ describe("sanitizeEmail", () => {
     // "a".repeat(249) + "@b.com" = 249 + 6 = 255 chars
     // After .slice(0, 254): first 249 chars are 'a', then positions 249-253 = "@b.co"
     // Result: "a".repeat(249) + "@b.co" = 254 chars
-    const longEmail = "a".repeat(249) + "@b.com";
+    const longEmail = `${"a".repeat(249)}@b.com`;
     const result = sanitizeEmail(longEmail);
     expect(result).toHaveLength(254);
     expect(result).toMatch(/^a+@b\.co$/);
-    expect(result).toBe("a".repeat(249) + "@b.co");
+    expect(result).toBe(`${"a".repeat(249)}@b.co`);
   });
 
   it("should return empty for email where trimming removes @ sign", () => {
     // After trim to 254 chars, the @ sign gets cut off -> invalid
-    const longEmail = "a".repeat(254) + "@b.c";
+    const longEmail = `${"a".repeat(254)}@b.c`;
     const result = sanitizeEmail(longEmail);
     // After slice(0, 254): "a".repeat(254) with no @ sign -> validation fails
     expect(result).toBe("");
