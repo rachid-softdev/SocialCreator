@@ -41,9 +41,11 @@
         "noExplicitAny": "off",
         "noImplicitAnyLet": "warn",
         "noAssignInExpressions": "warn",
+        "noNonNullAssertedOptionalChain": "warn",
         "noUnknownAtRules": "warn"
       },
       "a11y": {
+        "useAltText": "off",
         "useButtonType": "warn",
         "noLabelWithoutControl": "warn",
         "noSvgWithoutTitle": "warn",
