@@ -24,10 +24,24 @@ const hooks = vi.hoisted(() => {
 
 const mockUseSession = vi.hoisted(() => vi.fn());
 
-vi.mock("react", async () => {
-  const actual = await vi.importActual<typeof import("react")>("react");
+vi.mock("react", () => {
+  const createElement = (
+    type: unknown,
+    props: Record<string, unknown> | null,
+    ...children: unknown[]
+  ) => ({
+    type,
+    props: {
+      ...(props || {}),
+      ...(children.length > 0 ? { children: children.length === 1 ? children[0] : children } : {}),
+    },
+    key: null,
+  });
   return {
-    ...actual,
+    __esModule: true,
+    default: { createElement, Fragment: Symbol.for("react.fragment") },
+    createElement,
+    Fragment: Symbol.for("react.fragment"),
     useState: hooks.mockUseState,
     useEffect: hooks.mockUseEffect,
   };
