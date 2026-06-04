@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Shield,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -114,7 +115,7 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* Notifications */}
+        {/* Teams */}
         <div className="px-4 pb-2">
           <div className="flex items-center gap-3">
             <Link
@@ -126,6 +127,26 @@ export function Sidebar({
             </Link>
           </div>
         </div>
+
+        {/* Admin (conditionnel) */}
+        {storeUser?.role === "ADMIN" && (
+          <div className="px-4 pb-2">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin"
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2 rounded-lg text-nav-link transition-colors flex-1",
+                  pathname.startsWith("/admin")
+                    ? "bg-surface-strong text-ink"
+                    : "text-muted hover:text-ink hover:bg-surface-strong/50",
+                )}
+              >
+                <Shield className="w-5 h-5" />
+                Admin
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* User section */}
         <div className="border-t border-hairline p-4">
