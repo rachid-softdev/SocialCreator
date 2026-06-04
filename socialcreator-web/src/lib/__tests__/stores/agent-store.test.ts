@@ -4,8 +4,10 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { mockAgent, mockAgentRun } from "@/lib/__tests__/__shared__/test-fixtures";
+import { useAgentStore as useRealAgentStore } from "@/lib/stores/agent-store";
 
 // ========== Inline types and store matching the design spec ==========
 
@@ -325,6 +327,214 @@ describe("AgentStore", () => {
 
       expect(useAgentStore.getState().isLoading).toBe(false);
       expect(useAgentStore.getState().isRunning).toBe(false);
+    });
+  });
+});
+
+// ========== Import-based tests: async operations ==========
+
+describe("agent-store [integration] — fetchAgents, fetchRuns, runAgent", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    useRealAgentStore.setState({
+      agents: [],
+      runs: {},
+      selectedAgentId: null,
+      selectedRunId: null,
+      isLoading: false,
+      isRunning: false,
+      error: null,
+    });
+    globalThis.fetch = mockFetch;
+    vi.clearAllMocks();
+  });
+
+  describe("fetchAgents", () => {
+    const profileId = "profile-1";
+
+    it("sets agents and isLoading false on success", async () => {
+      const agents = [mockAgent];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ agents }),
+      });
+
+      await useRealAgentStore.getState().fetchAgents(profileId);
+
+      expect(useRealAgentStore.getState().agents).toStrictEqual(agents);
+      expect(useRealAgentStore.getState().isLoading).toBe(false);
+      expect(useRealAgentStore.getState().error).toBeNull();
+    });
+
+    it("sets error on HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      await useRealAgentStore.getState().fetchAgents(profileId);
+
+      expect(useRealAgentStore.getState().error).toBe("HTTP 500");
+      expect(useRealAgentStore.getState().isLoading).toBe(false);
+    });
+
+    it("sets error when fetch throws", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      await useRealAgentStore.getState().fetchAgents(profileId);
+
+      expect(useRealAgentStore.getState().error).toBe("Network error");
+      expect(useRealAgentStore.getState().isLoading).toBe(false);
+    });
+
+    it("calls the correct URL", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ agents: [] }),
+      });
+
+      await useRealAgentStore.getState().fetchAgents(profileId);
+
+      expect(mockFetch).toHaveBeenCalledWith(`/api/v1/agents?profileId=${profileId}`);
+    });
+  });
+
+  describe("fetchRuns", () => {
+    const agentId = "agent-1";
+
+    it("adds runs to map keyed by agentId on success", async () => {
+      const runs = [mockAgentRun];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runs }),
+      });
+
+      await useRealAgentStore.getState().fetchRuns(agentId);
+
+      expect(useRealAgentStore.getState().runs[agentId]).toStrictEqual(runs);
+    });
+
+    it("sets error when fetch throws", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      await useRealAgentStore.getState().fetchRuns(agentId);
+
+      expect(useRealAgentStore.getState().error).toBe("Network error");
+    });
+
+    it("calls the correct URL", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runs: [] }),
+      });
+
+      await useRealAgentStore.getState().fetchRuns(agentId);
+
+      expect(mockFetch).toHaveBeenCalledWith(`/api/v1/agents/${agentId}/runs`);
+    });
+  });
+
+  describe("runAgent", () => {
+    const agentId = "agent-1";
+
+    it("returns runId and sets isRunning false on success", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runId: "run-1" }),
+      });
+
+      // also mock the subsequent fetchRuns call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runs: [] }),
+      });
+
+      const runId = await useRealAgentStore.getState().runAgent(agentId);
+
+      expect(runId).toBe("run-1");
+      expect(useRealAgentStore.getState().isRunning).toBe(false);
+    });
+
+    it("throws and sets isRunning false on failure", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Run failed"));
+
+      await expect(useRealAgentStore.getState().runAgent(agentId)).rejects.toThrow("Run failed");
+
+      expect(useRealAgentStore.getState().isRunning).toBe(false);
+      expect(useRealAgentStore.getState().error).toBe("Run failed");
+    });
+
+    it("calls POST endpoint", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runId: "run-1" }),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runs: [] }),
+      });
+
+      await useRealAgentStore.getState().runAgent(agentId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `/api/v1/agents/${agentId}/run`,
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+  });
+
+  describe("sync actions", () => {
+    it("selectAgent sets selectedAgentId and clears selectedRunId", () => {
+      useRealAgentStore.setState({ selectedRunId: "run-1" });
+      useRealAgentStore.getState().selectAgent("agent-1");
+
+      expect(useRealAgentStore.getState().selectedAgentId).toBe("agent-1");
+      expect(useRealAgentStore.getState().selectedRunId).toBeNull();
+    });
+
+    it("selectRun sets selectedRunId", () => {
+      useRealAgentStore.getState().selectRun("run-1");
+
+      expect(useRealAgentStore.getState().selectedRunId).toBe("run-1");
+    });
+
+    it("updateRunStatus updates specific run in runs map", () => {
+      useRealAgentStore.setState({ runs: { "agent-1": [mockAgentRun] } });
+      useRealAgentStore.getState().updateRunStatus("agent-1", "run-1", "FAILED");
+
+      expect(useRealAgentStore.getState().runs["agent-1"][0].status).toBe("FAILED");
+    });
+
+    it("updateAgent updates agent in agents array", () => {
+      useRealAgentStore.setState({ agents: [mockAgent] });
+      useRealAgentStore.getState().updateAgent("agent-1", {
+        name: "Updated Agent",
+      });
+
+      expect(useRealAgentStore.getState().agents[0].name).toBe("Updated Agent");
+    });
+
+    it("removeAgent removes from agents array", () => {
+      useRealAgentStore.setState({ agents: [mockAgent] });
+      useRealAgentStore.getState().removeAgent("agent-1");
+
+      expect(useRealAgentStore.getState().agents).toStrictEqual([]);
+    });
+
+    it("reset clears all state", () => {
+      useRealAgentStore.setState({
+        agents: [mockAgent],
+        runs: { "agent-1": [mockAgentRun] },
+        selectedAgentId: "agent-1",
+        error: "some error",
+      });
+
+      useRealAgentStore.getState().reset();
+
+      const state = useRealAgentStore.getState();
+      expect(state.agents).toStrictEqual([]);
+      expect(state.runs).toStrictEqual({});
+      expect(state.selectedAgentId).toBeNull();
+      expect(state.selectedRunId).toBeNull();
+      expect(state.error).toBeNull();
     });
   });
 });

@@ -7,6 +7,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
 
+import { useQueueStore as useRealQueueStore } from "@/lib/stores/queue-store";
+
 // ========== Inline types and store matching the design spec ==========
 
 interface QueueJobItem {
@@ -272,6 +274,115 @@ describe("QueueStore", () => {
       await useQueueStore.getState().retryJob("job-1");
 
       expect(useQueueStore.getState().error).toBe("Network error");
+    });
+  });
+});
+
+// ========== Import-based tests: cache headers, retry chaining, edge cases ==========
+
+describe("queue-store [integration] — cache, retry, edge cases", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    useRealQueueStore.setState({
+      status: null,
+      jobs: [],
+      isLoading: false,
+      error: null,
+      autoRefresh: true,
+    });
+    globalThis.fetch = mockFetch;
+    vi.clearAllMocks();
+  });
+
+  describe("fetchStatus with cache: no-store", () => {
+    it("calls fetch with cache: no-store", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ queued: 2, running: 0, completed: 5, failed: 0, total: 7 }),
+      });
+
+      await useRealQueueStore.getState().fetchStatus();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/queue/status",
+        expect.objectContaining({ cache: "no-store" }),
+      );
+    });
+  });
+
+  describe("fetchJobs with cache: no-store", () => {
+    it("calls fetch with cache: no-store", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await useRealQueueStore.getState().fetchJobs();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/queue/jobs",
+        expect.objectContaining({ cache: "no-store" }),
+      );
+    });
+  });
+
+  describe("retryJob", () => {
+    it("calls retry endpoint then refreshes status and jobs", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ queued: 0, running: 0, completed: 0, failed: 0, total: 0 }),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      await useRealQueueStore.getState().retryJob("job-1");
+
+      // First call: POST retry
+      expect(mockFetch.mock.calls[0][0]).toBe("/api/v1/queue/jobs/job-1/retry");
+      expect(mockFetch.mock.calls[0][1]).toMatchObject({ method: "POST" });
+      // Second call: fetchStatus
+      expect(mockFetch.mock.calls[1][0]).toBe("/api/v1/queue/status");
+      // Third call: fetchJobs
+      expect(mockFetch.mock.calls[2][0]).toBe("/api/v1/queue/jobs");
+    });
+
+    it("sets error when retry endpoint returns non-ok", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      await useRealQueueStore.getState().retryJob("job-1");
+
+      expect(useRealQueueStore.getState().error).toBe("HTTP 500");
+    });
+  });
+
+  describe("edge cases", () => {
+    it("fetchStatus handles non-Error thrown values", async () => {
+      mockFetch.mockRejectedValueOnce("String error");
+
+      await useRealQueueStore.getState().fetchStatus();
+
+      expect(useRealQueueStore.getState().error).toBe("Failed to fetch status");
+    });
+
+    it("fetchJobs handles non-Error thrown values", async () => {
+      mockFetch.mockRejectedValueOnce(42);
+
+      await useRealQueueStore.getState().fetchJobs();
+
+      expect(useRealQueueStore.getState().error).toBe("Failed to fetch jobs");
+      expect(useRealQueueStore.getState().isLoading).toBe(false);
+    });
+
+    it("retryJob handles non-Error thrown values", async () => {
+      mockFetch.mockRejectedValueOnce(null);
+
+      await useRealQueueStore.getState().retryJob("job-1");
+
+      expect(useRealQueueStore.getState().error).toBe("Failed to retry job");
     });
   });
 });

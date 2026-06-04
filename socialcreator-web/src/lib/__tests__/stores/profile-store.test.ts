@@ -4,8 +4,11 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { mockLocalStorage } from "@/lib/__tests__/__shared__/mock-factory";
+import { mockProfile } from "@/lib/__tests__/__shared__/test-fixtures";
+import { useProfileStore as useRealProfileStore } from "@/lib/stores/profile-store";
 
 // ========== Inline types and store matching the design spec ==========
 
@@ -197,6 +200,172 @@ describe("ProfileStore", () => {
       useProfileStore.getState().reset();
 
       expect(useProfileStore.getState().error).toBeNull();
+    });
+  });
+});
+
+// ========== Import-based tests: async operations & persist ==========
+
+describe("profile-store [integration] — fetchProfiles, CRUD, persist", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    useRealProfileStore.setState({
+      profiles: [],
+      selectedProfileId: null,
+      isLoading: false,
+      error: null,
+    });
+    globalThis.fetch = mockFetch;
+    vi.clearAllMocks();
+  });
+
+  describe("fetchProfiles", () => {
+    it("fetches and sets profiles on success", async () => {
+      const profiles = [mockProfile];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ profiles }),
+      });
+
+      await useRealProfileStore.getState().fetchProfiles();
+
+      expect(useRealProfileStore.getState().profiles).toStrictEqual(profiles);
+      expect(useRealProfileStore.getState().isLoading).toBe(false);
+    });
+
+    it("sets error on HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      await useRealProfileStore.getState().fetchProfiles();
+
+      expect(useRealProfileStore.getState().error).toBe("HTTP 500");
+      expect(useRealProfileStore.getState().isLoading).toBe(false);
+    });
+
+    it("calls GET /api/v1/profiles", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ profiles: [] }),
+      });
+
+      await useRealProfileStore.getState().fetchProfiles();
+
+      expect(mockFetch).toHaveBeenCalledWith("/api/v1/profiles");
+    });
+  });
+
+  describe("createProfile", () => {
+    it("creates profile and auto-selects it", async () => {
+      const newProfile = { ...mockProfile, id: "profile-new" };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(newProfile),
+      });
+
+      const result = await useRealProfileStore
+        .getState()
+        .createProfile({ name: "New Profile", brandVoice: "Fun" });
+
+      expect(result).toMatchObject(newProfile);
+      expect(useRealProfileStore.getState().profiles[0]).toMatchObject(newProfile);
+      expect(useRealProfileStore.getState().selectedProfileId).toBe("profile-new");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/profiles",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "New Profile", brandVoice: "Fun" }),
+        }),
+      );
+    });
+
+    it("throws on HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 400 });
+
+      await expect(
+        useRealProfileStore.getState().createProfile({ name: "Bad", brandVoice: "" }),
+      ).rejects.toThrow("HTTP 400");
+    });
+  });
+
+  describe("updateProfile", () => {
+    it("sends PATCH and updates local state", async () => {
+      useRealProfileStore.setState({ profiles: [mockProfile] });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ name: "Updated Name" }),
+      });
+
+      await useRealProfileStore.getState().updateProfile("profile-1", { name: "Updated Name" });
+
+      expect(useRealProfileStore.getState().profiles[0].name).toBe("Updated Name");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/profiles/profile-1",
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+  });
+
+  describe("deleteProfile", () => {
+    it("sends DELETE and removes profile", async () => {
+      useRealProfileStore.setState({
+        profiles: [mockProfile],
+        selectedProfileId: "profile-1",
+      });
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+
+      await useRealProfileStore.getState().deleteProfile("profile-1");
+
+      expect(useRealProfileStore.getState().profiles).toStrictEqual([]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/profiles/profile-1",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+
+    it("clears selectedProfileId if deleted profile was selected", async () => {
+      useRealProfileStore.setState({
+        profiles: [mockProfile, { ...mockProfile, id: "profile-2" }],
+        selectedProfileId: "profile-1",
+      });
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+
+      await useRealProfileStore.getState().deleteProfile("profile-1");
+
+      expect(useRealProfileStore.getState().selectedProfileId).toBeNull();
+    });
+
+    it("preserves selectedProfileId if other profile deleted", async () => {
+      const otherProfile = { ...mockProfile, id: "profile-2" };
+      useRealProfileStore.setState({
+        profiles: [mockProfile, otherProfile],
+        selectedProfileId: "profile-2",
+      });
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+
+      await useRealProfileStore.getState().deleteProfile("profile-1");
+
+      expect(useRealProfileStore.getState().selectedProfileId).toBe("profile-2");
+    });
+  });
+
+  describe("persist middleware", () => {
+    it("partialize only stores selectedProfileId", async () => {
+      // Fresh store instance so localStorage is mocked before createJSONStorage evaluates
+      const { store: lsStore } = mockLocalStorage();
+      vi.resetModules();
+      const { useProfileStore: persistStore } = await import("@/lib/stores/profile-store");
+
+      persistStore.getState().selectProfile("profile-1");
+
+      const storedRaw = lsStore.get("sc-profile-storage");
+      expect(storedRaw).not.toBeNull();
+
+      const parsed = JSON.parse(storedRaw as string);
+      expect(parsed.state).toHaveProperty("selectedProfileId", "profile-1");
+      expect(parsed.state).not.toHaveProperty("profiles");
+      expect(parsed.state).not.toHaveProperty("isLoading");
     });
   });
 });

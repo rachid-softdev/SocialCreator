@@ -4,8 +4,10 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { mockLocalStorage } from "@/lib/__tests__/__shared__/mock-factory";
+import { useUIStore as useRealUIStore } from "@/lib/stores/ui-store";
 
 // ========== Inline types and store matching the design spec ==========
 
@@ -250,6 +252,143 @@ describe("UIStore", () => {
 
       expect(useUIStore.getState().theme).toBe("dark");
       expect(useUIStore.getState().sidebar).toBe("collapsed");
+    });
+  });
+});
+
+// ========== Import-based tests: persist, toasts, modals ==========
+
+describe("ui-store [integration] — persist, toast, modal", () => {
+  beforeEach(() => {
+    useRealUIStore.setState({
+      sidebar: "open",
+      theme: "system",
+      toasts: [],
+      activeModal: null,
+      modalData: null,
+    });
+    vi.clearAllMocks();
+  });
+
+  describe("sidebar", () => {
+    it("toggleSidebar toggles between open and collapsed", () => {
+      expect(useRealUIStore.getState().sidebar).toBe("open");
+      useRealUIStore.getState().toggleSidebar();
+      expect(useRealUIStore.getState().sidebar).toBe("collapsed");
+      useRealUIStore.getState().toggleSidebar();
+      expect(useRealUIStore.getState().sidebar).toBe("open");
+    });
+
+    it("setSidebar sets sidebar state directly", () => {
+      useRealUIStore.getState().setSidebar("collapsed");
+      expect(useRealUIStore.getState().sidebar).toBe("collapsed");
+      useRealUIStore.getState().setSidebar("open");
+      expect(useRealUIStore.getState().sidebar).toBe("open");
+    });
+  });
+
+  describe("theme", () => {
+    it("setTheme updates theme", () => {
+      useRealUIStore.getState().setTheme("dark");
+      expect(useRealUIStore.getState().theme).toBe("dark");
+      useRealUIStore.getState().setTheme("light");
+      expect(useRealUIStore.getState().theme).toBe("light");
+      useRealUIStore.getState().setTheme("system");
+      expect(useRealUIStore.getState().theme).toBe("system");
+    });
+  });
+
+  describe("toasts", () => {
+    it("addToast generates an ID and adds the toast", () => {
+      useRealUIStore.getState().addToast({
+        type: "info",
+        message: "Test toast",
+      });
+
+      const toasts = useRealUIStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].type).toBe("info");
+      expect(toasts[0].message).toBe("Test toast");
+      expect(typeof toasts[0].id).toBe("string");
+      expect(toasts[0].id.length).toBeGreaterThan(0);
+    });
+
+    it("addToast can accept optional duration", () => {
+      useRealUIStore.getState().addToast({
+        type: "success",
+        message: "Timed",
+        duration: 3000,
+      });
+
+      expect(useRealUIStore.getState().toasts[0].duration).toBe(3000);
+    });
+
+    it("removeToast dismisses a toast by id", () => {
+      useRealUIStore.getState().addToast({ type: "info", message: "A" });
+      useRealUIStore.getState().addToast({ type: "error", message: "B" });
+      const id = useRealUIStore.getState().toasts[0].id;
+
+      useRealUIStore.getState().removeToast(id);
+
+      expect(useRealUIStore.getState().toasts).toHaveLength(1);
+      expect(useRealUIStore.getState().toasts[0].message).toBe("B");
+    });
+
+    it("removeToast does nothing for nonexistent id", () => {
+      useRealUIStore.getState().addToast({ type: "info", message: "Only" });
+      useRealUIStore.getState().removeToast("nonexistent");
+
+      expect(useRealUIStore.getState().toasts).toHaveLength(1);
+    });
+  });
+
+  describe("modal", () => {
+    it("openModal sets active modal with data", () => {
+      useRealUIStore.getState().openModal("confirm", { id: "x" });
+
+      expect(useRealUIStore.getState().activeModal).toBe("confirm");
+      expect(useRealUIStore.getState().modalData).toStrictEqual({ id: "x" });
+    });
+
+    it("openModal sets active modal without data", () => {
+      useRealUIStore.getState().openModal("simple");
+
+      expect(useRealUIStore.getState().activeModal).toBe("simple");
+      expect(useRealUIStore.getState().modalData).toBeUndefined();
+    });
+
+    it("closeModal clears active modal and data", () => {
+      useRealUIStore.getState().openModal("settings", { section: "general" });
+      useRealUIStore.getState().closeModal();
+
+      expect(useRealUIStore.getState().activeModal).toBeNull();
+      expect(useRealUIStore.getState().modalData).toBeNull();
+    });
+  });
+
+  describe("persist middleware", () => {
+    it("persists theme and sidebar but not toasts or modal", async () => {
+      // Fresh store instance so localStorage is mocked before createJSONStorage evaluates
+      const { store: lsStore } = mockLocalStorage();
+      vi.resetModules();
+      const { useUIStore: persistStore } = await import("@/lib/stores/ui-store");
+
+      persistStore.getState().setTheme("dark");
+      persistStore.getState().setSidebar("collapsed");
+      persistStore.getState().addToast({ type: "info", message: "Temp" });
+      persistStore.getState().openModal("test", { x: 1 });
+
+      const storedRaw = lsStore.get("sc-ui-storage");
+      expect(storedRaw).not.toBeNull();
+
+      const parsed = JSON.parse(storedRaw as string);
+      // persisted
+      expect(parsed.state).toHaveProperty("theme", "dark");
+      expect(parsed.state).toHaveProperty("sidebar", "collapsed");
+      // NOT persisted
+      expect(parsed.state).not.toHaveProperty("toasts");
+      expect(parsed.state).not.toHaveProperty("activeModal");
+      expect(parsed.state).not.toHaveProperty("modalData");
     });
   });
 });

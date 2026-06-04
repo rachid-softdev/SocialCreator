@@ -4,8 +4,17 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+
+const mockAuth = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth", () => ({
+  auth: mockAuth,
+}));
+
+import { mockLocalStorage } from "@/lib/__tests__/__shared__/mock-factory";
+import { mockUser } from "@/lib/__tests__/__shared__/test-fixtures";
+import { syncAuthSession, useAuthStore as useRealAuthStore } from "@/lib/stores/auth-store";
 
 // ========== Inline types and store matching the design spec ==========
 
@@ -170,6 +179,112 @@ describe("AuthStore", () => {
 
       expect(useAuthStore.getState().user?.id).toBe("user-2");
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    });
+  });
+});
+
+// ========== Import-based tests: persist & syncAuthSession ==========
+
+describe("auth-store [integration] — syncAuthSession & persist", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useRealAuthStore.setState({
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+    });
+  });
+
+  describe("syncAuthSession", () => {
+    it("sets user when auth() returns session with id", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "1", email: "a@b.com", name: null, image: null },
+      });
+
+      await syncAuthSession();
+
+      const state = useRealAuthStore.getState();
+      expect(state.user).toMatchObject({
+        id: "1",
+        email: "a@b.com",
+        name: null,
+        image: null,
+        role: "USER",
+      });
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.isLoading).toBe(false);
+    });
+
+    it("sets isLoading false when no session", async () => {
+      mockAuth.mockResolvedValue(null);
+
+      await syncAuthSession();
+
+      const state = useRealAuthStore.getState();
+      expect(state.isLoading).toBe(false);
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.user).toBeNull();
+    });
+
+    it("sets isLoading false when auth() throws", async () => {
+      mockAuth.mockRejectedValue(new Error("Auth service unavailable"));
+
+      await syncAuthSession();
+
+      const state = useRealAuthStore.getState();
+      expect(state.isLoading).toBe(false);
+    });
+  });
+
+  describe("persist middleware", () => {
+    it("partialize only stores user", async () => {
+      // Need a fresh store instance so that localStorage is already mocked
+      // when createJSONStorage eagerly evaluates the getter
+      const { store: lsStore } = mockLocalStorage();
+      vi.resetModules();
+      const { useAuthStore: persistStore } = await import("@/lib/stores/auth-store");
+
+      persistStore.getState().setUser(mockUser);
+
+      const storedRaw = lsStore.get("sc-auth-storage");
+      expect(storedRaw).not.toBeNull();
+
+      const parsed = JSON.parse(storedRaw as string);
+      expect(parsed.state).toHaveProperty("user");
+      expect(parsed.state.user).toMatchObject(
+        expect.objectContaining({ id: mockUser.id, email: mockUser.email }),
+      );
+      // partialize only keeps user — no isLoading or isAuthenticated
+      expect(parsed.state).not.toHaveProperty("isLoading");
+      expect(parsed.state).not.toHaveProperty("isAuthenticated");
+    });
+
+    it("merge rehydrates with correct auth flags", async () => {
+      const { store } = mockLocalStorage();
+      store.set("sc-auth-storage", JSON.stringify({ state: { user: mockUser }, version: 0 }));
+
+      vi.resetModules();
+      const { useAuthStore: rehydratedStore } = await import("@/lib/stores/auth-store");
+
+      // merge always sets isLoading=true on rehydration
+      expect(rehydratedStore.getState().isLoading).toBe(true);
+      // Since user was persisted, isAuthenticated should be true
+      expect(rehydratedStore.getState().isAuthenticated).toBe(true);
+      expect(rehydratedStore.getState().user).toMatchObject(
+        expect.objectContaining({ id: mockUser.id, email: mockUser.email }),
+      );
+    });
+
+    it("merge rehydrates as unauthenticated when no user persisted", async () => {
+      const { store } = mockLocalStorage();
+      store.set("sc-auth-storage", JSON.stringify({ state: {}, version: 0 }));
+
+      vi.resetModules();
+      const { useAuthStore: rehydratedStore } = await import("@/lib/stores/auth-store");
+
+      expect(rehydratedStore.getState().isLoading).toBe(true);
+      expect(rehydratedStore.getState().isAuthenticated).toBe(false);
+      expect(rehydratedStore.getState().user).toBeNull();
     });
   });
 });
