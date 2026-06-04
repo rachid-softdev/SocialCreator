@@ -146,10 +146,8 @@ function OrgsContent() {
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array, no reordering
                 <tr key={i} className="border-b border-hairline">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array, no reordering
                     <td key={j} className="px-4 py-3">
                       <Skeleton className="h-4 w-full" />
                     </td>

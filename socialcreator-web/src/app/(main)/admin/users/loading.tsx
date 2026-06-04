@@ -9,7 +9,6 @@ export default function UsersLoading() {
       <Skeleton className="h-10 w-full mb-4" />
       <div className="border border-hairline rounded-lg overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array, no reordering
           <div key={i} className="h-14 border-b border-hairline flex items-center px-4 gap-4">
             <Skeleton className="h-4 flex-1" />
             <Skeleton className="h-4 w-48" />

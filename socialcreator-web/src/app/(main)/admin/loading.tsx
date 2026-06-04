@@ -9,7 +9,6 @@ export default function AdminLoading() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array, no reordering
           <div key={i} className="rounded-lg border border-hairline bg-surface-card p-5">
             <Skeleton className="h-4 w-24 mb-3" />
             <Skeleton className="h-8 w-20 mb-2" />
