@@ -223,6 +223,12 @@ importers:
       prom-client:
         specifier: ^15.1.3
         version: 15.1.3
+      react:
+        specifier: ^19.2.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.6(react@19.2.6)
       react-markdown:
         specifier: ^9.0.0
         version: 9.1.0(@types/react@19.2.14)(react@19.2.6)
