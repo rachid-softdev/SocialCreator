@@ -22,6 +22,16 @@ vi.mock("next/server", () => ({
   },
 }));
 
+vi.mock("@/lib/job-queue", () => ({
+  getQueueStatus: vi.fn(() => ({
+    queued: 0,
+    running: 1,
+    completed: 5,
+    failed: 0,
+    total: 6,
+  })),
+}));
+
 vi.mock("@/lib/middleware/api-middleware", () => ({
   withApiMiddleware: vi.fn(
     (handler: (ctx: { userId: string; request: any }) => unknown) => async (request: unknown) => {

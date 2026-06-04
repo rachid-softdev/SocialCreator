@@ -4,8 +4,10 @@
  *
  * Self-contained: implements the store inline matching the design spec.
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { mockContentItem } from "@/lib/__tests__/__shared__/test-fixtures";
+import { useContentStore as useRealContentStore } from "@/lib/stores/content-store";
 
 // ========== Inline types and store matching the design spec ==========
 
@@ -310,6 +312,176 @@ describe("ContentStore", () => {
 
       useContentStore.getState().reset();
       expect(useContentStore.getState().totalPages).toBe(0);
+    });
+  });
+});
+
+// ========== Import-based tests: async operations ==========
+
+describe("content-store [integration] — fetchContent, filters, CRUD", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    useRealContentStore.setState({
+      items: [],
+      total: 0,
+      totalPages: 0,
+      filters: { page: 1, pageSize: 20 },
+      selectedId: null,
+      isLoading: false,
+      error: null,
+    });
+    globalThis.fetch = mockFetch;
+    vi.clearAllMocks();
+  });
+
+  describe("fetchContent", () => {
+    it("fetches content with current filter params", async () => {
+      useRealContentStore.setState({
+        filters: {
+          profileId: "profile-1",
+          status: "DRAFT",
+          platform: "X",
+          page: 1,
+          pageSize: 20,
+        },
+      });
+
+      const contentItems = [mockContentItem];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ contents: contentItems, total: 1, totalPages: 1 }),
+      });
+
+      await useRealContentStore.getState().fetchContent();
+
+      expect(useRealContentStore.getState().items).toStrictEqual(contentItems);
+      expect(useRealContentStore.getState().total).toBe(1);
+      expect(useRealContentStore.getState().totalPages).toBe(1);
+      expect(useRealContentStore.getState().isLoading).toBe(false);
+    });
+
+    it("encodes all filter params in URL", async () => {
+      useRealContentStore.setState({
+        filters: {
+          profileId: "profile-1",
+          status: "DRAFT",
+          platform: "X",
+          page: 2,
+          pageSize: 10,
+        },
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ contents: [], total: 0, totalPages: 0 }),
+      });
+
+      await useRealContentStore.getState().fetchContent();
+
+      const url = mockFetch.mock.calls[0][0] as string;
+      expect(url).toContain("profileId=profile-1");
+      expect(url).toContain("status=DRAFT");
+      expect(url).toContain("platform=X");
+      expect(url).toContain("page=2");
+      expect(url).toContain("pageSize=10");
+    });
+
+    it("sets error on HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      await useRealContentStore.getState().fetchContent();
+
+      expect(useRealContentStore.getState().error).toBe("HTTP 500");
+      expect(useRealContentStore.getState().isLoading).toBe(false);
+    });
+
+    it("sets error when fetch throws", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      await useRealContentStore.getState().fetchContent();
+
+      expect(useRealContentStore.getState().error).toBe("Network error");
+      expect(useRealContentStore.getState().isLoading).toBe(false);
+    });
+  });
+
+  describe("setFilters", () => {
+    it("updates filters and triggers fetchContent", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ contents: [], total: 0, totalPages: 0 }),
+      });
+
+      useRealContentStore.getState().setFilters({ status: "PUBLISHED" });
+
+      expect(useRealContentStore.getState().filters.status).toBe("PUBLISHED");
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("resets page to 1 when setting new filters without page", async () => {
+      useRealContentStore.setState({
+        filters: { page: 5, pageSize: 20 },
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ contents: [], total: 0, totalPages: 0 }),
+      });
+
+      useRealContentStore.getState().setFilters({ platform: "INSTAGRAM" });
+
+      expect(useRealContentStore.getState().filters.page).toBe(1);
+    });
+  });
+
+  describe("CRUD operations", () => {
+    it("addItem prepends to items list", () => {
+      useRealContentStore.getState().addItem(mockContentItem);
+
+      expect(useRealContentStore.getState().items).toHaveLength(1);
+      expect(useRealContentStore.getState().items[0].id).toBe("content-1");
+      expect(useRealContentStore.getState().total).toBe(1);
+    });
+
+    it("updateItem updates matching item", () => {
+      useRealContentStore.setState({ items: [mockContentItem] });
+      useRealContentStore.getState().updateItem("content-1", {
+        status: "PUBLISHED",
+      });
+
+      expect(useRealContentStore.getState().items[0].status).toBe("PUBLISHED");
+    });
+
+    it("removeItem removes item and decrements total", () => {
+      useRealContentStore.setState({
+        items: [mockContentItem],
+        total: 1,
+      });
+      useRealContentStore.getState().removeItem("content-1");
+
+      expect(useRealContentStore.getState().items).toStrictEqual([]);
+      expect(useRealContentStore.getState().total).toBe(0);
+    });
+
+    it("reset clears all state", () => {
+      useRealContentStore.setState({
+        items: [mockContentItem],
+        total: 1,
+        totalPages: 5,
+        selectedId: "content-1",
+        error: "some error",
+      });
+
+      useRealContentStore.getState().reset();
+
+      const state = useRealContentStore.getState();
+      expect(state.items).toStrictEqual([]);
+      expect(state.total).toBe(0);
+      expect(state.totalPages).toBe(0);
+      expect(state.selectedId).toBeNull();
+      expect(state.error).toBeNull();
+      expect(state.filters).toStrictEqual({ page: 1, pageSize: 20 });
     });
   });
 });
