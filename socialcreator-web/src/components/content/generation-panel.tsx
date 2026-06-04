@@ -119,7 +119,9 @@ export function GenerationPanel() {
 
         {/* Profile Selector */}
         <div>
-          <label className="block text-body-sm text-ink mb-1.5">Profile</label>
+          <label htmlFor="gen-profile" className="block text-body-sm text-ink mb-1.5">
+            Profile
+          </label>
           {profilesLoading ? (
             <div className="flex items-center gap-2 text-caption text-muted">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -127,6 +129,7 @@ export function GenerationPanel() {
             </div>
           ) : (
             <select
+              id="gen-profile"
               value={selectedProfileId}
               onChange={(e) => setSelectedProfileId(e.target.value)}
               className="w-full px-4 py-2.5 rounded-lg bg-surface-card border border-hairline-strong text-body-md text-ink focus:outline-none focus:border-primary"
@@ -143,8 +146,11 @@ export function GenerationPanel() {
 
         {/* Platform Selector */}
         <div>
-          <label className="block text-body-sm text-ink mb-1.5">Platform</label>
+          <label htmlFor="gen-platform" className="block text-body-sm text-ink mb-1.5">
+            Platform
+          </label>
           <select
+            id="gen-platform"
             value={platform}
             onChange={(e) => setPlatform(e.target.value)}
             className="w-full px-4 py-2.5 rounded-lg bg-surface-card border border-hairline-strong text-body-md text-ink focus:outline-none focus:border-primary"
@@ -160,7 +166,7 @@ export function GenerationPanel() {
 
         {/* Count Selector */}
         <div>
-          <label className="block text-body-sm text-ink mb-1.5">Variations to generate</label>
+          <span className="block text-body-sm text-ink mb-1.5">Variations to generate</span>
           <div className="flex items-center gap-3">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -182,7 +188,9 @@ export function GenerationPanel() {
         {/* Brief Textarea */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-body-sm text-ink">Brief</label>
+            <label htmlFor="gen-brief" className="text-body-sm text-ink">
+              Brief
+            </label>
             <span
               className={`text-caption ${brief.length < 10 ? "text-semantic-error" : "text-muted"}`}
             >
@@ -190,6 +198,7 @@ export function GenerationPanel() {
             </span>
           </div>
           <textarea
+            id="gen-brief"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             placeholder="Describe what you want to generate..."
@@ -205,10 +214,11 @@ export function GenerationPanel() {
 
         {/* Keywords */}
         <div>
-          <label className="block text-body-sm text-ink mb-1.5">
+          <label htmlFor="gen-keywords" className="block text-body-sm text-ink mb-1.5">
             Keywords <span className="text-muted">(comma-separated, optional)</span>
           </label>
           <input
+            id="gen-keywords"
             type="text"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
@@ -219,10 +229,11 @@ export function GenerationPanel() {
 
         {/* Brand Voice */}
         <div>
-          <label className="block text-body-sm text-ink mb-1.5">
+          <label htmlFor="gen-brand-voice" className="block text-body-sm text-ink mb-1.5">
             Brand Voice <span className="text-muted">(optional)</span>
           </label>
           <input
+            id="gen-brand-voice"
             type="text"
             value={brandVoice}
             onChange={(e) => setBrandVoice(e.target.value)}

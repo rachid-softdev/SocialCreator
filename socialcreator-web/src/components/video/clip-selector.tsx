@@ -86,12 +86,14 @@ export function ClipSelector({
         </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={selectAll}
             className="px-3 py-1.5 rounded-pill text-caption text-muted hover:text-ink hover:bg-surface-strong transition-colors"
           >
             Select all
           </button>
           <button
+            type="button"
             onClick={deselectAll}
             className="px-3 py-1.5 rounded-pill text-caption text-muted hover:text-ink hover:bg-surface-strong transition-colors"
           >
@@ -107,10 +109,11 @@ export function ClipSelector({
           const thumbnailUrl = playbackId ? getMuxThumbnailUrl(playbackId, segment.start) : null;
 
           return (
-            <div
+            <button
+              type="button"
               key={index}
               className={cn(
-                "relative bg-surface-card rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer",
+                "w-full text-left relative bg-surface-card rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer",
                 isSelected
                   ? "border-gradient-mint shadow-soft"
                   : "border-hairline hover:border-hairline-strong",
@@ -173,7 +176,7 @@ export function ClipSelector({
                   </span>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -181,6 +184,7 @@ export function ClipSelector({
       {/* Generate button */}
       <div className="flex justify-end pt-4 border-t border-hairline">
         <button
+          type="button"
           onClick={handleGenerate}
           disabled={selectedIds.size === 0 || isGenerating}
           className={cn(

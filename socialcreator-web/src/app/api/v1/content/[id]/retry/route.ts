@@ -6,8 +6,8 @@
 import { NextResponse } from "next/server";
 import { badRequest, notFound } from "@/lib/api-errors";
 import { withApiMiddleware } from "@/lib/api-middleware";
-import { getRepositories } from "@/lib/repositories";
 import { enqueueJob } from "@/lib/job-queue";
+import { getRepositories } from "@/lib/repositories";
 
 // POST /api/v1/content/:id/retry
 export const POST = withApiMiddleware(async ({ userId }, params) => {

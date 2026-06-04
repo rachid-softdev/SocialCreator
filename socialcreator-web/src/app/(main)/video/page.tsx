@@ -157,8 +157,11 @@ export default function AllVideosPage() {
           <div className="flex flex-wrap items-center gap-4">
             {/* Profile filter */}
             <div className="flex items-center gap-2">
-              <label className="text-caption text-muted">Profile:</label>
+              <label htmlFor="video-profile-filter" className="text-caption text-muted">
+                Profile:
+              </label>
               <select
+                id="video-profile-filter"
                 value={selectedProfile}
                 onChange={(e) => setSelectedProfile(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-surface-card border border-hairline text-body-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
@@ -178,6 +181,7 @@ export default function AllVideosPage() {
               <div className="flex gap-1">
                 {STATUS_FILTERS.map((filter) => (
                   <button
+                    type="button"
                     key={filter.value}
                     onClick={() => setStatusFilter(filter.value)}
                     className={cn(
@@ -196,6 +200,7 @@ export default function AllVideosPage() {
             {/* View mode toggle */}
             <div className="ml-auto flex items-center gap-1">
               <button
+                type="button"
                 onClick={() => setViewMode("grid")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
@@ -205,6 +210,7 @@ export default function AllVideosPage() {
                 <Grid className="w-4 h-4" />
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode("list")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
@@ -234,6 +240,7 @@ export default function AllVideosPage() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -294,6 +301,7 @@ export default function AllVideosPage() {
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"

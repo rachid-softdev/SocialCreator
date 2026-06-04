@@ -139,7 +139,7 @@ export class DowngradeService {
               featureKey: impact.featureKey,
               enabled: true, // Keep access until period end
               limitValue: impact.currentLimit,
-              expiresAt: periodEnd!,
+              expiresAt: periodEnd as Date,
               reason: `Graceful downgrade - access until ${periodEnd?.toISOString()}`,
             });
           }

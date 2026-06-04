@@ -105,10 +105,11 @@ export function ReviewDialog({ contentId, open, onOpenChange }: ReviewDialogProp
           )}
 
           <div className="space-y-2">
-            <label className="text-body-sm font-medium">
+            <label htmlFor="review-comment" className="text-body-sm font-medium">
               Review comment (required for rejection)
             </label>
             <textarea
+              id="review-comment"
               value={comment}
               onChange={(e) => {
                 setComment(e.target.value);

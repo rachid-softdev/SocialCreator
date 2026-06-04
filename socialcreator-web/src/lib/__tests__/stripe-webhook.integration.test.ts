@@ -74,9 +74,6 @@ vi.mock("@/lib/entitlements/service", () => ({
   getFeatureGateService: vi.fn().mockReturnValue({}),
 }));
 
-// Import after mocks
-import { prisma } from "@/lib/prisma";
-
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "whsec_test";
 
 describe("Stripe Webhook (Integration)", () => {

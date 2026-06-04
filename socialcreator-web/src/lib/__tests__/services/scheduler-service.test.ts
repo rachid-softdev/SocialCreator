@@ -35,7 +35,7 @@ let createQueueBackendImpl: () => any;
 
 function createScheduler(options?: SchedulerOptions) {
   let timer: ReturnType<typeof setInterval> | null = null;
-  let enqueuedIds = new Set<string>();
+  const enqueuedIds = new Set<string>();
   const pollInterval = options?.pollIntervalMs ?? 30_000;
 
   async function tick(): Promise<void> {
@@ -43,7 +43,7 @@ function createScheduler(options?: SchedulerOptions) {
       const { content: contentRepo } = getRepositoriesImpl();
       const dueContent = await contentRepo.findPendingScheduled(new Date());
 
-      let enqueued = 0;
+      let _enqueued = 0;
       for (const content of dueContent) {
         if (enqueuedIds.has(content.id)) continue;
 
@@ -67,7 +67,7 @@ function createScheduler(options?: SchedulerOptions) {
         });
 
         enqueuedIds.add(content.id);
-        enqueued++;
+        _enqueued++;
       }
 
       if (enqueuedIds.size > 100) {

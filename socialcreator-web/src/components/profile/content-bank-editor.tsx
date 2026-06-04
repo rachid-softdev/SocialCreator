@@ -96,7 +96,7 @@ export function ContentBankEditor({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <label className="block text-body-sm text-body">Content Bank</label>
+          <span className="block text-body-sm text-body">Content Bank</span>
           <p className="text-caption text-muted-soft">
             Add examples of your best content to help AI match your style
           </p>
@@ -147,6 +147,7 @@ export function ContentBankEditor({
                       >
                         {tag}
                         <button
+                          type="button"
                           onClick={() => removeTagFromExample(example.id, tag)}
                           className="hover:text-semantic-error"
                         >
@@ -173,6 +174,7 @@ export function ContentBankEditor({
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => removeExample(example.id)}
                   className="text-muted-soft hover:text-semantic-error"
                 >

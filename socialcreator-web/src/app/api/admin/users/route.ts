@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 const VALID_ROLES = ["USER", "ADMIN"] as const;
 
@@ -14,20 +15,54 @@ const createUserSchema = z.object({
   password: z.string().min(8).optional(),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    await requireAdmin();
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
+
+    const url = new URL(request.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10) || 20),
+    );
+    const search = url.searchParams.get("search") || "";
+
+    const where: Record<string, unknown> = {};
+    if (search.trim()) {
+      where.OR = [
+        { email: { contains: search.trim(), mode: "insensitive" } },
+        { name: { contains: search.trim(), mode: "insensitive" } },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ users });
   } catch (e: unknown) {
     if (e instanceof AuthError) {
       return NextResponse.json({ error: e.message }, { status: e.status });
@@ -38,7 +73,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const body = await request.json();
     const parsed = createUserSchema.safeParse(body);
     if (!parsed.success) {

@@ -8,18 +8,22 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { adminAudit } from "@/lib/admin-audit";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import type { OverrideInput } from "@/lib/entitlements/types";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 const ALLOWED_SORT_FIELDS = ["key", "name", "sortOrder", "createdAt", "isActive"] as const;
 const ALLOWED_SORT_ORDERS = ["asc", "desc"] as const;
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const url = new URL(request.url);
     const resource = url.searchParams.get("resource") || "plans";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10) || 1);
@@ -108,7 +112,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const createOverrideSchema = z.object({
       scope: z.enum(["ORG", "USER"]),
       scopeId: z.string().min(1, "scopeId required"),
@@ -142,6 +148,15 @@ export async function POST(request: Request) {
 
     const repo = getEntitlementRepository();
     await repo.createOverride(input);
+
+    adminAudit.info("entitlement.override.create", {
+      adminId: admin.id,
+      scope,
+      scopeId,
+      featureKey,
+      enabled,
+      reason,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

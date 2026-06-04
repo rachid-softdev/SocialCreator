@@ -49,7 +49,8 @@ export async function createMuxClip(
   const playbackId = asset.playback_ids?.[0]?.id;
   if (!playbackId) throw new Error("No playback ID returned from Mux");
 
-  return { assetId: asset.id!, playbackId };
+  if (!asset.id) throw new Error("Asset ID is missing from Mux response");
+  return { assetId: asset.id, playbackId };
 }
 
 export async function getMuxAsset(assetId: string): Promise<MuxAssetResult> {

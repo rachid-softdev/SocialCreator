@@ -48,6 +48,7 @@ export async function handleStripeWebhook(
   // Verify signature
   let event: Stripe.Event;
   try {
+    // biome-ignore lint/style/noNonNullAssertion: validated at startup or will throw
     event = stripe.webhooks.constructEvent(payload, signature, WEBHOOK_SECRET!);
   } catch (err) {
     logger.error({ err }, "Webhook signature verification failed");

@@ -81,8 +81,8 @@ async function refreshOAuthToken(
     case "FACEBOOK": {
       const url = new URL("https://graph.facebook.com/v19.0/oauth/access_token");
       url.searchParams.set("grant_type", "fb_exchange_token");
-      url.searchParams.set("client_id", process.env.META_CLIENT_ID!);
-      url.searchParams.set("client_secret", process.env.META_CLIENT_SECRET!);
+      url.searchParams.set("client_id", process.env.META_CLIENT_ID ?? "");
+      url.searchParams.set("client_secret", process.env.META_CLIENT_SECRET ?? "");
       url.searchParams.set("fb_exchange_token", refreshToken);
 
       const response = await fetchWithTimeout(url.toString(), { timeout: 10000 });
@@ -103,8 +103,8 @@ async function refreshOAuthToken(
         body: new URLSearchParams({
           grant_type: "refresh_token",
           refresh_token: refreshToken,
-          client_id: process.env.GOOGLE_CLIENT_ID!,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+          client_id: process.env.GOOGLE_CLIENT_ID ?? "",
+          client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
         }),
       });
       if (!response.ok) return null;
@@ -124,8 +124,8 @@ async function refreshOAuthToken(
         body: new URLSearchParams({
           grant_type: "refresh_token",
           refresh_token: refreshToken,
-          client_id: process.env.LINKEDIN_CLIENT_ID!,
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+          client_id: process.env.LINKEDIN_CLIENT_ID ?? "",
+          client_secret: process.env.LINKEDIN_CLIENT_SECRET ?? "",
         }),
       });
       if (!response.ok) return null;

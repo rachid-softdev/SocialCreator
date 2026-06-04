@@ -44,7 +44,8 @@ export const POST = withApiMiddleware(async ({ userId }, params) => {
     // Check if user has a role that auto-approves
     const { canReview } = await import("@/lib/middleware/team-access");
     const { teamMember: memberRepo } = getRepositories();
-    const members = await memberRepo.findByTeamId(profile.teamId!);
+    if (!profile.teamId) throw new Error("Profile has no team");
+    const members = await memberRepo.findByTeamId(profile.teamId);
     const userMembership = members.find((m) => m.userId === userId);
     if (userMembership && canReview(userMembership.role as any)) {
       reviewStatus = "APPROVED";

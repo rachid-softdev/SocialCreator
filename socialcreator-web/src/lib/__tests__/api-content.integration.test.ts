@@ -6,7 +6,7 @@
  * No real database is used.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Hoisted mock factories
@@ -41,7 +41,6 @@ vi.mock("@/lib/sanitize", () => ({
 // Import after mocks
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { withRateLimit } from "@/lib/rate-limit-redis";
 import { isValidUuid } from "@/lib/sanitize";
 
 const validSession = { user: { id: "user-123" } };

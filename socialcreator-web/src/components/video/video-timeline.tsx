@@ -61,7 +61,7 @@ export function VideoTimeline({
   const maxIntensity = Math.max(...Array.from(intensityMap.values()), 1);
 
   const handleTimelineClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.MouseEvent<HTMLButtonElement>) => {
       if (!onSeek) return;
 
       const rect = e.currentTarget.getBoundingClientRect();
@@ -86,9 +86,10 @@ export function VideoTimeline({
       </div>
 
       {/* Timeline track */}
-      <div
+      <button
+        type="button"
         onClick={handleTimelineClick}
-        className="relative h-16 bg-surface-card rounded-lg border border-hairline cursor-pointer overflow-hidden"
+        className="relative w-full h-16 bg-surface-card rounded-lg border border-hairline cursor-pointer overflow-hidden"
       >
         {/* Heatmap background */}
         <div className="absolute inset-0 flex">
@@ -142,13 +143,14 @@ export function VideoTimeline({
           className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-mint shadow-md cursor-grab"
           style={{ left: `${(currentTime / totalDuration) * 100}%`, marginLeft: "-6px" }}
         />
-      </div>
+      </button>
 
       {/* Segment labels */}
       {segments.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {segments.map((segment, index) => (
             <button
+              type="button"
               key={index}
               onClick={() => onSeek?.(segment.start)}
               className="px-2 py-1 rounded text-caption text-muted hover:text-ink hover:bg-surface-strong transition-colors truncate max-w-[150px]"

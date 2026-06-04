@@ -37,6 +37,7 @@ export function UploadButton({
   return (
     <>
       <button
+        type="button"
         onClick={handleClick}
         disabled={disabled}
         className={cn(

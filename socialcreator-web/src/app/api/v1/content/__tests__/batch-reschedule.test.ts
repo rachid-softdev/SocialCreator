@@ -117,7 +117,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       mockProfileRepo.findById.mockResolvedValueOnce(profile).mockResolvedValueOnce(profile);
       mockContentRepo.batchReschedule.mockResolvedValue(2);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(mockContentRepo.findById).toHaveBeenCalledTimes(2);
       expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
@@ -157,7 +157,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       mockProfileRepo.findById.mockResolvedValue(profile);
       mockContentRepo.batchReschedule.mockResolvedValue(1);
 
-      await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(mockContentRepo.batchReschedule).toHaveBeenCalledWith([
         { id: "content-1", scheduledPublishAt: new Date(futureDate) },
@@ -169,7 +169,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
     it("should return 400 when items is missing", async () => {
       requestJsonMock.current = vi.fn().mockResolvedValue({});
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -178,7 +178,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
     it("should return 400 when items is empty array", async () => {
       requestJsonMock.current = vi.fn().mockResolvedValue({ items: [] });
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(badRequest).toHaveBeenCalledWith("At least one item is required");
       expect(response).toEqual({ status: 400, error: "At least one item is required" });
@@ -191,7 +191,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       }));
       requestJsonMock.current = vi.fn().mockResolvedValue({ items });
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(badRequest).toHaveBeenCalledWith("Maximum 100 items per request");
       expect(response).toEqual({ status: 400, error: "Maximum 100 items per request" });
@@ -202,7 +202,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
         items: [{ id: "content-1", scheduledPublishAt: "not-a-date" }],
       });
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -222,7 +222,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       const content = makeMockContent({ id: "content-1" });
       mockContentRepo.findById.mockResolvedValueOnce(content).mockResolvedValueOnce(null);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(notFound).toHaveBeenCalledWith("Content with id content-not-found");
       expect(response).toEqual({
@@ -248,7 +248,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       mockContentRepo.findById.mockResolvedValueOnce(content1).mockResolvedValueOnce(contentOther);
       mockProfileRepo.findById.mockResolvedValueOnce(profile1).mockResolvedValueOnce(profileOther);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
+      const response = await (POST as unknown as (...args: any[]) => unknown)({}, {});
 
       expect(notFound).toHaveBeenCalledWith("Content with id content-other");
       expect(response).toEqual({

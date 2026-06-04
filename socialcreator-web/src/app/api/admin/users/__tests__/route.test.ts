@@ -25,6 +25,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
       findMany: vi.fn(),
+      count: vi.fn(),
       create: vi.fn(),
     },
   },
@@ -36,9 +37,17 @@ vi.mock("bcryptjs", () => ({
   default: { hash: vi.fn(), compare: vi.fn() },
 }));
 
+vi.mock("@/lib/rate-limit-redis", () => ({
+  withRateLimit: vi.fn().mockResolvedValue(null),
+}));
+
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { GET, POST } from "../route";
+
+function createGetRequest(url = "http://localhost:3000/api/admin/users"): Request {
+  return new Request(url);
+}
 
 function createRequest(body: unknown): Request {
   return new Request("http://localhost:3000/api/admin/users", {
@@ -57,7 +66,7 @@ describe("GET /api/admin/users", () => {
     it("should return 401 when requireAdmin throws AuthError with status 401", async () => {
       mockRequireAdmin.mockRejectedValue(new MockAuthError("Non authentifié", 401));
 
-      const res = await GET();
+      const res = await GET(createGetRequest());
       const data = await res.json();
 
       expect(res.status).toBe(401);
@@ -69,7 +78,7 @@ describe("GET /api/admin/users", () => {
         new MockAuthError("Accès non autorisé - rôle administrateur requis", 403),
       );
 
-      const res = await GET();
+      const res = await GET(createGetRequest());
       const data = await res.json();
 
       expect(res.status).toBe(403);
@@ -114,19 +123,21 @@ describe("GET /api/admin/users", () => {
     beforeEach(() => {
       mockRequireAdmin.mockResolvedValue({ id: "admin-1", email: "admin@test.com" });
       (prisma.user.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockUsers);
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(2);
     });
 
-    it("should return users list", async () => {
-      const res = await GET();
+    it("should return users list in data field", async () => {
+      const res = await GET(createGetRequest());
       const data = await res.json();
 
       expect(res.status).toBe(200);
-      expect(data.users).toHaveLength(2);
-      expect(data.users).toEqual(expectedUsersJson);
+      expect(data.data).toHaveLength(2);
+      expect(data.data).toEqual(expectedUsersJson);
+      expect(data.pagination).toBeDefined();
     });
 
     it("should query users ordered by createdAt desc", async () => {
-      await GET();
+      await GET(createGetRequest());
 
       expect(prisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -136,7 +147,7 @@ describe("GET /api/admin/users", () => {
     });
 
     it("should select specific user fields", async () => {
-      await GET();
+      await GET(createGetRequest());
 
       expect(prisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -150,6 +161,12 @@ describe("GET /api/admin/users", () => {
         }),
       );
     });
+
+    it("should call user.count for pagination total", async () => {
+      await GET(createGetRequest());
+
+      expect(prisma.user.count).toHaveBeenCalled();
+    });
   });
 
   describe("error handling", () => {
@@ -159,11 +176,150 @@ describe("GET /api/admin/users", () => {
         new Error("Unexpected DB error"),
       );
 
-      const res = await GET();
+      const res = await GET(createGetRequest());
       const data = await res.json();
 
       expect(res.status).toBe(500);
       expect(data.error).toBe("Internal Server Error");
+    });
+  });
+
+  describe("pagination", () => {
+    const mockUsers = [
+      {
+        id: "1",
+        email: "u1@test.com",
+        name: "U1",
+        role: "USER",
+        createdAt: new Date("2024-01-01"),
+      },
+    ];
+
+    beforeEach(() => {
+      mockRequireAdmin.mockResolvedValue({ id: "admin-1", email: "admin@test.com" });
+      (prisma.user.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockUsers);
+    });
+
+    it("should return default page 1 and limit 20", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(50);
+
+      const res = await GET(createGetRequest());
+      const data = await res.json();
+
+      expect(data.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 50,
+        totalPages: 3,
+      });
+    });
+
+    it("should use custom page and limit from query params", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(50);
+
+      const res = await GET(
+        createGetRequest("http://localhost:3000/api/admin/users?page=2&limit=10"),
+      );
+      const data = await res.json();
+
+      expect(data.pagination).toEqual({
+        page: 2,
+        limit: 10,
+        total: 50,
+        totalPages: 5,
+      });
+    });
+
+    it("should pass skip and take to prisma query", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(100);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?page=3&limit=15"));
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 30,
+          take: 15,
+        }),
+      );
+    });
+
+    it("should cap limit at 100", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(500);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?limit=999"));
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
+    });
+
+    it("should handle negative page as page 1", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?page=-5"));
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 0 }));
+    });
+
+    it("should default to limit 20 when limit is 0 (0 is falsy)", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(10);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?limit=0"));
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 20 }));
+    });
+
+    it("should apply search filter to both findMany and count", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?search=john"));
+
+      const expectedWhere = {
+        OR: [
+          { email: { contains: "john", mode: "insensitive" } },
+          { name: { contains: "john", mode: "insensitive" } },
+        ],
+      };
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expectedWhere }),
+      );
+      expect(prisma.user.count).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expectedWhere }),
+      );
+    });
+
+    it("should not apply search filter when search is empty", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+      await GET(createGetRequest("http://localhost:3000/api/admin/users?search="));
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+      expect(prisma.user.count).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+    });
+
+    it("should calculate totalPages as 0 when total is 0", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+      const res = await GET(createGetRequest());
+      const data = await res.json();
+
+      expect(data.pagination.totalPages).toBe(0);
+    });
+
+    it("should handle single page of results", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(5);
+
+      const res = await GET(createGetRequest("http://localhost:3000/api/admin/users?limit=10"));
+      const data = await res.json();
+
+      expect(data.pagination.totalPages).toBe(1);
+    });
+
+    it("should call both findMany and count in parallel", async () => {
+      (prisma.user.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(100);
+
+      await GET(createGetRequest());
+
+      expect(prisma.user.findMany).toHaveBeenCalled();
+      expect(prisma.user.count).toHaveBeenCalled();
     });
   });
 });

@@ -211,7 +211,9 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
                 <p className="text-body-sm text-muted font-mono">{key.prefix}...</p>
               </div>
 
-              <span className="text-body-sm text-muted">Revoked {formatDate(key.revokedAt!)}</span>
+              <span className="text-body-sm text-muted">
+                Revoked {key.revokedAt ? formatDate(key.revokedAt) : "N/A"}
+              </span>
             </div>
           ))}
         </div>

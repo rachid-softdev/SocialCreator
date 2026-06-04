@@ -37,6 +37,7 @@
         "noImgElement": "warn"
       },
       "suspicious": {
+        "noArrayIndexKey": "off",
         "noExplicitAny": "off",
         "noImplicitAnyLet": "warn",
         "noAssignInExpressions": "warn",

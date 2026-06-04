@@ -4,18 +4,27 @@
  */
 
 import { NextResponse } from "next/server";
+import { adminAudit } from "@/lib/admin-audit";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import logger from "@/lib/logger";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
 
     const { id } = await params;
 
     const repo = getEntitlementRepository();
     await repo.deleteOverride(id);
+
+    adminAudit.info("entitlement.override.delete", {
+      adminId: admin.id,
+      overrideId: id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

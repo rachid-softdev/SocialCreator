@@ -42,7 +42,12 @@ export function ApprovalPanel({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+      <button
+        type="button"
+        className="fixed inset-0 bg-black/30 z-40 cursor-default"
+        onClick={onClose}
+        aria-label="Close"
+      />
 
       {/* Panel */}
       <div className="fixed right-0 top-0 h-screen w-full max-w-lg bg-surface-dark z-50 shadow-xl overflow-y-auto">
@@ -51,6 +56,7 @@ export function ApprovalPanel({
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-title-md text-on-dark">Review Content</h2>
             <button
+              type="button"
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-surface-dark-elevated text-on-dark-soft hover:text-on-dark transition-colors"
             >
@@ -103,10 +109,11 @@ export function ApprovalPanel({
           {/* Reject Reason Input */}
           {showRejectInput && (
             <div className="mb-6">
-              <label className="block text-body-sm text-on-dark mb-2">
+              <label htmlFor="reject-reason" className="block text-body-sm text-on-dark mb-2">
                 Reason for rejection (optional)
               </label>
               <textarea
+                id="reject-reason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Enter reason..."
@@ -119,6 +126,7 @@ export function ApprovalPanel({
           {/* Actions */}
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={handleReject}
               disabled={isLoading}
               className={cn(
@@ -132,6 +140,7 @@ export function ApprovalPanel({
               {showRejectInput ? "Confirm Reject" : "Reject"}
             </button>
             <button
+              type="button"
               onClick={() => onApprove(content.id)}
               disabled={isLoading}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-pill bg-semantic-success text-white hover:bg-semantic-success/90 transition-colors disabled:opacity-50"

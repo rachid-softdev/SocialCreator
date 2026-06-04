@@ -3,8 +3,8 @@
  * Displays real-time queue monitoring with stats and job table
  */
 
-import { QueueDashboard } from "@/components/queue-monitor/queue-dashboard";
 import { PageHeader } from "@/components/layout/page-header";
+import { QueueDashboard } from "@/components/queue-monitor/queue-dashboard";
 
 export default function PublishQueuePage() {
   return (

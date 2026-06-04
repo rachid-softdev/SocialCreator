@@ -180,6 +180,7 @@ export function MultiPlatformPreview({ content, hashtags, platforms }: MultiPlat
           const platformInfo = PLATFORMS.find((p) => p.value === platform);
           return (
             <button
+              type="button"
               key={platform}
               onClick={() => setSelectedPlatform(platform)}
               className={cn(

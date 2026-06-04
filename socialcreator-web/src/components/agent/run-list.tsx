@@ -103,6 +103,7 @@ export function RunList({ runs, agentId, profileId, pagination, onRerun }: RunLi
                       </Link>
                       {run.status === "FAILED" && onRerun && (
                         <button
+                          type="button"
                           onClick={() => onRerun(run.id)}
                           className="p-2 rounded-lg hover:bg-surface-strong text-muted hover:text-ink transition-colors"
                           title="Rerun"
@@ -127,6 +128,7 @@ export function RunList({ runs, agentId, profileId, pagination, onRerun }: RunLi
           </p>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => pagination.onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
               className="p-2 rounded-lg hover:bg-surface-strong disabled:opacity-50 disabled:cursor-not-allowed"
@@ -134,6 +136,7 @@ export function RunList({ runs, agentId, profileId, pagination, onRerun }: RunLi
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => pagination.onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
               className="p-2 rounded-lg hover:bg-surface-strong disabled:opacity-50 disabled:cursor-not-allowed"

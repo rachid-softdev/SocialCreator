@@ -116,7 +116,7 @@ describe("OAuth Token Exchange", () => {
 
       // Verify PKCE code_verifier in body
       const callBody = mockFetch.mock.calls[0][1].body;
-      expect(callBody).toContain("code_verifier=" + encodeURIComponent(verifier));
+      expect(callBody).toContain(`code_verifier=${encodeURIComponent(verifier)}`);
       expect(callBody).toContain("grant_type=authorization_code");
     });
 

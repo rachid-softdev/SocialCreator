@@ -48,7 +48,7 @@ function getResetTime(): number {
   // Reset at midnight UTC
   const now = Date.now();
   const msUntilMidnight =
-    new Date(new Date().toISOString().slice(0, 10) + "T23:59:59.999Z").getTime() - now + 1;
+    new Date(`${new Date().toISOString().slice(0, 10)}T23:59:59.999Z`).getTime() - now + 1;
   return now + Math.max(msUntilMidnight, WINDOW_MS);
 }
 

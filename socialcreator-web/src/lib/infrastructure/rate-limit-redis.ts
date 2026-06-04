@@ -53,6 +53,12 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   "/api/stripe/checkout": { limit: 5, window: "60s" },
   "/api/stripe/portal": { limit: 5, window: "60s" },
 
+  // Admin API - stricter limits for admin operations
+  "/api/admin/users": { limit: 30, window: "60s" },
+  "/api/admin/orgs": { limit: 30, window: "60s" },
+  "/api/admin/stats": { limit: 20, window: "60s" },
+  "/api/admin/entitlements": { limit: 20, window: "60s" },
+
   // Default for other API endpoints
   default: { limit: 100, window: "60s" },
 };
@@ -166,7 +172,7 @@ const limiterCache = new Map<string, Ratelimit>();
 function getRateLimiter(path: string): Ratelimit | null {
   // Check cache first
   if (limiterCache.has(path)) {
-    return limiterCache.get(path)!;
+    return limiterCache.get(path) ?? null;
   }
 
   // Get config for path

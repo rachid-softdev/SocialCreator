@@ -20,8 +20,11 @@ export function BrandVoiceEditor({
 
   return (
     <div className="space-y-2">
-      <label className="block text-body-sm text-body">Brand Voice</label>
+      <label htmlFor="brand-voice" className="block text-body-sm text-body">
+        Brand Voice
+      </label>
       <textarea
+        id="brand-voice"
         value={value}
         onChange={(e) => onChange(e.target.value.slice(0, maxLength))}
         placeholder={placeholder}

@@ -108,7 +108,7 @@ export function MuxPlayer({
 
       {/* Mux branding (required by Mux) */}
       <div className="absolute bottom-2 right-2 opacity-50">
-        <svg width="48" height="12" viewBox="0 0 48 12" fill="none">
+        <svg width="48" height="12" viewBox="0 0 48 12" fill="none" aria-hidden="true">
           <path
             d="M0 0h2.4v9.6H0V0zm4.8 0H8l2.4 6 2.4-6h3.2L12 12 7.2 0zM16 0h2.4v9.6H16V0zm7.2 0h2.4v9.6h-2.4V0zm4.8 0h2.4l1.2 4.8 1.2-4.8h2.4L32.4 12l-2.4-9.6h-2.4L26 12 24 0z"
             fill="white"

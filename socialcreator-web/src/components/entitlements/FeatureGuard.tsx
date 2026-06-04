@@ -134,6 +134,7 @@ export function FeatureButton({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled || !enabled}
       className={`${className} ${!enabled ? "opacity-50 cursor-not-allowed" : ""}`}

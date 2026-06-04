@@ -341,6 +341,7 @@ export default function VideoPipelinePage() {
                       ] as Platform[]
                     ).map((platform) => (
                       <button
+                        type="button"
                         key={platform}
                         onClick={() => handlePlatformToggle(platform)}
                         className={cn(
@@ -399,10 +400,12 @@ export default function VideoPipelinePage() {
                 </div>
               ) : videoAsset?.uploadUrl ? (
                 <div className="aspect-video bg-surface-strong rounded-lg flex items-center justify-center">
+                  {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video, no caption file available */}
                   <video
                     src={videoAsset.uploadUrl}
                     controls
                     className="w-full h-full object-contain rounded-lg"
+                    aria-label="Video player"
                   />
                 </div>
               ) : (

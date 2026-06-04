@@ -125,6 +125,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
       <div className="grid grid-cols-4 gap-2">
         {exampleRequests.map((example) => (
           <button
+            type="button"
             key={example.name}
             onClick={() => setRequestBody(JSON.stringify(example.body, null, 2))}
             className="px-2 py-1 text-caption bg-surface-strong rounded hover:bg-hairline transition-colors text-left"
@@ -136,8 +137,11 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label className="block text-caption font-medium mb-2">Request</label>
+          <label htmlFor="mcp-request" className="block text-caption font-medium mb-2">
+            Request
+          </label>
           <textarea
+            id="mcp-request"
             value={requestBody}
             onChange={(e) => setRequestBody(e.target.value)}
             className="w-full h-64 px-3 py-2 bg-surface-dark text-on-dark rounded font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
@@ -147,7 +151,7 @@ export function McpTester({ baseUrl = "/api/mcp", apiKey = "" }: McpTesterProps)
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-caption font-medium">Response</label>
+            <span className="block text-caption font-medium">Response</span>
 
             {response && (
               <Button variant="ghost" size="sm" icon={copied ? Check : Copy} onClick={copyResponse}>

@@ -58,11 +58,11 @@ function enqueueJob(type: JobType, payload: JobPayload, options: JobOptions = {}
     id,
     type,
     payload,
-    priority: opts.priority!,
+    priority: opts.priority ?? 0,
     status: "queued",
     attempts: 0,
-    maxAttempts: opts.maxAttempts!,
-    retryDelayMs: opts.retryDelayMs!,
+    maxAttempts: opts.maxAttempts ?? 3,
+    retryDelayMs: opts.retryDelayMs ?? 60000,
     createdAt: Date.now(),
   };
   const insertIndex = jobQueue.findIndex(

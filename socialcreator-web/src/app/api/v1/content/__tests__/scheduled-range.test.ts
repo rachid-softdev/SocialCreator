@@ -89,7 +89,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=2099-01-01T00:00:00.000Z&to=2099-12-31T23:59:59.000Z",
       };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockContentRepo.findScheduledByDateRange).toHaveBeenCalledWith(
         "test-user-id",
@@ -106,7 +106,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=2099-01-01T00:00:00.000Z&to=2099-12-31T23:59:59.000Z&platform=INSTAGRAM",
       };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockContentRepo.findScheduledByDateRange).toHaveBeenCalledWith(
         "test-user-id",
@@ -123,7 +123,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=2099-01-01T00:00:00.000Z&to=2099-12-31T23:59:59.000Z",
       };
-      await (GET as unknown as (...args: never[]) => unknown)(request);
+      await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockJson).toHaveBeenCalledWith(
         {
@@ -154,7 +154,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=2099-01-01T00:00:00.000Z&to=2099-12-31T23:59:59.000Z",
       };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(mockJson).toHaveBeenCalledWith({ contents: [] }, expect.anything());
       expect(response).toEqual({ status: 200 });
@@ -166,7 +166,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?to=2099-12-31T23:59:59.000Z",
       };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -176,7 +176,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=2099-01-01T00:00:00.000Z",
       };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });
@@ -186,7 +186,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       const request = {
         url: "http://localhost/api/v1/content/scheduled-range?from=not-a-date&to=2099-12-31T23:59:59.000Z",
       };
-      const response = await (GET as unknown as (...args: never[]) => unknown)(request);
+      const response = await (GET as unknown as (...args: any[]) => unknown)(request);
 
       expect(badRequest).toHaveBeenCalled();
       expect(response).toEqual({ status: 400, error: expect.any(String) });

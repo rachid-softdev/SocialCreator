@@ -66,7 +66,12 @@ export function AgentRunModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+      <button
+        type="button"
+        className="fixed inset-0 bg-black/30 z-40 cursor-default"
+        onClick={onClose}
+        aria-label="Close"
+      />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -76,18 +81,23 @@ export function AgentRunModal({
               <h2 className="text-title-md text-ink">Run Agent</h2>
               <p className="text-caption text-muted mt-1">{agentName}</p>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-strong text-muted">
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-surface-strong text-muted"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
             <div className="mb-6">
-              <label className="block text-body-sm text-ink mb-2">
+              <label htmlFor="content-brief" className="block text-body-sm text-ink mb-2">
                 Content Brief
                 <span className="text-muted ml-1">(what do you want to generate?)</span>
               </label>
               <textarea
+                id="content-brief"
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 placeholder="e.g., Create a motivational post about consistency in achieving goals..."

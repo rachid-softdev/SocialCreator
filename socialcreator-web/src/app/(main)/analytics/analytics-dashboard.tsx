@@ -106,8 +106,11 @@ export function AnalyticsDashboard({
       {/* Profile Selector */}
       {profiles.length > 1 && (
         <div className="flex items-center gap-4">
-          <label className="text-body-sm text-muted">Profile:</label>
+          <label htmlFor="profile-select" className="text-body-sm text-muted">
+            Profile:
+          </label>
           <select
+            id="profile-select"
             value={selectedProfileId}
             onChange={(e) => handleProfileChange(e.target.value)}
             className="px-3 py-2 rounded-lg border border-hairline bg-surface-card text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20"

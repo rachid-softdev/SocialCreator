@@ -103,7 +103,7 @@ export class Container {
         if (!registration.scopedInstances.has(scopeId)) {
           registration.scopedInstances.set(scopeId, registration.factory());
         }
-        return registration.scopedInstances.get(scopeId)!;
+        return registration.scopedInstances.get(scopeId) as ReturnType<typeof registration.factory>;
     }
   }
 }
