@@ -6,10 +6,13 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
 
     const url = new URL(request.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10) || 1);
@@ -17,7 +20,7 @@ export async function GET(request: Request) {
       100,
       Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10) || 20),
     );
-    const search = url.searchParams.get("search") || "";
+    const search = (url.searchParams.get("search") || "").trim();
 
     const where = search ? { name: { contains: search, mode: "insensitive" as const } } : {};
 

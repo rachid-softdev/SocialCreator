@@ -7,10 +7,89 @@ import { startOfDay, startOfMonth, subDays } from "date-fns";
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
-export async function GET() {
+// ── Types ────────────────────────────────────────────────────
+
+interface TrendDataItem {
+  date: string;
+  count: number;
+}
+
+interface Trends {
+  users: TrendDataItem[];
+  content: TrendDataItem[];
+  publications: TrendDataItem[];
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+
+/**
+ * Aggregate an array of objects (each with a Date field) into daily counts
+ * for the last 30 days. Days with zero items are included with count = 0.
+ */
+function aggregateByDate<T extends Record<string, Date>>(
+  items: T[],
+  dateField: keyof T,
+): TrendDataItem[] {
+  const map = new Map<string, number>();
+  const now = new Date();
+
+  // Initialize all 30 days with zero
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split("T")[0];
+    map.set(key, 0);
+  }
+
+  // Count items per day
+  for (const item of items) {
+    const d = item[dateField];
+    if (d instanceof Date) {
+      const key = d.toISOString().split("T")[0];
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, count }));
+}
+
+async function computeTrends(): Promise<Trends> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [recentUsers, recentContent, recentPublications] = await Promise.all([
+    prisma.user.findMany({
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.generatedContent.findMany({
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.publishLog.findMany({
+      where: { publishedAt: { gte: thirtyDaysAgo } },
+      select: { publishedAt: true },
+      orderBy: { publishedAt: "asc" },
+    }),
+  ]);
+
+  return {
+    users: aggregateByDate(recentUsers, "createdAt"),
+    content: aggregateByDate(recentContent, "createdAt"),
+    publications: aggregateByDate(recentPublications, "publishedAt"),
+  };
+}
+
+export async function GET(request: Request) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
 
     const now = new Date();
     const startToday = startOfDay(now);
@@ -51,10 +130,18 @@ export async function GET() {
       }),
     ]);
 
+    // ── Trend data (last 30 days) ──────────────────────────────
+    const url = new URL(request.url);
+    const includeTrends = url.searchParams.get("includeTrends") === "true";
+
+    let trends: Trends | undefined;
+    if (includeTrends) {
+      trends = await computeTrends();
+    }
+
     return NextResponse.json({
       users: {
         total: totalUsers,
-        activeThisMonth: newThisMonth,
         newThisWeek,
         newThisMonth,
       },
@@ -71,6 +158,7 @@ export async function GET() {
         today: publishLogsToday,
         thisMonth: publishLogsThisMonth,
       },
+      ...(includeTrends && { trends }),
     });
   } catch (e: unknown) {
     if (e instanceof AuthError) {

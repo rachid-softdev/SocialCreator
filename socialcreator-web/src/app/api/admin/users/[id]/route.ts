@@ -8,8 +8,10 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { adminAudit } from "@/lib/admin-audit";
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit-redis";
 
 const VALID_ROLES = ["USER", "ADMIN"] as const;
 
@@ -18,9 +20,11 @@ const updateUserSchema = z.object({
   role: z.enum(VALID_ROLES).optional(),
 });
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const { id } = await params;
 
     const user = await prisma.user.findUnique({
@@ -101,7 +105,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const { id } = await params;
 
     const body = await request.json();
@@ -120,6 +126,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       );
     }
 
+    // Prevent self-demotion
+    if (role !== undefined && admin.id === id) {
+      return NextResponse.json({ error: "You cannot demote yourself from ADMIN" }, { status: 403 });
+    }
+
+    // Fetch current user before update for audit trail
+    const currentUser = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -135,6 +156,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
     });
 
+    if (role !== undefined && currentUser.role !== role) {
+      adminAudit.info("user.role.change", {
+        adminId: admin.id,
+        targetUserId: id,
+        oldRole: currentUser.role,
+        newRole: role,
+      });
+    }
+
     return NextResponse.json({ user });
   } catch (e: unknown) {
     if (e instanceof AuthError) {
@@ -147,18 +177,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const rateLimited = await withRateLimit(request, { userId: admin.id });
+    if (rateLimited) return rateLimited;
     const { id } = await params;
 
     // Prevent deleting yourself
-    const admin = await requireAdmin();
     if (admin.id === id) {
-      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 403 });
     }
 
     await prisma.user.delete({ where: { id } });
+
+    adminAudit.info("user.delete", {
+      adminId: admin.id,
+      targetUserId: id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {

@@ -7,15 +7,36 @@
 
 import { AlertCircle, Building2, FileText, Loader2, SendHorizonal, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { AdminGuard } from "@/components/admin/admin-guard";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
+
+interface TrendDataItem {
+  date: string;
+  count: number;
+}
+
+interface Trends {
+  users: TrendDataItem[];
+  content: TrendDataItem[];
+  publications: TrendDataItem[];
+}
 
 interface AdminStats {
   users: { total: number; activeThisMonth: number; newThisWeek: number; newThisMonth: number };
   organizations: { total: number; withSubscription: number };
   content: { totalGenerated: number; publishedToday: number; publishedThisMonth: number };
   publications: { today: number; thisMonth: number };
+  trends?: Trends;
 }
 
 function StatsCard({
@@ -41,6 +62,64 @@ function StatsCard({
   );
 }
 
+function TrendChart({
+  data,
+  title,
+  color,
+}: {
+  data: TrendDataItem[];
+  title: string;
+  color: string;
+}) {
+  if (data.length === 0) {
+    return (
+      <div className="rounded-lg border border-hairline bg-surface-card p-4">
+        <h3 className="text-title-sm text-ink font-medium mb-4">{title}</h3>
+        <p className="text-muted text-center py-12">No data yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-hairline bg-surface-card p-4">
+      <h3 className="text-title-sm text-ink font-medium mb-4">{title}</h3>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-hairline" />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 11 }}
+            className="text-muted"
+            tickFormatter={(val: string) => {
+              const d = new Date(`${val}T00:00:00`);
+              return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+            }}
+          />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} className="text-muted" width={30} />
+          <Tooltip
+            labelFormatter={(val: unknown) => {
+              const d = new Date(`${String(val)}T00:00:00`);
+              return d.toLocaleDateString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              });
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="count"
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function DashboardContent() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +128,7 @@ function DashboardContent() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/admin/stats");
+        const res = await fetch("/api/admin/stats?includeTrends=true");
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.error || "Failed to fetch stats");
@@ -117,6 +196,26 @@ function DashboardContent() {
           subtext={`${stats.publications.today} aujourd'hui`}
         />
       </div>
+
+      {stats.trends && (
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <TrendChart
+            data={stats.trends.users}
+            title="Nouveaux utilisateurs (30 jours)"
+            color="#3b82f6"
+          />
+          <TrendChart
+            data={stats.trends.content}
+            title="Contenu généré (30 jours)"
+            color="#22c55e"
+          />
+          <TrendChart
+            data={stats.trends.publications}
+            title="Publications (30 jours)"
+            color="#a855f7"
+          />
+        </div>
+      )}
     </div>
   );
 }

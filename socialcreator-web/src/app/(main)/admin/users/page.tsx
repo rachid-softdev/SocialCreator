@@ -23,6 +23,7 @@ import { AdminGuard } from "@/components/admin/admin-guard";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { SearchBar } from "@/components/shared/search-bar";
 
 interface AdminUser {
@@ -48,6 +49,10 @@ function AdminUsersContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 20;
 
   // Edit role dialog
   const [editDialog, setEditDialog] = useState<{ open: boolean; user: AdminUser | null }>({
@@ -64,16 +69,26 @@ function AdminUsersContent() {
   });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Refetch when page or search changes
   useEffect(() => {
     async function fetchUsers() {
+      setLoading(true);
       try {
-        const res = await fetch("/api/admin/users");
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("limit", String(limit));
+        if (search.trim()) {
+          params.set("search", search.trim());
+        }
+        const res = await fetch(`/api/admin/users?${params.toString()}`);
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.error || "Failed to fetch users");
         }
         const data = await res.json();
-        setUsers(data.users);
+        setUsers(data.data);
+        setTotalPages(data.pagination.totalPages);
+        setTotalItems(data.pagination.total);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load users");
       } finally {
@@ -81,13 +96,12 @@ function AdminUsersContent() {
       }
     }
     fetchUsers();
-  }, []);
+  }, [page, search]);
 
-  const filteredUsers = users.filter((u) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return u.email.toLowerCase().includes(q) || (u.name || "").toLowerCase().includes(q);
-  });
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
   const handleEditRole = useCallback(async () => {
     if (!editDialog.user) return;
@@ -163,7 +177,7 @@ function AdminUsersContent() {
       {/* Search */}
       <SearchBar
         value={search}
-        onChange={setSearch}
+        onChange={handleSearchChange}
         placeholder="Rechercher par email ou nom..."
         className="mt-6"
       />
@@ -183,14 +197,14 @@ function AdminUsersContent() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.length === 0 ? (
+            {users.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-12 text-center text-body-sm text-muted">
                   Aucun utilisateur trouvé
                 </td>
               </tr>
             ) : (
-              filteredUsers.map((user) => (
+              users.map((user) => (
                 <tr
                   key={user.id}
                   className="border-b border-hairline last:border-b-0 hover:bg-surface-strong/50 transition-colors"
@@ -245,10 +259,13 @@ function AdminUsersContent() {
         </table>
       </div>
 
-      <p className="mt-3 text-caption text-muted">
-        {filteredUsers.length} utilisateur{filteredUsers.length !== 1 ? "s" : ""}
-        {search ? " (filtrés)" : ""}
-      </p>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={limit}
+        onPageChange={setPage}
+      />
 
       {/* Edit Role Dialog */}
       <Dialog
