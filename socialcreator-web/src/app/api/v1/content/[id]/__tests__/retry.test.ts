@@ -110,7 +110,10 @@ describe("POST /api/v1/content/:id/retry", () => {
       mockProfileRepo.findById.mockResolvedValue(profile);
       mockContentRepo.resetToApproved.mockResolvedValue(updatedContent);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (POST as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
@@ -153,7 +156,10 @@ describe("POST /api/v1/content/:id/retry", () => {
       mockContentRepo.findById.mockResolvedValue(content);
       mockProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (POST as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(badRequest).toHaveBeenCalledWith("Only FAILED content can be retried");
       expect(response).toEqual({
@@ -191,7 +197,10 @@ describe("POST /api/v1/content/:id/retry", () => {
     it("should return 404 when content is not found", async () => {
       mockContentRepo.findById.mockResolvedValue(null);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "nonexistent" } });
+      const response = await (POST as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "nonexistent" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -204,7 +213,10 @@ describe("POST /api/v1/content/:id/retry", () => {
       mockContentRepo.findById.mockResolvedValue(content);
       mockProfileRepo.findById.mockResolvedValue(profile);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (POST as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });
@@ -216,7 +228,10 @@ describe("POST /api/v1/content/:id/retry", () => {
       mockContentRepo.findById.mockResolvedValue(content);
       mockProfileRepo.findById.mockResolvedValue(null);
 
-      const response = await (POST as unknown as (...args: never[]) => unknown)({}, { params: { id: "content-1" } });
+      const response = await (POST as unknown as (...args: never[]) => unknown)(
+        {},
+        { params: { id: "content-1" } },
+      );
 
       expect(notFound).toHaveBeenCalledWith("Content");
       expect(response).toEqual({ status: 404, error: "Content not found" });

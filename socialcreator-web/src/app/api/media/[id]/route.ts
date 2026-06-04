@@ -5,7 +5,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
+import { verifyMediaAssetOwnership } from "@/lib/ownership";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -23,16 +26,8 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const { id } = await params;
 
     // Verify user owns this media
-    const media = await prisma.mediaAsset.findFirst({
-      where: {
-        id,
-        profile: { userId: session.user.id },
-      },
-    });
-
-    if (!media) {
-      return NextResponse.json({ error: "Media not found" }, { status: 404 });
-    }
+    const result = await verifyMediaAssetOwnership(session.user.id, id);
+    if (!result.valid) return result.error;
 
     await prisma.mediaAsset.delete({
       where: { id },

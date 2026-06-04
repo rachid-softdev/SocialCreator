@@ -27,6 +27,13 @@ vi.mock("@/lib/prisma", () => ({
     },
     videoAsset: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    mediaAsset: {
+      findFirst: vi.fn(),
+    },
+    apiKey: {
+      findFirst: vi.fn(),
     },
     agentRun: {
       findUnique: vi.fn(),
@@ -39,8 +46,10 @@ vi.mock("@/lib/prisma", () => ({
 import {
   verifyAgentOwnership,
   verifyAgentRunOwnership,
+  verifyApiKeyOwnership,
   verifyConnectedAccountOwnership,
   verifyContentOwnership,
+  verifyMediaAssetOwnership,
   verifyProfileOwnership,
   verifyVideoAssetOwnership,
 } from "@/lib/middleware/ownership";
@@ -260,10 +269,8 @@ describe("Ownership Verification", () => {
   describe("verifyVideoAssetOwnership", () => {
     it("should return valid=true when video asset profile belongs to user", async () => {
       const mockVideoAsset = { id: "video-1", profileId: "profile-1" };
-      const mockProfile = { id: "profile-1", userId, name: "Test" };
 
-      vi.mocked(prisma.videoAsset.findUnique).mockResolvedValue(mockVideoAsset as any);
-      vi.mocked(prisma.profile.findUnique).mockResolvedValue(mockProfile as any);
+      vi.mocked(prisma.videoAsset.findFirst).mockResolvedValue(mockVideoAsset as any);
 
       const result = await verifyVideoAssetOwnership(userId, "video-1");
 
@@ -271,10 +278,13 @@ describe("Ownership Verification", () => {
       if (result.valid) {
         expect(result.data).toEqual(mockVideoAsset);
       }
+      expect(prisma.videoAsset.findFirst).toHaveBeenCalledWith({
+        where: { id: "video-1", profile: { userId } },
+      });
     });
 
-    it("should return valid=false when video asset not found", async () => {
-      vi.mocked(prisma.videoAsset.findUnique).mockResolvedValue(null);
+    it("should return valid=false when video asset not found or access denied", async () => {
+      vi.mocked(prisma.videoAsset.findFirst).mockResolvedValue(null);
 
       const result = await verifyVideoAssetOwnership(userId, "video-nonexistent");
 
@@ -282,36 +292,137 @@ describe("Ownership Verification", () => {
       if (!result.valid) {
         expect(result.error.status).toBe(404);
         const body = await result.error.json();
-        expect(body.error).toContain("Video asset not found");
+        expect(body.error).toContain("not found or access denied");
       }
     });
 
-    it("should return valid=false when profile not found for video asset", async () => {
-      vi.mocked(prisma.videoAsset.findUnique).mockResolvedValue({
-        id: "video-2",
-        profileId: "profile-nonexistent",
-      } as any);
-      vi.mocked(prisma.profile.findUnique).mockResolvedValue(null);
+    it("should return valid=false when video asset belongs to another user", async () => {
+      // findFirst with profile.userId filter returns null when profile doesn't match
+      vi.mocked(prisma.videoAsset.findFirst).mockResolvedValue(null);
 
-      const result = await verifyVideoAssetOwnership(userId, "video-2");
+      const result = await verifyVideoAssetOwnership(userId, "video-other");
 
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error.status).toBe(404);
+        const body = await result.error.json();
+        expect(body.error).toContain("access denied");
+      }
+    });
+  });
+
+  // ============================================
+  // Media Asset Ownership
+  // ============================================
+
+  describe("verifyMediaAssetOwnership", () => {
+    it("should return valid when media asset belongs to user's profile", async () => {
+      const mockMediaAsset = {
+        id: "media-1",
+        profileId: "profile-1",
+        type: "IMAGE",
+        url: "https://example.com/img.jpg",
+      };
+      vi.mocked(prisma.mediaAsset.findFirst).mockResolvedValue(mockMediaAsset as any);
+
+      const result = await verifyMediaAssetOwnership(userId, "media-1");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.data).toEqual(mockMediaAsset);
+      }
+      expect(prisma.mediaAsset.findFirst).toHaveBeenCalledWith({
+        where: { id: "media-1", profile: { userId } },
+      });
+    });
+
+    it("should return invalid when media asset does not exist", async () => {
+      vi.mocked(prisma.mediaAsset.findFirst).mockResolvedValue(null);
+
+      const result = await verifyMediaAssetOwnership(userId, "media-nonexistent");
+
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error.status).toBe(404);
+        const body = await result.error.json();
+        expect(body.error).toContain("Media asset not found");
       }
     });
 
-    it("should return valid=false when profile belongs to another user", async () => {
-      vi.mocked(prisma.videoAsset.findUnique).mockResolvedValue({
-        id: "video-3",
-        profileId: "profile-other",
-      } as any);
-      vi.mocked(prisma.profile.findUnique).mockResolvedValue({
-        id: "profile-other",
-        userId: "user-other",
-      } as any);
+    it("should return invalid when media asset belongs to another user", async () => {
+      // findFirst with profile.userId filter returns null when profile doesn't match
+      vi.mocked(prisma.mediaAsset.findFirst).mockResolvedValue(null);
 
-      const result = await verifyVideoAssetOwnership(userId, "video-3");
+      const result = await verifyMediaAssetOwnership(userId, "media-other");
+
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error.status).toBe(404);
+        const body = await result.error.json();
+        expect(body.error).toContain("access denied");
+      }
+    });
+  });
+
+  // ============================================
+  // API Key Ownership
+  // ============================================
+
+  describe("verifyApiKeyOwnership", () => {
+    it("should return valid when api key belongs to user and not revoked", async () => {
+      const mockApiKey = {
+        id: "key-1",
+        userId,
+        name: "Production Key",
+        keyHash: "abc123",
+        prefix: "sc_live_",
+        revokedAt: null,
+      };
+      vi.mocked(prisma.apiKey.findFirst).mockResolvedValue(mockApiKey as any);
+
+      const result = await verifyApiKeyOwnership(userId, "key-1");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.data).toEqual(mockApiKey);
+      }
+      expect(prisma.apiKey.findFirst).toHaveBeenCalledWith({
+        where: { id: "key-1", userId, revokedAt: null },
+      });
+    });
+
+    it("should return invalid when api key does not exist", async () => {
+      vi.mocked(prisma.apiKey.findFirst).mockResolvedValue(null);
+
+      const result = await verifyApiKeyOwnership(userId, "key-nonexistent");
+
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error.status).toBe(404);
+        const body = await result.error.json();
+        expect(body.error).toContain("API key not found");
+      }
+    });
+
+    it("should return invalid when api key belongs to another user", async () => {
+      // findFirst with userId filter returns null for different user
+      vi.mocked(prisma.apiKey.findFirst).mockResolvedValue(null);
+
+      const result = await verifyApiKeyOwnership(userId, "key-other-user");
+
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error.status).toBe(404);
+        const body = await result.error.json();
+        expect(body.error).toContain("access denied");
+      }
+    });
+
+    it("should return invalid when api key is revoked", async () => {
+      // findFirst with revokedAt: null filter returns null for revoked keys
+      vi.mocked(prisma.apiKey.findFirst).mockResolvedValue(null);
+
+      const result = await verifyApiKeyOwnership(userId, "key-revoked");
 
       expect(result.valid).toBe(false);
       if (!result.valid) {

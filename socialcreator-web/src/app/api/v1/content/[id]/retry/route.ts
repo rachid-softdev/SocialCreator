@@ -32,12 +32,16 @@ export const POST = withApiMiddleware(async ({ userId }, params) => {
   const updatedContent = await contentRepo.resetToApproved(id);
 
   // Re-enqueue publish job with high priority
-  enqueueJob("publish", {
-    contentId: id,
-    profileId: content.profileId,
-    platform: content.platform,
-    userId,
-  }, { priority: "high" });
+  enqueueJob(
+    "publish",
+    {
+      contentId: id,
+      profileId: content.profileId,
+      platform: content.platform,
+      userId,
+    },
+    { priority: "high" },
+  );
 
   return NextResponse.json(
     { content: updatedContent, reEnqueued: true },

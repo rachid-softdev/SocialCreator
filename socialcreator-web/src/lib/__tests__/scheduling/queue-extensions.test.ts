@@ -146,7 +146,11 @@ function resetQueue() {
   counter = 0;
 }
 
-function enqueueJob(type: JobType, payload: Record<string, unknown>, priority: JobPriority = "normal"): string {
+function enqueueJob(
+  type: JobType,
+  payload: Record<string, unknown>,
+  priority: JobPriority = "normal",
+): string {
   const id = `job-${++counter}`;
   const job: Job = {
     id,
@@ -191,8 +195,16 @@ describe("Queue: getJobs (sync)", () => {
 
   it("should return all jobs sorted by createdAt descending", () => {
     enqueueJob("agent-run", { agentId: "a-1", runId: "r-1", userId: "u-1" }, "low");
-    enqueueJob("publish", { contentId: "c-1", profileId: "p-1", platform: "X", userId: "u-1" }, "high");
-    enqueueJob("content-generate", { profileId: "p-1", platform: "X", brief: "test", agentId: "a-1" }, "normal");
+    enqueueJob(
+      "publish",
+      { contentId: "c-1", profileId: "p-1", platform: "X", userId: "u-1" },
+      "high",
+    );
+    enqueueJob(
+      "content-generate",
+      { profileId: "p-1", platform: "X", brief: "test", agentId: "a-1" },
+      "normal",
+    );
 
     const jobs = getJobs();
     expect(jobs).toHaveLength(3);
@@ -213,20 +225,25 @@ describe("Queue: getJobs (sync)", () => {
 
   it("should include jobs in all statuses", () => {
     const id1 = enqueueJob("agent-run", { agentId: "a-1", runId: "r-1", userId: "u-1" });
-    const id2 = enqueueJob("publish", { contentId: "c-1", profileId: "p-1", platform: "X", userId: "u-1" });
+    const id2 = enqueueJob("publish", {
+      contentId: "c-1",
+      profileId: "p-1",
+      platform: "X",
+      userId: "u-1",
+    });
 
     // Complete one
-    const j1 = jobQueue.find(j => j.id === id1)!;
+    const j1 = jobQueue.find((j) => j.id === id1)!;
     j1.status = "completed";
     j1.completedAt = Date.now();
 
     const jobs = getJobs();
     expect(jobs).toHaveLength(2);
 
-    const completedJob = jobs.find(j => j.id === id1);
+    const completedJob = jobs.find((j) => j.id === id1);
     expect(completedJob?.status).toBe("completed");
 
-    const queuedJob = jobs.find(j => j.id === id2);
+    const queuedJob = jobs.find((j) => j.id === id2);
     expect(queuedJob?.status).toBe("queued");
   });
 });
@@ -244,9 +261,36 @@ describe("QueueBackend: list()", () => {
   });
 
   it("should return all jobs sorted by createdAt descending", async () => {
-    await backend.enqueue({ type: "agent-run", payload: { agentId: "a-1", runId: "r-1", userId: "u-1" }, priority: "normal", status: "queued", attempts: 0, maxAttempts: 3, retryDelayMs: 1000, createdAt: Date.now() - 3000 } as any);
-    await backend.enqueue({ type: "publish", payload: { contentId: "c-1", profileId: "p-1", platform: "X", userId: "u-1" }, priority: "high", status: "queued", attempts: 0, maxAttempts: 3, retryDelayMs: 1000, createdAt: Date.now() - 1000 } as any);
-    await backend.enqueue({ type: "content-generate", payload: { profileId: "p-1", platform: "X", brief: "test", agentId: "a-1" }, priority: "normal", status: "queued", attempts: 0, maxAttempts: 3, retryDelayMs: 1000, createdAt: Date.now() - 2000 } as any);
+    await backend.enqueue({
+      type: "agent-run",
+      payload: { agentId: "a-1", runId: "r-1", userId: "u-1" },
+      priority: "normal",
+      status: "queued",
+      attempts: 0,
+      maxAttempts: 3,
+      retryDelayMs: 1000,
+      createdAt: Date.now() - 3000,
+    } as any);
+    await backend.enqueue({
+      type: "publish",
+      payload: { contentId: "c-1", profileId: "p-1", platform: "X", userId: "u-1" },
+      priority: "high",
+      status: "queued",
+      attempts: 0,
+      maxAttempts: 3,
+      retryDelayMs: 1000,
+      createdAt: Date.now() - 1000,
+    } as any);
+    await backend.enqueue({
+      type: "content-generate",
+      payload: { profileId: "p-1", platform: "X", brief: "test", agentId: "a-1" },
+      priority: "normal",
+      status: "queued",
+      attempts: 0,
+      maxAttempts: 3,
+      retryDelayMs: 1000,
+      createdAt: Date.now() - 2000,
+    } as any);
 
     const jobs = await backend.list();
     expect(jobs).toHaveLength(3);
@@ -257,7 +301,16 @@ describe("QueueBackend: list()", () => {
   });
 
   it("should return a copy, not a reference to internal array", async () => {
-    await backend.enqueue({ type: "agent-run", payload: { agentId: "a-1", runId: "r-1", userId: "u-1" }, priority: "normal", status: "queued", attempts: 0, maxAttempts: 3, retryDelayMs: 1000, createdAt: Date.now() } as any);
+    await backend.enqueue({
+      type: "agent-run",
+      payload: { agentId: "a-1", runId: "r-1", userId: "u-1" },
+      priority: "normal",
+      status: "queued",
+      attempts: 0,
+      maxAttempts: 3,
+      retryDelayMs: 1000,
+      createdAt: Date.now(),
+    } as any);
 
     const jobs = await backend.list();
     const originalLength = jobs.length;

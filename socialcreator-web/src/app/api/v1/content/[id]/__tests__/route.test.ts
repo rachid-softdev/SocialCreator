@@ -112,7 +112,9 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ textContent: "Updated text", hashtags: ["#updated"] }),
       };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+        params: { id: "content-1" },
+      });
 
       expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
       expect(mockProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
@@ -144,7 +146,9 @@ describe("PUT /api/v1/content/:id", () => {
         json: async () => ({ status: "APPROVED" }),
       };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+        params: { id: "content-1" },
+      });
 
       expect(mockContentRepo.update).toHaveBeenCalledWith("content-1", { status: "APPROVED" });
     });
@@ -164,7 +168,9 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "nonexistent" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+        params: { id: "nonexistent" },
+      });
 
       expect(notFound).toHaveBeenCalledWith("Content");
     });
@@ -178,7 +184,9 @@ describe("PUT /api/v1/content/:id", () => {
 
       const request = { json: async () => ({ textContent: "test" }) };
 
-      await (PUT as unknown as (...args: never[]) => unknown)(request, { params: { id: "content-1" } });
+      await (PUT as unknown as (...args: never[]) => unknown)(request, {
+        params: { id: "content-1" },
+      });
 
       expect(notFound).toHaveBeenCalledWith("Content");
     });

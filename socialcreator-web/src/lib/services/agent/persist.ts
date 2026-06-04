@@ -41,9 +41,11 @@ export async function saveGeneratedContent(
     ),
   );
 
-  // Track business metric
+  // Track business metric (platform label always lowercase for Prometheus consistency)
   for (const { platform, textContent } of results) {
-    contentGenerated.inc({ platform, type: textContent ? "text" : "media" });
+    const platformLower = platform.toLowerCase();
+    contentGenerated.inc({ platform: platformLower, type: textContent ? "text" : "media" });
+    contentGenerated.inc({ platform: platformLower, type: "agent" });
   }
 }
 

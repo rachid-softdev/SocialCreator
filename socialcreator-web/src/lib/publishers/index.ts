@@ -4,6 +4,7 @@
  */
 
 import type { Platform } from "@prisma/client";
+import { contentGenerated } from "@/lib/utils/metrics";
 import { publishToFacebook } from "./facebook";
 import { publishToInstagram } from "./instagram";
 import { publishToLinkedIn } from "./linkedin";
@@ -54,7 +55,14 @@ export async function publishContent(
   options: PublishOptions,
 ): Promise<PublishResult> {
   const publisher = getPublisher(platform);
-  return publisher.publish(input, options);
+  const result = await publisher.publish(input, options);
+
+  // Track business metric
+  if (result.success) {
+    contentGenerated.inc({ platform: platform.toLowerCase(), type: "publish" });
+  }
+
+  return result;
 }
 
 // Export individual publishers for direct use

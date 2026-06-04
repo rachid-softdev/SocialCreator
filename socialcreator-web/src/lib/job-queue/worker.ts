@@ -39,7 +39,11 @@ export function startWorker(options?: { mode?: "sync" | "async" }): void {
   running = true;
 
   logger.info(
-    { maxConcurrent: MAX_CONCURRENT, pollInterval: POLL_INTERVAL_MS, mode: useAsyncMode ? "async" : "sync" },
+    {
+      maxConcurrent: MAX_CONCURRENT,
+      pollInterval: POLL_INTERVAL_MS,
+      mode: useAsyncMode ? "async" : "sync",
+    },
     "Job worker started",
   );
 

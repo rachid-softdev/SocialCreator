@@ -7,7 +7,9 @@ import type { IAgentRepository, IAgentRunRepository } from "./agent.repository";
 import type { IApiKeyRepository } from "./api-key.repository";
 import type { IConnectedAccountRepository } from "./connected-account.repository";
 import type { IContentRepository } from "./content.repository";
+import type { IInvitationRepository } from "./invitation.repository";
 import type { IMediaAssetRepository } from "./media-asset.repository";
+import type { INotificationRepository } from "./notification.repository";
 import type { IProfileRepository } from "./profile.repository";
 import type { IPublishLogRepository } from "./publish-log.repository";
 import type { ITeamRepository } from "./team.repository";
@@ -25,7 +27,9 @@ export interface Repositories {
   profile: IProfileRepository;
   user: IUserRepository;
   apiKey: IApiKeyRepository;
+  invitation: IInvitationRepository;
   mediaAsset: IMediaAssetRepository;
+  notification: INotificationRepository;
   team: ITeamRepository;
   teamMember: ITeamMemberRepository;
   connectedAccount: IConnectedAccountRepository;
@@ -48,6 +52,8 @@ export function initRepositories(overrides?: Partial<Repositories>): Repositorie
   // Lazy require to avoid circular deps
   const { PrismaContentRepository } = require("./content.repository");
   const { PrismaAgentRepository, PrismaAgentRunRepository } = require("./agent.repository");
+  const { PrismaInvitationRepository } = require("./invitation.repository");
+  const { PrismaNotificationRepository } = require("./notification.repository");
   const { PrismaProfileRepository } = require("./profile.repository");
   const { PrismaUserRepository } = require("./user.repository");
   const { PrismaApiKeyRepository } = require("./api-key.repository");
@@ -64,7 +70,9 @@ export function initRepositories(overrides?: Partial<Repositories>): Repositorie
     profile: new PrismaProfileRepository(),
     user: new PrismaUserRepository(),
     apiKey: new PrismaApiKeyRepository(),
+    invitation: new PrismaInvitationRepository(),
     mediaAsset: new PrismaMediaAssetRepository(),
+    notification: new PrismaNotificationRepository(),
     team: new PrismaTeamRepository(),
     teamMember: new PrismaTeamMemberRepository(),
     connectedAccount: new PrismaConnectedAccountRepository(),

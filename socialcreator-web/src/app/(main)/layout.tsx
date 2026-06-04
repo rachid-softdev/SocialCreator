@@ -38,7 +38,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         <Sidebar user={session.user} />
       </div>
 
-      <main className="lg:pl-[256px]">
+      <main id="main-content" className="lg:pl-[256px]">
         {/* Mobile header with drawer */}
         <MobileHeader user={user} />
         <div className="p-6 lg:p-8">

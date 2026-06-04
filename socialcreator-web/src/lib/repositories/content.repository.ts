@@ -42,11 +42,24 @@ export interface IContentRepository {
   countPublishedToday(profileId: string, platform: Platform): Promise<number>;
   findByRunId(runId: string): Promise<GeneratedContent[]>;
   /** Find SCHEDULED content within a time window for a profile */
-  findScheduledByProfileAndTime(profileId: string, start: Date, end: Date): Promise<GeneratedContent[]>;
+  findScheduledByProfileAndTime(
+    profileId: string,
+    start: Date,
+    end: Date,
+  ): Promise<GeneratedContent[]>;
   /** Find SCHEDULED content by date range for a user, optionally filtered by platform */
-  findScheduledByDateRange(userId: string, from: Date, to: Date, platform?: string): Promise<GeneratedContent[]>;
+  findScheduledByDateRange(
+    userId: string,
+    from: Date,
+    to: Date,
+    platform?: string,
+  ): Promise<GeneratedContent[]>;
   /** Find FAILED content with optional profile filter and pagination */
-  findFailed(options?: { page?: number; pageSize?: number; profileId?: string }): Promise<ContentPage>;
+  findFailed(options?: {
+    page?: number;
+    pageSize?: number;
+    profileId?: string;
+  }): Promise<ContentPage>;
   /** Reset content status from FAILED back to APPROVED (for retry) */
   resetToApproved(id: string): Promise<GeneratedContent>;
   /** Cancel a schedule (set scheduledPublishAt=null, status=APPROVED) */
@@ -300,9 +313,7 @@ export class PrismaContentRepository implements IContentRepository {
     });
   }
 
-  async batchReschedule(
-    items: Array<{ id: string; scheduledPublishAt: Date }>,
-  ): Promise<number> {
+  async batchReschedule(items: Array<{ id: string; scheduledPublishAt: Date }>): Promise<number> {
     if (items.length === 0) return 0;
 
     const updates = items.map((item) =>

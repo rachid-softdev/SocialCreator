@@ -2,20 +2,10 @@
 
 import { cn } from "@socialcreator/utils";
 import { useEffect, useCallback } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  Play,
-  RefreshCw,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Loader2, Play, RefreshCw } from "lucide-react";
 import { useQueueStore } from "@/lib/stores/queue-store";
 
-const STATUS_BADGE: Record<
-  string,
-  { label: string; className: string }
-> = {
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   queued: { label: "Queued", className: "bg-blue-100 text-blue-800" },
   running: { label: "Running", className: "bg-yellow-100 text-yellow-800" },
   completed: {
@@ -25,10 +15,7 @@ const STATUS_BADGE: Record<
   failed: { label: "Failed", className: "bg-red-100 text-red-800" },
 };
 
-const PRIORITY_BADGE: Record<
-  string,
-  { label: string; className: string }
-> = {
+const PRIORITY_BADGE: Record<string, { label: string; className: string }> = {
   critical: { label: "Critical", className: "bg-red-100 text-red-800" },
   high: { label: "High", className: "bg-orange-100 text-orange-800" },
   normal: { label: "Normal", className: "bg-gray-100 text-gray-800" },
@@ -110,9 +97,7 @@ export function QueueDashboard() {
     <div className="space-y-6">
       {/* Header with controls */}
       <div className="flex items-center justify-between">
-        <h2 className="text-title-md text-ink font-semibold">
-          Queue Overview
-        </h2>
+        <h2 className="text-title-md text-ink font-semibold">Queue Overview</h2>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-body-sm text-muted cursor-pointer">
             <input
@@ -129,9 +114,7 @@ export function QueueDashboard() {
             disabled={isLoading}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hairline bg-surface-card text-body-sm text-ink hover:bg-surface-strong transition-colors disabled:opacity-50"
           >
-            <RefreshCw
-              className={cn("h-4 w-4", isLoading && "animate-spin")}
-            />
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             Refresh
           </button>
         </div>
@@ -157,19 +140,12 @@ export function QueueDashboard() {
                 "rounded-xl border border-hairline bg-surface-card p-5 flex items-center gap-4",
               )}
             >
-              <div
-                className={cn(
-                  "rounded-lg p-3",
-                  card.bg,
-                )}
-              >
+              <div className={cn("rounded-lg p-3", card.bg)}>
                 <Icon className={cn("h-5 w-5", card.color)} />
               </div>
               <div>
                 <p className="text-caption text-muted">{card.label}</p>
-                <p className="text-display-sm text-ink font-semibold">
-                  {value.toLocaleString()}
-                </p>
+                <p className="text-display-sm text-ink font-semibold">{value.toLocaleString()}</p>
               </div>
             </div>
           );
@@ -179,8 +155,7 @@ export function QueueDashboard() {
       {/* Total from status */}
       {status && (
         <p className="text-body-sm text-muted">
-          Total jobs in queue:{" "}
-          <span className="font-medium text-ink">{status.total}</span>
+          Total jobs in queue: <span className="font-medium text-ink">{status.total}</span>
         </p>
       )}
 
@@ -203,12 +178,8 @@ export function QueueDashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-hairline-soft bg-surface-strong/50">
-                  <th className="text-left px-6 py-3 text-caption text-muted font-medium">
-                    ID
-                  </th>
-                  <th className="text-left px-6 py-3 text-caption text-muted font-medium">
-                    Type
-                  </th>
+                  <th className="text-left px-6 py-3 text-caption text-muted font-medium">ID</th>
+                  <th className="text-left px-6 py-3 text-caption text-muted font-medium">Type</th>
                   <th className="text-left px-6 py-3 text-caption text-muted font-medium">
                     Status
                   </th>
@@ -245,9 +216,7 @@ export function QueueDashboard() {
                       <td className="px-6 py-4 text-body-sm text-ink font-mono truncate max-w-[120px]">
                         {job.id.slice(0, 8)}...
                       </td>
-                      <td className="px-6 py-4 text-body-sm text-ink capitalize">
-                        {job.type}
-                      </td>
+                      <td className="px-6 py-4 text-body-sm text-ink capitalize">{job.type}</td>
                       <td className="px-6 py-4">
                         <span
                           className={cn(
@@ -302,9 +271,7 @@ export function QueueDashboard() {
       {/* Job errors section */}
       {jobs.some((j) => j.error) && (
         <div className="bg-surface-card border border-hairline rounded-xl p-6">
-          <h3 className="text-title-sm text-ink font-medium mb-4">
-            Recent Errors
-          </h3>
+          <h3 className="text-title-sm text-ink font-medium mb-4">Recent Errors</h3>
           <div className="space-y-2">
             {jobs
               .filter((j) => j.error)
@@ -319,9 +286,7 @@ export function QueueDashboard() {
                     <p className="text-body-sm font-medium text-red-800">
                       {job.type} — {job.id.slice(0, 8)}...
                     </p>
-                    <p className="text-caption text-red-600 mt-0.5 break-words">
-                      {job.error}
-                    </p>
+                    <p className="text-caption text-red-600 mt-0.5 break-words">{job.error}</p>
                   </div>
                   <button
                     type="button"

@@ -16,27 +16,30 @@ enum Role {
 }
 
 model User {
-  id                       String       @id @default(cuid())
+  id                       String             @id @default(cuid())
   name                     String?
-  email                    String       @unique
+  email                    String             @unique
   emailVerified            DateTime?
   image                    String?
   password                 String? // For credentials auth (optional, OAuth users don't have password)
   stripeCustomerId         String?
   stripeSubscriptionId     String?
   stripeSubscriptionStatus String?
-  cguAccepted              Boolean      @default(false)
+  cguAccepted              Boolean            @default(false)
   cguAcceptedAt            DateTime?
-  ownedTeams               Team[]       @relation("TeamOwner")
+  ownedTeams               Team[]             @relation("TeamOwner")
   teamMemberships          TeamMember[]
   accounts                 Account[]
   sessions                 Session[]
   profiles                 Profile[]
   apiKeys                  ApiKey[]
   publishLogs              PublishLog[]
-  createdAt                DateTime     @default(now())
-  updatedAt                DateTime     @updatedAt
-  role                     Role         @default(USER)
+  invitationsSent          Invitation[]       @relation("InvitedBy")
+  notifications            Notification[]
+  reviewedContent          GeneratedContent[] @relation("ContentReviewer")
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  role                     Role               @default(USER)
 }
 
 model Account {
@@ -83,6 +86,7 @@ model Team {
   ownerId      String
   owner        User          @relation("TeamOwner", fields: [ownerId], references: [id])
   members      TeamMember[]
+  invitations  Invitation[]
   profiles     Profile[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -98,6 +102,20 @@ enum TeamRole {
   VIEWER
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ContentReviewStatus {
+  NONE
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model TeamMember {
   id        String    @id @default(cuid())
   teamId    String
@@ -110,6 +128,46 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@index([userId])
+}
+
+// ── Invitations ───────────────────────────────────────
+
+model Invitation {
+  id              String           @id @default(cuid())
+  teamId          String
+  team            Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedByUserId String
+  invitedBy       User             @relation("InvitedBy", fields: [invitedByUserId], references: [id])
+  email           String
+  role            TeamRole         @default(VIEWER)
+  token           String           @unique
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime         @default(now())
+
+  @@index([teamId])
+  @@index([email])
+  @@index([token])
+  @@index([status, expiresAt])
+}
+
+// ── Notifications ─────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String?
+  data      Json     @default("{}")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read, createdAt])
+  @@index([userId, createdAt])
 }
 
 // ── Media Library ─────────────────────────────────────────
@@ -259,26 +317,32 @@ enum RunStatus {
 }
 
 model GeneratedContent {
-  id                 String        @id @default(cuid())
+  id                 String              @id @default(cuid())
   runId              String?
-  run                AgentRun?     @relation(fields: [runId], references: [id])
+  run                AgentRun?           @relation(fields: [runId], references: [id])
   profileId          String
-  profile            Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile            Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform           Platform
-  textContent        String        @db.Text
+  textContent        String              @db.Text
   mediaUrls          String[]
   hashtags           String[]
-  status             ContentStatus @default(DRAFT)
+  status             ContentStatus       @default(DRAFT)
+  reviewStatus       ContentReviewStatus @default(NONE)
+  reviewedById       String?
+  reviewedBy         User?               @relation("ContentReviewer", fields: [reviewedById], references: [id])
+  reviewedAt         DateTime?
+  reviewComment      String?             @db.Text
   postId             String?
   publishedAt        DateTime?
   rejectedAt         DateTime?
   scheduledPublishAt DateTime? // Publication planifiée
-  scheduledTimezone  String?       @default("UTC")
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  scheduledTimezone  String?             @default("UTC")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   @@index([status, scheduledPublishAt])
   @@index([profileId, status])
+  @@index([reviewStatus])
 }
 
 enum ContentStatus {

@@ -28,9 +28,7 @@ export function TodayScheduleList({ events }: TodayScheduleListProps) {
   // Filter events scheduled for today
   const todayEvents = events
     .filter((e) => isToday(new Date(e.scheduledAt)))
-    .sort(
-      (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-    );
+    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
   if (todayEvents.length === 0) {
     return (

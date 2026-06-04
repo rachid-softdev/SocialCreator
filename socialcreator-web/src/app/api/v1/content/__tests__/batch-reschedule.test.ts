@@ -32,14 +32,7 @@ vi.mock("next/server", () => ({
 
 vi.mock("@/lib/api-middleware", () => ({
   withApiMiddleware: vi.fn(
-    (
-      handler: (
-        ctx: {
-          userId: string;
-          request: { json: ReturnType<typeof vi.fn> };
-        },
-      ) => unknown,
-    ) =>
+    (handler: (ctx: { userId: string; request: { json: ReturnType<typeof vi.fn> } }) => unknown) =>
       async (_request: unknown) => {
         return handler({
           userId: "test-user-id",
@@ -120,12 +113,8 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       const content2 = makeMockContent({ id: "content-2" });
       const profile = makeMockProfile();
 
-      mockContentRepo.findById
-        .mockResolvedValueOnce(content1)
-        .mockResolvedValueOnce(content2);
-      mockProfileRepo.findById
-        .mockResolvedValueOnce(profile)
-        .mockResolvedValueOnce(profile);
+      mockContentRepo.findById.mockResolvedValueOnce(content1).mockResolvedValueOnce(content2);
+      mockProfileRepo.findById.mockResolvedValueOnce(profile).mockResolvedValueOnce(profile);
       mockContentRepo.batchReschedule.mockResolvedValue(2);
 
       const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
@@ -231,9 +220,7 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       });
 
       const content = makeMockContent({ id: "content-1" });
-      mockContentRepo.findById
-        .mockResolvedValueOnce(content)
-        .mockResolvedValueOnce(null);
+      mockContentRepo.findById.mockResolvedValueOnce(content).mockResolvedValueOnce(null);
 
       const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
 
@@ -258,12 +245,8 @@ describe("POST /api/v1/content/batch/reschedule", () => {
       const profile1 = makeMockProfile();
       const profileOther = makeMockProfile({ userId: "different-user" });
 
-      mockContentRepo.findById
-        .mockResolvedValueOnce(content1)
-        .mockResolvedValueOnce(contentOther);
-      mockProfileRepo.findById
-        .mockResolvedValueOnce(profile1)
-        .mockResolvedValueOnce(profileOther);
+      mockContentRepo.findById.mockResolvedValueOnce(content1).mockResolvedValueOnce(contentOther);
+      mockProfileRepo.findById.mockResolvedValueOnce(profile1).mockResolvedValueOnce(profileOther);
 
       const response = await (POST as unknown as (...args: never[]) => unknown)({}, {});
 

@@ -24,10 +24,9 @@ vi.mock("next/server", () => ({
 
 vi.mock("@/lib/middleware/api-middleware", () => ({
   withApiMiddleware: vi.fn(
-    (handler: (ctx: { userId: string; request: any }) => unknown) =>
-      async (request: unknown) => {
-        return handler({ userId: "test-user-id", request });
-      },
+    (handler: (ctx: { userId: string; request: any }) => unknown) => async (request: unknown) => {
+      return handler({ userId: "test-user-id", request });
+    },
   ),
 }));
 

@@ -22,10 +22,7 @@ export const POST = withApiMiddleware(async (_ctx, params) => {
   }
 
   if (job.status !== "failed") {
-    return NextResponse.json(
-      { error: "Only failed jobs can be retried" },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: "Only failed jobs can be retried" }, { status: 409 });
   }
 
   const success = retryJob(id);

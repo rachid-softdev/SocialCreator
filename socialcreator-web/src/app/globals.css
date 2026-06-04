@@ -22,7 +22,7 @@
     --color-ink: #0c0a09;
     --color-body: #4e4e4e;
     --color-body-strong: #292524;
-    --color-muted: #777169;
+    --color-muted: #6b6559;
     --color-muted-soft: #a8a29e;
 
     /* Colors - Surface */
@@ -89,6 +89,18 @@
   body {
     @apply bg-canvas text-ink;
     font-family: var(--font-sans), Inter, system-ui, sans-serif;
+  }
+
+  /* Custom focus ring accessible */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Suppress focus ring for mouse clicks only */
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 }
 

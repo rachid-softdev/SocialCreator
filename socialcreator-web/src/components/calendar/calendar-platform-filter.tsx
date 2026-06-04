@@ -39,9 +39,7 @@ export function CalendarPlatformFilter({
         <span
           className={cn(
             "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[11px] px-1",
-            selected === null
-              ? "bg-on-primary/20 text-on-primary"
-              : "bg-surface-strong text-muted",
+            selected === null ? "bg-on-primary/20 text-on-primary" : "bg-surface-strong text-muted",
           )}
         >
           {totalCount}
@@ -70,9 +68,7 @@ export function CalendarPlatformFilter({
               <span
                 className={cn(
                   "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[11px] px-1",
-                  isSelected
-                    ? "bg-on-primary/20 text-on-primary"
-                    : "bg-surface-strong text-muted",
+                  isSelected ? "bg-on-primary/20 text-on-primary" : "bg-surface-strong text-muted",
                 )}
               >
                 {platformCount}

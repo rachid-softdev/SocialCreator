@@ -156,10 +156,7 @@ describe("GET /api/v1/content/scheduled-range", () => {
       };
       const response = await (GET as unknown as (...args: never[]) => unknown)(request);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        { contents: [] },
-        expect.anything(),
-      );
+      expect(mockJson).toHaveBeenCalledWith({ contents: [] }, expect.anything());
       expect(response).toEqual({ status: 200 });
     });
   });

@@ -30,6 +30,23 @@ vi.mock("@/lib/logger", () => ({
   default: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
+// Mock prisma for routes that use it directly (dashboard)
+import { prisma } from "@/lib/prisma";
+
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    profile: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+    },
+    generatedContent: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
+    },
+  },
+}));
+
 // Mock withApiMiddleware to be a pass-through for handler tests.
 // The middleware's auth/rate-limit behavior is tested separately
 // in api-middleware.integration.test.ts.
@@ -144,7 +161,9 @@ import {
   GET as ProfileGET,
   PUT as ProfilePUT,
 } from "@/app/api/v1/profiles/[id]/route";
+import { PATCH as ProfileSharePATCH } from "@/app/api/v1/profiles/[id]/share/route";
 import { GET as ProfilesGET, POST as ProfilesPOST } from "@/app/api/v1/profiles/route";
+import { GET as TeamDashboardGET } from "@/app/api/v1/teams/[id]/dashboard/route";
 import {
   GET as TeamInvitationsGET,
   POST as TeamInvitationsPOST,
@@ -585,6 +604,179 @@ describe("v1 API Routes", () => {
       );
       expect(res.status).toBe(200);
       expect(res.headers.get("Cache-Control")).toContain("no-store");
+    });
+  });
+
+  // ── Profile Share ──────────────────────────────────────────
+
+  describe("PATCH /api/v1/profiles/[id]/share", () => {
+    it("should set teamId on profile for owner", async () => {
+      mockRepos.profile.findById.mockResolvedValue({ id: "p-1", userId: "user-abc-123" });
+      mockRepos.team.findById.mockResolvedValue({
+        id: "t-1",
+        ownerId: "user-abc-123",
+        members: [],
+      });
+      mockRepos.profile.update.mockResolvedValue({ id: "p-1", teamId: "t-1" });
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: "t-1" },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.profile.teamId).toBe("t-1");
+      expect(res.headers.get("X-API-Version")).toBe("v1");
+    });
+
+    it("should unshare profile when teamId is null", async () => {
+      mockRepos.profile.findById.mockResolvedValue({
+        id: "p-1",
+        userId: "user-abc-123",
+        teamId: "t-1",
+      });
+      mockRepos.profile.update.mockResolvedValue({ id: "p-1", teamId: null });
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: null },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.profile.teamId).toBeNull();
+    });
+
+    it("should return 401 when non-owner tries to share", async () => {
+      mockRepos.profile.findById.mockResolvedValue({ id: "p-1", userId: "other-user" });
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: "t-1" },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("should return 404 when profile not found", async () => {
+      mockRepos.profile.findById.mockResolvedValue(null);
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: "t-1" },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(404);
+    });
+
+    it("should return 404 when team does not exist", async () => {
+      mockRepos.profile.findById.mockResolvedValue({ id: "p-1", userId: "user-abc-123" });
+      mockRepos.team.findById.mockResolvedValue(null);
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: "nonexistent" },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(404);
+    });
+
+    it("should return 403 when user is not team owner or admin", async () => {
+      mockRepos.profile.findById.mockResolvedValue({ id: "p-1", userId: "user-abc-123" });
+      mockRepos.team.findById.mockResolvedValue({
+        id: "t-1",
+        ownerId: "other-owner",
+        members: [{ userId: "user-abc-123", role: "VIEWER" }],
+      });
+
+      const res = await ProfileSharePATCH(
+        createRequest("/api/v1/profiles/p-1/share", {
+          method: "PATCH",
+          body: { teamId: "t-1" },
+        }),
+        createParams({ id: "p-1" }),
+      );
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ── Team Dashboard ─────────────────────────────────────────
+
+  describe("GET /api/v1/teams/[id]/dashboard", () => {
+    beforeEach(() => {
+      // Mock all prisma aggregation calls for the happy path
+      vi.mocked(prisma.profile.count).mockResolvedValue(5);
+      vi.mocked(prisma.generatedContent.count).mockResolvedValue(42);
+      vi.mocked(prisma.generatedContent.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.generatedContent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([]);
+    });
+
+    it("should return aggregated team stats for owner", async () => {
+      mockRepos.team.findById.mockResolvedValue({
+        id: "t-1",
+        name: "My Team",
+        ownerId: "user-abc-123",
+        members: [],
+      });
+
+      // Make the second count call (for total published) return a different value
+      vi.mocked(prisma.generatedContent.count)
+        .mockResolvedValueOnce(42) // total content created
+        .mockResolvedValueOnce(30) // total published
+        .mockResolvedValueOnce(5) // published this week
+        .mockResolvedValueOnce(3); // in review
+
+      const res = await TeamDashboardGET(
+        createRequest("/api/v1/teams/t-1/dashboard"),
+        createParams({ id: "t-1" }),
+      );
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.team.name).toBe("My Team");
+      expect(data.totalContentCreated).toBe(42);
+      expect(data.totalContentPublished).toBe(30);
+      expect(data.contentPublishedThisWeek).toBe(5);
+      expect(data.contentInReview).toBe(3);
+      expect(data.team.memberCount).toBe(1); // owner only
+      expect(data.team.profileCount).toBe(5);
+      expect(res.headers.get("Cache-Control")).toContain("no-store");
+    });
+
+    it("should return 404 when team not found", async () => {
+      mockRepos.team.findById.mockResolvedValue(null);
+
+      const res = await TeamDashboardGET(
+        createRequest("/api/v1/teams/t-1/dashboard"),
+        createParams({ id: "t-1" }),
+      );
+      expect(res.status).toBe(404);
+    });
+
+    it("should return 401 when non-member tries to access", async () => {
+      mockRepos.team.findById.mockResolvedValue({
+        id: "t-1",
+        name: "My Team",
+        ownerId: "other-owner",
+        members: [],
+      });
+
+      const res = await TeamDashboardGET(
+        createRequest("/api/v1/teams/t-1/dashboard"),
+        createParams({ id: "t-1" }),
+      );
+      expect(res.status).toBe(401);
     });
   });
 });
