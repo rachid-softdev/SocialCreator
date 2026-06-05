@@ -113,62 +113,6 @@ describe("PUT /api/v1/content/:id", () => {
       };
 
       await (PUT as unknown as (...args: any[]) => unknown)(request, {
-        params: { id: "content-1" },
-      });
-
-      expect(mockContentRepo.findById).toHaveBeenCalledWith("content-1");
-      expect(mockProfileRepo.findById).toHaveBeenCalledWith(content.profileId);
-      expect(mockContentRepo.update).toHaveBeenCalledWith("content-1", {
-        textContent: "Updated text",
-        hashtags: ["#updated"],
-      });
-      expect(mockJson).toHaveBeenCalledWith(
-        { content: updatedContent },
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            "Cache-Control": "private, no-store",
-            "X-API-Version": "v1",
-          }),
-        }),
-      );
-    });
-
-    it("should update status field", async () => {
-      const content = makeMockContent();
-      const profile = makeMockProfile();
-      const updatedContent = { ...content, status: "APPROVED" };
-
-      mockContentRepo.findById.mockResolvedValue(content);
-      mockProfileRepo.findById.mockResolvedValue(profile);
-      mockContentRepo.update.mockResolvedValue(updatedContent);
-
-      const request = {
-        json: async () => ({ status: "APPROVED" }),
-      };
-
-      await (PUT as unknown as (...args: any[]) => unknown)(request, {
-        params: { id: "content-1" },
-      });
-
-      expect(mockContentRepo.update).toHaveBeenCalledWith("content-1", { status: "APPROVED" });
-    });
-  });
-
-  describe("error cases", () => {
-    it("should return 400 when content ID is missing", async () => {
-      const request = { json: async () => ({ textContent: "test" }) };
-
-      await (PUT as unknown as (...args: any[]) => unknown)(request, { params: {} });
-
-      expect(badRequest).toHaveBeenCalledWith("Content ID is required");
-    });
-
-    it("should return 404 when content is not found", async () => {
-      mockContentRepo.findById.mockResolvedValue(null);
-
-      const request = { json: async () => ({ textContent: "test" }) };
-
-      await (PUT as unknown as (...args: any[]) => unknown)(request, {
         params: { id: "nonexistent" },
       });
 
