@@ -19,7 +19,7 @@
     "test:e2e:ui": "turbo test:e2e -- --ui",
     "db:generate": "turbo db:generate",
     "db:seed": "pnpm --filter=socialcreator-web run db:seed",
-    "clean": "turbo clean && rm -rf node_modules packages/*/node_modules",
+    "clean": "turbo clean \u0026\u0026 rm -rf node_modules packages/*/node_modules",
     "web:dev": "pnpm --filter=socialcreator-web dev",
     "web:build": "pnpm --filter=socialcreator-web build",
     "web:start": "pnpm --filter=socialcreator-web start",
@@ -45,8 +45,12 @@
     "push-env": "pnpm --filter=socialcreator-web push-env",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
-    "prepare": "husky"
+    "check": "pnpm run format:check \u0026\u0026 pnpm run lint \u0026\u0026 pnpm run typecheck",
+    "prepare": "husky",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset tag",
+    "ci:release": "pnpm changeset version \u0026\u0026 pnpm install --no-frozen-lockfile \u0026\u0026 pnpm build \u0026\u0026 pnpm changeset tag"
   },
   "lint-staged": {
     "*": [
@@ -64,7 +68,9 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "turbo": "^2.4.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "@changesets/cli": "^2.27.0",
+    "@changesets/changelog-github": "^0.5.0"
   },
   "packageManager": "pnpm@9.15.9"
 }
