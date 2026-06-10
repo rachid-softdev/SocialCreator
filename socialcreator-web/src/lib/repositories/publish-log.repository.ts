@@ -5,6 +5,8 @@
 
 import type { Platform, PublishLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getCacheService } from "@/lib/infrastructure/cache";
+import { getRedis } from "@/lib/infrastructure/rate-limit-redis";
 
 // ============================================
 // Domain Types
@@ -40,6 +42,7 @@ export interface IPublishLogRepository {
   create(data: CreatePublishLogInput): Promise<PublishLog>;
   countPublishedToday(profileId: string, platform: Platform): Promise<number>;
   findByContentHash(hash: string): Promise<PublishLog | null>;
+  findSuccessfulByContentHash(hash: string, profileId: string): Promise<PublishLog | null>;
   getDailyStats(userId: string, days: number): Promise<DailyStatsItem[]>;
 }
 
@@ -99,7 +102,7 @@ export class PrismaPublishLogRepository implements IPublishLogRepository {
   }
 
   async create(data: CreatePublishLogInput): Promise<PublishLog> {
-    return prisma.publishLog.create({
+    const log = await prisma.publishLog.create({
       data: {
         userId: data.userId,
         profileId: data.profileId,
@@ -110,6 +113,10 @@ export class PrismaPublishLogRepository implements IPublishLogRepository {
         error: data.error ?? null,
       },
     });
+
+    await this.invalidateDailyStatsCache(data.userId);
+
+    return log;
   }
 
   async countPublishedToday(profileId: string, platform: Platform): Promise<number> {
@@ -127,6 +134,12 @@ export class PrismaPublishLogRepository implements IPublishLogRepository {
   }
 
   async getDailyStats(userId: string, days: number): Promise<DailyStatsItem[]> {
+    const cacheKey = `cache:publishlog:dailystats:${userId}:${days}`;
+    const cache = getCacheService();
+
+    const cached = await cache.get<DailyStatsItem[]>(cacheKey);
+    if (cached) return cached;
+
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const logs = await prisma.publishLog.findMany({
@@ -154,15 +167,39 @@ export class PrismaPublishLogRepository implements IPublishLogRepository {
       }
     }
 
-    return Object.entries(grouped)
+    const result = Object.entries(grouped)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, counts]) => ({ date, ...counts }));
+
+    await cache.set(cacheKey, result, 300);
+
+    return result;
+  }
+
+  async invalidateDailyStatsCache(userId: string): Promise<void> {
+    const redis = getRedis();
+    if (!redis) return;
+    const pattern = `cache:publishlog:dailystats:${userId}:*`;
+    let cursor = 0;
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 100 });
+      cursor = Number(nextCursor);
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+    } while (cursor !== 0);
   }
 
   async findByContentHash(hash: string): Promise<PublishLog | null> {
     return prisma.publishLog.findFirst({
       where: { contentHash: hash },
       orderBy: { publishedAt: "desc" },
+    });
+  }
+
+  async findSuccessfulByContentHash(hash: string, profileId: string): Promise<PublishLog | null> {
+    return prisma.publishLog.findFirst({
+      where: { contentHash: hash, profileId, success: true },
     });
   }
 }

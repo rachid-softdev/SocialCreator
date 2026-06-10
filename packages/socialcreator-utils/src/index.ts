@@ -41,3 +41,20 @@ export function formatDuration(ms: number): string {
 export function hashContent(content: string): string {
   return createHash("sha256").update(content).digest("hex");
 }
+
+export function computeContentHash(params: {
+  profileId: string;
+  platform: string;
+  textContent: string;
+  mediaUrls: string[];
+  hashtags: string[];
+}): string {
+  const canonical = [
+    params.profileId,
+    params.platform,
+    params.textContent,
+    [...params.mediaUrls].sort().join(','),
+    [...params.hashtags].sort().join(','),
+  ].join('|');
+  return createHash('sha256').update(canonical).digest('hex');
+}

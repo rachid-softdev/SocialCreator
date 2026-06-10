@@ -6,6 +6,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import logger from "@/lib/logger";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
@@ -30,7 +31,7 @@ export async function publishToX(
 
     const response = await fetchWithTimeout("https://api.twitter.com/2/tweets", {
       method: "POST",
-      timeout: 15000, // X API: 15s timeout
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

@@ -4,6 +4,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
@@ -34,7 +35,7 @@ export async function getPinterestBoards(accessToken: string): Promise<Pinterest
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      timeout: 10000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
     });
 
     if (!response.ok) {
@@ -96,7 +97,7 @@ export async function publishToPinterest(
 
       const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/pins`, {
         method: "POST",
-        timeout: 15000,
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -176,7 +177,7 @@ export async function createPinterestBoard(
   try {
     const response = await fetchWithTimeout(`${PINTEREST_API_BASE}/boards`, {
       method: "POST",
-      timeout: 10000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -221,7 +222,7 @@ export async function getPinterestProfile(accessToken: string): Promise<{
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      timeout: 10000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
     });
 
     if (!response.ok) return null;

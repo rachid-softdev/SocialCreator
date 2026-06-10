@@ -5,6 +5,7 @@
 
 import type { Agent, AgentRun, Platform } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getCacheService } from "@/lib/infrastructure/cache";
 
 // ============================================
 // Domain Types
@@ -18,6 +19,19 @@ export type AgentRunWithContent = AgentRun & {
   generatedContents: Array<{ id: string; platform: string; status: string }>;
 };
 
+export interface AgentPage {
+  agents: Agent[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface PaginationOptions {
+  page?: number;
+  pageSize?: number;
+}
+
 // ============================================
 // Agent Repository
 // ============================================
@@ -25,6 +39,7 @@ export type AgentRunWithContent = AgentRun & {
 export interface IAgentRepository {
   findById(id: string): Promise<AgentWithProfile | null>;
   findByProfileId(profileId: string): Promise<Agent[]>;
+  findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<AgentPage>;
   create(data: CreateAgentInput): Promise<Agent>;
   update(id: string, data: UpdateAgentInput): Promise<Agent>;
   delete(id: string): Promise<void>;
@@ -74,17 +89,54 @@ export interface CreateRunInput {
 
 export class PrismaAgentRepository implements IAgentRepository {
   async findById(id: string): Promise<AgentWithProfile | null> {
-    return prisma.agent.findUnique({
+    const cacheKey = `cache:agent:${id}`;
+    const cache = getCacheService();
+
+    const cached = await cache.get<AgentWithProfile>(cacheKey);
+    if (cached) return cached;
+
+    const agent = await prisma.agent.findUnique({
       where: { id },
       include: { profile: { select: { id: true, name: true } } },
     });
+
+    if (agent) {
+      await cache.set(cacheKey, agent, 300);
+    }
+
+    return agent;
   }
 
   async findByProfileId(profileId: string): Promise<Agent[]> {
     return prisma.agent.findMany({
       where: { profileId },
       orderBy: { createdAt: "desc" },
+      take: 100,
     });
+  }
+
+  async findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<AgentPage> {
+    const page = options?.page ?? 1;
+    const pageSize = options?.pageSize ?? 20;
+    const where = { profileId };
+
+    const [agents, total] = await Promise.all([
+      prisma.agent.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.agent.count({ where }),
+    ]);
+
+    return {
+      agents,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
   }
 
   async create(data: CreateAgentInput): Promise<Agent> {
@@ -103,7 +155,11 @@ export class PrismaAgentRepository implements IAgentRepository {
   }
 
   async update(id: string, data: UpdateAgentInput): Promise<Agent> {
-    return prisma.agent.update({ where: { id }, data: data as any });
+    const agent = await prisma.agent.update({ where: { id }, data: data as any });
+
+    await getCacheService().del(`cache:agent:${id}`);
+
+    return agent;
   }
 
   async delete(id: string): Promise<void> {

@@ -22,6 +22,12 @@ export { PrismaInvitationRepository } from "./invitation.repository";
 export type { IMediaAssetRepository } from "./media-asset.repository";
 export { PrismaMediaAssetRepository } from "./media-asset.repository";
 export type {
+  IAnalyticsRepository,
+  AnalyticsFilterOptions,
+  AnalyticsPage,
+} from "./analytics.repository";
+export { PrismaAnalyticsRepository } from "./analytics.repository";
+export type {
   INotificationRepository,
   NotificationListOptions,
   NotificationPage,

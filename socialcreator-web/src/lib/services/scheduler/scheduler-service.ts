@@ -6,6 +6,7 @@
  */
 
 import type { Platform } from "@prisma/client";
+import { computeContentHash } from "@socialcreator/utils";
 import { createQueueBackend } from "@/lib/job-queue/backend";
 import logger from "@/lib/logger";
 import { getRepositories } from "@/lib/repositories";
@@ -16,23 +17,28 @@ export interface SchedulerOptions {
 
 export function createScheduler(options?: SchedulerOptions) {
   let timer: ReturnType<typeof setInterval> | null = null;
-  const enqueuedIds = new Set<string>();
   const pollInterval = options?.pollIntervalMs ?? 30_000;
 
   async function tick(): Promise<void> {
     const start = Date.now();
     try {
       const { content: contentRepo } = getRepositories();
-      const dueContent = await contentRepo.findPendingScheduled(new Date());
+      const dueContent = await contentRepo.claimScheduled(new Date());
 
       let enqueued = 0;
       for (const content of dueContent) {
-        if (enqueuedIds.has(content.id)) continue; // dedup
-
         if (!content.profileId) {
           logger.warn({ contentId: content.id }, "Scheduled content has no profileId, skipping");
           continue;
         }
+
+        const contentHash = computeContentHash({
+          profileId: content.profileId,
+          platform: content.platform,
+          textContent: content.textContent,
+          mediaUrls: content.mediaUrls,
+          hashtags: content.hashtags,
+        });
 
         const backend = createQueueBackend();
         await backend.enqueue({
@@ -42,6 +48,7 @@ export function createScheduler(options?: SchedulerOptions) {
             profileId: content.profileId,
             platform: content.platform as Platform,
             userId: "", // resolved by publish handler
+            contentHash,
           },
           priority: "normal",
           status: "queued",
@@ -51,13 +58,7 @@ export function createScheduler(options?: SchedulerOptions) {
           createdAt: Date.now(),
         });
 
-        enqueuedIds.add(content.id);
         enqueued++;
-      }
-
-      // Garbage collect old IDs (older than 5 minutes)
-      if (enqueuedIds.size > 100) {
-        enqueuedIds.clear(); // simple approach: clear and rebuild
       }
 
       logger.debug(
@@ -81,7 +82,6 @@ export function createScheduler(options?: SchedulerOptions) {
         clearInterval(timer);
         timer = null;
       }
-      enqueuedIds.clear();
       logger.info("Scheduler stopped");
     },
     isRunning() {

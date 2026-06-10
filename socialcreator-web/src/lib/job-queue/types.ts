@@ -31,6 +31,7 @@ export interface PublishPayload {
   profileId: string;
   platform: Platform;
   userId: string;
+  contentHash?: string;
 }
 
 export interface VideoProcessPayload {

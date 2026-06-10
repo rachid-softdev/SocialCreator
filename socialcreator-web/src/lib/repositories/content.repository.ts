@@ -68,6 +68,8 @@ export interface IContentRepository {
   countScheduledAtTime(profileId: string, time: Date): Promise<number>;
   /** Batch update scheduled times — returns count updated */
   batchReschedule(items: Array<{ id: string; scheduledPublishAt: Date }>): Promise<number>;
+  /** Atomically claim SCHEDULED content for publishing (status → PUBLISHING) */
+  claimScheduled(before: Date): Promise<GeneratedContent[]>;
 }
 
 type GeneratedContentCreateInput = Omit<
@@ -325,5 +327,12 @@ export class PrismaContentRepository implements IContentRepository {
 
     const results = await Promise.all(updates);
     return results.length;
+  }
+
+  async claimScheduled(before: Date): Promise<GeneratedContent[]> {
+    return prisma.generatedContent.updateManyAndReturn({
+      where: { status: "SCHEDULED", scheduledPublishAt: { lte: before } },
+      data: { status: "PUBLISHING" },
+    });
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
@@ -56,7 +57,7 @@ export async function publishToYouTube(
         `${YOUTUBE_UPLOAD_URL}?uploadType=resumable&part=snippet,status`,
         {
           method: "POST",
-          timeout: 15000,
+          timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
@@ -107,7 +108,7 @@ export async function publishToYouTube(
         throw new Error(`Invalid video URL: ${urlValidation.error}`);
       }
       const videoResponse = await fetchWithTimeout(mediaUrl, {
-        timeout: 30000, // Video download: 30s timeout (large files)
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       });
       if (!videoResponse.ok) {
         throw new Error(`Failed to fetch video: ${videoResponse.status}`);
@@ -118,7 +119,7 @@ export async function publishToYouTube(
       // Upload to YouTube
       const uploadResponse = await fetchWithTimeout(uploadUrl, {
         method: "PUT",
-        timeout: 60000, // YouTube upload: 60s timeout (very large files)
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
         headers: {
           "Content-Length": videoBlob.size.toString(),
           "Content-Type": "video/mp4",
@@ -212,7 +213,7 @@ export async function getYouTubeVideoDetails(
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        timeout: 10000,
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       },
     );
 

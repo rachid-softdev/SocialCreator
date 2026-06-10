@@ -5,6 +5,7 @@
 
 import type { Platform, Profile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getCacheService } from "@/lib/infrastructure/cache";
 
 // ============================================
 // Domain Types
@@ -59,7 +60,13 @@ export interface UpdateProfileInput {
 
 export class PrismaProfileRepository implements IProfileRepository {
   async findById(id: string): Promise<ProfileWithRelations | null> {
-    return prisma.profile.findUnique({
+    const cacheKey = `cache:profile:${id}`;
+    const cache = getCacheService();
+
+    const cached = await cache.get<ProfileWithRelations>(cacheKey);
+    if (cached) return cached;
+
+    const profile = await prisma.profile.findUnique({
       where: { id },
       include: {
         connectedAccounts: {
@@ -70,6 +77,12 @@ export class PrismaProfileRepository implements IProfileRepository {
         },
       },
     });
+
+    if (profile) {
+      await cache.set(cacheKey, profile, 600);
+    }
+
+    return profile;
   }
 
   async findByUserId(userId: string): Promise<Profile[]> {
@@ -94,7 +107,11 @@ export class PrismaProfileRepository implements IProfileRepository {
   }
 
   async update(id: string, data: UpdateProfileInput): Promise<Profile> {
-    return prisma.profile.update({ where: { id }, data: data as any });
+    const profile = await prisma.profile.update({ where: { id }, data: data as any });
+
+    await getCacheService().del(`cache:profile:${id}`);
+
+    return profile;
   }
 
   async delete(id: string): Promise<void> {

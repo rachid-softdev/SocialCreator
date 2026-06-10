@@ -4,6 +4,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import logger from "@/lib/logger";
 import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
@@ -114,7 +115,7 @@ export async function publishToTikTok(
 
         const response = await fetchWithTimeout(`${TIKTOK_API_BASE}/post/publish/video/init/`, {
           method: "POST",
-          timeout: 15000,
+          timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -161,7 +162,7 @@ export async function publishToTikTok(
 
           // Fetch the video from our storage
           const videoResponse = await fetchWithTimeout(mediaUrl, {
-            timeout: 30000, // Video download: 30s timeout
+            timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           });
 
           if (!videoResponse.ok) {
@@ -173,7 +174,7 @@ export async function publishToTikTok(
           // Upload to TikTok's upload URL with proper headers
           const uploadResponse = await fetchWithTimeout(data.upload_url, {
             method: "PUT",
-            timeout: 60000, // TikTok upload: 60s timeout
+            timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
             body: videoBlob,
             headers: {
               "Content-Type": "video/mp4",
@@ -253,7 +254,7 @@ export async function getTikTokPostStatus(
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        timeout: 10000,
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       },
     );
 
@@ -283,7 +284,7 @@ export async function getTikTokProfile(accessToken: string): Promise<{
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      timeout: 10000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
     });
 
     if (!response.ok) return null;

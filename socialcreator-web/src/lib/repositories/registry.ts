@@ -4,6 +4,7 @@
  */
 
 import type { IAgentRepository, IAgentRunRepository } from "./agent.repository";
+import type { IAnalyticsRepository } from "./analytics.repository";
 import type { IApiKeyRepository } from "./api-key.repository";
 import type { IConnectedAccountRepository } from "./connected-account.repository";
 import type { IContentRepository } from "./content.repository";
@@ -34,6 +35,7 @@ export interface Repositories {
   teamMember: ITeamMemberRepository;
   connectedAccount: IConnectedAccountRepository;
   publishLog: IPublishLogRepository;
+  analytics: IAnalyticsRepository;
 }
 
 // ============================================
@@ -62,6 +64,7 @@ export function initRepositories(overrides?: Partial<Repositories>): Repositorie
   const { PrismaTeamMemberRepository } = require("./team-member.repository");
   const { PrismaConnectedAccountRepository } = require("./connected-account.repository");
   const { PrismaPublishLogRepository } = require("./publish-log.repository");
+  const { PrismaAnalyticsRepository } = require("./analytics.repository");
 
   registryInstance = {
     content: new PrismaContentRepository(),
@@ -77,6 +80,7 @@ export function initRepositories(overrides?: Partial<Repositories>): Repositorie
     teamMember: new PrismaTeamMemberRepository(),
     connectedAccount: new PrismaConnectedAccountRepository(),
     publishLog: new PrismaPublishLogRepository(),
+    analytics: new PrismaAnalyticsRepository(),
     ...overrides,
   };
 

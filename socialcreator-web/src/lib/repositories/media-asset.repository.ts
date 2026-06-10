@@ -7,12 +7,30 @@ import type { MediaAsset, MediaType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 // ============================================
+// Domain Types
+// ============================================
+
+export interface MediaAssetPage {
+  items: MediaAsset[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface PaginationOptions {
+  page?: number;
+  pageSize?: number;
+}
+
+// ============================================
 // Repository Interface
 // ============================================
 
 export interface IMediaAssetRepository {
   findById(id: string): Promise<MediaAsset | null>;
   findByProfileId(profileId: string, type?: MediaType): Promise<MediaAsset[]>;
+  findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<MediaAssetPage>;
   create(data: CreateMediaAssetInput): Promise<MediaAsset>;
   delete(id: string): Promise<void>;
 }
@@ -46,6 +64,30 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
       where,
       orderBy: { uploadedAt: "desc" },
     });
+  }
+
+  async findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<MediaAssetPage> {
+    const page = options?.page ?? 1;
+    const pageSize = options?.pageSize ?? 20;
+    const where = { profileId };
+
+    const [items, total] = await Promise.all([
+      prisma.mediaAsset.findMany({
+        where,
+        orderBy: { uploadedAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.mediaAsset.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
   }
 
   async create(data: CreateMediaAssetInput): Promise<MediaAsset> {

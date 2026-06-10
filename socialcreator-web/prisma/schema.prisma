@@ -352,6 +352,7 @@ enum ContentStatus {
   FAILED
   REJECTED
   SCHEDULED // En attente de publication planifiée
+  PUBLISHING // En cours de publication (verrou atomique)
 }
 
 /// Journal d'audit immuable pour chaque publication
@@ -376,6 +377,7 @@ model PublishLog {
 
   publishedAt DateTime @default(now())
 
+  @@unique([contentHash, profileId, success])
   @@index([userId, publishedAt])
   @@index([profileId, publishedAt])
 }

@@ -5,6 +5,8 @@
 
 import { getEntitlementRepository } from "@/lib/entitlements/repository";
 import { FeatureGateService } from "@/lib/entitlements/service";
+import { RedisCacheService } from "@/lib/infrastructure/cache";
+import { getRedis } from "@/lib/infrastructure/rate-limit-redis";
 import { Container } from "./container";
 import { TOKENS } from "./token";
 
@@ -27,6 +29,26 @@ export function registerDefaultServices(container: Container): void {
   container.register(TOKENS.ENTITLEMENT_REPOSITORY, () => getEntitlementRepository(), "singleton");
 
   container.register(TOKENS.FEATURE_GATE_SERVICE, () => new FeatureGateService(), "singleton");
+
+  container.register(
+    TOKENS.CACHE_SERVICE,
+    () => {
+      const redis = getRedis();
+      if (!redis) throw new Error("Redis not configured — cannot create CacheService");
+      return new RedisCacheService(redis);
+    },
+    "singleton",
+  );
+
+  // Analytics Repository
+  container.register(
+    TOKENS.ANALYTICS_REPOSITORY,
+    () => {
+      const { PrismaAnalyticsRepository } = require("@/lib/repositories/analytics.repository");
+      return new PrismaAnalyticsRepository();
+    },
+    "singleton",
+  );
 }
 
 /**

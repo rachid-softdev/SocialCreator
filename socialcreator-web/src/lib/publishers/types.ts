@@ -51,6 +51,7 @@ export interface PublishContext {
   profileId: string;
   userId: string;
   attempt: number;
+  idempotencyKey?: string;
 }
 
 export interface ValidationResult {

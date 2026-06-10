@@ -3,6 +3,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
@@ -28,7 +29,7 @@ export async function publishToFacebook(
 
     const response = await fetchWithTimeout(`https://graph.facebook.com/v18.0/${accountId}/feed`, {
       method: "POST",
-      timeout: 15000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,

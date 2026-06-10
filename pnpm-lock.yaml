@@ -136,6 +136,9 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@22.19.19)
 
   socialcreator-desktop: {}
 

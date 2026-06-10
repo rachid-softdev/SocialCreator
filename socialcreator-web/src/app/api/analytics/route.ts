@@ -6,6 +6,8 @@
  * - profileId: string (required)
  * - from: ISO date string (optional, defaults to 30 days ago)
  * - to: ISO date string (optional, defaults to now)
+ * - page: number (optional, defaults to 1)
+ * - pageSize: number (optional, defaults to 20)
  */
 
 import type { Platform } from "@prisma/client";
@@ -14,6 +16,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { PrismaAnalyticsRepository } from "@/lib/repositories/analytics.repository";
+
+const analyticsRepo = new PrismaAnalyticsRepository();
 
 export async function GET(request: Request) {
   try {
@@ -27,6 +32,8 @@ export async function GET(request: Request) {
     const profileId = searchParams.get("profileId");
     const fromParam = searchParams.get("from");
     const toParam = searchParams.get("to");
+    const pageParam = searchParams.get("page");
+    const pageSizeParam = searchParams.get("pageSize");
 
     if (!profileId) {
       return NextResponse.json({ error: "Missing profileId" }, { status: 400 });
@@ -47,6 +54,9 @@ export async function GET(request: Request) {
       ? new Date(fromParam)
       : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+    const page = pageParam ? parseInt(pageParam, 10) : 1;
+    const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : 20;
+
     // Fetch PublishLogs in range
     const publishLogs = await prisma.publishLog.findMany({
       where: {
@@ -59,17 +69,16 @@ export async function GET(request: Request) {
       orderBy: { publishedAt: "asc" },
     });
 
-    // Fetch Analytics records in range
-    const analytics = await prisma.analytics.findMany({
-      where: {
-        profileId,
-        date: {
-          gte: startOfDayUTC(from),
-          lte: to,
-        },
-      },
-      orderBy: { date: "asc" },
+    // Fetch Analytics records in range via repository with pagination
+    const analyticsPage = await analyticsRepo.findByProfileId({
+      profileId,
+      from: startOfDayUTC(from),
+      to,
+      page,
+      pageSize,
     });
+
+    const analytics = analyticsPage.items;
 
     // Aggregate daily data
     const dailyMap = new Map<
@@ -137,6 +146,12 @@ export async function GET(request: Request) {
         dateRange: {
           from: from.toISOString(),
           to: to.toISOString(),
+        },
+        pagination: {
+          page: analyticsPage.page,
+          pageSize: analyticsPage.pageSize,
+          total: analyticsPage.total,
+          totalPages: analyticsPage.totalPages,
         },
       },
       {

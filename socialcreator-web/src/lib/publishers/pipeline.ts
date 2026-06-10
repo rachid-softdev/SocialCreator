@@ -2,6 +2,7 @@
  * Publish pipeline with validation, hooks, and retry
  */
 
+import { computeContentHash } from "@socialcreator/utils";
 import logger from "@/lib/logger";
 import type {
   PublishAccount,
@@ -55,6 +56,13 @@ export async function runPublishPipeline(ctx: PipelineContext): Promise<PublishR
     profileId,
     userId,
     attempt: 0,
+    idempotencyKey: computeContentHash({
+      profileId,
+      platform,
+      textContent: content.textContent,
+      mediaUrls: content.mediaUrls,
+      hashtags: content.hashtags,
+    }),
   };
 
   if (registration.hooks?.prePublish) {

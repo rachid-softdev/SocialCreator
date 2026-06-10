@@ -6,6 +6,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToThreads(
@@ -19,7 +20,7 @@ export async function publishToThreads(
       `https://graph.facebook.com/v18.0/${accountId}/threads`,
       {
         method: "POST",
-        timeout: 15000,
+        timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,

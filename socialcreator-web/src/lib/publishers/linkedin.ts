@@ -6,6 +6,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
 export async function publishToLinkedIn(
@@ -30,7 +31,7 @@ export async function publishToLinkedIn(
 
     const response = await fetchWithTimeout("https://api.linkedin.com/rest/posts", {
       method: "POST",
-      timeout: 15000,
+      timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

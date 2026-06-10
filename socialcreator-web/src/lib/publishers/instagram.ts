@@ -3,6 +3,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import { validateMediaUrl } from "@/lib/validate-url";
 import type { PublishInput, PublishOptions, PublishResult } from "./types";
 
@@ -26,7 +27,7 @@ export async function publishToInstagram(
         `https://graph.facebook.com/v18.0/${accountId}/media`,
         {
           method: "POST",
-          timeout: 15000, // Meta API: 15s timeout
+          timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -50,7 +51,7 @@ export async function publishToInstagram(
         `https://graph.facebook.com/v18.0/${accountId}/media_publish`,
         {
           method: "POST",
-          timeout: 15000,
+          timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -75,7 +76,7 @@ export async function publishToInstagram(
         `https://graph.facebook.com/v18.0/${accountId}/feed`,
         {
           method: "POST",
-          timeout: 15000,
+          timeout: EXTERNAL_TIMEOUTS.PUBLISH_PLATFORM,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,

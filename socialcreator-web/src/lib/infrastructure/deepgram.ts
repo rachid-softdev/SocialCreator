@@ -1,7 +1,8 @@
 import { createClient } from "@deepgram/sdk";
 import logger from "@/lib/logger";
+import { EXTERNAL_TIMEOUTS } from "./timeouts";
 
-const DEEPGRAM_TIMEOUT_MS = 30_000; // 30 seconds
+const DEEPGRAM_TIMEOUT_MS = EXTERNAL_TIMEOUTS.DEEPGRAM_TRANSCRIPTION;
 
 // Lazy initialization to prevent build-time errors
 function getDeepgramClient() {
@@ -10,6 +11,34 @@ function getDeepgramClient() {
     throw new Error("DEEPGRAM_API_KEY is not configured");
   }
   return createClient(apiKey);
+}
+
+function generateIdempotencyKey(): string {
+  return `dg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function retryWithIdempotency<T>(
+  fn: (idempotencyKey: string) => Promise<T>,
+  maxRetries: number = 2,
+  baseDelay: number = 1000,
+): Promise<T> {
+  let lastError: Error | null = null;
+  const idempotencyKey = generateIdempotencyKey();
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn(idempotencyKey);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (attempt < maxRetries) {
+        const delay = baseDelay * 2 ** (attempt - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error("Max retries exceeded");
 }
 
 /**
@@ -51,21 +80,27 @@ export interface TranscriptResult {
 
 export async function transcribeVideo(videoUrl: string): Promise<TranscriptResult> {
   const deepgram = getDeepgramClient();
-  // Note: No retry on preRecorded — it's a non-idempotent write operation.
-  // Retrying could create duplicate transcription jobs with duplicate billing.
-  const result: any = await withTimeout(
-    deepgram.transcription.preRecorded(
-      { url: videoUrl },
-      {
-        punctuate: true,
-        paragraphs: true,
-        timestamps: true,
-        model: "nova-2",
-        language: "multi",
-      },
-    ),
-    DEEPGRAM_TIMEOUT_MS,
-    "Deepgram.transcribeVideo",
+
+  const result: any = await retryWithIdempotency(
+    async (idempotencyKey) => {
+      return withTimeout(
+        deepgram.transcription.preRecorded(
+          { url: videoUrl },
+          {
+            punctuate: true,
+            paragraphs: true,
+            timestamps: true,
+            model: "nova-2",
+            language: "multi",
+            "x-idempotency-key": idempotencyKey,
+          } as any,
+        ),
+        DEEPGRAM_TIMEOUT_MS,
+        "Deepgram.transcribeVideo",
+      );
+    },
+    2,
+    1000,
   );
 
   return {
@@ -78,18 +113,25 @@ export async function getTranscriptWithTimestamps(videoUrl: string): Promise<{
   words: Array<{ word: string; start: number; end: number }>;
 }> {
   const deepgram = getDeepgramClient();
-  // Note: No retry on preRecorded — non-idempotent write (see transcribeVideo).
-  const result: any = await withTimeout(
-    deepgram.transcription.preRecorded(
-      { url: videoUrl },
-      {
-        punctuate: true,
-        model: "nova-2",
-        detect_language: true,
-      },
-    ),
-    DEEPGRAM_TIMEOUT_MS,
-    "Deepgram.getTranscriptWithTimestamps",
+
+  const result: any = await retryWithIdempotency(
+    async (idempotencyKey) => {
+      return withTimeout(
+        deepgram.transcription.preRecorded(
+          { url: videoUrl },
+          {
+            punctuate: true,
+            model: "nova-2",
+            detect_language: true,
+            "x-idempotency-key": idempotencyKey,
+          } as any,
+        ),
+        DEEPGRAM_TIMEOUT_MS,
+        "Deepgram.getTranscriptWithTimestamps",
+      );
+    },
+    2,
+    1000,
   );
 
   return {

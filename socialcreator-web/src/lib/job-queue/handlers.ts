@@ -4,7 +4,7 @@
  * Uses repository pattern for data access
  */
 
-import { hashContent } from "@socialcreator/utils";
+import { computeContentHash } from "@socialcreator/utils";
 import logger from "@/lib/logger";
 import { publishContent } from "@/lib/publishers";
 import { getRepositories } from "@/lib/repositories";
@@ -81,11 +81,43 @@ registerHandler("publish", async (payload: PublishPayload) => {
   const {
     content: contentRepo,
     connectedAccount: caRepo,
+    profile: profileRepo,
     publishLog: publishLogRepo,
   } = getRepositories();
 
   const content = await contentRepo.findById(payload.contentId);
   if (!content) throw new Error("Content not found");
+
+  // Idempotency check: skip if already published successfully
+  const contentHash =
+    payload.contentHash ??
+    computeContentHash({
+      profileId: payload.profileId,
+      platform: payload.platform,
+      textContent: content.textContent,
+      mediaUrls: content.mediaUrls,
+      hashtags: content.hashtags,
+    });
+  const existing = await publishLogRepo.findSuccessfulByContentHash(
+    contentHash,
+    payload.profileId,
+  );
+  if (existing) {
+    logger.info(
+      { contentId: payload.contentId, contentHash },
+      "Content already published, skipping",
+    );
+    await contentRepo.updateStatus(payload.contentId, "PUBLISHED");
+    return;
+  }
+
+  // Resolve userId from profile if not provided
+  if (!payload.userId) {
+    const profile = await profileRepo.findById(content.profileId);
+    if (profile) {
+      payload = { ...payload, userId: profile.userId };
+    }
+  }
 
   // Validate media URLs (SSRF protection with DNS resolution)
   for (const url of content.mediaUrls) {
@@ -141,14 +173,21 @@ registerHandler("publish", async (payload: PublishPayload) => {
   // Handle result
   if (result.success) {
     await contentRepo.updateStatus(payload.contentId, "PUBLISHED");
-    await publishLogRepo.create({
-      userId: payload.userId || "",
-      profileId: payload.profileId,
-      platform: payload.platform as any,
-      contentId: payload.contentId,
-      contentHash: hashContent(content.textContent),
-      success: true,
-    });
+    try {
+      await publishLogRepo.create({
+        userId: payload.userId || "",
+        profileId: payload.profileId,
+        platform: payload.platform as any,
+        contentId: payload.contentId,
+        contentHash,
+        success: true,
+      });
+    } catch {
+      logger.info(
+        { contentId: payload.contentId },
+        "PublishLog already exists (duplicate prevention)",
+      );
+    }
     logger.info(
       { contentId: payload.contentId, postId: result.postId },
       "Content published successfully",
@@ -160,7 +199,7 @@ registerHandler("publish", async (payload: PublishPayload) => {
       profileId: payload.profileId,
       platform: payload.platform as any,
       contentId: payload.contentId,
-      contentHash: hashContent(content.textContent),
+      contentHash,
       success: false,
       error: result.error,
     });

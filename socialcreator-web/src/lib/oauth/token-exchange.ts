@@ -3,6 +3,7 @@
  */
 
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
+import { EXTERNAL_TIMEOUTS } from "@/lib/infrastructure/timeouts";
 import { parseState } from "./auth-url";
 import { getProviderCredentials, OAUTH_PROVIDERS, type OAuthProvider } from "./providers";
 
@@ -80,7 +81,7 @@ export async function exchangeCodeForToken(
 
   const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
-    timeout: 10000, // OAuth token exchange: 10s timeout
+    timeout: EXTERNAL_TIMEOUTS.OAUTH_TOKEN_EXCHANGE,
     headers,
     body: formData.toString(),
   });
@@ -124,7 +125,7 @@ export async function refreshAccessToken(
 
   const response = await fetchWithTimeout(getTokenUrl(platform), {
     method: "POST",
-    timeout: 10000, // Token refresh: 10s timeout
+    timeout: EXTERNAL_TIMEOUTS.OAUTH_TOKEN_EXCHANGE,
     headers,
     body: formData.toString(),
   });

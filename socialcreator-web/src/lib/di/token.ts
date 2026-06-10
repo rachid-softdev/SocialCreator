@@ -7,6 +7,7 @@ export const TOKENS = {
   // Infrastructure
   PRISMA_CLIENT: "PrismaClient",
   LOGGER: "Logger",
+  CACHE_SERVICE: "CacheService",
 
   // Repositories
   CONTENT_REPOSITORY: "IContentRepository",
@@ -20,6 +21,7 @@ export const TOKENS = {
   TEAM_MEMBER_REPOSITORY: "ITeamMemberRepository",
   CONNECTED_ACCOUNT_REPOSITORY: "IConnectedAccountRepository",
   PUBLISH_LOG_REPOSITORY: "IPublishLogRepository",
+  ANALYTICS_REPOSITORY: "IAnalyticsRepository",
 
   // Services
   ENTITLEMENT_REPOSITORY: "IEntitlementRepository",
