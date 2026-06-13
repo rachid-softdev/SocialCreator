@@ -33,7 +33,9 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-display-sm font-display text-ink mb-2">Sign In</h2>
-            <p className="text-body text-muted">Enter your credentials to access your account</p>
+            <p className="text-body text-muted">
+              Welcome back — sign in to pick up where you left off
+            </p>
           </div>
 
           <Suspense

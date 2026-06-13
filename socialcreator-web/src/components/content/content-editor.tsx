@@ -6,7 +6,8 @@ import { PLATFORM_CONSTRAINTS } from "@socialcreator/types/agent";
 import { PLATFORMS } from "@socialcreator/types/profile";
 import { cn } from "@socialcreator/utils";
 import { Calendar, Eye, Hash, Save, Send, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { MultiPlatformPreview } from "./platform-preview";
 
 interface ContentEditorProps {
@@ -21,8 +22,28 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
   const [hashtags, setHashtags] = useState<string[]>(content.hashtags);
   const [newHashtag, setNewHashtag] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [savedConfirmation, setSavedConfirmation] = useState(false);
+
+  const initialTextContent = useRef(content.textContent);
+  const initialHashtags = useRef(content.hashtags);
 
   const constraints = PLATFORM_CONSTRAINTS[content.platform];
+
+  const hasUnsavedChanges =
+    textContent !== initialTextContent.current ||
+    hashtags.length !== initialHashtags.current.length ||
+    hashtags.some((tag, i) => tag !== initialHashtags.current[i]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      const handler = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = "";
+      };
+      window.addEventListener("beforeunload", handler);
+      return () => window.removeEventListener("beforeunload", handler);
+    }
+  }, [hasUnsavedChanges]);
 
   const handleAddHashtag = () => {
     const tag = newHashtag.trim().replace(/^#/, "");
@@ -38,6 +59,11 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
 
   const handleSave = () => {
     onSave({ textContent, hashtags });
+    initialTextContent.current = textContent;
+    initialHashtags.current = hashtags;
+    setSavedConfirmation(true);
+    toast.success("Changes saved");
+    setTimeout(() => setSavedConfirmation(false), 2000);
   };
 
   const isOverLimit = textContent.length > constraints.maxChars;
@@ -53,9 +79,20 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
       });
       if (res.ok) {
         onSave({ textContent, hashtags });
+        initialTextContent.current = textContent;
+        initialHashtags.current = hashtags;
+        setSavedConfirmation(true);
+        toast.success("Draft saved");
+        setTimeout(() => setSavedConfirmation(false), 2000);
+      } else {
+        toast.error("Couldn't save draft", {
+          description: "Please check your connection and try again.",
+        });
       }
     } catch {
-      // Silent failure — the parent can handle error display
+      toast.error("Couldn't save draft", {
+        description: "Please check your connection and try again.",
+      });
     }
   };
 
@@ -67,6 +104,12 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
     // @todo Publish directly
   };
 
+  const saveButtonLabel = (defaultLabel: string) => {
+    if (savedConfirmation) return "Saved!";
+    if (isSaving) return "Saving...";
+    return defaultLabel;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -76,7 +119,15 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
             {PLATFORMS.find((p) => p.value === content.platform)?.icon}
           </span>
           <div>
-            <h2 className="text-title-sm text-ink">Edit Content</h2>
+            <h2 className="text-title-sm text-ink">
+              Edit Content
+              {hasUnsavedChanges && (
+                <span className="ml-2 inline-flex items-center gap-1.5 text-caption text-orange-600">
+                  <span className="inline-block w-2 h-2 rounded-full bg-orange-500" />
+                  Unsaved changes
+                </span>
+              )}
+            </h2>
             <p className="text-caption text-muted">
               {PLATFORMS.find((p) => p.value === content.platform)?.label}
             </p>
@@ -115,7 +166,8 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
         />
         {isOverLimit && (
           <p className="text-caption text-semantic-error mt-1">
-            Content exceeds platform limit by {textContent.length - constraints.maxChars} characters
+            This is {textContent.length - constraints.maxChars} characters over the limit for this
+            platform. Try shortening your text.
           </p>
         )}
       </div>
@@ -202,7 +254,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
                 className="flex items-center gap-2 px-4 py-2 rounded-pill text-body-sm text-ink bg-surface-strong hover:bg-hairline transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? "Saving..." : "Save Draft"}
+                {saveButtonLabel("Save Draft")}
               </button>
               <button
                 type="button"
@@ -230,7 +282,7 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
               className="flex items-center gap-2 px-6 py-2 rounded-pill bg-primary text-on-primary text-button hover:bg-primary-active transition-colors disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
+              {saveButtonLabel("Save Changes")}
             </button>
           )}
         </div>
