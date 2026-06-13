@@ -66,7 +66,9 @@ vi.mock("lucide-react", () => ({
 }));
 
 vi.mock("next/image", () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img {...props} alt={props.alt || ""} src={props.src || "https://placehold.co/48"} />
+  ),
 }));
 
 vi.mock("date-fns", () => ({

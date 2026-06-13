@@ -1,4 +1,5 @@
 import { GradientOrb } from "@socialcreator/ui/gradient-orb";
+import { ChevronDown } from "lucide-react";
 import { PricingTable } from "@/components/billing/pricing-table";
 import { auth } from "@/lib/auth";
 
@@ -37,7 +38,7 @@ export default async function PricingPage() {
     <div className="relative min-h-screen">
       {/* Background orb */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none">
-        <GradientOrb color="mint" className="opacity-30" />
+        <GradientOrb color="mint" />
       </div>
 
       <div className="relative max-w-content mx-auto px-6 py-section">
@@ -95,9 +96,7 @@ export default async function PricingPage() {
               >
                 <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-strong transition-colors">
                   <span className="text-body-sm font-medium">{faq.question}</span>
-                  <span className="w-5 h-5 text-muted group-open:rotate-180 transition-transform">
-                    ▼
-                  </span>
+                  <ChevronDown className="w-5 h-5 text-muted group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="px-4 pb-4 text-body-sm text-muted">{faq.answer}</div>
               </details>

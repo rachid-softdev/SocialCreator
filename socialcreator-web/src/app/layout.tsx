@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display, Spectral } from "next/font/google";
 import "./globals.css";
 import { ToastLayoutWrapper } from "@/components/toast-layout-wrapper";
 
@@ -16,26 +16,27 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
-// EB Garamond for display/headings - replaces licensed Waldenburg
-const ebGaramond = EB_Garamond({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-eb-garamond",
-  weight: ["400", "500", "600"],
-});
-
-// Playfair Display for alternative headings
-const playfair = Playfair_Display({
+// Spectral for display/headings at weight 300 - replaces licensed Waldenburg Light
+// Chosen over EB Garamond because Spectral has a real weight 300 (EB Garamond only offers 400+)
+const spectral = Spectral({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-display",
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+// Playfair Display for alternative serif headings
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-display-alt",
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`antialiased ${inter.variable} ${ebGaramond.variable} ${playfair.variable}`}>
+      <body className={`antialiased ${inter.variable} ${spectral.variable} ${playfair.variable}`}>
         {/* Skip link — first tabbable element for keyboard users */}
         <a
           href="#main-content"

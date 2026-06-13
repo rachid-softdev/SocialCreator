@@ -36,7 +36,18 @@ export default function LoginPage() {
             <p className="text-body text-muted">Enter your credentials to access your account</p>
           </div>
 
-          <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
+          <Suspense
+            fallback={
+              <div
+                className="flex flex-col items-center gap-4 py-8"
+                role="status"
+                aria-label="Loading"
+              >
+                <div className="w-6 h-6 rounded-full border-2 border-hairline-strong border-t-primary animate-spin" />
+                <span className="text-body-sm text-muted">Loading sign-in form</span>
+              </div>
+            }
+          >
             <LoginForm />
           </Suspense>
 

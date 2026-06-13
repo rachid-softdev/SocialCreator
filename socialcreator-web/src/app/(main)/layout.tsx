@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import ErrorBoundary from "@/components/error-boundary";
+import { AppShell } from "@/components/app-shell";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth";
@@ -42,7 +42,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         {/* Mobile header with drawer */}
         <MobileHeader user={user} />
         <div className="p-6 lg:p-8">
-          <ErrorBoundary>{children}</ErrorBoundary>
+          <AppShell>{children}</AppShell>
         </div>
       </main>
     </div>

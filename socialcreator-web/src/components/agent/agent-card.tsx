@@ -6,6 +6,7 @@ import { cn, formatDateTime } from "@socialcreator/utils";
 import { Bot, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { PlatformBadge } from "@/components/content/platform-badge";
 import { RunStatusBadge } from "./run-status-badge";
 
@@ -25,6 +26,7 @@ const TYPE_COLORS: Record<AgentType, string> = {
 
 export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const lastRun = agent.runs?.[0];
 
   return (
@@ -123,9 +125,7 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                if (confirm("Are you sure you want to delete this agent?")) {
-                  onDelete?.(agent.id);
-                }
+                setShowDeleteConfirm(true);
                 setShowDropdown(false);
               }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-sm text-semantic-error hover:bg-surface-strong rounded-b-lg"
@@ -136,6 +136,16 @@ export function AgentCard({ agent, onDelete, onEdit }: AgentCardProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete agent?"
+        description="Are you sure you want to delete this agent? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => onDelete?.(agent.id)}
+      />
     </div>
   );
 }

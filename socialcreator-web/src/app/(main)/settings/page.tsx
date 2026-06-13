@@ -23,51 +23,51 @@ export default async function SettingsPage() {
     where: { userId: session.user.id },
   });
 
-  const breadcrumbItems = [{ label: "Paramètres" }];
+  const breadcrumbItems = [{ label: "Settings" }];
 
   const settingsSections = [
     {
-      title: "Compte",
-      description: "Gérez vos informations personnelles et votre compte",
+      title: "Account",
+      description: "Manage your personal information and account settings",
       icon: User,
       href: "/settings/account",
       comingSoon: true,
     },
     {
-      title: "Profils & Comptes sociaux",
-      description: "Gérez vos profils de marque et comptes sociaux connectés",
+      title: "Profiles & Social Accounts",
+      description: "Manage your brand profiles and connected social accounts",
       icon: Link2,
       href: "/profiles",
     },
     {
-      title: "Équipes",
-      description: "Collaborez avec votre équipe et gérez les accès",
+      title: "Teams",
+      description: "Collaborate with your team and manage access",
       icon: Users,
       href: "/settings/teams",
     },
     {
-      title: "Abonnement",
-      description: "Gérez votre abonnement et vos facturations",
+      title: "Billing",
+      description: "Manage your subscription and invoices",
       icon: CreditCard,
       href: "/settings/billing",
       comingSoon: true,
     },
     {
       title: "Notifications",
-      description: "Configurez vos préférences de notification",
+      description: "Configure your notification preferences",
       icon: Bell,
       href: "/settings/notifications",
     },
     {
-      title: "Sécurité",
-      description: "Gérez la sécurité de votre compte",
+      title: "Security",
+      description: "Manage your account security",
       icon: Shield,
       href: "/settings/security",
       comingSoon: true,
     },
     {
-      title: "Aide & Support",
-      description: "Obtenez de l'aide et contactez le support",
+      title: "Help & Support",
+      description: "Get help and contact support",
       icon: HelpCircle,
       href: "/settings/help",
       comingSoon: true,
@@ -78,7 +78,7 @@ export default async function SettingsPage() {
     <div className="container max-w-4xl">
       <Breadcrumb items={breadcrumbItems} />
 
-      <PageHeader title="Paramètres" description="Gérez vos préférences et votre compte" />
+      <PageHeader title="Settings" description="Manage your preferences and account" />
 
       <div className="mt-8 space-y-4">
         {settingsSections.map((section) => {
@@ -98,7 +98,7 @@ export default async function SettingsPage() {
                   <h3 className="text-title-sm text-ink">{section.title}</h3>
                   <p className="text-body-sm text-muted mt-0.5">{section.description}</p>
                 </div>
-                <span className="text-caption text-muted-soft">Bientôt disponible</span>
+                <span className="text-caption text-muted-soft">Coming soon</span>
               </div>
             );
           }
@@ -136,11 +136,11 @@ export default async function SettingsPage() {
       </div>
 
       <div className="mt-12 p-6 bg-surface-card border border-hairline rounded-xl">
-        <h3 className="text-title-sm text-ink mb-2">Statistiques</h3>
+        <h3 className="text-title-sm text-ink mb-2">Statistics</h3>
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="text-center p-4 bg-surface-strong rounded-lg">
             <p className="text-display-sm text-ink">{profilesCount}</p>
-            <p className="text-caption text-muted mt-1">Profils</p>
+            <p className="text-caption text-muted mt-1">Profiles</p>
           </div>
         </div>
       </div>

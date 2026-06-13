@@ -15,7 +15,7 @@
 "use client";
 
 import { Button } from "@socialcreator/ui/button";
-import { Home, RefreshCw } from "lucide-react";
+import { AlertTriangle, Home, Lock, RefreshCw, Search as SearchIcon, WifiOff } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
 import logger from "@/lib/logger";
 
@@ -90,15 +90,17 @@ export function ErrorDisplay({ error, reset }: ErrorProps) {
   };
 
   const getErrorIcon = () => {
-    if (isAuthError) return "🔐";
-    if (isNetworkError) return "📡";
-    if (isNotFound) return "🔍";
-    return "⚠️";
+    if (isAuthError) return <Lock className="w-12 h-12 text-muted" />;
+    if (isNetworkError) return <WifiOff className="w-12 h-12 text-muted" />;
+    if (isNotFound) return <SearchIcon className="w-12 h-12 text-muted" />;
+    return <AlertTriangle className="w-12 h-12 text-muted" />;
   };
 
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
-      <div className="text-6xl">{getErrorIcon()}</div>
+      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-surface-strong">
+        {getErrorIcon()}
+      </div>
 
       <div className="text-center space-y-2">
         <h2 className="font-display text-display-md text-ink">{getErrorTitle()}</h2>
@@ -143,7 +145,9 @@ export function ErrorDisplay({ error, reset }: ErrorProps) {
 export function NotFoundError() {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
-      <div className="text-6xl">🔍</div>
+      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-surface-strong">
+        <SearchIcon className="w-10 h-10 text-muted" />
+      </div>
       <div className="text-center space-y-2">
         <h2 className="font-display text-display-md text-ink">Page Not Found</h2>
         <p className="text-body-md text-body max-w-md">
@@ -168,7 +172,9 @@ export function NotFoundError() {
 export function SessionExpiredError() {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 px-4 py-12">
-      <div className="text-6xl">🔐</div>
+      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-surface-strong">
+        <Lock className="w-10 h-10 text-muted" />
+      </div>
       <div className="text-center space-y-2">
         <h2 className="font-display text-display-md text-ink">Session Expired</h2>
         <p className="text-body-md text-body max-w-md">

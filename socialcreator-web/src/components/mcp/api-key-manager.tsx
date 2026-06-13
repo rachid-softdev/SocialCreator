@@ -3,6 +3,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { AlertTriangle, Check, Copy, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import logger from "@/lib/logger";
 
 interface ApiKey {
@@ -32,6 +33,7 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
     apiKey: string;
   } | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [revokeConfirmKeyId, setRevokeConfirmKeyId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
@@ -64,12 +66,7 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
   };
 
   const handleRevoke = async (id: string) => {
-    if (
-      !onCreate ||
-      !confirm("Are you sure you want to revoke this API key? It will stop working immediately.")
-    ) {
-      return;
-    }
+    if (!onCreate) return;
 
     setRevokingId(id);
     try {
@@ -182,7 +179,7 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
                   variant="ghost"
                   size="sm"
                   icon={Trash2}
-                  onClick={() => handleRevoke(key.id)}
+                  onClick={() => setRevokeConfirmKeyId(key.id)}
                   disabled={revokingId === key.id}
                   className="text-semantic-error hover:text-semantic-error"
                 >
@@ -245,6 +242,21 @@ export function ApiKeyManager({ initialKeys = [], onCreate, onRevoke }: ApiKeyMa
           Create New Key
         </Button>
       )}
+
+      <ConfirmDialog
+        open={!!revokeConfirmKeyId}
+        onOpenChange={(open) => {
+          if (!open) setRevokeConfirmKeyId(null);
+        }}
+        title="Revoke API key?"
+        description="This action cannot be undone. The API key will stop working immediately."
+        confirmLabel="Revoke"
+        variant="destructive"
+        onConfirm={() => {
+          if (revokeConfirmKeyId) handleRevoke(revokeConfirmKeyId);
+          setRevokeConfirmKeyId(null);
+        }}
+      />
     </div>
   );
 }

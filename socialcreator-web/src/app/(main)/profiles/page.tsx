@@ -2,6 +2,7 @@ import { EmptyState } from "@socialcreator/ui/empty-state";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileCard } from "@/components/profile/profile-card";
 import { auth } from "@/lib/auth";
@@ -30,6 +31,7 @@ export default async function ProfilesPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Profiles" }]} />
       <PageHeader
         title="Profiles"
         description="Manage your brand profiles"
