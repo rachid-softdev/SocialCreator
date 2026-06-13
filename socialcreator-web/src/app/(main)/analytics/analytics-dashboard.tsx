@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ContentStatusBadge } from "@/components/content/content-status-badge";
 import { PlatformBadge } from "@/components/content/platform-badge";
 import { PublishStats } from "@/components/dashboard/publish-stats";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import logger from "@/lib/logger";
 
@@ -101,6 +102,7 @@ export function AnalyticsDashboard({
 
   return (
     <div className="space-y-8">
+      <Breadcrumb items={[{ label: "Analytics" }]} />
       <PageHeader title="Analytics" description="Track your content performance" />
 
       {/* Profile Selector */}

@@ -11,6 +11,7 @@ import {
   History,
   LayoutDashboard,
   LogOut,
+  Search as SearchIcon,
   Settings,
   Shield,
   Sparkles,
@@ -18,8 +19,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useEffect } from "react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useAuthStore, useUIStore } from "@/lib/stores";
 
@@ -33,16 +35,16 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/profiles", label: "Profiles", icon: Users },
-  { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/content", label: "Content", icon: FileText },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "⌘D" },
+  { href: "/profiles", label: "Profiles", icon: Users, shortcut: "⌘P" },
+  { href: "/agents", label: "Agents", icon: Bot, shortcut: "⌘A" },
+  { href: "/content", label: "Content", icon: FileText, shortcut: "⌘C" },
   { href: "/content/calendar", label: "Calendar", icon: Calendar },
   { href: "/content/queue", label: "Queue", icon: Clock },
   { href: "/content/history", label: "History", icon: History },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/billing", label: "Billing", icon: CreditCard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, shortcut: "⌘N" },
+  { href: "/settings", label: "Settings", icon: Settings, shortcut: "⌘S" },
+  { href: "/billing", label: "Billing", icon: CreditCard, shortcut: "⌘B" },
 ];
 
 export function Sidebar({
@@ -56,6 +58,35 @@ export function Sidebar({
   const storeSidebarOpen = useUIStore((s) => s.sidebar === "open");
   const storeToggleSidebar = useUIStore((s) => s.toggleSidebar);
   const storeUser = useAuthStore((s) => s.user);
+
+  const router = useRouter();
+
+  // Wire up keyboard shortcuts for primary navigation
+  useEffect(() => {
+    const shortcutMap: Record<string, string> = {
+      d: "/dashboard",
+      p: "/profiles",
+      a: "/agents",
+      c: "/content",
+      n: "/analytics",
+      s: "/settings",
+      b: "/billing",
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (!isMod) return;
+      const key = e.key.toLowerCase();
+      const href = shortcutMap[key];
+      if (href) {
+        e.preventDefault();
+        router.push(href);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [router]);
 
   const isOpen = propIsOpen ?? storeSidebarOpen;
   const onClose =
@@ -109,7 +140,12 @@ export function Sidebar({
                 )}
               >
                 <item.icon className="w-5 h-5" aria-hidden="true" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.shortcut && (
+                  <kbd className="text-caption text-muted-soft hidden lg:inline">
+                    {item.shortcut}
+                  </kbd>
+                )}
               </Link>
             );
           })}
@@ -147,6 +183,22 @@ export function Sidebar({
             </div>
           </div>
         )}
+
+        {/* Command palette hint */}
+        <div className="px-4 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              // Dispatch Cmd+K to open command palette
+              document.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, key: "k" }));
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-nav-link text-muted-soft hover:text-muted hover:bg-surface-strong/50 transition-colors"
+          >
+            <SearchIcon className="w-5 h-5" />
+            <span className="flex-1 text-left">Quick search…</span>
+            <kbd className="text-caption text-muted-soft">⌘K</kbd>
+          </button>
+        </div>
 
         {/* User section */}
         <div className="border-t border-hairline p-4">

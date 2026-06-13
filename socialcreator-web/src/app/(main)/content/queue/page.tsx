@@ -4,11 +4,13 @@
  */
 
 import { QueueStatus } from "@/components/job-queue/queue-status";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 
 export default function QueuePage() {
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Content", href: "/content" }, { label: "Queue" }]} />
       <PageHeader title="Publish Queue" description="Monitor content publishing in real-time" />
       <QueueStatus />
     </div>

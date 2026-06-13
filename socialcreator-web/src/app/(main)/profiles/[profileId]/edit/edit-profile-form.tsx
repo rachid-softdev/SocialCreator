@@ -4,6 +4,7 @@ import type { ProfileFormData } from "@socialcreator/types/profile";
 import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
@@ -23,6 +24,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -44,14 +46,6 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this profile? This action cannot be undone and will remove all associated agents and content.",
-      )
-    ) {
-      return;
-    }
-
     setIsDeleting(true);
 
     try {
@@ -105,7 +99,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
         </p>
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={() => setShowDeleteConfirm(true)}
           disabled={isDeleting}
           className="flex items-center gap-2 px-4 py-2 rounded-pill border border-semantic-error text-semantic-error text-body-strong hover:bg-semantic-error/10 transition-colors disabled:opacity-50"
         >
@@ -117,6 +111,17 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
           Delete Profile
         </button>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete profile?"
+        description="This action cannot be undone. It will permanently delete this profile and remove all associated agents, content, and connected accounts."
+        confirmLabel="Delete Profile"
+        variant="destructive"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

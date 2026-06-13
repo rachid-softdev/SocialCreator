@@ -6,7 +6,9 @@ import { cn } from "@socialcreator/utils";
 import { Filter, Grid, List, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import logger from "@/lib/logger";
 
 interface VideoAsset {
@@ -38,6 +40,7 @@ const STATUS_FILTERS = [
 ];
 
 export default function AllVideosPage() {
+  const router = useRouter();
   const [videos, setVideos] = useState<VideoAsset[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string>("all");
@@ -136,12 +139,15 @@ export default function AllVideosPage() {
       {/* Header */}
       <div className="border-b border-hairline bg-surface-card">
         <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumb items={[{ label: "Videos" }]} className="mb-2" />
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-title-md text-ink">All Videos</h1>
               <p className="text-caption text-muted mt-0.5">Manage your video library</p>
             </div>
-            <Link href="/profiles">
+            <Link
+              href={selectedProfile !== "all" ? `/profiles/${selectedProfile}/video` : "/profiles"}
+            >
               <Button>
                 <Plus className="w-4 h-4" />
                 New Video
@@ -269,9 +275,7 @@ export default function AllVideosPage() {
                 playbackId={video.muxPlaybackId}
                 status={video.status}
                 createdAt={video.createdAt}
-                onClick={() =>
-                  (window.location.href = `/profiles/${video.profileId}/video?id=${video.id}`)
-                }
+                onClick={() => router.push(`/profiles/${video.profileId}/video?id=${video.id}`)}
               />
             ))}
           </div>
@@ -285,7 +289,7 @@ export default function AllVideosPage() {
                   href={`/profiles/${video.profileId}/video?id=${video.id}`}
                   className="flex items-center gap-4 p-4 bg-surface-card rounded-xl border border-hairline hover:shadow-soft transition-all"
                 >
-                  <div className="w-32 h-18 bg-surface-strong rounded-lg overflow-hidden">
+                  <div className="w-32 h-[72px] bg-surface-strong rounded-lg overflow-hidden">
                     {video.muxPlaybackId ? (
                       <Image
                         src={`https://image.mux.com/${video.muxPlaybackId}/thumbnail.jpg`}

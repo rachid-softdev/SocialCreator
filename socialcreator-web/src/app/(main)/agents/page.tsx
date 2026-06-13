@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { AllAgentsClient } from "@/components/agent/all-agents-client";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -59,5 +61,11 @@ export default async function AllAgentsPage() {
     }),
   );
 
-  return <AllAgentsClient initialAgents={agentsWithStats} profiles={profiles} />;
+  return (
+    <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Agents" }]} />
+      <PageHeader title="Agents" description="Manage your AI content agents" />
+      <AllAgentsClient initialAgents={agentsWithStats} profiles={profiles} />
+    </div>
+  );
 }

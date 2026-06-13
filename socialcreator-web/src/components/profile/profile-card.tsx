@@ -6,6 +6,7 @@ import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface ProfileCardProps {
   profile: Profile & {
@@ -43,6 +44,7 @@ function getPlatformBadges(platforms: Platform[]) {
 
 export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
     <div className="group relative bg-surface-card border border-hairline rounded-xl p-6 shadow-card hover:shadow-card-hover transition-all">
@@ -118,9 +120,7 @@ export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                if (confirm("Are you sure you want to delete this profile?")) {
-                  onDelete?.(profile.id);
-                }
+                setShowDeleteConfirm(true);
                 setShowDropdown(false);
               }}
               className="flex items-center gap-2 w-full px-4 py-2 text-body-sm text-semantic-error hover:bg-surface-strong rounded-b-lg"
@@ -131,6 +131,16 @@ export function ProfileCard({ profile, onDelete }: ProfileCardProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete profile?"
+        description="Are you sure you want to delete this profile? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => onDelete?.(profile.id)}
+      />
 
       {/* Active indicator */}
       {!profile.isActive && (

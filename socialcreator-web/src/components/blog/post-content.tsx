@@ -53,11 +53,23 @@ export function PostContent({ content }: PostContentProps) {
       );
     },
     blockquote: ({ children }) => (
-      <blockquote className="relative my-8 mx-0 pl-6 py-1 border-l-4 border-primary">
-        <div className="absolute -left-2 -top-2 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-lg">💡</span>
+      <blockquote className="relative my-8 mx-0 pl-10 py-4 rounded-lg bg-primary/5 border border-primary/20">
+        <div className="absolute left-3 top-4 w-5 h-5 text-primary" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <title>Tip</title>
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+          </svg>
         </div>
-        <div className="bg-canvas-soft rounded-lg p-4 text-body leading-relaxed">{children}</div>
+        <div className="text-body leading-relaxed">{children}</div>
       </blockquote>
     ),
     code: ({ className, children, ...props }) => {
