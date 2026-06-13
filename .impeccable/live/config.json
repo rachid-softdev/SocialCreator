@@ -1,0 +1,6 @@
+{
+  "files": ["socialcreator-web/src/app/layout.tsx"],
+  "insertBefore": "</body>",
+  "commentSyntax": "jsx",
+  "cspChecked": true
+}

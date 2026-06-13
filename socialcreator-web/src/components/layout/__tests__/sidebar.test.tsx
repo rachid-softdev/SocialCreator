@@ -32,7 +32,7 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("next/image", () => ({
   default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean }) => (
-    <img {...props} />
+    <img {...props} alt={props.alt || ""} src={props.src || "https://placehold.co/36"} />
   ),
 }));
 

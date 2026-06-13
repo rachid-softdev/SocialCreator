@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { memo, useCallback, useState } from "react";
 import { ApprovalPanel } from "@/components/content/approval-panel";
 import { ContentList } from "@/components/content/content-list";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { SearchBar } from "@/components/shared/search-bar";
@@ -129,6 +130,7 @@ export const ContentPageClient = memo(function ContentPageClient({
 
   return (
     <div className="space-y-8">
+      <Breadcrumb items={[{ label: "Content" }]} />
       <PageHeader
         title="Content Library"
         description={`${totalContent} content pieces generated`}
