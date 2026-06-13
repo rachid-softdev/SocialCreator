@@ -9,6 +9,7 @@ import {
   CreditCard,
   FileText,
   History,
+  Keyboard,
   LayoutDashboard,
   LogOut,
   Search as SearchIcon,
@@ -185,7 +186,7 @@ export function Sidebar({
         )}
 
         {/* Command palette hint */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-1">
           <button
             type="button"
             onClick={() => {
@@ -197,6 +198,21 @@ export function Sidebar({
             <SearchIcon className="w-5 h-5" />
             <span className="flex-1 text-left">Quick search…</span>
             <kbd className="text-caption text-muted-soft">⌘K</kbd>
+          </button>
+        </div>
+
+        {/* Keyboard shortcuts hint */}
+        <div className="px-4 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              document.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }));
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-nav-link text-muted-soft hover:text-muted hover:bg-surface-strong/50 transition-colors"
+          >
+            <Keyboard className="w-5 h-5" />
+            <span className="flex-1 text-left">Shortcuts</span>
+            <kbd className="text-caption text-muted-soft">?</kbd>
           </button>
         </div>
 
