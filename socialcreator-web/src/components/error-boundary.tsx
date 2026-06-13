@@ -86,7 +86,8 @@ export function ErrorDisplay({ error, reset }: ErrorProps) {
     if (isAuthError) return "Your session has expired. Please sign in again.";
     if (isNetworkError) return "Unable to connect to the server. Please check your connection.";
     if (isNotFound) return "The requested resource could not be found.";
-    return error.message || "An unexpected error occurred. Please try again.";
+    if (error.message && !error.message.startsWith("An unexpected")) return error.message;
+    return "Something went wrong on our end. Try again — most issues are temporary.";
   };
 
   const getErrorIcon = () => {
