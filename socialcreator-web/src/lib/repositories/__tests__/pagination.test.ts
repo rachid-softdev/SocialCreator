@@ -13,7 +13,11 @@ interface PageResult<T> {
   totalPages: number;
 }
 
-function calculatePagination<T>(items: T[], total: number, options?: PaginationOptions): PageResult<T> {
+function calculatePagination<T>(
+  items: T[],
+  total: number,
+  options?: PaginationOptions,
+): PageResult<T> {
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? 20;
   return {

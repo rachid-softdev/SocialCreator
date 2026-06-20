@@ -47,7 +47,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
       makeGeneratedContent({ id: "c-2", scheduledPublishAt: new Date("2024-06-15T10:00:00.000Z") }),
     ];
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(dueContent);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(dueContent);
 
     const result = await repo.claimScheduled(now);
 
@@ -59,7 +61,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
   it("should query with status SCHEDULED and scheduledPublishAt <= before date", async () => {
     const before = new Date("2024-06-15T12:00:00.000Z");
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     await repo.claimScheduled(before);
 
@@ -75,7 +79,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
   it("should return empty array when no SCHEDULED content is due", async () => {
     const now = new Date("2024-06-15T12:00:00.000Z");
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     const result = await repo.claimScheduled(now);
 
@@ -85,7 +91,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
   it("should not claim FUTURE SCHEDULED content", async () => {
     const now = new Date("2024-06-15T08:00:00.000Z");
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     const result = await repo.claimScheduled(now);
 
@@ -101,11 +109,11 @@ describe("PrismaContentRepository — claimScheduled", () => {
 
   it("should update status to PUBLISHING on claimed content", async () => {
     const before = new Date("2024-06-15T12:00:00.000Z");
-    const claimed = [
-      makeGeneratedContent({ id: "c-1", status: "PUBLISHING" }),
-    ];
+    const claimed = [makeGeneratedContent({ id: "c-1", status: "PUBLISHING" })];
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(claimed);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(claimed);
 
     const result = await repo.claimScheduled(before);
 
@@ -120,7 +128,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
       makeGeneratedContent({ id: "published", status: "PUBLISHED" }),
     ];
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     const result = await repo.claimScheduled(before);
 
@@ -134,7 +144,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
       scheduledPublishAt: exactTime,
     });
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([exactMatch]);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([exactMatch]);
 
     const result = await repo.claimScheduled(exactTime);
 
@@ -152,7 +164,9 @@ describe("PrismaContentRepository — claimScheduled", () => {
       }),
     );
 
-    (prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(batch);
+    (
+      prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(batch);
 
     const result = await repo.claimScheduled(now);
 

@@ -4,8 +4,8 @@
  */
 
 import type { Agent, AgentRun, Platform } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { getCacheService } from "@/lib/infrastructure/cache";
+import { prisma } from "@/lib/prisma";
 
 // ============================================
 // Domain Types
@@ -115,7 +115,10 @@ export class PrismaAgentRepository implements IAgentRepository {
     });
   }
 
-  async findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<AgentPage> {
+  async findByProfileIdPaginated(
+    profileId: string,
+    options?: PaginationOptions,
+  ): Promise<AgentPage> {
     const page = options?.page ?? 1;
     const pageSize = options?.pageSize ?? 20;
     const where = { profileId };

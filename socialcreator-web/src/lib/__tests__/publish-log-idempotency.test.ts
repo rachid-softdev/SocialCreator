@@ -84,7 +84,9 @@ describe("PrismaPublishLogRepository — idempotency", () => {
         success: false,
       });
 
-      (prisma.publishLog.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(failedLog);
+      (prisma.publishLog.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        failedLog,
+      );
 
       const result = await repo.findSuccessfulByContentHash("hash-1", "profile-1");
 
@@ -115,7 +117,9 @@ describe("PrismaPublishLogRepository — idempotency", () => {
         success: true,
       });
 
-      (prisma.publishLog.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(firstLog);
+      (prisma.publishLog.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        firstLog,
+      );
 
       const result = await repo.findSuccessfulByContentHash("hash-dup", "profile-1");
 

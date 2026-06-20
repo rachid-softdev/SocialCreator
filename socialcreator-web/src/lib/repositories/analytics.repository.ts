@@ -86,7 +86,10 @@ export class PrismaAnalyticsRepository implements IAnalyticsRepository {
     });
   }
 
-  async findByPlatform(platform: Platform, options: AnalyticsFilterOptions): Promise<AnalyticsPage> {
+  async findByPlatform(
+    platform: Platform,
+    options: AnalyticsFilterOptions,
+  ): Promise<AnalyticsPage> {
     const page = options.page ?? 1;
     const pageSize = options.pageSize ?? 20;
     const where: Record<string, unknown> = { platform };

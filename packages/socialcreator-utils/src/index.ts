@@ -53,8 +53,8 @@ export function computeContentHash(params: {
     params.profileId,
     params.platform,
     params.textContent,
-    [...params.mediaUrls].sort().join(','),
-    [...params.hashtags].sort().join(','),
-  ].join('|');
-  return createHash('sha256').update(canonical).digest('hex');
+    [...params.mediaUrls].sort().join(","),
+    [...params.hashtags].sort().join(","),
+  ].join("|");
+  return createHash("sha256").update(canonical).digest("hex");
 }

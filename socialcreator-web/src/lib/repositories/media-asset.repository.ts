@@ -66,7 +66,10 @@ export class PrismaMediaAssetRepository implements IMediaAssetRepository {
     });
   }
 
-  async findByProfileIdPaginated(profileId: string, options?: PaginationOptions): Promise<MediaAssetPage> {
+  async findByProfileIdPaginated(
+    profileId: string,
+    options?: PaginationOptions,
+  ): Promise<MediaAssetPage> {
     const page = options?.page ?? 1;
     const pageSize = options?.pageSize ?? 20;
     const where = { profileId };

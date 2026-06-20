@@ -84,17 +84,14 @@ export async function transcribeVideo(videoUrl: string): Promise<TranscriptResul
   const result: any = await retryWithIdempotency(
     async (idempotencyKey) => {
       return withTimeout(
-        deepgram.transcription.preRecorded(
-          { url: videoUrl },
-          {
-            punctuate: true,
-            paragraphs: true,
-            timestamps: true,
-            model: "nova-2",
-            language: "multi",
-            "x-idempotency-key": idempotencyKey,
-          } as any,
-        ),
+        deepgram.transcription.preRecorded({ url: videoUrl }, {
+          punctuate: true,
+          paragraphs: true,
+          timestamps: true,
+          model: "nova-2",
+          language: "multi",
+          "x-idempotency-key": idempotencyKey,
+        } as any),
         DEEPGRAM_TIMEOUT_MS,
         "Deepgram.transcribeVideo",
       );
@@ -117,15 +114,12 @@ export async function getTranscriptWithTimestamps(videoUrl: string): Promise<{
   const result: any = await retryWithIdempotency(
     async (idempotencyKey) => {
       return withTimeout(
-        deepgram.transcription.preRecorded(
-          { url: videoUrl },
-          {
-            punctuate: true,
-            model: "nova-2",
-            detect_language: true,
-            "x-idempotency-key": idempotencyKey,
-          } as any,
-        ),
+        deepgram.transcription.preRecorded({ url: videoUrl }, {
+          punctuate: true,
+          model: "nova-2",
+          detect_language: true,
+          "x-idempotency-key": idempotencyKey,
+        } as any),
         DEEPGRAM_TIMEOUT_MS,
         "Deepgram.getTranscriptWithTimestamps",
       );
