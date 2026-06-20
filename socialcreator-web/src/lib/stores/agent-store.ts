@@ -116,6 +116,11 @@ export const useAgentStore = create<AgentState>()((set, get) => ({
     }
   },
 
+  // Note: isRunning is always reset in both success and error paths via the
+  // set({ isRunning: false }) calls above. On network errors (fetch throws),
+  // the catch block ensures isRunning is reset. On HTTP errors (!res.ok),
+  // the try block throws into the catch block, same graceful reset.
+
   selectAgent: (id) => set({ selectedAgentId: id, selectedRunId: null }),
   selectRun: (id) => set({ selectedRunId: id }),
 

@@ -46,7 +46,13 @@ export default async function ContentPage({ searchParams }: PageProps) {
 
   // Text search on content and hashtags
   if (q) {
-    where.OR = [{ textContent: { contains: q, mode: "insensitive" } }, { hashtags: { has: q } }];
+    const sanitized = q.trim().slice(0, 200);
+    if (sanitized.length >= 2) {
+      where.OR = [
+        { textContent: { contains: sanitized, mode: "insensitive" } },
+        { hashtags: { has: sanitized } },
+      ];
+    }
   }
 
   // Fetch one page of content with total count

@@ -24,8 +24,8 @@ export type ApiHandler = (
   params?: Record<string, string>,
 ) => Promise<NextResponse>;
 
-/** Maximum request body size in bytes (100 KB) */
-const MAX_BODY_SIZE = 100_000;
+/** Maximum request body size in bytes (1 MB) */
+const MAX_BODY_SIZE = 1_000_000;
 
 /**
  * Sanitize route pathname by replacing resource IDs (24+ char hex strings) with [id].

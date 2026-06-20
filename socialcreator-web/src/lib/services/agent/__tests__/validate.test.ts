@@ -120,4 +120,35 @@ describe("validateAgentRun", () => {
     const { validateAgentRun } = await import("../validate");
     await expect(validateAgentRun("agent-1", "run-1")).rejects.toThrow("Database connection lost");
   });
+
+  it("should throw when profile is missing from agent result", async () => {
+    const agentWithoutProfile = {
+      id: "agent-1",
+      name: "No Profile Agent",
+      profileId: "profile-nonexistent",
+      platforms: ["X"],
+      maxPerDay: 2,
+      isActive: true,
+      profile: null,
+    };
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue(agentWithoutProfile as any);
+
+    const { validateAgentRun } = await import("../validate");
+    await expect(validateAgentRun("agent-1", "run-1")).rejects.toThrow();
+  });
+
+  it("should propagate error when prisma.agentRun.update fails during CGU soft-fail", async () => {
+    const agentNoCgu = {
+      ...mockAgent,
+      profile: {
+        ...mockAgent.profile,
+        user: { cguAccepted: false },
+      },
+    };
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue(agentNoCgu as any);
+    vi.mocked(prisma.agentRun.update).mockRejectedValue(new Error("Database write timeout"));
+
+    const { validateAgentRun } = await import("../validate");
+    await expect(validateAgentRun("agent-1", "run-1")).rejects.toThrow("Database write timeout");
+  });
 });

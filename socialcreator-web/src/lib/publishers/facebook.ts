@@ -41,7 +41,7 @@ export async function publishToFacebook(
       if (data.error.code === 190) {
         throw new Error("Access token expired. Please reconnect your Facebook account.");
       }
-      throw new Error(`Facebook API error: ${response.status}`);
+      throw new Error("Facebook API returned an error. Please check your post and try again.");
     }
 
     return { success: true, postId: data.id };

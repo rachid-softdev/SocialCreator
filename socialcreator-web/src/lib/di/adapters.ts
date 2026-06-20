@@ -1,61 +1,8 @@
 /**
- * Adapters for bridging existing service getters into the DI container
- * Coexists with existing entitlements module patterns
+ * DI Adapters (deprecated)
+ *
+ * These adapter functions were part of the Container DI system that was never adopted.
+ * The codebase uses the repository registry pattern (getRepositories()) instead.
+ *
+ * @deprecated Use getRepositories() from "@/lib/repositories" or direct service imports.
  */
-
-import { getEntitlementRepository } from "@/lib/entitlements/repository";
-import { FeatureGateService } from "@/lib/entitlements/service";
-import { RedisCacheService } from "@/lib/infrastructure/cache";
-import { getRedis } from "@/lib/infrastructure/rate-limit-redis";
-import { Container } from "./container";
-import { TOKENS } from "./token";
-
-/**
- * Register all default services into the container
- * This bridges the existing entitlements module without breaking it
- */
-export function registerDefaultServices(container: Container): void {
-  // Infrastructure
-  container.register(
-    TOKENS.PRISMA_CLIENT,
-    () => {
-      const { prisma } = require("@/lib/prisma");
-      return prisma;
-    },
-    "singleton",
-  );
-
-  // Entitlements (bridging existing module)
-  container.register(TOKENS.ENTITLEMENT_REPOSITORY, () => getEntitlementRepository(), "singleton");
-
-  container.register(TOKENS.FEATURE_GATE_SERVICE, () => new FeatureGateService(), "singleton");
-
-  container.register(
-    TOKENS.CACHE_SERVICE,
-    () => {
-      const redis = getRedis();
-      if (!redis) throw new Error("Redis not configured — cannot create CacheService");
-      return new RedisCacheService(redis);
-    },
-    "singleton",
-  );
-
-  // Analytics Repository
-  container.register(
-    TOKENS.ANALYTICS_REPOSITORY,
-    () => {
-      const { PrismaAnalyticsRepository } = require("@/lib/repositories/analytics.repository");
-      return new PrismaAnalyticsRepository();
-    },
-    "singleton",
-  );
-}
-
-/**
- * Create a pre-configured default container
- */
-export function createDefaultContainer(): Container {
-  const container = new Container();
-  registerDefaultServices(container);
-  return container;
-}

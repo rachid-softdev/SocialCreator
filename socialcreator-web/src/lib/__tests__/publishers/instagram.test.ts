@@ -89,7 +89,9 @@ describe("publishToInstagram", () => {
       const result = await publishToInstagram(contentWithMedia, mockAccount);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Instagram API error: 200");
+      expect(result.error).toBe(
+        "Instagram API returned an error. Please check your media and try again.",
+      );
       // Second call should not happen
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
@@ -107,7 +109,9 @@ describe("publishToInstagram", () => {
       const result = await publishToInstagram(contentWithMedia, mockAccount);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Instagram API error: 200");
+      expect(result.error).toBe(
+        "Instagram API returned an error during publish. Please try again.",
+      );
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
@@ -173,7 +177,9 @@ describe("publishToInstagram", () => {
       const result = await publishToInstagram(mockContent, mockAccount);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Instagram API error: 200");
+      expect(result.error).toBe(
+        "Instagram API returned an error. Please check your post and try again.",
+      );
     });
   });
 

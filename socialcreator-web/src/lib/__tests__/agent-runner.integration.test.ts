@@ -331,4 +331,182 @@ describe("Agent Runner (Integration)", () => {
     // LLM called exactly once
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
+
+  // ============================================
+  // Agent with zero platforms
+  // ============================================
+
+  it("should handle agent with 0 platforms (empty array)", async () => {
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue({
+      id: "agent-zero",
+      name: "Zero Platform Agent",
+      profileId: "profile-1",
+      platforms: [],
+      maxPerDay: 5,
+      isActive: true,
+      profile: {
+        id: "profile-1",
+        name: "Test Brand",
+        brandVoice: "Voice",
+        contentBank: null,
+        userId: "user-1",
+        user: { cguAccepted: true },
+      },
+    } as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-zero", runId: "run-1" })).resolves.not.toThrow();
+
+    // Validate step
+    expect(prisma.agent.findUnique).toHaveBeenCalledTimes(1);
+
+    // Mark running
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "run-1" },
+        data: expect.objectContaining({ status: "RUNNING" }),
+      }),
+    );
+
+    // LLM not called (no platforms)
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+
+    // Transaction still called but with empty array
+    expect(prisma.$transaction).toHaveBeenCalled();
+
+    // Mark success
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "run-1" },
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  // ============================================
+  // Empty textContent from LLM
+  // ============================================
+
+  it("should handle empty textContent from LLM", async () => {
+    vi.mocked(mockGenerateContent).mockResolvedValue({
+      textContent: "",
+      hashtags: [],
+      hook: "",
+    });
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).resolves.not.toThrow();
+
+    // Content still saved and marked success
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(2);
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  // ============================================
+  // Non-Error throwables (string, object)
+  // ============================================
+
+  it("should handle non-Error throwable (string) from LLM", async () => {
+    vi.mocked(mockGenerateContent).mockRejectedValue("Something went wrong" as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    // The catch block re-throws the original error (the string), not "Unknown error"
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).rejects.toBe(
+      "Something went wrong",
+    );
+
+    // But markRunFailed is called with "Unknown error" since it's not an Error instance
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "FAILED",
+          error: "Unknown error",
+        }),
+      }),
+    );
+  });
+
+  // ============================================
+  // All 8 platforms configured
+  // ============================================
+
+  it("should generate content for all 8 platforms", async () => {
+    const allPlatforms = [
+      "INSTAGRAM",
+      "TIKTOK",
+      "LINKEDIN",
+      "YOUTUBE",
+      "X",
+      "FACEBOOK",
+      "THREADS",
+      "PINTEREST",
+    ];
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue({
+      id: "agent-all",
+      name: "All Platforms Agent",
+      profileId: "profile-1",
+      platforms: allPlatforms,
+      maxPerDay: 10,
+      isActive: true,
+      profile: {
+        id: "profile-1",
+        name: "Test Brand",
+        brandVoice: "Voice",
+        contentBank: null,
+        userId: "user-1",
+        user: { cguAccepted: true },
+      },
+    } as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-all", runId: "run-1" })).resolves.not.toThrow();
+
+    // LLM called 8 times (one per platform)
+    expect(mockGenerateContent).toHaveBeenCalledTimes(8);
+
+    // 8 content items created
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(8);
+
+    // Mark success
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  // ============================================
+  // markRunSuccess fails after content saved
+  // ============================================
+
+  it("should mark FAILED when markRunSuccess throws after content saved", async () => {
+    // Reset and set explicit call chain: markRunRunning → OK, markRunSuccess → throws, markRunFailed → OK
+    vi.mocked(prisma.agentRun.update).mockReset();
+    vi.mocked(prisma.agentRun.update)
+      .mockResolvedValueOnce({} as any) // markRunRunning
+      .mockRejectedValueOnce(new Error("Failed to update status to SUCCESS")) // markRunSuccess (throws)
+      .mockResolvedValueOnce({} as any); // markRunFailed (catch)
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).rejects.toThrow(
+      "Failed to update status to SUCCESS",
+    );
+
+    // Content was still saved despite markRunSuccess failure
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(2);
+
+    // Run marked FAILED with the markRunSuccess error
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "FAILED",
+          error: "Failed to update status to SUCCESS",
+        }),
+      }),
+    );
+  });
 });

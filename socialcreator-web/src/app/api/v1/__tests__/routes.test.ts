@@ -39,9 +39,15 @@ vi.mock("@/lib/prisma", () => ({
       count: vi.fn(),
       findMany: vi.fn(),
     },
+    agent: {
+      groupBy: vi.fn(),
+    },
     generatedContent: {
       count: vi.fn(),
       findMany: vi.fn(),
+      groupBy: vi.fn(),
+    },
+    connectedAccount: {
       groupBy: vi.fn(),
     },
   },
@@ -234,6 +240,9 @@ describe("v1 API Routes", () => {
   describe("GET /api/v1/profiles", () => {
     it("should return 200 with empty list", async () => {
       mockRepos.profile.findByUserId.mockResolvedValue([]);
+      vi.mocked(prisma.agent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.generatedContent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.connectedAccount.groupBy).mockResolvedValue([]);
 
       const res = await ProfilesGET(createRequest("/api/v1/profiles"), createParams({}));
       expect(res.status).toBe(200);
@@ -241,9 +250,10 @@ describe("v1 API Routes", () => {
 
     it("should return X-API-Version: v1 header", async () => {
       mockRepos.profile.findByUserId.mockResolvedValue([]);
-      mockRepos.agent.findByProfileId.mockResolvedValue([]);
-      mockRepos.content.findByProfileId.mockResolvedValue({ total: 0 });
-      mockRepos.connectedAccount.findByProfileId.mockResolvedValue([]);
+      // N+1 fix: groupBy calls used for batch counts
+      vi.mocked(prisma.agent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.generatedContent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.connectedAccount.groupBy).mockResolvedValue([]);
 
       const res = await ProfilesGET(createRequest("/api/v1/profiles"), createParams({}));
       expect(res.headers.get("X-API-Version")).toBe("v1");
@@ -251,9 +261,9 @@ describe("v1 API Routes", () => {
 
     it("should return Cache-Control: private, no-store", async () => {
       mockRepos.profile.findByUserId.mockResolvedValue([]);
-      mockRepos.agent.findByProfileId.mockResolvedValue([]);
-      mockRepos.content.findByProfileId.mockResolvedValue({ total: 0 });
-      mockRepos.connectedAccount.findByProfileId.mockResolvedValue([]);
+      vi.mocked(prisma.agent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.generatedContent.groupBy).mockResolvedValue([]);
+      vi.mocked(prisma.connectedAccount.groupBy).mockResolvedValue([]);
 
       const res = await ProfilesGET(createRequest("/api/v1/profiles"), createParams({}));
       expect(res.headers.get("Cache-Control")).toContain("no-store");

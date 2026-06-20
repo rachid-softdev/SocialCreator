@@ -270,9 +270,36 @@ export function cleanupExpiredMemoryCache(): void {
   memoryCache.clearExpired();
 }
 
-// Start periodic cleanup for memory cache
-if (typeof setInterval !== "undefined") {
-  setInterval(cleanupExpiredMemoryCache, 60000); // Every minute
+// ── Lifecycle-managed periodic cleanup ──────────────────────────
+// NOTE: setInterval is NOT registered at module scope to avoid memory leaks
+// in serverless environments. Call start/stop from instrumentation.ts instead.
+
+let cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Start periodic cleanup of expired memory cache entries.
+ * Call once at server startup (e.g., from instrumentation.ts).
+ * @param intervalMs - Cleanup interval in milliseconds (default: 60000)
+ * @returns A cleanup function to stop the interval
+ */
+export function startMemoryCacheCleanup(intervalMs: number = 60000): () => void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+  }
+  cleanupInterval = setInterval(cleanupExpiredMemoryCache, intervalMs);
+  logger.debug({ intervalMs }, "[Entitlements] Memory cache cleanup started");
+  return stopMemoryCacheCleanup;
+}
+
+/**
+ * Stop periodic cleanup of expired memory cache entries.
+ */
+export function stopMemoryCacheCleanup(): void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+    logger.debug({}, "[Entitlements] Memory cache cleanup stopped");
+  }
 }
 
 export default cacheService;

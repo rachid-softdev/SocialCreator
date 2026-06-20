@@ -156,7 +156,9 @@ describe("Publisher factory", () => {
       const result = await publishContent("FACEBOOK", mockContent, mockAccount);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Facebook API error: 200");
+      expect(result.error).toBe(
+        "Facebook API returned an error. Please check your post and try again.",
+      );
     });
 
     it("should pass content and account to the publisher", async () => {

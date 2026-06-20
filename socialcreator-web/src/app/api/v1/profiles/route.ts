@@ -7,6 +7,7 @@ import { createProfileSchema } from "@socialcreator/types";
 import { NextResponse } from "next/server";
 import { badRequest, forbidden } from "@/lib/api-errors";
 import { withApiMiddleware } from "@/lib/api-middleware";
+import { prisma } from "@/lib/prisma";
 import { checkProfileQuota } from "@/lib/quota-guard";
 import { getRepositories } from "@/lib/repositories";
 
@@ -15,30 +16,41 @@ export const GET = withApiMiddleware(async ({ userId }) => {
   const { profile: profileRepo } = getRepositories();
   const profiles = await profileRepo.findByUserId(userId);
 
-  // Enrich with counts
-  const profilesWithCounts = await Promise.all(
-    profiles.map(async (profile) => {
-      const {
-        agent: agentRepo,
-        content: contentRepo,
-        connectedAccount: caRepo,
-      } = getRepositories();
-      const [agents, contents, connectedAccounts] = await Promise.all([
-        agentRepo.findByProfileId(profile.id),
-        contentRepo.findByProfileId(profile.id, { pageSize: 1 }),
-        caRepo.findByProfileId(profile.id),
-      ]);
+  // N+1 fix: fetch counts for ALL profiles in a single query each,
+  // then merge into profiles using a lookup map.
+  // This replaces the per-profile loop (N+1) with 3 aggregate queries.
+  const profileIds = profiles.map((p) => p.id);
 
-      return {
-        ...profile,
-        _count: {
-          agents: agents.length,
-          generatedContents: contents.total,
-          connectedAccounts: connectedAccounts.length,
-        },
-      };
+  const [agentCounts, contentCounts, accountCounts] = await Promise.all([
+    prisma.agent.groupBy({
+      by: ["profileId"],
+      where: { profileId: { in: profileIds } },
+      _count: true,
     }),
-  );
+    prisma.generatedContent.groupBy({
+      by: ["profileId"],
+      where: { profileId: { in: profileIds } },
+      _count: true,
+    }),
+    prisma.connectedAccount.groupBy({
+      by: ["profileId"],
+      where: { profileId: { in: profileIds } },
+      _count: true,
+    }),
+  ]);
+
+  const agentMap = Object.fromEntries(agentCounts.map((a) => [a.profileId, a._count]));
+  const contentMap = Object.fromEntries(contentCounts.map((c) => [c.profileId, c._count]));
+  const accountMap = Object.fromEntries(accountCounts.map((a) => [a.profileId, a._count]));
+
+  const profilesWithCounts = profiles.map((profile) => ({
+    ...profile,
+    _count: {
+      agents: agentMap[profile.id] ?? 0,
+      generatedContents: contentMap[profile.id] ?? 0,
+      connectedAccounts: accountMap[profile.id] ?? 0,
+    },
+  }));
 
   return NextResponse.json(
     { profiles: profilesWithCounts },

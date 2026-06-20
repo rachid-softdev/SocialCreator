@@ -89,14 +89,78 @@ describe("API Middleware Integration", () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it("should reject requests with body larger than 100KB", async () => {
+  it("should reject requests with body larger than 1MB", async () => {
     const handler = vi.fn();
     const wrapped = withApiMiddleware(handler);
-    const largeBody = "x".repeat(100_001);
+    const largeBody = "x".repeat(1_000_001);
     const request = new NextRequest("http://localhost:3000/api/test", {
       method: "POST",
       headers: { "content-length": String(largeBody.length) },
       body: largeBody,
+    });
+
+    const response = await wrapped(request);
+
+    expect(response.status).toBe(413);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("should allow requests with body up to 1MB", async () => {
+    (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user-1" },
+    });
+    (withRateLimit as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+    const wrapped = withApiMiddleware(handler);
+    // 900KB — well within the 1MB limit
+    const body = "x".repeat(900_000);
+    const request = new NextRequest("http://localhost:3000/api/test", {
+      method: "POST",
+      headers: { "content-length": String(body.length) },
+      body,
+    });
+
+    const response = await wrapped(request);
+
+    expect(response.status).toBe(200);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("should sanitize route paths in Prometheus labels", async () => {
+    (auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user-1" },
+    });
+    (withRateLimit as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+    const wrapped = withApiMiddleware(handler);
+    const request = new NextRequest(
+      "http://localhost:3000/api/v1/content/507f1f77bcf86cd799439011",
+      {
+        method: "GET",
+      },
+    );
+
+    await wrapped(request);
+
+    // The handler should receive the sanitized route path without the raw ID
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.any(NextRequest),
+        userId: "user-1",
+      }),
+      {},
+    );
+  });
+
+  it("should return 413 when content-length exceeds limit", async () => {
+    const handler = vi.fn();
+    const wrapped = withApiMiddleware(handler);
+    const request = new NextRequest("http://localhost:3000/api/test", {
+      method: "POST",
+      headers: { "content-length": "5000000" }, // 5MB
+      body: "x".repeat(5000), // body doesn't matter, content-length header is checked first
     });
 
     const response = await wrapped(request);

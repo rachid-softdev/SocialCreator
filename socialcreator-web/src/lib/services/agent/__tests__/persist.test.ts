@@ -258,5 +258,79 @@ describe("Agent persistence", () => {
         saveGeneratedContent("run-1", "profile-1", mockGenerationResults),
       ).rejects.toThrow("Transaction aborted");
     });
+
+    it("should save content for all 8 platforms", async () => {
+      const manyResults = [
+        { platform: "INSTAGRAM", textContent: "IG post", hashtags: ["#ig"] },
+        { platform: "TIKTOK", textContent: "TT vid", hashtags: ["#tt"] },
+        { platform: "LINKEDIN", textContent: "LI article", hashtags: ["#li"] },
+        { platform: "YOUTUBE", textContent: "YT short", hashtags: ["#yt"] },
+        { platform: "X", textContent: "X tweet", hashtags: ["#x"] },
+        { platform: "FACEBOOK", textContent: "FB post", hashtags: ["#fb"] },
+        { platform: "THREADS", textContent: "Threads post", hashtags: ["#threads"] },
+        { platform: "PINTEREST", textContent: "Pin desc", hashtags: ["#pin"] },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => {
+        if (typeof fn === "function") return fn(prisma);
+        return fn;
+      });
+      vi.mocked(prisma.generatedContent.create).mockResolvedValue({} as any);
+
+      const { saveGeneratedContent } = await import("../persist");
+      await saveGeneratedContent("run-1", "profile-1", manyResults);
+
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.generatedContent.create).toHaveBeenCalledTimes(8);
+      // Metrics: 2 inc calls per platform (text + agent) = 16
+      expect(contentGenerated.inc).toHaveBeenCalledTimes(16);
+    });
+
+    it("should handle undefined hook gracefully in results", async () => {
+      const resultsWithoutHook = [{ platform: "X", textContent: "No hook", hashtags: [] }];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => {
+        if (typeof fn === "function") return fn(prisma);
+        return fn;
+      });
+      vi.mocked(prisma.generatedContent.create).mockResolvedValue({} as any);
+
+      const { saveGeneratedContent } = await import("../persist");
+      await expect(
+        saveGeneratedContent("run-1", "profile-1", resultsWithoutHook as any),
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe("markRunFailed edge cases", () => {
+    it("should handle very long error message", async () => {
+      vi.mocked(prisma.agentRun.update).mockResolvedValue({} as any);
+      const longError = "x".repeat(10000);
+
+      const { markRunFailed } = await import("../persist");
+      await markRunFailed("run-1", longError);
+
+      expect(prisma.agentRun.update).toHaveBeenCalledWith({
+        where: { id: "run-1" },
+        data: {
+          status: "FAILED",
+          finishedAt: expect.any(Date),
+          error: longError,
+        },
+      });
+    });
+
+    it("should include special characters in error message", async () => {
+      vi.mocked(prisma.agentRun.update).mockResolvedValue({} as any);
+      const specialError = "Error: 'quotes' & <brackets> | pipe `backtick` $dollar";
+
+      const { markRunFailed } = await import("../persist");
+      await markRunFailed("run-1", specialError);
+
+      expect(prisma.agentRun.update).toHaveBeenCalledWith({
+        where: { id: "run-1" },
+        data: expect.objectContaining({ error: specialError }),
+      });
+    });
   });
 });

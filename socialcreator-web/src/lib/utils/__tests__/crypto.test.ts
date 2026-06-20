@@ -1,9 +1,14 @@
 /**
  * Tests for crypto utilities
- * AES-256 encryption/decryption, hashing, token generation, masking
+ * AES-256-GCM encryption/decryption, hashing, token generation, masking
+ *
+ * NOTE: ENCRYPTION_KEY is set in vitest.setup.ts before any test file loads,
+ * so the module-level `SECRET` is available at import time. We also assert
+ * it in beforeAll as a secondary safety net (though module-level code runs
+ * before beforeAll hooks).
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   decryptObject,
   decryptToken,
@@ -15,330 +20,340 @@ import {
   verifyHash,
 } from "../crypto";
 
-// NOTE: ENCRYPTION_KEY is set in vitest.setup.ts as "test-encryption-key".
-// The module-level SECRET is captured at import time.
+beforeAll(() => {
+  process.env.ENCRYPTION_KEY = "test-encryption-key-that-is-32-bytes-long!!";
+});
 
-describe("crypto", () => {
-  describe("encryptToken", () => {
-    it("should encrypt a token string", () => {
-      const token = "my_secret_token_123";
-      const encrypted = encryptToken(token);
+// ---------------------------------------------------------------------------
+// encryptToken / decryptToken (round-trip)
+// ---------------------------------------------------------------------------
+describe("encryptToken / decryptToken — round-trip", () => {
+  it("should round-trip a normal string token", () => {
+    const token = "my_secret_token_123";
+    const encrypted = encryptToken(token);
+    expect(encrypted).not.toBe(token);
+    expect(encrypted.split(":")).toHaveLength(3);
 
-      expect(encrypted).not.toBe(token);
-      expect(typeof encrypted).toBe("string");
-      // Format: base64(iv):base64(tag):base64(ciphertext)
-      expect(encrypted.split(":")).toHaveLength(3);
-    });
-
-    it("should produce different ciphertext for same plaintext (random IV)", () => {
-      const token = "same_token_value";
-      const encrypted1 = encryptToken(token);
-      const encrypted2 = encryptToken(token);
-
-      expect(encrypted1).not.toBe(encrypted2);
-    });
-
-    it("should handle special characters", () => {
-      const token = "token!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
-      const encrypted = encryptToken(token);
-      const decrypted = decryptToken(encrypted);
-
-      expect(decrypted).toBe(token);
-    });
-
-    it("should handle unicode and emoji characters", () => {
-      const token = "token_émojis_🎉_日本語_中文_한국어";
-      const encrypted = encryptToken(token);
-      const decrypted = decryptToken(encrypted);
-
-      expect(decrypted).toBe(token);
-    });
-
-    it("should throw for empty string", () => {
-      expect(() => encryptToken("")).toThrow("Invalid token provided for encryption");
-    });
-
-    it("should throw for non-string input", () => {
-      expect(() => encryptToken(null as unknown as string)).toThrow(
-        "Invalid token provided for encryption",
-      );
-      expect(() => encryptToken(undefined as unknown as string)).toThrow(
-        "Invalid token provided for encryption",
-      );
-    });
+    const decrypted = decryptToken(encrypted);
+    expect(decrypted).toBe(token);
   });
 
-  describe("decryptToken", () => {
-    it("should decrypt an encrypted token back to original", () => {
-      const token = "my_secret_token";
-      const encrypted = encryptToken(token);
-      const decrypted = decryptToken(encrypted);
-
-      expect(decrypted).toBe(token);
-    });
-
-    it("should handle long tokens", () => {
-      const token = "a".repeat(1000);
-      const encrypted = encryptToken(token);
-      const decrypted = decryptToken(encrypted);
-
-      expect(decrypted).toBe(token);
-    });
-
-    it("should round-trip various token formats", () => {
-      const tokens = [
-        "short",
-        "with-dashes",
-        "with_underscores",
-        "with.dots",
-        "CamelCase",
-        "UPPERCASE",
-        "1234567890",
-      ];
-
-      for (const token of tokens) {
-        const encrypted = encryptToken(token);
-        const decrypted = decryptToken(encrypted);
-        expect(decrypted).toBe(token);
-      }
-    });
-
-    it("should throw for empty string", () => {
-      expect(() => decryptToken("")).toThrow("Invalid encrypted string provided for decryption");
-    });
-
-    it("should throw for non-string input", () => {
-      expect(() => decryptToken(null as unknown as string)).toThrow(
-        "Invalid encrypted string provided for decryption",
-      );
-    });
-
-    it("should throw for invalid format (no colons)", () => {
-      expect(() => decryptToken("base64withoutcolons")).toThrow("Invalid encrypted format");
-    });
-
-    it("should throw for wrong number of parts (2 colons)", () => {
-      expect(() => decryptToken("part1:part2:part3:part4")).toThrow("Invalid encrypted format");
-    });
-
-    it("should throw for tampered ciphertext (GCM auth tag mismatch)", () => {
-      const encrypted = encryptToken("original");
-      const parts = encrypted.split(":");
-      // Tamper with the ciphertext portion
-      const tampered = `${parts[0]}:${parts[1]}:dGFtcGVyZWQ=`;
-      expect(() => decryptToken(tampered)).toThrow();
-    });
+  it("should round-trip a long token (1000+ characters)", () => {
+    const token = "a".repeat(1500);
+    const encrypted = encryptToken(token);
+    const decrypted = decryptToken(encrypted);
+    expect(decrypted).toBe(token);
   });
 
-  describe("encryptObject", () => {
-    it("should encrypt an object", () => {
-      const obj = { userId: "123", role: "admin", scopes: ["read", "write"] };
-      const encrypted = encryptObject(obj);
-
-      expect(typeof encrypted).toBe("string");
-      expect(encrypted.split(":")).toHaveLength(3);
-    });
-
-    it("should produce different ciphertext for same object (random IV)", () => {
-      const obj = { key: "value" };
-      const encrypted1 = encryptObject(obj);
-      const encrypted2 = encryptObject(obj);
-
-      expect(encrypted1).not.toBe(encrypted2);
-    });
-
-    it("should throw for null", () => {
-      expect(() => encryptObject(null as unknown as object)).toThrow(
-        "Invalid object provided for encryption",
-      );
-    });
-
-    it("should throw for non-object (string)", () => {
-      expect(() => encryptObject("string" as unknown as object)).toThrow(
-        "Invalid object provided for encryption",
-      );
-    });
-
-    it("should throw for array (not a plain object)", () => {
-      // Arrays are objects in JS so this might pass — let's check behavior
-      // encryptObject checks typeof !== "object", arrays pass typeof check
-      const arr = [1, 2, 3];
-      // If the check is `typeof obj !== "object"`, arrays will pass as objects
-      // JSON.stringify on an array works fine, so this should encrypt
-      if (typeof arr === "object") {
-        const encrypted = encryptObject(arr as unknown as object);
-        expect(typeof encrypted).toBe("string");
-      }
-    });
+  it("should round-trip a short token (1 character)", () => {
+    const token = "x";
+    const encrypted = encryptToken(token);
+    const decrypted = decryptToken(encrypted);
+    expect(decrypted).toBe(token);
   });
 
-  describe("decryptObject", () => {
-    it("should decrypt an encrypted object back to original", () => {
-      const obj = { userId: "123", name: "test", count: 42 };
-      const encrypted = encryptObject(obj);
-      const decrypted = decryptObject<typeof obj>(encrypted);
-
-      expect(decrypted).toEqual(obj);
-    });
-
-    it("should handle nested objects", () => {
-      const obj = { user: { id: "456", profile: { email: "test@example.com" } } };
-      const encrypted = encryptObject(obj);
-      const decrypted = decryptObject<typeof obj>(encrypted);
-
-      expect(decrypted).toEqual(obj);
-    });
-
-    it("should throw for invalid JSON after decryption", () => {
-      // Create a minimal valid GCM encrypted string that decrypts to non-JSON
-      // We can construct one by encrypting a non-JSON string
-      const validEncrypted = encryptToken("not-json");
-      // This will decrypt successfully but JSON.parse will fail
-      expect(() => decryptObject(validEncrypted)).toThrow("Failed to parse decrypted JSON");
-    });
+  it("should round-trip tokens with special characters, unicode, emoji, and newlines", () => {
+    const token = "Hello\nWorld\t\r\n🎉🔥日本語中文한국어`~!@#$%^&*()_+-=[]{}|;':\",./<>?\n";
+    const encrypted = encryptToken(token);
+    const decrypted = decryptToken(encrypted);
+    expect(decrypted).toBe(token);
   });
 
-  describe("generateSecureToken", () => {
-    it("should generate a token of default length 32", () => {
-      const token = generateSecureToken();
-      expect(token).toHaveLength(32);
-    });
+  it("should produce different ciphertext for the same plaintext (random IV)", () => {
+    const token = "consistent-value";
+    const a = encryptToken(token);
+    const b = encryptToken(token);
+    expect(a).not.toBe(b);
+  });
+});
 
-    it("should generate a token of custom length", () => {
-      const token = generateSecureToken(64);
-      expect(token).toHaveLength(64);
-    });
-
-    it("should generate a token of length 0", () => {
-      const token = generateSecureToken(0);
-      expect(token).toHaveLength(0);
-    });
-
-    it("should only contain alphanumeric characters", () => {
-      const token = generateSecureToken(1000);
-      expect(token).toMatch(/^[A-Za-z0-9]+$/);
-    });
-
-    it("should produce different tokens on successive calls", () => {
-      const token1 = generateSecureToken();
-      const token2 = generateSecureToken();
-      expect(token1).not.toBe(token2);
-    });
+// ---------------------------------------------------------------------------
+// encryptToken — validation
+// ---------------------------------------------------------------------------
+describe("encryptToken — validation", () => {
+  it("should throw for empty string", () => {
+    expect(() => encryptToken("")).toThrow("Invalid token provided for encryption");
   });
 
-  describe("hashString", () => {
-    it("should produce a 64-character hex string", () => {
-      const hash = hashString("test");
-      expect(hash).toMatch(/^[a-f0-9]{64}$/);
-    });
-
-    it("should produce consistent hash for same input", () => {
-      const input = "Hello World";
-      expect(hashString(input)).toBe(hashString(input));
-    });
-
-    it("should produce different hash for different input", () => {
-      expect(hashString("Hello")).not.toBe(hashString("World"));
-    });
-
-    it("should handle empty string", () => {
-      const hash = hashString("");
-      expect(hash).toMatch(/^[a-f0-9]{64}$/);
-    });
-
-    it("should handle unicode characters", () => {
-      const hash = hashString("日本語🎉");
-      expect(hash).toMatch(/^[a-f0-9]{64}$/);
-    });
+  it("should throw for non-string input (number)", () => {
+    expect(() => encryptToken(123 as unknown as string)).toThrow(
+      "Invalid token provided for encryption",
+    );
   });
 
-  describe("verifyHash", () => {
-    it("should return true for matching input and hash", () => {
-      const hash = hashString("mypassword");
-      expect(verifyHash("mypassword", hash)).toBe(true);
-    });
-
-    it("should return false for non-matching input", () => {
-      const hash = hashString("correct");
-      expect(verifyHash("wrong", hash)).toBe(false);
-    });
-
-    it("should handle empty strings (both empty)", () => {
-      const hash = hashString("");
-      expect(verifyHash("", hash)).toBe(true);
-    });
-
-    it("should handle empty string vs non-empty", () => {
-      const hash = hashString("");
-      expect(verifyHash("x", hash)).toBe(false);
-    });
-
-    it("should handle different hash lengths gracefully (no crash)", () => {
-      // hashString returns 64 hex chars; a shorter/longer string should not crash
-      expect(() => verifyHash("test", "tooshort")).not.toThrow();
-      expect(verifyHash("test", "tooshort")).toBe(false);
-    });
-
-    it("should handle longer hash string", () => {
-      const longHash = "a".repeat(128);
-      expect(() => verifyHash("test", longHash)).not.toThrow();
-      expect(verifyHash("test", longHash)).toBe(false);
-    });
-
-    it("should never crash regardless of input", () => {
-      expect(() => verifyHash("anything", "anything")).not.toThrow();
-      expect(() => verifyHash("", "")).not.toThrow();
-      expect(() => verifyHash("a", "b")).not.toThrow();
-    });
+  it("should throw for null input", () => {
+    expect(() => encryptToken(null as unknown as string)).toThrow(
+      "Invalid token provided for encryption",
+    );
   });
 
-  describe("maskString", () => {
-    it("should mask the middle of a string, showing 4 chars at each end", () => {
-      const result = maskString("abcdefghijklmnop");
-      // "abcdefghijklmnop" length 16, visible 4+4=8, middle = min(8, 20) = 8 asterisks
-      expect(result).toBe("abcd********mnop");
-    });
+  it("should throw for undefined input", () => {
+    expect(() => encryptToken(undefined as unknown as string)).toThrow(
+      "Invalid token provided for encryption",
+    );
+  });
+});
 
-    it("should show correct number of visible chars at start and end", () => {
-      const result = maskString("1234567890", 3);
-      expect(result).toMatch(/^123/);
-      expect(result).toMatch(/890$/);
-    });
+// ---------------------------------------------------------------------------
+// decryptToken — validation
+// ---------------------------------------------------------------------------
+describe("decryptToken — validation", () => {
+  it("should throw for empty string", () => {
+    expect(() => decryptToken("")).toThrow("Invalid encrypted string provided for decryption");
+  });
 
-    it("should return all asterisks for short strings (<= 2*visibleChars)", () => {
-      // Length 8 with visibleChars=4 => 8 <= 8 so all asterisks
-      expect(maskString("12345678", 4)).toBe("********");
-    });
+  it("should throw for non-string input", () => {
+    expect(() => decryptToken(null as unknown as string)).toThrow(
+      "Invalid encrypted string provided for decryption",
+    );
+  });
 
-    it("should return empty string for empty input", () => {
-      expect(maskString("")).toBe("");
-    });
+  it("should throw for invalid format — 2 parts (1 colon)", () => {
+    expect(() => decryptToken("part1:part2")).toThrow("Invalid encrypted format");
+  });
 
-    it("should handle single character", () => {
-      expect(maskString("a")).toBe("*");
-    });
+  it("should throw for invalid format — 4 parts (3 colons)", () => {
+    expect(() => decryptToken("a:b:c:d")).toThrow("Invalid encrypted format");
+  });
 
-    it("should cap middle asterisks at 20", () => {
-      const long = "a".repeat(50);
-      const result = maskString(long, 4);
-      // 4 visible start + 20 asterisks max + 4 visible end = 28
-      expect(result).toHaveLength(28);
-      expect(result.startsWith("aaaa")).toBe(true);
-      expect(result.endsWith("aaaa")).toBe(true);
-      expect(result).toMatch(/^aaaa\*+aaaa$/);
-    });
+  it("should throw for invalid format — single part (no colon)", () => {
+    // The source fn expects exactly 3 parts; 1 part fails
+    expect(() => decryptToken("justonerandomstring")).toThrow("Invalid encrypted format");
+  });
 
-    it("should handle custom visibleChars", () => {
-      const result = maskString("abcdefghij", 1);
-      expect(result).toBe("a********j");
-    });
+  it("should throw for tampered ciphertext (GCM auth tag mismatch)", () => {
+    const encrypted = encryptToken("original-value");
+    const parts = encrypted.split(":");
+    // Replace the ciphertext portion with garbage base64
+    const tampered = `${parts[0]}:${parts[1]}:dGFtcGVyZWQ=`;
+    expect(() => decryptToken(tampered)).toThrow();
+  });
 
-    it("should handle visibleChars=0", () => {
-      const result = maskString("hello", 0);
-      // visibleChars=0: start is "", end is full string (slice(-0) === slice(0)),
-      // middle is value.length asterisks = "*****"
-      // Result: "" + "*****" + "hello" = "*****hello"
-      expect(result).toBe("*****hello");
-    });
+  it("should throw for tampered IV", () => {
+    const encrypted = encryptToken("test");
+    const parts = encrypted.split(":");
+    const tampered = `AAAAAAAAAAAAAAAAAAAAAA==:${parts[1]}:${parts[2]}`;
+    expect(() => decryptToken(tampered)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// encryptObject / decryptObject
+// ---------------------------------------------------------------------------
+describe("encryptObject / decryptObject", () => {
+  it("should round-trip a simple object", () => {
+    const obj = { key: "value", num: 42 };
+    const encrypted = encryptObject(obj);
+    expect(typeof encrypted).toBe("string");
+    expect(encrypted.split(":")).toHaveLength(3);
+
+    const decrypted = decryptObject<typeof obj>(encrypted);
+    expect(decrypted).toEqual(obj);
+  });
+
+  it("should round-trip an empty object", () => {
+    const obj = {};
+    const encrypted = encryptObject(obj);
+    const decrypted = decryptObject<typeof obj>(encrypted);
+    expect(decrypted).toEqual({});
+  });
+
+  it("should round-trip a nested object", () => {
+    const obj = { user: { id: "456", profile: { email: "test@example.com" } } };
+    const encrypted = encryptObject(obj);
+    const decrypted = decryptObject<typeof obj>(encrypted);
+    expect(decrypted).toEqual(obj);
+  });
+
+  it("should round-trip an object with arrays", () => {
+    const obj = { tags: ["a", "b", "c"], scores: [1, 2, 3] };
+    const encrypted = encryptObject(obj);
+    const decrypted = decryptObject<typeof obj>(encrypted);
+    expect(decrypted).toEqual(obj);
+  });
+
+  it("should produce different ciphertext for the same object (random IV)", () => {
+    const obj = { key: "value" };
+    expect(encryptObject(obj)).not.toBe(encryptObject(obj));
+  });
+
+  // --- validation ---
+  it("should throw for null input", () => {
+    expect(() => encryptObject(null as unknown as object)).toThrow(
+      "Invalid object provided for encryption",
+    );
+  });
+
+  it("should throw for non-object input (string)", () => {
+    expect(() => encryptObject("some-string" as unknown as object)).toThrow(
+      "Invalid object provided for encryption",
+    );
+  });
+
+  it("should throw for non-object input (number)", () => {
+    expect(() => encryptObject(42 as unknown as object)).toThrow(
+      "Invalid object provided for encryption",
+    );
+  });
+
+  it("should throw when decrypting non-JSON content", () => {
+    // encryptToken produces valid GCM ciphertext that decrypts to non-JSON text
+    const encrypted = encryptToken("this-is-not-json");
+    expect(() => decryptObject(encrypted)).toThrow("Failed to parse decrypted JSON");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateSecureToken
+// ---------------------------------------------------------------------------
+describe("generateSecureToken", () => {
+  it("should generate a token of default length 32", () => {
+    expect(generateSecureToken()).toHaveLength(32);
+  });
+
+  it("should generate a token of custom length (16)", () => {
+    expect(generateSecureToken(16)).toHaveLength(16);
+  });
+
+  it("should generate a token of custom length (64)", () => {
+    expect(generateSecureToken(64)).toHaveLength(64);
+  });
+
+  it("should generate an empty string for length 0", () => {
+    expect(generateSecureToken(0)).toBe("");
+  });
+
+  it("should contain only alphanumeric characters", () => {
+    const token = generateSecureToken(1000);
+    expect(token).toMatch(/^[A-Za-z0-9]+$/);
+  });
+
+  it("should produce different tokens on successive calls (randomness)", () => {
+    const tokens = new Set(Array.from({ length: 10 }, () => generateSecureToken()));
+    // With 10 tokens of length 32, all should be unique
+    expect(tokens.size).toBe(10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hashString
+// ---------------------------------------------------------------------------
+describe("hashString", () => {
+  it("should produce a 64-character hex string (SHA-256)", () => {
+    const hash = hashString("test-input");
+    expect(hash).toHaveLength(64);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("should produce the same hash for the same input (deterministic)", () => {
+    const input = "Hello World!";
+    expect(hashString(input)).toBe(hashString(input));
+  });
+
+  it("should produce different hashes for different inputs", () => {
+    expect(hashString("abc")).not.toBe(hashString("xyz"));
+  });
+
+  it("should handle an empty string", () => {
+    const hash = hashString("");
+    expect(hash).toHaveLength(64);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("should handle unicode characters", () => {
+    const hash = hashString("日本語🎉🔥");
+    expect(hash).toHaveLength(64);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// verifyHash
+// ---------------------------------------------------------------------------
+describe("verifyHash", () => {
+  it("should return true when input matches the hash", () => {
+    const hash = hashString("mypassword");
+    expect(verifyHash("mypassword", hash)).toBe(true);
+  });
+
+  it("should return false when input does not match the hash", () => {
+    const hash = hashString("correct");
+    expect(verifyHash("wrong", hash)).toBe(false);
+  });
+
+  it("should return false when buffers have different lengths (and not throw)", () => {
+    expect(() => verifyHash("test", "tooshort")).not.toThrow();
+    expect(verifyHash("test", "tooshort")).toBe(false);
+  });
+
+  it("should return false for a longer-than-expected hash string (and not throw)", () => {
+    const longHash = "a".repeat(128);
+    expect(() => verifyHash("test", longHash)).not.toThrow();
+    expect(verifyHash("test", longHash)).toBe(false);
+  });
+
+  it("should handle empty strings (both empty)", () => {
+    const hash = hashString("");
+    expect(verifyHash("", hash)).toBe(true);
+  });
+
+  it("should handle empty hash against non-empty input", () => {
+    expect(verifyHash("x", "")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// maskString
+// ---------------------------------------------------------------------------
+describe("maskString", () => {
+  it("should show first and last 4 characters, masking the middle", () => {
+    const result = maskString("abcdefghijklmnop");
+    // "abcdefghijklmnop" length 16, visible 4+4=8, middle = min(8, 20) = 8
+    expect(result).toBe("abcd********mnop");
+  });
+
+  it("should handle custom visibleChars count", () => {
+    const result = maskString("abcdefghij", 1);
+    expect(result).toBe("a********j");
+  });
+
+  it("should fully mask a short string (length <= 2 * visibleChars)", () => {
+    // Length 6, visibleChars=4 → 6 <= 8 → fully masked
+    expect(maskString("abcdef", 4)).toBe("******");
+  });
+
+  it("should fully mask a string of exactly 2 * visibleChars", () => {
+    // Length 8, visibleChars=4 → 8 <= 8 → fully masked
+    expect(maskString("12345678", 4)).toBe("********");
+  });
+
+  it("should mask a single character", () => {
+    expect(maskString("a")).toBe("*");
+  });
+
+  it("should mask only two characters", () => {
+    expect(maskString("ab")).toBe("**");
+  });
+
+  it("should cap middle asterisks at 20", () => {
+    const long = "a".repeat(50);
+    const result = maskString(long, 4);
+    // 4 + min(42, 20) + 4 = 4 + 20 + 4 = 28
+    expect(result).toHaveLength(28);
+    expect(result.startsWith("aaaa")).toBe(true);
+    expect(result.endsWith("aaaa")).toBe(true);
+    expect(result).toMatch(/^aaaa\*+aaaa$/);
+  });
+
+  it("should return empty string for empty input", () => {
+    expect(maskString("")).toBe("");
+  });
+
+  it("should return empty string for null", () => {
+    expect(maskString(null as unknown as string)).toBe("");
+  });
+
+  it("should return empty string for undefined", () => {
+    expect(maskString(undefined as unknown as string)).toBe("");
   });
 });

@@ -41,7 +41,13 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
       if (!opts.retryOn(lastError)) throw lastError;
 
       // Exponential backoff with jitter
-      const delay = Math.min(opts.baseDelayMs * 2 ** (attempt - 1), opts.maxDelayMs);
+      // If the error carries a retryAfterMs hint (e.g., from a 429 Retry-After header),
+      // use that as the delay instead of the exponential backoff.
+      const retryAfterMs = (lastError as any)?.retryAfterMs;
+      const delay =
+        retryAfterMs != null
+          ? Math.min(retryAfterMs, opts.maxDelayMs)
+          : Math.min(opts.baseDelayMs * 2 ** (attempt - 1), opts.maxDelayMs);
       const jitter = opts.jitter ? delay * 0.1 * Math.random() : 0;
 
       await new Promise((resolve) => setTimeout(resolve, delay + jitter));

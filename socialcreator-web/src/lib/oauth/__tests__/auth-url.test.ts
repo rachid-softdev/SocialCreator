@@ -207,6 +207,98 @@ describe("OAuth Auth URL", () => {
       const parsed = new URL(url);
       expect(parsed.searchParams.get("client_id")).toBe("");
     });
+
+    it("should build a valid TikTok OAuth URL", () => {
+      const url = buildAuthUrl("TIKTOK", "profile-tt");
+      const parsed = new URL(url);
+
+      expect(parsed.origin).toBe("https://www.tiktok.com");
+      expect(parsed.pathname).toBe("/auth/authorize/");
+      expect(parsed.searchParams.get("client_id")).toBe("tt-client-345");
+      expect(parsed.searchParams.get("redirect_uri")).toBe(
+        "https://socialcreator.app/api/connected-accounts/callback/tiktok",
+      );
+      expect(parsed.searchParams.get("scope")).toContain("user.info.basic");
+      expect(parsed.searchParams.get("response_type")).toBe("code");
+      expect(parsed.searchParams.get("state")).toBeTruthy();
+    });
+
+    it("should build a valid Pinterest OAuth URL", () => {
+      const url = buildAuthUrl("PINTEREST", "profile-pin");
+      const parsed = new URL(url);
+
+      expect(parsed.origin).toBe("https://www.pinterest.com");
+      expect(parsed.pathname).toBe("/oauth/");
+      expect(parsed.searchParams.get("client_id")).toBe("pin-client-678");
+      expect(parsed.searchParams.get("redirect_uri")).toBe(
+        "https://socialcreator.app/api/connected-accounts/callback/pinterest",
+      );
+      expect(parsed.searchParams.get("scope")).toContain("boards:read");
+      expect(parsed.searchParams.get("response_type")).toBe("code");
+      expect(parsed.searchParams.get("state")).toBeTruthy();
+    });
+
+    it("should build a valid Threads OAuth URL (Meta)", () => {
+      const url = buildAuthUrl("THREADS", "profile-threads");
+      const parsed = new URL(url);
+
+      expect(parsed.origin).toBe("https://www.facebook.com");
+      expect(parsed.pathname).toBe("/v18.0/dialog/oauth");
+      expect(parsed.searchParams.get("client_id")).toBe("meta-client-123");
+      expect(parsed.searchParams.get("redirect_uri")).toBe(
+        "https://socialcreator.app/api/connected-accounts/callback/threads",
+      );
+      expect(parsed.searchParams.get("scope")).toContain("threads_basic_exposure");
+    });
+
+    it("should build URLs for all 8 providers without throwing", () => {
+      const providers = [
+        "INSTAGRAM",
+        "FACEBOOK",
+        "TIKTOK",
+        "LINKEDIN",
+        "X",
+        "YOUTUBE",
+        "PINTEREST",
+        "THREADS",
+      ];
+      for (const provider of providers) {
+        const url = buildAuthUrl(provider as any, `profile-${provider.toLowerCase()}`);
+        expect(() => new URL(url)).not.toThrow();
+        expect(url.startsWith("http")).toBe(true);
+      }
+    });
+
+    it("should include state with codeVerifier in X auth URL", () => {
+      const url = buildAuthUrl("X", "profile-x-pkce");
+      const parsed = new URL(url);
+
+      const stateParam = parsed.searchParams.get("state") ?? "";
+      // State should contain PKCE code verifier when platform is X
+      const parsedState = parseState(stateParam);
+      expect(parsedState).not.toBeNull();
+      expect(parsedState?.codeVerifier).toBeTruthy();
+      expect(typeof parsedState?.codeVerifier).toBe("string");
+    });
+
+    it("should not include codeVerifier for non-X platforms", () => {
+      const url = buildAuthUrl("FACEBOOK", "profile-fb");
+      const parsed = new URL(url);
+
+      const stateParam = parsed.searchParams.get("state") ?? "";
+      const parsedState = parseState(stateParam);
+      expect(parsedState).not.toBeNull();
+      expect(parsedState?.codeVerifier).toBeUndefined();
+    });
+
+    it("should set redirect_uri for LinkedIn", () => {
+      const url = buildAuthUrl("LINKEDIN", "profile-li");
+      const parsed = new URL(url);
+
+      expect(parsed.searchParams.get("redirect_uri")).toBe(
+        "https://socialcreator.app/api/connected-accounts/callback/linkedin",
+      );
+    });
   });
 
   describe("buildAuthUrlWithParams", () => {

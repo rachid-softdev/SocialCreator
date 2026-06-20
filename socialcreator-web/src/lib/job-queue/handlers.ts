@@ -6,6 +6,7 @@
 
 import { computeContentHash } from "@socialcreator/utils";
 import logger from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 import { publishContent } from "@/lib/publishers";
 import { getRepositories } from "@/lib/repositories";
 import { triggerAgentRun } from "@/lib/services/agent";
@@ -88,7 +89,25 @@ registerHandler("publish", async (payload: PublishPayload) => {
   const content = await contentRepo.findById(payload.contentId);
   if (!content) throw new Error("Content not found");
 
-  // Idempotency check: skip if already published successfully
+  // ── Atomic claim: prevent concurrent publish of the same content ──
+  // Atomically transition from APPROVED/SCHEDULED → PUBLISHING.
+  // If another worker has already claimed it, 0 rows are affected → skip.
+  const claimed = await prisma.generatedContent.updateMany({
+    where: {
+      id: payload.contentId,
+      status: { in: ["APPROVED", "SCHEDULED"] },
+    },
+    data: { status: "PUBLISHING" },
+  });
+  if (claimed.count === 0) {
+    logger.warn(
+      { contentId: payload.contentId },
+      "Content already claimed by another worker (status not APPROVED/SCHEDULED), skipping",
+    );
+    return;
+  }
+
+  // Compute content hash for idempotency
   const contentHash =
     payload.contentHash ??
     computeContentHash({
@@ -98,10 +117,9 @@ registerHandler("publish", async (payload: PublishPayload) => {
       mediaUrls: content.mediaUrls,
       hashtags: content.hashtags,
     });
-  const existing = await publishLogRepo.findSuccessfulByContentHash(
-    contentHash,
-    payload.profileId,
-  );
+
+  // Idempotency check: skip if already published successfully
+  const existing = await publishLogRepo.findSuccessfulByContentHash(contentHash, payload.profileId);
   if (existing) {
     logger.info(
       { contentId: payload.contentId, contentHash },
@@ -132,7 +150,10 @@ registerHandler("publish", async (payload: PublishPayload) => {
     }
   }
 
-  // Check daily cap
+  // Check daily cap (per-profile, per-platform)
+  // NOTE: This check has a TOCTOU window: two different content items for the
+  // same profile could both pass this check concurrently. For strict atomicity,
+  // use Redis INCR with daily TTL as described in the TODO below.
   const todayCount = await publishLogRepo.countPublishedToday(
     payload.profileId,
     payload.platform as any,
@@ -143,17 +164,25 @@ registerHandler("publish", async (payload: PublishPayload) => {
       { contentId: payload.contentId, profileId: payload.profileId, todayCount },
       "Daily publish cap reached, skipping",
     );
+    // Release the publishing lock so content can be retried
+    await contentRepo.updateStatus(payload.contentId, "APPROVED");
     return;
   }
 
   // Lookup connected account
   const account = await caRepo.findByProfileAndPlatform(payload.profileId, payload.platform as any);
 
-  if (!account?.isActive) throw new Error("No active connected account found");
+  if (!account?.isActive) {
+    await contentRepo.updateStatus(payload.contentId, "FAILED");
+    throw new Error("No active connected account found");
+  }
 
   // Get valid access token
   const accessToken = await getValidAccessToken(account.id);
-  if (!accessToken) throw new Error("Failed to get access token");
+  if (!accessToken) {
+    await contentRepo.updateStatus(payload.contentId, "FAILED");
+    throw new Error("Failed to get access token");
+  }
 
   // Publish via publisher strategy
   const result = await publishContent(
@@ -182,10 +211,12 @@ registerHandler("publish", async (payload: PublishPayload) => {
         contentHash,
         success: true,
       });
-    } catch {
-      logger.info(
-        { contentId: payload.contentId },
-        "PublishLog already exists (duplicate prevention)",
+    } catch (err) {
+      // Expected when the @@unique([contentHash, profileId, success]) constraint
+      // catches a duplicate — this is an idempotency safety net, not an error.
+      logger.warn(
+        { contentId: payload.contentId, contentHash, err },
+        "PublishLog already exists (duplicate prevention via unique constraint)",
       );
     }
     logger.info(

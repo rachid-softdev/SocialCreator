@@ -1,119 +1,59 @@
 /**
- * Lightweight DI Container
- * Registry-based, no decorators, no external dependencies
- * Supports singleton / transient / scoped lifetimes
+ * DI Container (deprecated)
+ *
+ * This Container was an early abstraction that was never adopted by application code.
+ * The codebase uses the repository registry pattern (getRepositories()) instead.
+ *
+ * To revive: re-implement the Container class with full typing, migrate repositories
+ * to use it, and remove the registry pattern. Until then, this file serves as a
+ * placeholder to avoid breaking tests that reference the module shape.
+ *
+ * @deprecated Use getRepositories() from "@/lib/repositories" instead.
  */
 
 export type Lifetime = "singleton" | "transient" | "scoped";
 
-interface Registration<T> {
-  factory: () => T;
-  lifetime: Lifetime;
-  instance?: T;
-  scopedInstances?: Map<string, T>;
-}
-
+/**
+ * @deprecated Will be removed in future cleanup. Do not use in new code.
+ */
 export class Container {
-  private registrations = new Map<string, Registration<any>>();
-  private parent: Container | null = null;
-  private scopeId = "root";
-
-  constructor(parent?: Container) {
-    this.parent = parent ?? null;
+  constructor() {
+    // No-op: use getRepositories() instead
   }
 
-  /**
-   * Register a service with a factory function
-   */
-  register<T>(name: string, factory: () => T, lifetime: Lifetime = "singleton"): void {
-    if (this.registrations.has(name)) {
-      throw new Error(`Service already registered: ${name}`);
-    }
-    this.registrations.set(name, { factory, lifetime });
+  register<T>(_name: string, _factory: () => T, _lifetime: Lifetime = "singleton"): void {
+    // No-op: use getRepositories() instead
   }
 
-  /**
-   * Register a pre-existing instance (always singleton)
-   */
-  registerInstance<T>(name: string, instance: T): void {
-    this.registrations.set(name, {
-      factory: () => instance,
-      lifetime: "singleton",
-      instance,
-    });
+  registerInstance<T>(_name: string, _instance: T): void {
+    // No-op: use getRepositories() instead
   }
 
-  /**
-   * Check if a service is registered (including parent)
-   */
-  isRegistered(name: string): boolean {
-    return this.registrations.has(name) || (this.parent?.isRegistered(name) ?? false);
+  isRegistered(_name: string): boolean {
+    return false;
   }
 
-  /**
-   * Resolve a service by name
-   * Pass the originating container to propagate scopeId for scoped lifetime resolution
-   */
-  resolve<T>(name: string, origin?: Container): T {
-    const registration = this.registrations.get(name);
-    if (registration)
-      return this.resolveFromRegistration<T>(registration, (origin ?? this).scopeId);
-    if (this.parent) return this.parent.resolve<T>(name, origin ?? this);
-    throw new Error(`Service not registered: ${name}`);
+  resolve<T>(_name: string, _origin?: Container): T {
+    throw new Error("DI Container is deprecated. Use getRepositories() instead.");
   }
 
-  /**
-   * Create a child scope (for scoped lifetime)
-   */
-  createScope(scopeId?: string): Container {
-    const child = new Container(this);
-    child.scopeId = scopeId ?? crypto.randomUUID();
-    return child;
+  createScope(_scopeId?: string): Container {
+    return new Container();
   }
 
-  /**
-   * Override a registration (for testing)
-   */
-  override<T>(name: string, factory: () => T): void {
-    this.registrations.set(name, { factory, lifetime: "transient" });
+  override<T>(_name: string, _factory: () => T): void {
+    // No-op
   }
 
-  /**
-   * Clear all registrations
-   */
   clear(): void {
-    this.registrations.clear();
-  }
-
-  private resolveFromRegistration<T>(registration: Registration<T>, scopeId: string): T {
-    switch (registration.lifetime) {
-      case "singleton":
-        if (!registration.instance) {
-          registration.instance = registration.factory();
-        }
-        return registration.instance;
-
-      case "transient":
-        return registration.factory();
-
-      case "scoped":
-        if (!registration.scopedInstances) {
-          registration.scopedInstances = new Map();
-        }
-        if (!registration.scopedInstances.has(scopeId)) {
-          registration.scopedInstances.set(scopeId, registration.factory());
-        }
-        return registration.scopedInstances.get(scopeId) as ReturnType<typeof registration.factory>;
-    }
+    // No-op
   }
 }
-
-// ── Global default container ──────────────────────────────────
 
 let defaultContainer: Container | null = null;
 
 /**
- * Get the global default container
+ * @deprecated Use getRepositories() from "@/lib/repositories" instead.
  */
 export function getContainer(): Container {
   if (!defaultContainer) {
@@ -123,7 +63,7 @@ export function getContainer(): Container {
 }
 
 /**
- * Reset the global container (for testing)
+ * @deprecated Use getRepositories() from "@/lib/repositories" instead.
  */
 export function resetContainer(): void {
   defaultContainer = null;

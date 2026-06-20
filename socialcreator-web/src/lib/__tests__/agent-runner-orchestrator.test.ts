@@ -443,4 +443,144 @@ describe("Agent Runner - triggerAgentRun (orchestrator)", () => {
       "Run not found",
     );
   });
+
+  it("should handle agent with 0 platforms (empty array)", async () => {
+    const agentNoPlatforms = { ...mockAgent, platforms: [] };
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue(agentNoPlatforms as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).resolves.not.toThrow();
+
+    // LLM not called
+    expect(generateContent).not.toHaveBeenCalled();
+    // Transaction still called (with empty array)
+    expect(prisma.$transaction).toHaveBeenCalled();
+    // Mark success
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  it("should handle empty textContent from LLM", async () => {
+    vi.mocked(generateContent).mockResolvedValue({
+      textContent: "",
+      hashtags: [],
+      hook: "",
+    });
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).resolves.not.toThrow();
+
+    // Content saved with empty text
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(2);
+    expect(prisma.generatedContent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ textContent: "" }),
+      }),
+    );
+    // Success
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  it("should handle all 8 platforms configured", async () => {
+    const eightPlatforms = [
+      "INSTAGRAM",
+      "TIKTOK",
+      "LINKEDIN",
+      "YOUTUBE",
+      "X",
+      "FACEBOOK",
+      "THREADS",
+      "PINTEREST",
+    ];
+    const agentAllPlatforms = { ...mockAgent, platforms: eightPlatforms };
+    vi.mocked(prisma.agent.findUnique).mockResolvedValue(agentAllPlatforms as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).resolves.not.toThrow();
+
+    expect(generateContent).toHaveBeenCalledTimes(8);
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(8);
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SUCCESS" }),
+      }),
+    );
+  });
+
+  it("should mark FAILED when markRunSuccess throws after content saved", async () => {
+    // Make SUCCESS update throw
+    vi.mocked(prisma.agentRun.update)
+      .mockResolvedValueOnce({} as any) // markRunRunning
+      .mockRejectedValueOnce(new Error("Success update failed")); // markRunSuccess
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).rejects.toThrow(
+      "Success update failed",
+    );
+
+    // Content was saved despite markRunSuccess failure
+    expect(prisma.generatedContent.create).toHaveBeenCalledTimes(2);
+
+    // Should have called markRunFailed with the success error
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "FAILED",
+          error: "Success update failed",
+        }),
+      }),
+    );
+
+    // agentRunDuration should be called with failed status (not success)
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+    expect(agentRunDuration.observe).toHaveBeenCalledWith({ status: "failed" }, expect.any(Number));
+  });
+
+  it("should handle non-Error throwable (string) in catch block gracefully", async () => {
+    vi.mocked(generateContent).mockRejectedValue("raw string error" as any);
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    // The catch block re-throws the ORIGINAL error (the string), not "Unknown error"
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).rejects.toBe(
+      "raw string error",
+    );
+
+    // But markRunFailed uses "Unknown error" since it's not an Error instance
+    expect(prisma.agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "FAILED",
+          error: "Unknown error",
+        }),
+      }),
+    );
+
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+    expect(agentRunDuration.observe).toHaveBeenCalledWith({ status: "failed" }, expect.any(Number));
+  });
+
+  it("should not record success metrics when run fails", async () => {
+    vi.mocked(generateContent).mockRejectedValue(new Error("LLM failure"));
+
+    const { triggerAgentRun } = await import("../services/agent/index");
+    await expect(triggerAgentRun({ agentId: "agent-1", runId: "run-1" })).rejects.toThrow(
+      "LLM failure",
+    );
+
+    const { agentRunDuration } = await import("@/lib/utils/metrics");
+
+    // Should only observe with "failed" status, not "success"
+    expect(agentRunDuration.observe).not.toHaveBeenCalledWith(
+      { status: "success" },
+      expect.any(Number),
+    );
+    expect(agentRunDuration.observe).toHaveBeenCalledWith({ status: "failed" }, expect.any(Number));
+  });
 });

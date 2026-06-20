@@ -43,7 +43,7 @@ export async function publishToInstagram(
         if (mediaData.error.code === 190) {
           throw new Error("Access token expired. Please reconnect your Instagram account.");
         }
-        throw new Error(`Instagram API error: ${mediaResponse.status}`);
+        throw new Error("Instagram API returned an error. Please check your media and try again.");
       }
 
       // Publish the container
@@ -66,7 +66,7 @@ export async function publishToInstagram(
         if (publishData.error.code === 190) {
           throw new Error("Access token expired. Please reconnect your Instagram account.");
         }
-        throw new Error(`Instagram API error: ${containerResponse.status}`);
+        throw new Error("Instagram API returned an error during publish. Please try again.");
       }
 
       return { success: true, postId: publishData.id };
@@ -91,7 +91,7 @@ export async function publishToInstagram(
         if (data.error.code === 190) {
           throw new Error("Access token expired. Please reconnect your Instagram account.");
         }
-        throw new Error(`Instagram API error: ${response.status}`);
+        throw new Error("Instagram API returned an error. Please check your post and try again.");
       }
       return { success: true, postId: data.id };
     }

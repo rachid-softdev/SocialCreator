@@ -1,9 +1,11 @@
 /**
- * DI Container - barrel export
+ * DI Container - barrel export (deprecated)
+ *
+ * @deprecated The DI container was never adopted. Use getRepositories() from
+ * "@/lib/repositories" for dependency resolution instead.
  */
 
-export { createDefaultContainer, registerDefaultServices } from "./adapters";
 export type { Lifetime } from "./container";
+// Container class remains exported for backward compatibility but will throw
+// if resolve() is called. Use getRepositories() instead.
 export { Container, getContainer, resetContainer } from "./container";
-export type { Token } from "./token";
-export { TOKENS } from "./token";

@@ -166,4 +166,100 @@ describe("executeAgentRun", () => {
 
     expect(results[0].hashtags).toEqual([]);
   });
+
+  it("should return empty results when agent has 0 platforms", async () => {
+    const zeroPlatformAgent = {
+      ...mockAgent,
+      platforms: [],
+    };
+
+    const { executeAgentRun } = await import("../execute");
+    const results = await executeAgentRun(zeroPlatformAgent as any, "Brief");
+
+    expect(results).toHaveLength(0);
+    expect(generateContent).not.toHaveBeenCalled();
+  });
+
+  it("should generate content for all 8 platforms simultaneously", async () => {
+    const allPlatformsAgent = {
+      ...mockAgent,
+      platforms: [
+        "INSTAGRAM",
+        "TIKTOK",
+        "LINKEDIN",
+        "YOUTUBE",
+        "X",
+        "FACEBOOK",
+        "THREADS",
+        "PINTEREST",
+      ],
+    };
+    vi.mocked(generateContent).mockResolvedValue({
+      textContent: "Platform content",
+      hashtags: ["#test"],
+      hook: "Hook",
+    });
+
+    const { executeAgentRun } = await import("../execute");
+    const results = await executeAgentRun(allPlatformsAgent as any, "Brief");
+
+    expect(results).toHaveLength(8);
+    expect(results[0].platform).toBe("INSTAGRAM");
+    expect(results[7].platform).toBe("PINTEREST");
+    expect(generateContent).toHaveBeenCalledTimes(8);
+  });
+
+  it("should handle empty textContent from LLM", async () => {
+    vi.mocked(generateContent).mockResolvedValue({
+      textContent: "",
+      hashtags: [],
+      hook: "",
+    });
+
+    const { executeAgentRun } = await import("../execute");
+    const results = await executeAgentRun(mockAgent as any, "Brief");
+
+    expect(results).toHaveLength(2);
+    expect(results[0].textContent).toBe("");
+    expect(results[0].hashtags).toEqual([]);
+  });
+
+  it("should handle very long brandVoice string", async () => {
+    const longBrandVoice = "A. ".repeat(1000); // ~2000 chars
+    const longBrandVoiceAgent = {
+      ...mockAgent,
+      profile: {
+        ...mockAgent.profile,
+        brandVoice: longBrandVoice,
+      },
+    };
+    vi.mocked(generateContent).mockResolvedValue({
+      textContent: "Content with long brand voice",
+      hashtags: [],
+    });
+
+    const { executeAgentRun } = await import("../execute");
+    const results = await executeAgentRun(longBrandVoiceAgent as any, "Brief");
+
+    expect(results).toHaveLength(2);
+    expect(buildSystemPrompt).toHaveBeenCalledWith({
+      name: mockAgent.profile.name,
+      brandVoice: longBrandVoice,
+      contentBank: mockAgent.profile.contentBank,
+    });
+  });
+
+  it("should propagate the first platform error when one platform fails (Promise.all fail-fast)", async () => {
+    vi.mocked(generateContent)
+      .mockResolvedValueOnce({
+        textContent: "Instagram content",
+        hashtags: ["#insta"],
+      })
+      .mockRejectedValueOnce(new Error("LinkedIn generation failed"));
+
+    const { executeAgentRun } = await import("../execute");
+    await expect(executeAgentRun(mockAgent as any, "Brief")).rejects.toThrow(
+      "LinkedIn generation failed",
+    );
+  });
 });

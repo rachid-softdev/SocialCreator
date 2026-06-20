@@ -2,10 +2,19 @@
  * LLM Provider Abstraction — Provider
  * Primary: Anthropic (default) or OpenAI (based on strategy)
  * Fallback: If primary fails with a retryable error, try the fallback
+ *
+ * Features:
+ * - Retry-After header from 429 responses is honoured as the retry delay
+ * - In-memory circuit breaker prevents hammering a failing provider
  */
 
 import Anthropic from "@anthropic-ai/sdk";
 import { withRetry } from "@/lib/utils/retry";
+import {
+  allowRequest,
+  recordFailure as cbRecordFailure,
+  recordSuccess as cbRecordSuccess,
+} from "./circuitBreaker";
 import type { LLMProviderId, LLMRequest, LLMResponse } from "./types";
 import { LLMError } from "./types";
 
@@ -28,6 +37,34 @@ function getAnthropicClient(): Anthropic {
     });
   }
   return anthropicClient;
+}
+
+// ── Retry-After header parser ───────────────────────────────────
+
+/**
+ * Parse a Retry-After header value.
+ * Supports both:
+ *  - seconds as integer (e.g. "120")
+ *  - HTTP-date format   (e.g. "Wed, 21 Oct 2015 07:28:00 GMT")
+ * Returns the delay in milliseconds, or undefined if unparseable.
+ */
+function parseRetryAfter(headerValue: string | null): number | undefined {
+  if (!headerValue) return undefined;
+
+  // Try seconds-as-integer first
+  const seconds = parseInt(headerValue, 10);
+  if (!isNaN(seconds) && seconds >= 0 && String(seconds) === headerValue.trim()) {
+    return seconds * 1000;
+  }
+
+  // Try HTTP-date format
+  const date = new Date(headerValue);
+  if (!isNaN(date.getTime())) {
+    const delay = date.getTime() - Date.now();
+    return Math.max(delay, 1000); // at least 1 second
+  }
+
+  return undefined;
 }
 
 // ── OpenAI fetch helper ─────────────────────────────────────────
@@ -58,7 +95,20 @@ async function callOpenAI(request: LLMRequest): Promise<LLMResponse> {
     const status = response.status;
     const body = await response.text();
     const retryable = status === 429 || (status >= 500 && status < 600);
-    throw new LLMError(`OpenAI API error (${status}): ${body}`, "openai", status, retryable);
+
+    // Parse Retry-After header for 429 responses
+    let retryAfterMs: number | undefined;
+    if (status === 429) {
+      retryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
+    }
+
+    throw new LLMError(
+      `OpenAI API error (${status}): ${body}`,
+      "openai",
+      status,
+      retryable,
+      retryAfterMs,
+    );
   }
 
   const data = (await response.json()) as {
@@ -143,6 +193,16 @@ function isRetryableError(error: unknown): boolean {
   return status === 429 || (status >= 500 && status < 600);
 }
 
+// ── Circuit breaker helpers ─────────────────────────────────────
+
+/**
+ * Returns true when the error represents the synthetic "circuit is open" case
+ * so we can distinguish it from real provider errors.
+ */
+function isCircuitOpenError(error: unknown): boolean {
+  return (error as Error)?.message?.includes("circuit is open");
+}
+
 // ── Public API ──────────────────────────────────────────────────
 
 export interface GenerationStrategy {
@@ -152,7 +212,11 @@ export interface GenerationStrategy {
 
 /**
  * Generate text via LLM with optional primary/fallback strategy.
- * Retries 3 times with 2s delay for retryable errors.
+ *
+ * Features:
+ *  - Retries up to 3 times (primary) / 2 times (fallback) with backoff
+ *  - Respects Retry-After headers from 429 responses
+ *  - Circuit breaker protects against hammering a failing provider
  */
 export async function generateText(
   request: LLMRequest,
@@ -161,32 +225,68 @@ export async function generateText(
   const primary = strategy.primary ?? "anthropic";
   const fallback = strategy.fallback;
 
+  // ── Attempt primary ─────────────────────────────────────────
   try {
-    return await withRetry(() => callProvider(primary, request), {
+    // Circuit breaker: reject early if the provider is known to be down
+    if (!allowRequest(primary)) {
+      throw new LLMError(`Provider ${primary} circuit is open`, primary, undefined, true);
+    }
+
+    const result = await withRetry(() => callProvider(primary, request), {
       maxAttempts: 3,
       baseDelayMs: 2000,
       retryOn: isRetryableError,
     });
+    cbRecordSuccess(primary);
+    return result;
   } catch (primaryError) {
-    // If we have a fallback and the primary error is retryable, try fallback
-    if (fallback && isRetryableError(primaryError)) {
-      try {
-        return await withRetry(() => callProvider(fallback, request), {
-          maxAttempts: 2,
-          baseDelayMs: 2000,
-          retryOn: isRetryableError,
-        });
-      } catch (fallbackError) {
-        throw new LLMError(
-          `Both providers failed. Primary (${primary}): ${(primaryError as Error).message}. Fallback (${fallback}): ${(fallbackError as Error).message}`,
-          primary,
-          undefined,
-          false,
-        );
-      }
+    // Record circuit failure only for real provider errors, not circuit-open signals
+    if (isRetryableError(primaryError) && !isCircuitOpenError(primaryError)) {
+      cbRecordFailure(primary);
     }
 
-    // Non-retryable or no fallback — rethrow
+    // Try fallback if the primary error is retryable and a fallback is configured
+    if (fallback && isRetryableError(primaryError)) {
+      return callFallback(fallback, request, primary, primaryError as Error);
+    }
+
+    // Non-retryable error or no fallback — rethrow
     throw primaryError;
+  }
+}
+
+/**
+ * Attempt the fallback provider.
+ * Also checks the circuit breaker before making the call.
+ */
+async function callFallback(
+  fallback: LLMProviderId,
+  request: LLMRequest,
+  primary: LLMProviderId,
+  primaryError: Error,
+): Promise<LLMResponse> {
+  try {
+    if (!allowRequest(fallback)) {
+      throw new LLMError(`Provider ${fallback} circuit is open`, fallback, undefined, false);
+    }
+
+    const result = await withRetry(() => callProvider(fallback, request), {
+      maxAttempts: 2,
+      baseDelayMs: 2000,
+      retryOn: isRetryableError,
+    });
+    cbRecordSuccess(fallback);
+    return result;
+  } catch (fallbackError) {
+    if (isRetryableError(fallbackError) && !isCircuitOpenError(fallbackError)) {
+      cbRecordFailure(fallback);
+    }
+
+    throw new LLMError(
+      `Both providers failed. Primary (${primary}): ${primaryError.message}. Fallback (${fallback}): ${(fallbackError as Error).message}`,
+      primary,
+      undefined,
+      false,
+    );
   }
 }

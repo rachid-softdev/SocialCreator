@@ -318,14 +318,15 @@ export class PrismaContentRepository implements IContentRepository {
   async batchReschedule(items: Array<{ id: string; scheduledPublishAt: Date }>): Promise<number> {
     if (items.length === 0) return 0;
 
-    const updates = items.map((item) =>
-      prisma.generatedContent.update({
-        where: { id: item.id },
-        data: { scheduledPublishAt: item.scheduledPublishAt },
-      }),
+    // Transaction ensures atomicity: if one update fails, all are rolled back
+    const results = await prisma.$transaction(
+      items.map((item) =>
+        prisma.generatedContent.update({
+          where: { id: item.id },
+          data: { scheduledPublishAt: item.scheduledPublishAt },
+        }),
+      ),
     );
-
-    const results = await Promise.all(updates);
     return results.length;
   }
 

@@ -29,6 +29,7 @@ export class LLMError extends Error {
     public readonly provider: LLMProviderId,
     public readonly statusCode?: number,
     public readonly retryable: boolean = false,
+    public readonly retryAfterMs?: number,
   ) {
     super(message);
     this.name = "LLMError";

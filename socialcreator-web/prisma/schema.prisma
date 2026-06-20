@@ -319,7 +319,7 @@ enum RunStatus {
 model GeneratedContent {
   id                 String              @id @default(cuid())
   runId              String?
-  run                AgentRun?           @relation(fields: [runId], references: [id])
+  run                AgentRun?           @relation(fields: [runId], references: [id], onDelete: SetNull)
   profileId          String
   profile            Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform           Platform
@@ -361,7 +361,7 @@ enum ContentStatus {
 model PublishLog {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   profileId String
   platform  Platform
   contentId String
@@ -380,6 +380,7 @@ model PublishLog {
   @@unique([contentHash, profileId, success])
   @@index([userId, publishedAt])
   @@index([profileId, publishedAt])
+  @@index([contentHash, profileId, success])
 }
 
 model ApiKey {

@@ -516,3 +516,244 @@ Examining visual consistency across the application.
 
 ### Verdict
 SocialCreator est un projet bien architecturé avec une séparation claire des couches, une stack moderne (Next.js 14 + TypeScript strict + Prisma) et une bonne couverture de sécurité (CSP, rate-limiting, ownership middleware). Les principaux risques sont l'absence de cache layer, la gestion des volumes de données à moyen terme, et la complétude de l'observabilité (traces, alerting). La base est solide — les correctifs recommandés sont principalement des investissements de maturité plutôt que des redesigns majeurs.
+
+---
+
+## 🔄 REVUE APPROFONDIE — 2026-06-14
+
+> Revue détaillée couvrant les 9 couches du codebase. 80+ fichiers clés examinés.
+
+---
+
+### 1. Architecture & Structure
+
+**✅ Points positifs :**
+- Architecture en couches propre (Présentation → API → Business → Data → Infrastructure → Background)
+- Route groups ((auth), (main), (onboarding)) bien organisés
+- Publisher registry pattern extensible avec `publisherMap` (O(1) lookup) pour 8 plateformes
+- DI container custom (`lib/di/container.ts`) avec lifetimes singleton/transient/scoped et containers hiérarchiques
+- Repository registry (`lib/repositories/registry.ts`) propre avec lazy `require()` pour éviter les circular deps
+- Chaîne de middleware bien structurée (auth, ownership, SSRF, team-access, request-ID)
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **High** | **Deux systèmes DI parallèles** — `Container` (token-based) et `registry` (singleton getter) coexistent. Le Container n'est jamais résolu (0 appels à `resolve()` trouvés). | `lib/di/container.ts`, `lib/di/adapters.ts` L57-60 | Adopter UN système DI (le registry pattern qui est utilisé) ou supprimer le Container inutilisé |
+| **Medium** | **Barrel files créent des risques de circular imports** — `lib/agent-runner.ts`, `lib/retry.ts`, `lib/api-errors.ts`, `lib/crypto.ts`, `lib/api-middleware.ts` ne font que ré-exporter. | Multiples fichiers lib/ | Supprimer les barrel files pour les modules à source unique |
+| **Low** | **15+ tokens DI inutilisés** — `TOKENS` définis mais jamais résolus. | `lib/di/token.ts` | Documenter ou supprimer |
+
+---
+
+### 2. Backend / API Layer
+
+**✅ Points positifs :**
+- 98 route files avec structure cohérente utilisant `withApiMiddleware()`
+- API versioning via /api/v1/ + header `Accept-version`
+- Gestion d'erreurs typée avec codes (UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, etc.)
+- Validation Zod cohérente
+- Middleware d'ownership bien implémenté
+- Serveur MCP avec JSON-RPC 2.0, 7 méthodes, auth et rate limiting
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **Critical** | **Body size limit trop restrictif (100KB)** — les payloads de contenu, URLs média et descriptions vidéo dépassent facilement 100KB | `lib/middleware/api-middleware.ts` L28 | Passer à 1MB minimum avec override configurable par route |
+| **High** | **Rate limiting sans configuration explicite** — `withRateLimit(request, { userId })` sans options (max, window) | `lib/middleware/api-middleware.ts` L69-72 | Ajouter `{ max: 100, windowMs: 60000 }` |
+| **High** | **Absence de pagination sur plusieurs routes API** — MCP handlers (listAgents, listProfiles) et routes v1 sans skip/take | `app/api/mcp/route.ts` L198-213, L370-383 | Ajouter pagination sur tous les endpoints list |
+| **Medium** | **Codes HTTP inconsistants** — 404 pour access-denied (devrait être 403), ownership checks mixent `notFound()` et `forbidden()` | Multiples route files | Standardiser : 401=unauth, 403=forbidden, 404=not found |
+| **Medium** | **`as any` dans les appels repository** — contourne la sécurité TypeScript | `app/api/v1/content/[id]/route.ts` L44, `lib/services/tokens.ts` L88, L137, L143, L187 | Créer des types update input propres |
+| **Medium** | **Stripe webhook bypass le middleware standard** — pas de rate limit, request ID, body size check | `app/api/stripe/webhook/route.ts` L9 | Ajouter middleware sélectif sans auth |
+| **Low** | **MCP route utilise Prisma directement** — bypass le repository layer | `app/api/mcp/route.ts` L198, L216, L247, L371 | Refactorer pour utiliser les repositories |
+
+---
+
+### 3. Business Logic
+
+**✅ Points positifs :**
+- Agent runner bien structuré (validate → execute → persist)
+- Publish pipeline avec validator hooks, pre/post hooks, retry exponential backoff, idempotency keys
+- Entitlement service avec 4 niveaux de résolution (user override → org override → plan → fallback)
+- Quota guard avec daily caps par profile/platform et Redis fallback
+- Scheduler avec `claimScheduled` atomique via `updateManyAndReturn` et status PUBLISHING
+- Idempotence via `contentHash` + `profileId` dedup (unique constraint)
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **Critical** | **Race condition dans le publish handler** — le check idempotency et le publish ne sont pas atomiques. Le `@@unique` rattrape mais avec un `catch {}` silencieux. | `lib/job-queue/handlers.ts` L105-112, L177-190 | Utiliser un mutex via le status PUBLISHING ou une lock pessimiste |
+| **Critical** | **Pas d'atomicité sur le daily cap** — `countPublishedToday` puis publish sans incrément atomique. 2 requêtes concurrentes peuvent passer. | `lib/job-queue/handlers.ts` L135-147 | Utiliser Redis INCR atomique avec TTL ou transaction Prisma |
+| **High** | **Scheduler tick sans isolation d'erreur** — si un item échoue, tout le tick échoue et les items suivants sont sautés | `lib/services/scheduler/scheduler-service.ts` L29-61 | Wrapper chaque itération dans try/catch |
+| **High** | **`createFeatureNotAvailableError` a "PRO" en dur** — ne résout pas dynamiquement le plan requis | `lib/entitlements/service.ts` L339-345 | Mapper feature → plan dynamiquement |
+| **Medium** | **CGU check "soft fail"** — retourne `null` au lieu de throw, les appelants ignorent la distinction | `lib/services/agent/validate.ts` L34-43 | Utiliser un type d'erreur distinct |
+| **Medium** | **Quota guard déprécié mais encore utilisé** — `@deprecated` mais toujours appelé depuis les routes | `lib/services/quota-guard.ts`, `app/api/v1/profiles/route.ts` L63 | Terminer la migration ou enlever le tag |
+| **Medium** | **`getUserOverridesForOrg` est un no-op** — "Placeholder" non implémenté | `lib/entitlements/service.ts` L324-327 | Implémenter ou supprimer |
+| **Low** | **Flag `autoPublish` ignoré par le scheduler** — tous les agents avec cron tournent | `schema.prisma` L280, `triggers/agent-scheduler.trigger.ts` L17 | Vérifier autoPublish avant de scheduler |
+
+---
+
+### 4. Data Layer
+
+**✅ Points positifs :**
+- 22 modèles bien définis avec relations sensées, index, et types appropriés
+- 13 repositories avec interfaces propres
+- Pagination sur `findByProfileId`, `findByUserId`, `findFailed` avec `skip`/`take` + `count` parallèle
+- Opérations atomiques (`claimScheduled` avec `updateManyAndReturn`, `consumeUsage` avec `$transaction`)
+- Contraintes unique sur PublishLog pour empêcher les doublons
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **Critical** | **N+1 query dans profiles endpoint** — pour chaque profile, 3 requêtes additionnelles (agents, content count, connected accounts) | `app/api/v1/profiles/route.ts` L19-41 | Utiliser Prisma `include` avec `count` ou une seule requête aggregate |
+| **High** | **Cascade delete manquant sur PublishLog → User** — la suppression d'un user échoue | `prisma/schema.prisma` L364 | Ajouter `onDelete: Cascade` |
+| **High** | **Cascade delete manquant sur GeneratedContent → AgentRun** — FK violation | `prisma/schema.prisma` L321-322 | Ajouter `onDelete: SetNull` ou `Cascade` |
+| **Medium** | **Index manquant sur PublishLog** — pas d'index pour le pattern `[contentHash, profileId, success]` | `prisma/schema.prisma` L380-383 | Ajouter `@@index([contentHash, profileId, success])` |
+| **Medium** | **`where` clause type-unsafe** — `Record<string, unknown>` au lieu de `Prisma.GeneratedContentWhereInput` | `lib/repositories/content.repository.ts` L114, L142, L248, L270 | Utiliser les types Prisma générés |
+| **Medium** | **`batchReschedule` non transactionnel** — `Promise.all` sans `$transaction` | `lib/repositories/content.repository.ts` L318-330 | Wrapper dans `prisma.$transaction()` |
+| **Low** | **Index composite à vérifier** — `[status, scheduledPublishAt]` vs pattern de requête du scheduler | `prisma/schema.prisma` L343 | Vérifier l'ordre des colonnes avec EXPLAIN ANALYZE |
+
+---
+
+### 5. Frontend
+
+**✅ Points positifs :**
+- Server Components par défaut avec data fetching serveur
+- 6 Zustand stores bien structurés avec TypeScript strict
+- Note de sécurité dans auth store sur les risques localStorage
+- 14 composants UI réutilisables avec variants CVA et `cn()` consistent
+- Accessibilité : skip link, aria-label, aria-current
+- États vides gérés via EmptyState component
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **High** | **Content page utilise Prisma directement** — bypass l'API layer, rate limiting, métriques | `app/(main)/content/page.tsx` L54-81 | Utiliser les repositories ou fetch API |
+| **High** | **Dashboard page aussi en direct Prisma** — même problème | `app/(main)/dashboard/page.tsx` L30-64 | Même correctif |
+| **Medium** | **6/6 stores sans tests d'erreur async** — les gestionnaires d'erreur ne sont pas testés | `lib/stores/*.ts` | Ajouter tests : network failure, HTTP errors, malformed responses |
+| **Medium** | **Content store fragile sur le parsing API** — `data.contents ?? data` assume un format spécifique | `lib/stores/content-store.ts` L86 | Assert ou parsing Zod |
+| **Medium** | **Agent store ne reset pas `isRunning` sur erreur réseau** — pas de `finally` block | `lib/stores/agent-store.ts` L96-117 | Ajouter `finally { set({ isRunning: false }) }` |
+| **Medium** | **`next-intl` importé dans test-utils mais peut-être absent des dépendances** | `components/__tests__/test-utils.tsx` L6 | Vérifier si next-intl est dans package.json |
+| **Low** | **`useCallback` inutile sur des handlers simples** | `components/shared/pagination.tsx` L60-70 | Supprimer useCallback |
+| **Low** | **Type assertion `as keyof typeof currentStats`** — unsafe | `components/dashboard/stats-grid.tsx` L53 | Utiliser une fonction de mapping typée |
+
+---
+
+### 6. Infrastructure
+
+**✅ Points positifs :**
+- LLM provider avec fallback (Anthropic → OpenAI), retry exponential backoff, timeouts
+- Retry utility avec jitter, backoff configurable
+- Timeouts explicites par service externe
+- Cache entitlements 2 niveaux (Redis + LRU mémoire)
+- Job queue dual sync/async (in-memory + Redis)
+- Observabilité : Pino logging, Prometheus metrics, request-ID propagation
+- Health checks : DB ping, Redis ping, version, uptime
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **Critical** | **Memory leak dans entitlements cache** — `setInterval` au module scope (top-level) jamais nettoyé. En serverless, chaque invocation leak un timer. | `lib/entitlements/cache.ts` L274-276 | Lifecycle managé via `instrumentation.ts` |
+| **High** | **LLM provider ignore les headers `Retry-After`** — les retries utilisent des délais fixes | `lib/llm/provider.ts` L103-109 | Parser et honorer les 429 Retry-After |
+| **High** | **Pas de circuit breaker** — le LLM provider hammer un provider mort pour tous les retries | `lib/llm/provider.ts` L164-191 | Implémenter un circuit breaker simple |
+| **Medium** | **Job worker sans graceful shutdown** — `stopWorker()` défini mais jamais appelé | `lib/job-queue/worker.ts` L76-85 | Nettoyer dans les shutdown hooks |
+| **Medium** | **Trigger.dev publish worker déprécié mais toujours exporté/appelé** | `triggers/publish-worker.trigger.ts` L8-9 | Supprimer ou migrer tous les callers |
+| **Low** | **Redis health check crée un nouveau client à chaque appel** — pas de réutilisation | `lib/observability/health.ts` L42-44 | Réutiliser un singleton Redis |
+
+---
+
+### 7. Security
+
+**✅ Points positifs :**
+- SSRF protection avec validation d'URL
+- Token encryption AES-256-GCM avec IV/tag/ciphertext format
+- API key hashing SHA-256, jamais en plaintext
+- Bcrypt timing-safe comparison même pour users inexistants
+- CSP headers complets (scripts, styles, images, media, fonts, connect-src)
+- HSTS 2 ans
+- PII redaction exhaustive dans Pino
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **High** | **Vector d'injection GraphQL dans publishers Instagram/Facebook** — les messages d'erreur incluent les raw API responses potentiellement controllées par un attaquant | `lib/publishers/instagram.ts` L42-46, L65-69, L90-94 | Sanitizer les messages d'erreur |
+| **Medium** | **UploadThing CSP incomplet** — certains hosts UploadThing peuvent être bloqués | `next.config.mjs` L66 | Review docs UploadThing et ajouter tous les hosts requis |
+| **Medium** | **Recherche texte sans protection** — pas de longueur minimale, leading wildcards possibles | `app/(main)/content/page.tsx` L49 | Ajouter longueur minimale (2-3 chars) |
+| **Medium** | **CI expose des secrets en dur** — OAuth client IDs/secrets en variables d'env plain-text dans le workflow | `.github/workflows/ci.yml` L112-129 | Utiliser GitHub Actions secrets |
+| **Low** | **`getUserPlan` trop simpliste** — tout abonnement actif = plan "starter" | `lib/services/quota-guard.ts` L31-34 | Limitation connue mais sous-sert les utilisateurs payants |
+
+---
+
+### 8. Testing
+
+**✅ Points positifs :**
+- 253 fichiers de test — bonne couverture unit + integration + E2E
+- 11 fichiers de test publishers couvrant chaque plateforme et le pipeline
+- Tests d'idempotence complets
+- Tests pour les 6 Zustand stores
+- Tests repositories séparés
+- Tests E2E Playwright (auth, landing, routes protégées, API)
+- Infrastructure de test : `test-utils.tsx`, fixtures, factories
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Correctif |
+|----------|----------|-----------|
+| **High** | **Chemins critiques sans tests d'intégration** — publish pipeline, agent runner orchestrator, scheduler | Ajouter des tests d'intégration full-flow |
+| **High** | **API middleware test incomplet** — ne teste que l'export de module, pas auth, rate limiting, propagation | Ajouter des tests middleware complets |
+| **Medium** | **Entitlement service zéro test** — logique complexe (4 niveaux, overrides, experiments) non testée | Ajouter tests unitaires |
+| **Medium** | **Pas de Playwright pour CRUD content** — les E2E couvrent auth mais pas la génération/scheduling/publishing | Ajouter E2E pour le parcours complet |
+| **Medium** | **Tests composants minimaux** — 6 seulement pour les composants partagés, aucun pour les feature components | Ajouter RTL tests pour les feature components |
+| **Low** | **Coverage exclut `__tests__`** — gonfle artificiellement le pourcentage de coverage | Retirer l'exclusion ou ajouter une config séparée |
+| **Low** | **Pas de visual regression testing** — 14 composants UI + feature components sans tests visuels | Envisager Storybook/Percy/Chromatic |
+
+---
+
+### 9. Configuration & DevOps
+
+**✅ Points positifs :**
+- pnpm + Turborepo 2.4 avec build caching et task orchestration
+- Biome config complète avec règles organisées
+- Husky + commitlint + lint-staged (pre-commit hooks + conventional commits)
+- CI pipeline : 4 jobs parallèles (lint+typecheck, tests, build, security scan)
+- Deploy GitHub Actions → Vercel avec notifications Slack
+- Changesets pour version management
+
+**⚠️ Problèmes :**
+| Sévérité | Problème | Fichier | Correctif |
+|----------|----------|---------|-----------|
+| **Critical** | **Deploy workflow utilise npm au lieu de pnpm** — `npm ci` et `npx prisma` dans deploy.yml | `.github/workflows/deploy.yml` L29-35 | Utiliser `pnpm install --frozen-lockfile` |
+| **Critical** | **Node.js version mismatch** — CI utilise Node 20, `.nvmrc` et projet spécifient Node 24 | `.github/workflows/ci.yml` L10, deploy.yml L9 | Uniformiser sur Node 24 |
+| **High** | **`noExplicitAny` désactivé dans Biome** — `"off"` permet du `as any` partout | `biome.json` L41 | Activer en error |
+| **Medium** | **Security scan avec `continue-on-error: true`** — les vulnérabilités connues ne fail pas le build | `.github/workflows/ci.yml` L196 | Fail sur high severity ou ajouter notification |
+| **Medium** | **Pas de CodeQL ni Dependabot** — pas de scanning automatisé | `.github/` | Activer CodeQL et Dependabot |
+| **Low** | **Règles a11y Biome en "warn"** — accessibilité pas bloquante | `biome.json` L47-55 | Passer critiques en "error" |
+| **Low** | **Pas de script `typecheck` direct** — seulement via `check` | `package.json` | Ajouter un script standalone |
+
+---
+
+### 🎯 Top 10 Actions Prioritaires
+
+| # | Sévérité | Domaine | Problème | Effort |
+|---|----------|---------|----------|--------|
+| 1 | 🔴 Critical | Infrastructure | Memory leak dans entitlements cache (setInterval) | 1h |
+| 2 | 🔴 Critical | DevOps | Deploy utilise npm au lieu de pnpm | 30min |
+| 3 | 🔴 Critical | DevOps | Node.js version mismatch (20 vs 24) | 15min |
+| 4 | 🔴 Critical | Business | Race condition dans publish handler (pas de mutex) | 4h |
+| 5 | 🔴 Critical | API | Body size limit 100KB bloque les uploads | 15min |
+| 6 | 🟠 High | Data | N+1 query dans profiles endpoint | 2h |
+| 7 | 🟠 High | Architecture | Deux systèmes DI parallèles, aucun pleinement adopté | 8h |
+| 8 | 🟠 High | Security | Vecteur d'injection dans error messages publishers | 1h |
+| 9 | 🟠 High | Testing | Chemins critiques sans tests d'intégration | 4h |
+| 10 | 🟠 High | Infrastructure | LLM provider ignore Retry-After headers | 2h |
+
+### 📊 Score Global Mis à Jour
+
+| Critère | Score précédent | Nouveau score |
+|---------|:-:|:-:|
+| Architecture | 8/10 | 7.5/10 |
+| Sécurité | 8/10 | 7.5/10 |
+| Performance | 7/10 | 7/10 |
+| Maintenabilité | 8/10 | 7/10 |
+| Scalabilité | 7/10 | 7/10 |
+| Observabilité | 7/10 | 7/10 |
+| **Global** | **7.5/10** | **7.0/10** |
+
+> La baisse du score global (7.5 → 7.0) reflète les findings critiques identifiés lors de cette revue approfondie : fuite mémoire dans le cache entitlements, race conditions dans le publish handler, mismatch de version Node.js, et deploy config qui utilise npm au lieu de pnpm. Ces problèmes sont rapidement corrigibles (quick wins) et ne nécessitent pas de redesign majeur. La base du projet reste solide.

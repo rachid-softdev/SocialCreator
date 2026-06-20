@@ -230,6 +230,252 @@ describe("OAuth Token Exchange", () => {
       expect(result.access_token).toBe("tt-access-token");
       expect(mockFetch.mock.calls[0][0]).toBe("https://open.tiktokapis.com/v2/oauth/access_token/");
     });
+
+    it("should exchange a code for Instagram (Meta body auth)", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "ig-access-token-456",
+          token_type: "Bearer",
+          expires_in: 5184000, // 60 days
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "INSTAGRAM",
+        "ig-auth-code",
+        "https://socialcreator.app/api/connected-accounts/callback/instagram",
+      );
+
+      expect(result.access_token).toBe("ig-access-token-456");
+      expect(result.token_type).toBe("Bearer");
+      expect(result.expires_in).toBe(5184000);
+
+      const callUrl = mockFetch.mock.calls[0][0];
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callUrl).toBe("https://graph.facebook.com/v18.0/oauth/access_token");
+      expect(callBody).toContain("client_id=meta-client-123");
+      expect(callBody).toContain("client_secret=meta-secret-456");
+      expect(callBody).toContain("grant_type=authorization_code");
+    });
+
+    it("should exchange a code for YouTube (Google OAuth)", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "yt-access-token-789",
+          refresh_token: "yt-refresh-token-789",
+          expires_in: 3600,
+          token_type: "Bearer",
+          scope: "https://www.googleapis.com/auth/youtube.force-ssl",
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "YOUTUBE",
+        "yt-auth-code",
+        "https://socialcreator.app/api/connected-accounts/callback/youtube",
+      );
+
+      expect(result.access_token).toBe("yt-access-token-789");
+      expect(result.refresh_token).toBe("yt-refresh-token-789");
+      expect(result.expires_in).toBe(3600);
+      expect(result.scope).toContain("youtube");
+
+      const callUrl = mockFetch.mock.calls[0][0];
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callUrl).toBe("https://oauth2.googleapis.com/token");
+      expect(callBody).toContain("client_id=google-client-789");
+      expect(callBody).toContain("client_secret=google-secret-012");
+    });
+
+    it("should exchange a code for Pinterest", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "pin-access-token-111",
+          refresh_token: "pin-refresh-token-222",
+          expires_in: 7776000, // 90 days
+          token_type: "Bearer",
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "PINTEREST",
+        "pin-auth-code",
+        "https://socialcreator.app/api/connected-accounts/callback/pinterest",
+      );
+
+      expect(result.access_token).toBe("pin-access-token-111");
+      expect(result.refresh_token).toBe("pin-refresh-token-222");
+      expect(result.expires_in).toBe(7776000);
+
+      const callUrl = mockFetch.mock.calls[0][0];
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callUrl).toBe("https://api.pinterest.com/v5/oauth/access_token");
+      expect(callBody).toContain("client_id=pin-client-111");
+      expect(callBody).toContain("client_secret=pin-secret-222");
+      expect(callBody).toContain("grant_type=authorization_code");
+    });
+
+    it("should exchange a code for Threads (Meta body auth)", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "threads-access-token",
+          token_type: "Bearer",
+          expires_in: 5184000,
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "THREADS",
+        "threads-auth-code",
+        "https://socialcreator.app/api/connected-accounts/callback/threads",
+      );
+
+      expect(result.access_token).toBe("threads-access-token");
+
+      const callUrl = mockFetch.mock.calls[0][0];
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callUrl).toBe("https://graph.facebook.com/v18.0/oauth/access_token");
+      expect(callBody).toContain("client_id=meta-client-123");
+      expect(callBody).toContain("client_secret=meta-secret-456");
+    });
+
+    it("should throw on network failure during token exchange", async () => {
+      mockFetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+      await expect(
+        exchangeCodeForToken(
+          "FACEBOOK",
+          "code",
+          "https://socialcreator.app/api/connected-accounts/callback/facebook",
+        ),
+      ).rejects.toThrow(TypeError);
+    });
+
+    it("should handle extra/unexpected fields in provider response", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "token-with-extras",
+          token_type: "Bearer",
+          expires_in: 3600,
+          refresh_token: "refresh-extra",
+          scope: "read write",
+          extra_field: "unexpected",
+          nested: { value: 42 },
+          provider_specific: "should-be-ignored",
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "INSTAGRAM",
+        "code",
+        "https://socialcreator.app/api/connected-accounts/callback/instagram",
+      );
+
+      expect(result.access_token).toBe("token-with-extras");
+      expect(result.refresh_token).toBe("refresh-extra");
+      expect(result.expires_in).toBe(3600);
+      expect(result.scope).toBe("read write");
+      // Extra fields should simply be ignored by the normalizer
+      expect(Object.keys(result)).not.toContain("extra_field");
+      expect(Object.keys(result)).not.toContain("nested");
+    });
+
+    it("should handle token response with very short expiry (60 seconds)", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "short-lived-token",
+          expires_in: 60,
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "FACEBOOK",
+        "code",
+        "https://socialcreator.app/api/connected-accounts/callback/facebook",
+      );
+
+      expect(result.access_token).toBe("short-lived-token");
+      expect(result.expires_in).toBe(60);
+    });
+
+    it("should handle response with no expires_in", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "no-expiry-token",
+        }),
+      );
+
+      const result = await exchangeCodeForToken(
+        "FACEBOOK",
+        "code",
+        "https://socialcreator.app/api/connected-accounts/callback/facebook",
+      );
+
+      expect(result.access_token).toBe("no-expiry-token");
+      expect(result.expires_in).toBeUndefined();
+      expect(result.scope).toBeUndefined();
+    });
+
+    it("should throw on expired authorization code (400 invalid_grant)", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { error: "invalid_grant", error_description: "The authorization code has expired" },
+          false,
+          400,
+        ),
+      );
+
+      await expect(
+        exchangeCodeForToken(
+          "LINKEDIN",
+          "expired-code",
+          "https://socialcreator.app/api/connected-accounts/callback/linkedin",
+        ),
+      ).rejects.toThrow("Token exchange failed for LINKEDIN");
+    });
+
+    it("should throw on 401 unauthorized response", async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({ error: "invalid_client" }, false, 401));
+
+      await expect(
+        exchangeCodeForToken(
+          "TIKTOK",
+          "bad-client-code",
+          "https://socialcreator.app/api/connected-accounts/callback/tiktok",
+        ),
+      ).rejects.toThrow("Token exchange failed for TIKTOK");
+    });
+
+    it("should throw if state is tampered/invalid for X platform", async () => {
+      await expect(
+        exchangeCodeForToken(
+          "X",
+          "code",
+          "https://socialcreator.app/api/connected-accounts/callback/x",
+          "tampered:state:string",
+        ),
+      ).rejects.toThrow("Missing code_verifier in state for X platform");
+    });
+
+    it("should not include client credentials in body when using Basic auth for X", async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({ access_token: "x-token" }));
+
+      const { generateState, generatePKCEVerifier } = await import("../auth-url");
+      const verifier = generatePKCEVerifier();
+      const state = generateState("X", "profile-x", verifier);
+
+      await exchangeCodeForToken(
+        "X",
+        "code",
+        "https://socialcreator.app/api/connected-accounts/callback/x",
+        state,
+      );
+
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callBody).not.toContain("client_id");
+      expect(callBody).not.toContain("client_secret");
+      expect(callBody).toContain("code_verifier");
+    });
   });
 
   describe("refreshAccessToken", () => {
@@ -276,6 +522,116 @@ describe("OAuth Token Exchange", () => {
         "No access token in response for FACEBOOK",
       );
     });
+
+    it("should refresh Instagram (Meta) token with body auth", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "ig-new-access-token",
+          expires_in: 5184000,
+        }),
+      );
+
+      const result = await refreshAccessToken("INSTAGRAM", "ig-old-refresh");
+
+      expect(result.access_token).toBe("ig-new-access-token");
+      const callUrl = mockFetch.mock.calls[0][0];
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callUrl).toBe("https://graph.facebook.com/v18.0/oauth/access_token");
+      expect(callBody).toContain("client_id=meta-client-123");
+      expect(callBody).toContain("client_secret=meta-secret-456");
+      expect(callBody).toContain("refresh_token=ig-old-refresh");
+      expect(callBody).toContain("grant_type=refresh_token");
+    });
+
+    it("should refresh YouTube token", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "yt-new-access",
+          refresh_token: "yt-new-refresh",
+          expires_in: 3600,
+        }),
+      );
+
+      const result = await refreshAccessToken("YOUTUBE", "yt-old-refresh");
+
+      expect(result.access_token).toBe("yt-new-access");
+      expect(result.refresh_token).toBe("yt-new-refresh");
+
+      const callUrl = mockFetch.mock.calls[0][0];
+      expect(callUrl).toBe("https://oauth2.googleapis.com/token");
+    });
+
+    it("should refresh X token with Basic auth", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "x-new-access",
+          expires_in: 7200,
+        }),
+      );
+
+      const result = await refreshAccessToken("X", "x-old-refresh");
+
+      expect(result.access_token).toBe("x-new-access");
+      const headers = mockFetch.mock.calls[0][1].headers;
+      expect(headers.Authorization).toContain("Basic ");
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callBody).not.toContain("client_id");
+      expect(callBody).not.toContain("client_secret");
+      expect(callBody).toContain("refresh_token=x-old-refresh");
+    });
+
+    it("should refresh LinkedIn token with Basic auth", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "li-new-access",
+          expires_in: 86400,
+        }),
+      );
+
+      const result = await refreshAccessToken("LINKEDIN", "li-old-refresh");
+
+      expect(result.access_token).toBe("li-new-access");
+      const headers = mockFetch.mock.calls[0][1].headers;
+      expect(headers.Authorization).toContain("Basic ");
+      const callBody = mockFetch.mock.calls[0][1].body;
+      expect(callBody).not.toContain("client_id");
+      expect(callBody).not.toContain("client_secret");
+      expect(callBody).toContain("refresh_token=li-old-refresh");
+    });
+
+    it("should throw on network failure during refresh", async () => {
+      mockFetch.mockRejectedValueOnce(new TypeError("Network error"));
+
+      await expect(refreshAccessToken("FACEBOOK", "refresh")).rejects.toThrow(TypeError);
+    });
+
+    it("should throw when provider returns 429 rate limit during refresh", async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({ error: "rate_limit_exceeded" }, false, 429));
+
+      await expect(refreshAccessToken("FACEBOOK", "refresh")).rejects.toThrow(
+        "Token refresh failed for FACEBOOK",
+      );
+    });
+
+    it("should handle refresh response with extra fields", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          access_token: "new-token",
+          refresh_token: "new-refresh",
+          expires_in: 3600,
+          token_type: "Bearer",
+          scope: "read write",
+          extra_info: { key: "value" },
+        }),
+      );
+
+      const result = await refreshAccessToken("FACEBOOK", "old-refresh");
+
+      expect(result.access_token).toBe("new-token");
+      expect(result.refresh_token).toBe("new-refresh");
+      expect(result.expires_in).toBe(3600);
+      expect(result.scope).toBe("read write");
+    });
   });
 
   describe("isTokenExpired", () => {
@@ -315,6 +671,23 @@ describe("OAuth Token Exchange", () => {
     it("should handle 0 seconds", () => {
       const result = calculateExpiresAt(0);
       expect(result.getTime()).toBe(new Date("2025-06-01T12:00:00.000Z").getTime());
+    });
+
+    it("should handle negative seconds (past expiration)", () => {
+      const result = calculateExpiresAt(-3600);
+      expect(result.getTime()).toBe(new Date("2025-06-01T11:00:00.000Z").getTime());
+    });
+
+    it("should handle large values (30 days)", () => {
+      const result = calculateExpiresAt(2592000);
+      expect(result.getTime()).toBe(new Date("2025-07-01T12:00:00.000Z").getTime());
+    });
+
+    it("should handle fractional seconds (not truncated)", () => {
+      const result = calculateExpiresAt(3600.7);
+      // The function does not truncate; 3600.7 * 1000 = 3,600,700 ms
+      const expectedMs = new Date("2025-06-01T12:00:00.000Z").getTime() + 3600.7 * 1000;
+      expect(result.getTime()).toBe(expectedMs);
     });
   });
 });
