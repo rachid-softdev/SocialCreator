@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RedisCacheService } from "../infrastructure/cache";
 import type { CacheService } from "../infrastructure/cache";
+import { RedisCacheService } from "../infrastructure/cache";
 
 function createMockRedis() {
   return {

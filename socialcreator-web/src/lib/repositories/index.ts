@@ -9,6 +9,12 @@ export type {
   IAgentRunRepository,
 } from "./agent.repository";
 export { PrismaAgentRepository, PrismaAgentRunRepository } from "./agent.repository";
+export type {
+  AnalyticsFilterOptions,
+  AnalyticsPage,
+  IAnalyticsRepository,
+} from "./analytics.repository";
+export { PrismaAnalyticsRepository } from "./analytics.repository";
 export type { IApiKeyRepository } from "./api-key.repository";
 export { PrismaApiKeyRepository } from "./api-key.repository";
 export type { IConnectedAccountRepository } from "./connected-account.repository";
@@ -21,12 +27,6 @@ export type { IInvitationRepository } from "./invitation.repository";
 export { PrismaInvitationRepository } from "./invitation.repository";
 export type { IMediaAssetRepository } from "./media-asset.repository";
 export { PrismaMediaAssetRepository } from "./media-asset.repository";
-export type {
-  IAnalyticsRepository,
-  AnalyticsFilterOptions,
-  AnalyticsPage,
-} from "./analytics.repository";
-export { PrismaAnalyticsRepository } from "./analytics.repository";
 export type {
   INotificationRepository,
   NotificationListOptions,

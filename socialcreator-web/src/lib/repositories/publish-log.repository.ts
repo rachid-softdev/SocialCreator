@@ -4,9 +4,9 @@
  */
 
 import type { Platform, PublishLog } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { getCacheService } from "@/lib/infrastructure/cache";
 import { getRedis } from "@/lib/infrastructure/rate-limit-redis";
+import { prisma } from "@/lib/prisma";
 
 // ============================================
 // Domain Types

@@ -4,8 +4,8 @@
  */
 
 import type { Platform, Profile } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { getCacheService } from "@/lib/infrastructure/cache";
+import { prisma } from "@/lib/prisma";
 
 // ============================================
 // Domain Types
