@@ -56,7 +56,7 @@ import { POST } from "../route";
 function createJsonRpcRequest(body: unknown, apiKey?: string) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (apiKey) {
-    headers["authorization"] = `Bearer ${apiKey}`;
+    headers.authorization = `Bearer ${apiKey}`;
   }
   return new NextRequest("http://localhost:3000/api/mcp", {
     method: "POST",

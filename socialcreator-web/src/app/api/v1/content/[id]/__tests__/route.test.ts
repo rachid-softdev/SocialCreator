@@ -54,7 +54,7 @@ vi.mock("@/lib/repositories", () => ({
 
 // ── Imports (after mocks) ──────────────────────────────────────
 
-import { badRequest, notFound } from "@/lib/api-errors";
+import { notFound } from "@/lib/api-errors";
 import { PUT } from "../route";
 
 // ── Helpers ─────────────────────────────────────────────────────

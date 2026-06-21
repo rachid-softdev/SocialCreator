@@ -35,7 +35,7 @@ vi.mock("next/link", () => ({
 
 // Mock next/image
 vi.mock("next/image", () => ({
-  default: (props: Record<string, unknown>) => <img {...props} />,
+  default: (props: Record<string, unknown>) => <span {...props} />,
 }));
 
 vi.mock("@/components/layout/breadcrumb", () => ({

@@ -36,7 +36,6 @@ vi.mock("@/lib/prisma", () => ({
 // Import after mocks
 // ---------------------------------------------------------------------------
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { DELETE, GET, POST, PUT } from "../route";
 
 // ---------------------------------------------------------------------------
