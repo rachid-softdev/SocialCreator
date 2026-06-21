@@ -3,7 +3,7 @@
  * Covers settings navigation and API keys management
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class SettingsPage extends BasePage {

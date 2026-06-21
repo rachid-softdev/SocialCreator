@@ -5,7 +5,6 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { PasswordResetPage } from "./pages/password-reset.page";
 import { LoginPage } from "./pages/login.page";
 
 test.describe("Password Reset", () => {
@@ -35,7 +34,9 @@ test.describe("Password Reset", () => {
       await login.goto();
 
       // Check for forgot password link
-      const forgotLink = page.getByText(/forgot password|reset password|mot de passe oublié/i).first();
+      const forgotLink = page
+        .getByText(/forgot password|reset password|mot de passe oublié/i)
+        .first();
       const hasLink = await forgotLink.isVisible().catch(() => false);
       // If the link exists, verify it navigates to reset page
       if (hasLink) {
@@ -51,7 +52,9 @@ test.describe("Password Reset", () => {
     test("should navigate to reset page via forgot password link", async ({ page }) => {
       await page.goto("/login");
 
-      const forgotLink = page.getByText(/forgot password|reset password|mot de passe oublié/i).first();
+      const forgotLink = page
+        .getByText(/forgot password|reset password|mot de passe oublié/i)
+        .first();
       const hasLink = await forgotLink.isVisible().catch(() => false);
 
       if (!hasLink) {
@@ -70,9 +73,9 @@ test.describe("Password Reset", () => {
 
       // Should be on reset/forgot password page
       const currentUrl = new URL(page.url());
-      expect(
-        currentUrl.pathname.includes("reset") || currentUrl.pathname.includes("forgot"),
-      ).toBe(true);
+      expect(currentUrl.pathname.includes("reset") || currentUrl.pathname.includes("forgot")).toBe(
+        true,
+      );
     });
   });
 
@@ -95,7 +98,9 @@ test.describe("Password Reset", () => {
         await page.waitForTimeout(500);
 
         // Should show validation error (either HTML5 validation or custom)
-        const validationError = page.getByText(/required|valid email|enter.*email|email.*required/i).first();
+        const validationError = page
+          .getByText(/required|valid email|enter.*email|email.*required/i)
+          .first();
         const hasValidation = await validationError.isVisible().catch(() => false);
         expect(hasValidation || true).toBe(true);
       }
@@ -149,7 +154,9 @@ test.describe("Password Reset", () => {
         await submitBtn.click();
         await page.waitForTimeout(500);
 
-        const validationError = page.getByText(/at least 8|too short|minimum|8 characters/i).first();
+        const validationError = page
+          .getByText(/at least 8|too short|minimum|8 characters/i)
+          .first();
         const hasValidation = await validationError.isVisible().catch(() => false);
         expect(hasValidation || true).toBe(true);
       }
@@ -180,7 +187,9 @@ test.describe("Password Reset", () => {
         await submitBtn.click();
         await page.waitForTimeout(500);
 
-        const mismatchError = page.getByText(/passwords do not match|don't match|not match|mismatch/i).first();
+        const mismatchError = page
+          .getByText(/passwords do not match|don't match|not match|mismatch/i)
+          .first();
         const hasValidation = await mismatchError.isVisible().catch(() => false);
         expect(hasValidation || true).toBe(true);
       }
@@ -192,7 +201,7 @@ test.describe("Password Reset", () => {
       // Mock the password reset request API
       await page.route("**/api/auth/reset-password", async (route) => {
         const body = route.request().postDataJSON();
-        if (body?.email && body.email.includes("@")) {
+        if (body?.email?.includes("@")) {
           await route.fulfill({ json: { success: true, message: "Reset link sent" } });
         } else {
           await route.fulfill({ status: 400, json: { error: "Invalid email" } });
@@ -216,7 +225,9 @@ test.describe("Password Reset", () => {
         await page.waitForTimeout(1000);
 
         // Should show success message (security: don't reveal if email exists)
-        const successMsg = page.getByText(/email sent|check your email|reset link|si un compte|if an account/i).first();
+        const successMsg = page
+          .getByText(/email sent|check your email|reset link|si un compte|if an account/i)
+          .first();
         const hasSuccess = await successMsg.isVisible().catch(() => false);
         expect(hasSuccess || true).toBe(true);
       }
@@ -251,7 +262,9 @@ test.describe("Password Reset", () => {
         await page.waitForTimeout(1000);
 
         // Should show same success message as known email
-        const successMsg = page.getByText(/email sent|check your email|reset link|si un compte|if an account/i).first();
+        const successMsg = page
+          .getByText(/email sent|check your email|reset link|si un compte|if an account/i)
+          .first();
         const hasSuccess = await successMsg.isVisible().catch(() => false);
         expect(hasSuccess || true).toBe(true);
       }
@@ -306,7 +319,6 @@ test.describe("Password Reset", () => {
 
       // Should show password fields (not email input)
       const passwordInput = page.locator('input[type="password"]').first();
-      const emailInput = page.locator('input[type="email"]').first();
       const hasPasswordForm = await passwordInput.isVisible().catch(() => false);
 
       if (hasPasswordForm) {
@@ -355,7 +367,9 @@ test.describe("Password Reset", () => {
         await page.waitForTimeout(1000);
 
         // Success message should appear
-        const successMsg = page.getByText(/password.*updated|password.*changed|success|réinitialisé/i).first();
+        const successMsg = page
+          .getByText(/password.*updated|password.*changed|success|réinitialisé/i)
+          .first();
         const hasSuccess = await successMsg.isVisible().catch(() => false);
         expect(hasSuccess || true).toBe(true);
       }
@@ -474,9 +488,11 @@ test.describe("Password Reset", () => {
         await submitBtn.click();
 
         // Button should show loading state
-        const loadingBtn = page.locator(
-          'button[type="submit"]:has-text("Loading"), button[type="submit"]:has-text("Sending"), button[type="submit"][disabled]',
-        ).first();
+        const loadingBtn = page
+          .locator(
+            'button[type="submit"]:has-text("Loading"), button[type="submit"]:has-text("Sending"), button[type="submit"][disabled]',
+          )
+          .first();
         const hasLoading = await loadingBtn.isVisible().catch(() => false);
         expect(hasLoading || true).toBe(true);
       }

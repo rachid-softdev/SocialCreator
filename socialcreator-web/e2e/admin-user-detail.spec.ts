@@ -33,7 +33,9 @@ function getBaseUser(id: string) {
 
 test.describe("Admin User Detail", () => {
   test.describe("Page Display — Success States", () => {
-    test("should show user detail page with user info (name, email, role, status)", async ({ page }) => {
+    test("should show user detail page with user info (name, email, role, status)", async ({
+      page,
+    }) => {
       const userId = `user-detail-${Date.now()}`;
       const user = getBaseUser(userId);
 
@@ -75,7 +77,9 @@ test.describe("Admin User Detail", () => {
       await expect(page.getByText("150").first()).toBeVisible({ timeout: 5000 });
       await expect(page.getByText("89").first()).toBeVisible({ timeout: 5000 });
       await expect(page.getByText(/Contenu généré/i).first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/Publications réussies|Publications/i).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/Publications réussies|Publications/i).first()).toBeVisible({
+        timeout: 5000,
+      });
     });
 
     test("should show user's profiles with platform badges", async ({ page }) => {
@@ -249,8 +253,12 @@ test.describe("Admin User Detail", () => {
       }
 
       // Large formatted numbers should display
-      await expect(page.getByText("15,000").or(page.getByText("15000")).first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText("12,300").or(page.getByText("12300")).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("15,000").or(page.getByText("15000")).first()).toBeVisible({
+        timeout: 5000,
+      });
+      await expect(page.getByText("12,300").or(page.getByText("12300")).first()).toBeVisible({
+        timeout: 5000,
+      });
     });
 
     test("should handle admin user with ADMIN role badge", async ({ page }) => {
@@ -390,8 +398,12 @@ test.describe("Admin User Detail", () => {
       const currentUrl = new URL(page.url());
       // Should either redirect to login or show unauthorized
       const isLogin = currentUrl.pathname === "/login";
-      const isForbidden = currentUrl.pathname.includes("unauthorized") || currentUrl.pathname.includes("403");
-      const hasError = await page.getByText(/unauthorized|forbidden|access denied/i).isVisible().catch(() => false);
+      const isForbidden =
+        currentUrl.pathname.includes("unauthorized") || currentUrl.pathname.includes("403");
+      const hasError = await page
+        .getByText(/unauthorized|forbidden|access denied/i)
+        .isVisible()
+        .catch(() => false);
 
       expect(isLogin || isForbidden || hasError).toBe(true);
     });

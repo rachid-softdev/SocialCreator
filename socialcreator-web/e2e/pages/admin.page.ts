@@ -3,7 +3,7 @@
  * Covers admin dashboard, user management, org management, and entitlement overrides
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class AdminDashboardPage extends BasePage {
@@ -13,9 +13,7 @@ export class AdminDashboardPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole("heading", { name: /admin dashboard/i });
-    this.statsSection = page
-      .getByText(/total users|active orgs|subscriptions/i)
-      .first();
+    this.statsSection = page.getByText(/total users|active orgs|subscriptions/i).first();
   }
 
   override async goto() {
@@ -23,7 +21,9 @@ export class AdminDashboardPage extends BasePage {
   }
 
   async getStatCard(label: string): Promise<string> {
-    const statCards = this.page.locator('[class*="stat-card"], [class*="rounded-xl"][class*="shadow-card"]');
+    const statCards = this.page.locator(
+      '[class*="stat-card"], [class*="rounded-xl"][class*="shadow-card"]',
+    );
     const count = await statCards.count();
     for (let i = 0; i < count; i++) {
       const card = statCards.nth(i);

@@ -40,7 +40,9 @@ test.describe("Connected Accounts Page", () => {
       expect(headingText?.toLowerCase()).toContain("account");
     });
 
-    test("should list available social platforms (Twitter, LinkedIn, Instagram, etc.)", async ({ page }) => {
+    test("should list available social platforms (Twitter, LinkedIn, Instagram, etc.)", async ({
+      page,
+    }) => {
       await page.goto("/settings/accounts");
 
       const currentUrl = new URL(page.url());
@@ -83,7 +85,10 @@ test.describe("Connected Accounts Page", () => {
         const connectButtons = page
           .getByRole("button")
           .filter({ hasText: /connect|link account/i });
-        const hasConnectButtons = await connectButtons.first().isVisible().catch(() => false);
+        const hasConnectButtons = await connectButtons
+          .first()
+          .isVisible()
+          .catch(() => false);
         expect(badgeCount > 0 || hasConnectButtons).toBe(true);
       }
     });
@@ -176,7 +181,12 @@ test.describe("Connected Accounts Page", () => {
         .getByRole("button")
         .filter({ hasText: /disconnect|remove|unlink/i });
 
-      if (await disconnectBtns.first().isVisible().catch(() => false)) {
+      if (
+        await disconnectBtns
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         await disconnectBtns.first().click();
         await page.waitForTimeout(500);
 
@@ -244,18 +254,14 @@ test.describe("Connected Accounts Page", () => {
       }
 
       // Look for refresh or reconnect buttons near expired/error status
-      const refreshBtns = page
-        .getByRole("button")
-        .filter({ hasText: /refresh|reconnect|renew/i });
+      const refreshBtns = page.getByRole("button").filter({ hasText: /refresh|reconnect|renew/i });
 
       const btnCount = await refreshBtns.count();
       if (btnCount > 0) {
         await expect(refreshBtns.first()).toBeVisible({ timeout: 3000 });
       } else {
         // Some platforms have "connect" as the refresh mechanism
-        const connectBtns = page
-          .getByRole("button")
-          .filter({ hasText: /connect|link/i });
+        const connectBtns = page.getByRole("button").filter({ hasText: /connect|link/i });
         const connectCount = await connectBtns.count();
         expect(btnCount > 0 || connectCount > 0).toBe(true);
       }
@@ -282,10 +288,13 @@ test.describe("Connected Accounts Page", () => {
         const accountIdentifier = page
           .locator('[class*="username"]')
           .or(page.locator('[class*="email"]'))
-          .or(page.locator("img[alt*=\"avatar\"]"))
-          .or(page.locator("img[alt*=\"profile\"]"));
+          .or(page.locator('img[alt*="avatar"]'))
+          .or(page.locator('img[alt*="profile"]'));
 
-        const hasIdentifier = await accountIdentifier.first().isVisible().catch(() => false);
+        const hasIdentifier = await accountIdentifier
+          .first()
+          .isVisible()
+          .catch(() => false);
         if (hasIdentifier) {
           await expect(accountIdentifier.first()).toBeVisible({ timeout: 3000 });
         }
@@ -303,8 +312,8 @@ test.describe("Connected Accounts Page", () => {
 
       // Look for avatars or usernames in the connected accounts list
       const avatars = page
-        .locator("img[alt*=\"avatar\"]")
-        .or(page.locator("img[alt*=\"profile\"]"))
+        .locator('img[alt*="avatar"]')
+        .or(page.locator('img[alt*="profile"]'))
         .or(page.locator('[class*="avatar"]'));
 
       const usernames = page
@@ -312,14 +321,21 @@ test.describe("Connected Accounts Page", () => {
         .or(page.locator('[class*="handle"]'))
         .or(page.locator('[class*="name"]').filter({ hasText: /@/ }));
 
-      const hasAvatar = await avatars.first().isVisible().catch(() => false);
-      const hasUsername = await usernames.first().isVisible().catch(() => false);
+      const hasAvatar = await avatars
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const hasUsername = await usernames
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       // Either avatars or usernames are visible for connected accounts
-      const connectedBadges = page
-        .locator('[class*="badge"]')
-        .filter({ hasText: /connected/i });
-      const hasConnected = await connectedBadges.first().isVisible().catch(() => false);
+      const connectedBadges = page.locator('[class*="badge"]').filter({ hasText: /connected/i });
+      const hasConnected = await connectedBadges
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       if (hasConnected) {
         expect(hasAvatar || hasUsername).toBe(true);
@@ -359,7 +375,9 @@ test.describe("Connected Accounts — OAuth Flow", () => {
     }
   });
 
-  test("should show only unconnected platforms in modal (hide already connected)", async ({ page }) => {
+  test("should show only unconnected platforms in modal (hide already connected)", async ({
+    page,
+  }) => {
     await page.goto("/settings/accounts");
 
     const currentUrl = new URL(page.url());
@@ -402,12 +420,17 @@ test.describe("Connected Accounts — OAuth Flow", () => {
     }
 
     // Check if all platforms are connected
-    const allConnected = page.getByText(/all connected|everything connected|all accounts connected/i);
+    const allConnected = page.getByText(
+      /all connected|everything connected|all accounts connected/i,
+    );
     const hasAllConnected = await allConnected.isVisible().catch(() => false);
 
     // If not all connected, verify connect buttons still exist
     const connectBtns = page.getByRole("button").filter({ hasText: /connect|link/i });
-    const hasConnectBtns = await connectBtns.first().isVisible().catch(() => false);
+    const hasConnectBtns = await connectBtns
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasAllConnected || hasConnectBtns).toBe(true);
   });
 
@@ -451,7 +474,10 @@ test.describe("Connected Accounts — OAuth Flow", () => {
     const errorMsg = page
       .getByText(/access denied|oauth error|authorization failed|denied/i)
       .or(page.locator('[role="alert"]'));
-    const hasError = await errorMsg.first().isVisible().catch(() => false);
+    const hasError = await errorMsg
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasError || true).toBe(true);
   });
 
@@ -472,7 +498,10 @@ test.describe("Connected Accounts — OAuth Flow", () => {
     const csrfError = page
       .getByText(/state mismatch|invalid state|csrf|security.*error/i)
       .or(page.locator('[role="alert"]'));
-    const hasError = await csrfError.first().isVisible().catch(() => false);
+    const hasError = await csrfError
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasError || true).toBe(true);
   });
 
@@ -493,7 +522,10 @@ test.describe("Connected Accounts — OAuth Flow", () => {
     const tokenError = page
       .getByText(/token exchange|token.*failed|could not authenticate/i)
       .or(page.locator('[role="alert"]'));
-    const hasError = await tokenError.first().isVisible().catch(() => false);
+    const hasError = await tokenError
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasError || true).toBe(true);
   });
 
@@ -517,7 +549,10 @@ test.describe("Connected Accounts — OAuth Flow", () => {
       const toast = page
         .getByText(/connected successfully|account connected|success|linked/i)
         .or(page.locator('[class*="toast"]').filter({ hasText: /success|connected/i }));
-      const hasToast = await toast.first().isVisible().catch(() => false);
+      const hasToast = await toast
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasToast || true).toBe(true);
     }
   });
@@ -547,7 +582,10 @@ test.describe("Connected Accounts — Disconnect Flow", () => {
         .locator('[role="dialog"]')
         .or(page.locator('[class*="modal"]'))
         .filter({ hasText: /confirm|are you sure|disconnect|remove/i });
-      const hasModal = await confirmModal.first().isVisible().catch(() => false);
+      const hasModal = await confirmModal
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasModal).toBe(true);
     } else {
       // Verify via API that disconnect requires confirmation
@@ -607,7 +645,10 @@ test.describe("Connected Accounts — Disconnect Flow", () => {
     if (response.status() === 404) {
       // UI should handle error gracefully
       const errorEl = page.locator('[role="alert"], [class*="error"]');
-      const hasError = await errorEl.first().isVisible().catch(() => false);
+      const hasError = await errorEl
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasError || true).toBe(true);
     }
   });
@@ -622,9 +663,7 @@ test.describe("Connected Accounts — Disconnect Flow", () => {
     }
 
     // After disconnect, the platform should show a connect button again
-    const connectButtons = page
-      .getByRole("button")
-      .filter({ hasText: /connect|link/i });
+    const connectButtons = page.getByRole("button").filter({ hasText: /connect|link/i });
 
     const connectCount = await connectButtons.count();
     if (connectCount > 0) {
@@ -638,7 +677,9 @@ test.describe("Connected Accounts — Disconnect Flow", () => {
 });
 
 test.describe("Connected Accounts — Token & Status", () => {
-  test("should show token expiry badge (≤7 days: red, ≤30: yellow, >30: green)", async ({ page }) => {
+  test("should show token expiry badge (≤7 days: red, ≤30: yellow, >30: green)", async ({
+    page,
+  }) => {
     await page.goto("/settings/accounts");
 
     const currentUrl = new URL(page.url());
@@ -651,7 +692,10 @@ test.describe("Connected Accounts — Token & Status", () => {
     const expiryBadge = page
       .locator('[class*="badge"], [class*="pill"]')
       .filter({ hasText: /expir|days left|token/i });
-    const hasBadge = await expiryBadge.first().isVisible().catch(() => false);
+    const hasBadge = await expiryBadge
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Also check colors via class names
     const redBadge = page.locator('[class*="red"], [class*="danger"], [class*="error"]');
@@ -659,9 +703,18 @@ test.describe("Connected Accounts — Token & Status", () => {
     const greenBadge = page.locator('[class*="green"], [class*="success"]');
 
     const hasColorCoding =
-      (await redBadge.first().isVisible().catch(() => false)) ||
-      (await yellowBadge.first().isVisible().catch(() => false)) ||
-      (await greenBadge.first().isVisible().catch(() => false));
+      (await redBadge
+        .first()
+        .isVisible()
+        .catch(() => false)) ||
+      (await yellowBadge
+        .first()
+        .isVisible()
+        .catch(() => false)) ||
+      (await greenBadge
+        .first()
+        .isVisible()
+        .catch(() => false));
     expect(hasBadge || hasColorCoding || true).toBe(true);
   });
 
@@ -678,7 +731,10 @@ test.describe("Connected Accounts — Token & Status", () => {
     const expiredBadge = page
       .locator('[class*="badge"], [class*="pill"]')
       .filter({ hasText: /expired/i });
-    const hasExpired = await expiredBadge.first().isVisible().catch(() => false);
+    const hasExpired = await expiredBadge
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Query API for expired tokens
     const response = await page.request.get("/api/accounts?status=expired");
@@ -705,7 +761,10 @@ test.describe("Connected Accounts — Token & Status", () => {
     const inactiveBadge = page
       .locator('[class*="badge"], [class*="pill"]')
       .filter({ hasText: /inactive/i });
-    const hasInactive = await inactiveBadge.first().isVisible().catch(() => false);
+    const hasInactive = await inactiveBadge
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Query API for inactive accounts
     const response = await page.request.get("/api/accounts?status=inactive");
@@ -746,7 +805,9 @@ test.describe("Connected Accounts — Token & Status", () => {
     const response = await page.request.post("/api/accounts/instagram/refresh");
     if (response.status() === 400) {
       const json = await response.json().catch(() => ({}));
-      expect(json.error || json.message || "").toMatch(/no refresh token|refresh token.*not found|cannot refresh/i);
+      expect(json.error || json.message || "").toMatch(
+        /no refresh token|refresh token.*not found|cannot refresh/i,
+      );
     }
   });
 
@@ -763,7 +824,10 @@ test.describe("Connected Accounts — Token & Status", () => {
     const errorBanner = page
       .locator('[role="alert"], [class*="banner"], [class*="error"]')
       .filter({ hasText: /connection error|could not connect|connection.*failed/i });
-    const hasBanner = await errorBanner.first().isVisible().catch(() => false);
+    const hasBanner = await errorBanner
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Trigger error state via bad request
     const response = await page.request.get("/api/accounts?error=true");
@@ -781,8 +845,13 @@ test.describe("Connected Accounts — Token & Status", () => {
     }
 
     // Check for skeleton loaders
-    const skeleton = page.locator('[class*="skeleton"], [class*="placeholder"], [class*="loading"]');
-    const hasSkeleton = await skeleton.first().isVisible().catch(() => false);
+    const skeleton = page.locator(
+      '[class*="skeleton"], [class*="placeholder"], [class*="loading"]',
+    );
+    const hasSkeleton = await skeleton
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // If no skeleton, the page should have loaded content
     const content = page.getByRole("heading").first();
@@ -800,7 +869,9 @@ test.describe("Connected Accounts — Token & Status", () => {
     }
 
     // Check for empty state
-    const emptyState = page.getByText(/no accounts connected|connect.*account|get started|no platform/i);
+    const emptyState = page.getByText(
+      /no accounts connected|connect.*account|get started|no platform/i,
+    );
     const hasEmpty = await emptyState.isVisible().catch(() => false);
 
     // Also check via API
@@ -855,7 +926,9 @@ test.describe("Connected Accounts — Token & Status", () => {
 
     if (response.status() === 409) {
       const json = await response.json().catch(() => ({}));
-      expect(json.error || json.message || "").toMatch(/already connected|duplicate|already linked/i);
+      expect(json.error || json.message || "").toMatch(
+        /already connected|duplicate|already linked/i,
+      );
     } else {
       // Other statuses are acceptable (same platform can be re-linked)
       expect([200, 201, 401, 302]).toContain(response.status());
@@ -874,13 +947,17 @@ test.describe("Connected Accounts — Navigation & Display", () => {
     }
 
     // Check for avatars and platform names
-    const avatars = page
-      .locator("img[alt*=\"avatar\"], img[alt*=\"profile\"], [class*=\"avatar\"]");
-    const hasAvatar = await avatars.first().isVisible().catch(() => false);
+    const avatars = page.locator('img[alt*="avatar"], img[alt*="profile"], [class*="avatar"]');
+    const hasAvatar = await avatars
+      .first()
+      .isVisible()
+      .catch(() => false);
 
-    const platformNames = page
-      .getByText(/twitter|x|linkedin|instagram|facebook|tiktok|youtube/i);
-    const hasName = await platformNames.first().isVisible().catch(() => false);
+    const platformNames = page.getByText(/twitter|x|linkedin|instagram|facebook|tiktok|youtube/i);
+    const hasName = await platformNames
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     const response = await page.request.get("/api/accounts");
     if (response.status() === 200) {
@@ -930,10 +1007,13 @@ test.describe("Connected Accounts — Navigation & Display", () => {
     }
 
     // Find a profile and navigate to it
-    const profileLinks = page
-      .locator('a[href*="/profiles/"]')
-      .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    const profileLinks = page.locator('a[href*="/profiles/"]').filter({ hasNotText: /new|edit/i });
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -941,7 +1021,10 @@ test.describe("Connected Accounts — Navigation & Display", () => {
       const accountsLink = page
         .locator('a[href*="accounts"], a[href*="settings"]')
         .filter({ hasText: /account|setting|integrat/i });
-      const hasLink = await accountsLink.first().isVisible().catch(() => false);
+      const hasLink = await accountsLink
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       if (hasLink) {
         await accountsLink.first().click();
@@ -994,7 +1077,10 @@ test.describe("Connected Accounts — Error States", () => {
       const errorMsg = page
         .locator('[role="alert"]')
         .or(page.getByText(/error|failed|unavailable|unable to connect/i));
-      const hasError = await errorMsg.first().isVisible({ timeout: 5000 }).catch(() => false);
+      const hasError = await errorMsg
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false);
       expect(typeof hasError).toBe("boolean");
     }
   });
@@ -1035,7 +1121,10 @@ test.describe("Connected Accounts — Error States", () => {
     const hasMsg = await rateLimitMsg.isVisible({ timeout: 5000 }).catch(() => false);
 
     // Page should remain usable
-    const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+    const bodyVisible = await page
+      .locator("body")
+      .isVisible()
+      .catch(() => false);
     expect(hasMsg || bodyVisible).toBe(true);
   });
 

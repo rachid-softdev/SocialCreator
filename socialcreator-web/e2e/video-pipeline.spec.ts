@@ -37,7 +37,9 @@ test.describe("Video Pipeline", () => {
           await page.waitForURL(/\/video/, { timeout: 10000 });
 
           // Should see the video pipeline heading
-          const heading = page.getByRole("heading", { name: /video pipeline|upload|video/i }).first();
+          const heading = page
+            .getByRole("heading", { name: /video pipeline|upload|video/i })
+            .first();
           await expect(heading).toBeVisible({ timeout: 10000 });
         }
       }
@@ -71,8 +73,7 @@ test.describe("Video Pipeline", () => {
         // Heading should be visible
         const headingVisible = await pipeline.heading.isVisible().catch(() => false);
         const fallbackHeading = page.getByRole("heading", { name: /video|upload/i }).first();
-        const headingOk =
-          headingVisible || (await fallbackHeading.isVisible().catch(() => false));
+        const headingOk = headingVisible || (await fallbackHeading.isVisible().catch(() => false));
         expect(headingOk).toBe(true);
 
         // Upload button should exist
@@ -131,7 +132,10 @@ test.describe("Video Pipeline", () => {
           .or(page.getByText(/transcribe/i))
           .or(page.getByText(/segment/i))
           .or(page.getByText(/clip/i));
-        const stepperVisible = await pipelineStepper.first().isVisible().catch(() => false);
+        const stepperVisible = await pipelineStepper
+          .first()
+          .isVisible()
+          .catch(() => false);
         expect(anyStageFound || stepperVisible).toBe(true);
       }
     });
@@ -252,7 +256,9 @@ test.describe("Video Pipeline", () => {
         const acceptAttr = await fileInput.getAttribute("accept").catch(() => null);
         const hasAcceptFormats =
           acceptAttr !== null &&
-          (acceptAttr.includes(".mp4") || acceptAttr.includes(".mov") || acceptAttr.includes(".avi"));
+          (acceptAttr.includes(".mp4") ||
+            acceptAttr.includes(".mov") ||
+            acceptAttr.includes(".avi"));
 
         expect(hasFormats || hasAcceptFormats).toBe(true);
       }
@@ -545,7 +551,7 @@ test.describe("Video Pipeline", () => {
           .isVisible()
           .catch(() => false);
         const hasGenerateLink = await page
-          .locator('a')
+          .locator("a")
           .filter({ hasText: /generate content|generate posts|generate/i })
           .first()
           .isVisible()
@@ -823,7 +829,9 @@ test.describe("Video Pipeline", () => {
 });
 
 test.describe("Video Pipeline — Upload Validation", () => {
-  test("should reject unsupported file format (AVI) — should show 'Invalid file type' error", async ({ page }) => {
+  test("should reject unsupported file format (AVI) — should show 'Invalid file type' error", async ({
+    page,
+  }) => {
     await page.goto("/profiles");
 
     const currentUrl = new URL(page.url());
@@ -848,7 +856,9 @@ test.describe("Video Pipeline — Upload Validation", () => {
       });
       if (response.status() === 400) {
         const json = await response.json();
-        expect(json.error || json.message || "").toMatch(/invalid file type|unsupported format|not supported/i);
+        expect(json.error || json.message || "").toMatch(
+          /invalid file type|unsupported format|not supported/i,
+        );
         return;
       }
     }
@@ -876,7 +886,9 @@ test.describe("Video Pipeline — Upload Validation", () => {
 
     if (response.status() === 400 || response.status() === 413) {
       const json = await response.json().catch(() => ({}));
-      expect(json.error || json.message || "").toMatch(/file too large|too large|exceeds|maximum size/i);
+      expect(json.error || json.message || "").toMatch(
+        /file too large|too large|exceeds|maximum size/i,
+      );
     } else {
       // UI might reject via client-side validation
       const errorMsg = page.getByText(/file too large|too large|exceeds|maximum size/i);
@@ -908,7 +920,7 @@ test.describe("Video Pipeline — Upload Validation", () => {
       .catch(() => false);
     const fileInput = page.locator('input[type="file"]').first();
     const acceptAttr = await fileInput.getAttribute("accept").catch(() => null);
-    const hasInAccept = acceptAttr !== null && acceptAttr.includes(".webm");
+    const hasInAccept = acceptAttr?.includes(".webm");
     expect(hasWebm || hasInAccept || true).toBe(true);
   });
 
@@ -935,7 +947,9 @@ test.describe("Video Pipeline — Upload Validation", () => {
     // Progress indicator should be present
     const progressBar = page.locator('[role="progressbar"], progress, [class*="progress"]');
     const progressText = page.getByText(/\d+%|uploading|processing/i);
-    const hasProgress = (await progressBar.isVisible().catch(() => false)) || (await progressText.isVisible().catch(() => false));
+    const hasProgress =
+      (await progressBar.isVisible().catch(() => false)) ||
+      (await progressText.isVisible().catch(() => false));
     // Accept if progress exists or if upload area is still visible (before actual upload)
     const uploadArea = page.getByText(/upload a video/i);
     const hasUploadArea = await uploadArea.isVisible().catch(() => false);
@@ -958,8 +972,13 @@ test.describe("Video Pipeline — Upload Validation", () => {
 
     if (response.status() === 400 || response.status() === 422) {
       // API rejected the upload - look for error and retry UI
-      const errorEl = page.locator('[role="alert"], [class*="error"]').filter({ hasText: /error|failed/i });
-      const hasError = await errorEl.first().isVisible().catch(() => false);
+      const errorEl = page
+        .locator('[role="alert"], [class*="error"]')
+        .filter({ hasText: /error|failed/i });
+      const hasError = await errorEl
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       const retryBtn = page.getByRole("button", { name: /try again|retry/i });
       const hasRetry = await retryBtn.isVisible().catch(() => false);
@@ -997,7 +1016,9 @@ test.describe("Video Pipeline — Upload Validation", () => {
 });
 
 test.describe("Video Pipeline — Full Pipeline Flow", () => {
-  test("should show all pipeline stage indicators (Upload → Transcribe → Segment → Clip → Generate)", async ({ page }) => {
+  test("should show all pipeline stage indicators (Upload → Transcribe → Segment → Clip → Generate)", async ({
+    page,
+  }) => {
     await page.goto("/profiles");
 
     const currentUrl = new URL(page.url());
@@ -1009,7 +1030,12 @@ test.describe("Video Pipeline — Full Pipeline Flow", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -1022,7 +1048,10 @@ test.describe("Video Pipeline — Full Pipeline Flow", () => {
     const stages = ["Upload", "Transcribe", "Segment", "Clip", "Generate"];
     let allFound = 0;
     for (const stage of stages) {
-      const found = await page.getByText(stage, { exact: false }).isVisible().catch(() => false);
+      const found = await page
+        .getByText(stage, { exact: false })
+        .isVisible()
+        .catch(() => false);
       if (found) allFound++;
     }
     // Accept if at least 3 stages are found (some may be hidden behind responsive UI)
@@ -1086,8 +1115,13 @@ test.describe("Video Pipeline — Full Pipeline Flow", () => {
     const response = await page.request.post(`/api/video/invalid-id-${Date.now()}/transcribe`);
     if (response.status() === 404) {
       // Look for error state in UI
-      const errorEl = page.locator('[role="alert"], [class*="error"]').filter({ hasText: /transcrib|error|failed/i });
-      const hasError = await errorEl.first().isVisible().catch(() => false);
+      const errorEl = page
+        .locator('[role="alert"], [class*="error"]')
+        .filter({ hasText: /transcrib|error|failed/i });
+      const hasError = await errorEl
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasError || true).toBe(true);
     }
   });
@@ -1195,7 +1229,12 @@ test.describe("Video Pipeline — State & UI", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -1207,7 +1246,10 @@ test.describe("Video Pipeline — State & UI", () => {
     // Should show empty/upload state
     const emptyMsg = page.getByText(/no videos yet|upload a video|no content yet|get started/i);
     const hasEmpty = await emptyMsg.isVisible().catch(() => false);
-    const hasUploadArea = await page.getByText(/upload a video|drag.*drop|drop.*file/i).isVisible().catch(() => false);
+    const hasUploadArea = await page
+      .getByText(/upload a video|drag.*drop|drop.*file/i)
+      .isVisible()
+      .catch(() => false);
     expect(hasEmpty || hasUploadArea).toBe(true);
   });
 
@@ -1244,7 +1286,12 @@ test.describe("Video Pipeline — State & UI", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -1258,7 +1305,10 @@ test.describe("Video Pipeline — State & UI", () => {
       .getByText(/\d+\s+clip|\d+\s+platform|\d+\s+post/i)
       .or(page.locator('[class*="stats"]'))
       .or(page.locator('[class*="sidebar"]'));
-    const hasStats = await sidebarStats.first().isVisible().catch(() => false);
+    const hasStats = await sidebarStats
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasStats || true).toBe(true);
   });
 
@@ -1274,13 +1324,20 @@ test.describe("Video Pipeline — State & UI", () => {
     // Check for video preview elements
     const videoEl = page.locator("video").first();
     const hasVideo = await videoEl.isVisible().catch(() => false);
-    const thumbnail = page.locator('img[class*="thumbnail"], img[class*="preview"], [class*="video-card"]').first();
+    const thumbnail = page
+      .locator('img[class*="thumbnail"], img[class*="preview"], [class*="video-card"]')
+      .first();
     const hasThumbnail = await thumbnail.isVisible().catch(() => false);
-    const noVideos = await page.getByText(/no videos yet|upload a video/i).isVisible().catch(() => false);
+    const noVideos = await page
+      .getByText(/no videos yet|upload a video/i)
+      .isVisible()
+      .catch(() => false);
     expect(hasVideo || hasThumbnail || noVideos).toBe(true);
   });
 
-  test("should handle browser refresh during processing (resume from API state)", async ({ page }) => {
+  test("should handle browser refresh during processing (resume from API state)", async ({
+    page,
+  }) => {
     await page.goto("/profiles");
 
     const currentUrl = new URL(page.url());
@@ -1300,7 +1357,9 @@ test.describe("Video Pipeline — State & UI", () => {
         await page.reload();
         await page.waitForTimeout(1000);
 
-        const videoList = page.locator('[class*="video-card"], [class*="video-item"], video').first();
+        const videoList = page
+          .locator('[class*="video-card"], [class*="video-item"], video')
+          .first();
         const hasVideoUI = await videoList.isVisible().catch(() => false);
         const emptyState = page.getByText(/upload a video|no videos/i);
         const hasEmpty = await emptyState.isVisible().catch(() => false);
@@ -1321,13 +1380,16 @@ test.describe("Video Pipeline — State & UI", () => {
     // Generate button should be disabled when no clips exist
     const generateBtn = page
       .getByRole("button", { name: /generate content|generate posts/i })
-      .or(page.locator('button').filter({ hasText: /generate/i }));
+      .or(page.locator("button").filter({ hasText: /generate/i }));
     const btn = generateBtn.first();
     if (await btn.isVisible().catch(() => false)) {
       const isDisabled = await btn.isDisabled().catch(() => false);
       if (!isDisabled) {
         // May exist but be visually disabled via class
-        const classDisabled = await btn.getAttribute("class").then((c) => c?.includes("disabled")).catch(() => false);
+        const classDisabled = await btn
+          .getAttribute("class")
+          .then((c) => c?.includes("disabled"))
+          .catch(() => false);
         expect(isDisabled || classDisabled || true).toBe(true);
       }
     } else {
@@ -1346,11 +1408,16 @@ test.describe("Video Pipeline — State & UI", () => {
     }
 
     // Generate button should require platform selection
-    const generateBtn = page.getByRole("button", { name: /generate content|generate posts/i }).first();
+    const generateBtn = page
+      .getByRole("button", { name: /generate content|generate posts/i })
+      .first();
     if (await generateBtn.isVisible().catch(() => false)) {
       const isDisabled = await generateBtn.isDisabled().catch(() => false);
       if (!isDisabled) {
-        const classDisabled = await generateBtn.getAttribute("class").then((c) => c?.includes("disabled")).catch(() => false);
+        const classDisabled = await generateBtn
+          .getAttribute("class")
+          .then((c) => c?.includes("disabled"))
+          .catch(() => false);
         expect(isDisabled || classDisabled || true).toBe(true);
       }
     } else {
@@ -1407,7 +1474,10 @@ test.describe("Video Pipeline — Edge Cases", () => {
     const warningMsg = page.getByText(/long video|long.*duration|processing.*longer|warning/i);
     const hasWarning = await warningMsg.isVisible({ timeout: 5000 }).catch(() => false);
     // Even without a duration warning, the page should not crash
-    const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+    const bodyVisible = await page
+      .locator("body")
+      .isVisible()
+      .catch(() => false);
     expect(hasWarning || bodyVisible).toBe(true);
   });
 
@@ -1443,7 +1513,10 @@ test.describe("Video Pipeline — Edge Cases", () => {
     const hasError = await noAudioError.isVisible({ timeout: 5000 }).catch(() => false);
 
     // Or the page should at least be stable
-    const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+    const bodyVisible = await page
+      .locator("body")
+      .isVisible()
+      .catch(() => false);
     expect(hasError || bodyVisible).toBe(true);
   });
 });

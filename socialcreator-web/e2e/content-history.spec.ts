@@ -172,9 +172,9 @@ test.describe("Content History", () => {
         publishedAt: new Date(Date.now() - i * 3600000).toISOString(),
       }));
 
-      let callCount = 0;
+      let _callCount = 0;
       await page.route("**/api/v1/publish-logs**", async (route) => {
-        callCount++;
+        _callCount++;
         const url = new URL(route.request().url());
         const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
 
@@ -201,7 +201,7 @@ test.describe("Content History", () => {
       await expect(history.pageIndicator).toBeVisible({ timeout: 10000 });
       expect(await history.getPageText()).toMatch(/page 1 of 2/i);
 
-      let countPage1 = await history.getHistoryItemCount();
+      const countPage1 = await history.getHistoryItemCount();
       expect(countPage1).toBe(20);
 
       // Previous should be disabled on page 1
@@ -213,7 +213,7 @@ test.describe("Content History", () => {
       await page.waitForTimeout(500);
 
       expect(await history.getPageText()).toMatch(/page 2 of 2/i);
-      let countPage2 = await history.getHistoryItemCount();
+      const countPage2 = await history.getHistoryItemCount();
       expect(countPage2).toBe(5);
 
       // Next should be disabled on last page
@@ -291,8 +291,6 @@ test.describe("Content History", () => {
       const history = new ContentHistoryPage(page);
       await history.goto();
 
-      // The platform text should be truncated via truncate class
-      const platformText = await history.getPlatformAt(0);
       // The truncate class will clip it but the text content may still be full
       // Verify the element has truncate class
       const item = history.historyItems.first();

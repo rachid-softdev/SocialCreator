@@ -57,7 +57,7 @@ test.describe("Analytics Page", () => {
       const options = analytics.profileSelector.locator("option");
       const optionCount = await options.count();
       if (optionCount > 0) {
-        await analytics.selectProfile(await options.nth(1).getAttribute("value") || "");
+        await analytics.selectProfile((await options.nth(1).getAttribute("value")) || "");
         // Page should update after selection
         await page.waitForLoadState("networkidle", { timeout: 5000 });
         // Still on analytics page
@@ -311,7 +311,9 @@ test.describe("Analytics Page", () => {
 // ============================================================
 
 test.describe("Analytics — Data Display", () => {
-  test("should display 4 stat cards (Total Impressions, Engagements, Clicks, CTR)", async ({ page }) => {
+  test("should display 4 stat cards (Total Impressions, Engagements, Clicks, CTR)", async ({
+    page,
+  }) => {
     await page.route("**/api/analytics/**", async (route) => {
       await route.fulfill({
         json: {
@@ -410,8 +412,20 @@ test.describe("Analytics — Data Display", () => {
       await route.fulfill({
         json: {
           recentPublications: [
-            { id: "1", title: "Post 1", platform: "twitter", publishedAt: "2026-06-20", status: "published" },
-            { id: "2", title: "Post 2", platform: "linkedin", publishedAt: "2026-06-19", status: "published" },
+            {
+              id: "1",
+              title: "Post 1",
+              platform: "twitter",
+              publishedAt: "2026-06-20",
+              status: "published",
+            },
+            {
+              id: "2",
+              title: "Post 2",
+              platform: "linkedin",
+              publishedAt: "2026-06-19",
+              status: "published",
+            },
           ],
           impressions: 0,
           engagements: 0,
@@ -483,7 +497,9 @@ test.describe("Analytics — Data Display", () => {
     expect(hasCapStatus).toBe(true);
   });
 
-  test("should show all 4 chart types with data (impressions, platform breakdown, engagement pie)", async ({ page }) => {
+  test("should show all 4 chart types with data (impressions, platform breakdown, engagement pie)", async ({
+    page,
+  }) => {
     await page.route("**/api/analytics/**", async (route) => {
       await route.fulfill({
         json: {
@@ -492,7 +508,10 @@ test.describe("Analytics — Data Display", () => {
           clicks: 200,
           ctr: 2.0,
           chartData: {
-            impressions: [{ date: "2026-06-01", value: 100 }, { date: "2026-06-02", value: 200 }],
+            impressions: [
+              { date: "2026-06-01", value: 100 },
+              { date: "2026-06-02", value: 200 },
+            ],
             platformBreakdown: [
               { platform: "twitter", value: 60 },
               { platform: "linkedin", value: 40 },
@@ -667,7 +686,9 @@ test.describe("Analytics — Filters & Selectors", () => {
     const allOption = page.getByText(/all profiles|all|tous les profils|tous/i).first();
     const hasOption = await allOption.isVisible().catch(() => false);
 
-    const selectAll = analytics.profileSelector.locator('option[value="all"], option:has-text("All")');
+    const selectAll = analytics.profileSelector.locator(
+      'option[value="all"], option:has-text("All")',
+    );
     const hasSelect = await selectAll.isVisible().catch(() => false);
 
     expect(hasOption || hasSelect).toBe(true);
@@ -738,11 +759,6 @@ test.describe("Analytics — Filters & Selectors", () => {
 
     // Profile selector should either be hidden or not visible
     const selectorVisible = await analytics.profileSelector.isVisible().catch(() => false);
-    const hasProfileText = await page
-      .getByText(/Solo Profile|profile/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
 
     // Either selector is hidden, or the profile name is shown without a selector
     if (selectorVisible) {
@@ -835,8 +851,15 @@ test.describe("Analytics — Error & Edge States", () => {
     // Should show error feedback or retry option
     const errorFeedback = page
       .locator('[role="alert"]')
-      .or(page.getByText(/failed to load|error loading|unable to load|analytics.*unavailable|something went wrong/i));
-    const hasError = await errorFeedback.first().isVisible({ timeout: 10000 }).catch(() => false);
+      .or(
+        page.getByText(
+          /failed to load|error loading|unable to load|analytics.*unavailable|something went wrong/i,
+        ),
+      );
+    const hasError = await errorFeedback
+      .first()
+      .isVisible({ timeout: 10000 })
+      .catch(() => false);
 
     // Also check for retry button
     const retryBtn = page.getByRole("button", { name: /retry|try again|reload/i });
@@ -853,9 +876,7 @@ test.describe("Analytics — Error & Edge States", () => {
           engagements: 0,
           clicks: 0,
           ctr: 0,
-          platformBreakdown: [
-            { platform: "twitter", followers: 0, impressions: 0, engagement: 0 },
-          ],
+          platformBreakdown: [{ platform: "twitter", followers: 0, impressions: 0, engagement: 0 }],
           recentPublications: [],
         },
       });
@@ -873,7 +894,10 @@ test.describe("Analytics — Error & Edge States", () => {
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
     // Zero values should display without error
-    const hasZero = await page.getByText(/0/).isVisible().catch(() => false);
+    const hasZero = await page
+      .getByText(/0/)
+      .isVisible()
+      .catch(() => false);
     expect(hasZero).toBe(true);
 
     // No error banner should appear
@@ -960,18 +984,22 @@ test.describe("Analytics — Error States", () => {
     }
 
     // Should show error state
-    const errorState = page.locator('[role="alert"], [class*="error"], [data-testid="error-state"]').first();
+    const errorState = page
+      .locator('[role="alert"], [class*="error"], [data-testid="error-state"]')
+      .first();
     const hasError = await errorState.isVisible({ timeout: 5000 }).catch(() => false);
-    const hasErrorMessage = await page.getByText(/error|unexpected|something went wrong|failed|server error/i).first().isVisible().catch(() => false);
+    const hasErrorMessage = await page
+      .getByText(/error|unexpected|something went wrong|failed|server error/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasError || hasErrorMessage).toBe(true);
   });
 
   test("should show warning when selected profile has no connected platforms", async ({ page }) => {
     await page.route("**/api/profiles", async (route) => {
       await route.fulfill({
-        json: [
-          { id: "p1", name: "Disconnected Profile", platform: "twitter" },
-        ],
+        json: [{ id: "p1", name: "Disconnected Profile", platform: "twitter" }],
       });
     });
 
@@ -1002,7 +1030,9 @@ test.describe("Analytics — Error States", () => {
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
     // Should show message about no connected platforms
-    const noPlatformMsg = page.getByText(/no platform|connect a platform|no connected|disconnected/i);
+    const noPlatformMsg = page.getByText(
+      /no platform|connect a platform|no connected|disconnected/i,
+    );
     const hasMsg = await noPlatformMsg.isVisible({ timeout: 5000 }).catch(() => false);
     const emptyState = page.getByText(/no data|no analytics|get started/i);
     const hasEmpty = await emptyState.isVisible({ timeout: 3000 }).catch(() => false);
@@ -1014,7 +1044,10 @@ test.describe("Analytics — Error States", () => {
       await route.fulfill({
         status: 401,
         contentType: "application/json",
-        body: JSON.stringify({ error: "token_expired", message: "OAuth token has expired. Please reconnect." }),
+        body: JSON.stringify({
+          error: "token_expired",
+          message: "OAuth token has expired. Please reconnect.",
+        }),
       });
     });
 
@@ -1028,7 +1061,9 @@ test.describe("Analytics — Error States", () => {
     }
 
     // Should show reconnection prompt
-    const reconnectPrompt = page.getByText(/reconnect|token expired|re-authorize|connect again|renew/i);
+    const reconnectPrompt = page.getByText(
+      /reconnect|token expired|re-authorize|connect again|renew/i,
+    );
     const hasPrompt = await reconnectPrompt.isVisible({ timeout: 5000 }).catch(() => false);
     const errorState = page.locator('[role="alert"]');
     const hasError = await errorState.isVisible({ timeout: 3000 }).catch(() => false);
@@ -1048,12 +1083,26 @@ test.describe("Analytics — Date Range Effects", () => {
       callCount++;
       if (callCount === 1) {
         await route.fulfill({
-          json: { impressions: 12500, engagements: 3400, clicks: 890, ctr: 7.12, platformBreakdown: [], recentPublications: [] },
+          json: {
+            impressions: 12500,
+            engagements: 3400,
+            clicks: 890,
+            ctr: 7.12,
+            platformBreakdown: [],
+            recentPublications: [],
+          },
         });
       } else {
         // Different data for different date range
         await route.fulfill({
-          json: { impressions: 3500, engagements: 800, clicks: 210, ctr: 6.0, platformBreakdown: [], recentPublications: [] },
+          json: {
+            impressions: 3500,
+            engagements: 800,
+            clicks: 210,
+            ctr: 6.0,
+            platformBreakdown: [],
+            recentPublications: [],
+          },
         });
       }
     });
@@ -1070,7 +1119,10 @@ test.describe("Analytics — Date Range Effects", () => {
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
     // Switch date range
-    const sevenDayBtn = page.getByRole("button").filter({ hasText: /7 days|7d|last 7/i }).first();
+    const sevenDayBtn = page
+      .getByRole("button")
+      .filter({ hasText: /7 days|7d|last 7/i })
+      .first();
     if (await sevenDayBtn.isVisible().catch(() => false)) {
       await sevenDayBtn.click();
       await page.waitForLoadState("networkidle", { timeout: 5000 });
@@ -1095,18 +1147,29 @@ test.describe("Analytics — Profile Switching", () => {
       });
     });
 
-    let selectedProfile = "";
     await page.route("**/api/analytics/**", async (route) => {
       const url = route.request().url();
       if (url.includes("p2")) {
-        selectedProfile = "p2";
         await route.fulfill({
-          json: { impressions: 50000, engagements: 12000, clicks: 3000, ctr: 6.0, platformBreakdown: [], recentPublications: [] },
+          json: {
+            impressions: 50000,
+            engagements: 12000,
+            clicks: 3000,
+            ctr: 6.0,
+            platformBreakdown: [],
+            recentPublications: [],
+          },
         });
       } else {
-        selectedProfile = "p1";
         await route.fulfill({
-          json: { impressions: 12500, engagements: 3400, clicks: 890, ctr: 7.12, platformBreakdown: [], recentPublications: [] },
+          json: {
+            impressions: 12500,
+            engagements: 3400,
+            clicks: 890,
+            ctr: 7.12,
+            platformBreakdown: [],
+            recentPublications: [],
+          },
         });
       }
     });
@@ -1126,7 +1189,7 @@ test.describe("Analytics — Profile Switching", () => {
     const options = analytics.profileSelector.locator("option");
     const optionCount = await options.count();
     if (optionCount >= 2) {
-      await analytics.selectProfile(await options.nth(1).getAttribute("value") || "");
+      await analytics.selectProfile((await options.nth(1).getAttribute("value")) || "");
       await page.waitForLoadState("networkidle", { timeout: 5000 });
       await expect(analytics.heading).toBeVisible({ timeout: 5000 });
     }
@@ -1141,7 +1204,14 @@ test.describe("Analytics — Export", () => {
   test("should show export button or option for analytics data", async ({ page }) => {
     await page.route("**/api/analytics/**", async (route) => {
       await route.fulfill({
-        json: { impressions: 12500, engagements: 3400, clicks: 890, ctr: 7.12, platformBreakdown: [], recentPublications: [] },
+        json: {
+          impressions: 12500,
+          engagements: 3400,
+          clicks: 890,
+          ctr: 7.12,
+          platformBreakdown: [],
+          recentPublications: [],
+        },
       });
     });
 
@@ -1156,10 +1226,6 @@ test.describe("Analytics — Export", () => {
 
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
-    // Check for export functionality
-    const exportBtn = page.getByRole("button").filter({ hasText: /export|download|csv|pdf|report/i });
-    const exportLink = page.locator('a').filter({ hasText: /export|download|report/i });
-    const hasExport = await exportBtn.isVisible().catch(() => false) || await exportLink.isVisible().catch(() => false);
     // Export feature may or may not exist — just verify page loads
     expect(true).toBe(true);
   });
@@ -1195,7 +1261,9 @@ test.describe("Analytics — Empty States", () => {
 
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
-    const emptyMsg = page.getByText(/no data yet|no analytics yet|no data available|aucune donnée|nothing to show|get started|no data/i);
+    const emptyMsg = page.getByText(
+      /no data yet|no analytics yet|no data available|aucune donnée|nothing to show|get started|no data/i,
+    );
     await expect(emptyMsg).toBeVisible({ timeout: 5000 });
   });
 
@@ -1214,7 +1282,9 @@ test.describe("Analytics — Empty States", () => {
     }
 
     // Should show a prompt to create a profile
-    const createPrompt = page.getByText(/create.*profile|no profiles|get started|create your first/i);
+    const createPrompt = page.getByText(
+      /create.*profile|no profiles|get started|create your first/i,
+    );
     await expect(createPrompt).toBeVisible({ timeout: 5000 });
   });
 });
@@ -1251,8 +1321,18 @@ test.describe("Analytics — Edge Cases", () => {
 
     // Large numbers should be formatted (1.5B, 450M, etc.) or shown as raw numbers
     const bodyText = await page.locator("body").textContent();
-    const hasLargeNumber = bodyText?.includes("1,500,000,000") || bodyText?.includes("1500000000") || bodyText?.includes("1.5") || bodyText?.includes("1,5") || bodyText?.includes("1B") || false;
-    const hasEngagement = bodyText?.includes("450,000,000") || bodyText?.includes("450000000") || bodyText?.includes("450M") || false;
+    const hasLargeNumber =
+      bodyText?.includes("1,500,000,000") ||
+      bodyText?.includes("1500000000") ||
+      bodyText?.includes("1.5") ||
+      bodyText?.includes("1,5") ||
+      bodyText?.includes("1B") ||
+      false;
+    const hasEngagement =
+      bodyText?.includes("450,000,000") ||
+      bodyText?.includes("450000000") ||
+      bodyText?.includes("450M") ||
+      false;
     expect(hasLargeNumber || hasEngagement).toBe(true);
   });
 
@@ -1299,7 +1379,16 @@ test.describe("Analytics — Loading States", () => {
   test("should show skeleton or spinner while analytics data loads", async ({ page }) => {
     await page.route("**/api/analytics/**", async (route) => {
       await new Promise((r) => setTimeout(r, 3000));
-      await route.fulfill({ json: { impressions: 0, engagements: 0, clicks: 0, ctr: 0, platformBreakdown: [], recentPublications: [] } });
+      await route.fulfill({
+        json: {
+          impressions: 0,
+          engagements: 0,
+          clicks: 0,
+          ctr: 0,
+          platformBreakdown: [],
+          recentPublications: [],
+        },
+      });
     });
 
     const analytics = new AnalyticsPage(page);
@@ -1312,7 +1401,11 @@ test.describe("Analytics — Loading States", () => {
     }
 
     // Loading indicator should be visible
-    const skeleton = page.locator('[class*="skeleton"], [class*="loading"], [class*="shimmer"], [role="status"], [aria-busy="true"]').first();
+    const skeleton = page
+      .locator(
+        '[class*="skeleton"], [class*="loading"], [class*="shimmer"], [role="status"], [aria-busy="true"]',
+      )
+      .first();
     const hasLoading = await skeleton.isVisible({ timeout: 3000 }).catch(() => false);
     if (hasLoading) {
       await expect(skeleton).toBeVisible({ timeout: 2000 });
@@ -1322,7 +1415,16 @@ test.describe("Analytics — Loading States", () => {
   test("should show loading indicator when changing date range", async ({ page }) => {
     await page.route("**/api/analytics/**", async (route) => {
       await new Promise((r) => setTimeout(r, 2000));
-      await route.fulfill({ json: { impressions: 12500, engagements: 3400, clicks: 890, ctr: 7.12, platformBreakdown: [], recentPublications: [] } });
+      await route.fulfill({
+        json: {
+          impressions: 12500,
+          engagements: 3400,
+          clicks: 890,
+          ctr: 7.12,
+          platformBreakdown: [],
+          recentPublications: [],
+        },
+      });
     });
 
     const analytics = new AnalyticsPage(page);
@@ -1337,11 +1439,16 @@ test.describe("Analytics — Loading States", () => {
     await expect(analytics.heading).toBeVisible({ timeout: 10000 });
 
     // Click a date range button and check for loading state
-    const sevenDayBtn = page.getByRole("button").filter({ hasText: /7 days|7d|last 7/i }).first();
+    const sevenDayBtn = page
+      .getByRole("button")
+      .filter({ hasText: /7 days|7d|last 7/i })
+      .first();
     if (await sevenDayBtn.isVisible().catch(() => false)) {
       await sevenDayBtn.click();
       // Loading state should appear
-      const loadingIndicator = page.locator('[class*="skeleton"], [class*="loading"], [role="status"]').first();
+      const loadingIndicator = page
+        .locator('[class*="skeleton"], [class*="loading"], [role="status"]')
+        .first();
       const hasLoading = await loadingIndicator.isVisible({ timeout: 2000 }).catch(() => false);
       if (hasLoading) {
         await expect(loadingIndicator).toBeVisible({ timeout: 1000 });

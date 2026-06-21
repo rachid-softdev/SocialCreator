@@ -92,7 +92,12 @@ test.describe("Accessibility", () => {
       const dialogTriggers = page.locator(
         'button[class*="danger"], button:has-text("Delete"), button:has-text("Remove")',
       );
-      if (await dialogTriggers.first().isVisible().catch(() => false)) {
+      if (
+        await dialogTriggers
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         await dialogTriggers.first().click();
         await page.waitForTimeout(500);
 
@@ -150,14 +155,6 @@ test.describe("Accessibility", () => {
       const linkCount = await navLinks.count();
 
       if (linkCount > 0) {
-        let hasAriaLabel = false;
-        for (let i = 0; i < linkCount; i++) {
-          const label = await navLinks.nth(i).getAttribute("aria-label").catch(() => null);
-          if (label && label.length > 0) {
-            hasAriaLabel = true;
-            break;
-          }
-        }
         // Some links may be visually labeled but not have aria-label; at least some should
         const visibleLinkCount = await navLinks
           .filter({ visible: true })
@@ -184,7 +181,7 @@ test.describe("Accessibility", () => {
       // Or the active item might use a different indicator (class-based)
       if (!hasActiveMarker) {
         const dashboardLink = page.locator('aside a[href="/dashboard"]');
-        const linkClass = await dashboardLink.getAttribute("class").catch(() => "");
+        const linkClass = (await dashboardLink.getAttribute("class")) ?? "";
         // Some visual active indicator exists
         expect(linkClass.length).toBeGreaterThan(0);
       }
@@ -205,14 +202,6 @@ test.describe("Accessibility", () => {
       const buttonCount = await iconButtons.count();
 
       if (buttonCount > 0) {
-        let hasAriaLabel = false;
-        for (let i = 0; i < Math.min(buttonCount, 5); i++) {
-          const label = await iconButtons.nth(i).getAttribute("aria-label").catch(() => null);
-          if (label && label.length > 0) {
-            hasAriaLabel = true;
-            break;
-          }
-        }
         // Icon buttons should ideally have labels, but some may not
         expect(true).toBe(true);
       }
@@ -250,21 +239,25 @@ test.describe("Accessibility", () => {
 
       // Look for any action that opens a dialog
       const dangerButtons = page.locator("button").filter({ hasText: /delete|remove/i });
-      if (await dangerButtons.first().isVisible().catch(() => false)) {
+      if (
+        await dangerButtons
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         await dangerButtons.first().click();
         await page.waitForTimeout(500);
 
         const dialog = page.getByRole("dialog");
         if (await dialog.isVisible().catch(() => false)) {
           // First focusable element inside dialog should be focused
-          const focusedInDialog = dialog.locator(":focus");
-          const hasFocus = await focusedInDialog.isVisible().catch(() => false);
-
           // Or at minimum, focus is within the dialog
-          const activeElement = await page.evaluate(() => {
-            const el = document.activeElement;
-            return el ? el.tagName : "";
-          }).catch(() => "");
+          const activeElement = await page
+            .evaluate(() => {
+              const el = document.activeElement;
+              return el ? el.tagName : "";
+            })
+            .catch(() => "");
           expect(activeElement.length).toBeGreaterThan(0);
         }
       }
@@ -281,11 +274,13 @@ test.describe("Accessibility", () => {
 
       // Check that after closing a dialog, focus returns to a sensible place
       const triggerButtons = page.locator("button").filter({ hasText: /delete|remove/i });
-      if (await triggerButtons.first().isVisible().catch(() => false)) {
+      if (
+        await triggerButtons
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         const trigger = triggerButtons.first();
-
-        // Remember the trigger text before clicking
-        const triggerText = await trigger.textContent().catch(() => "");
 
         await trigger.click();
         await page.waitForTimeout(500);
@@ -299,7 +294,7 @@ test.describe("Accessibility", () => {
           const activeTag = await page
             .evaluate(() => {
               const el = document.activeElement;
-              return el ? el.tagName + ":" + (el.textContent || "") : "";
+              return el ? `${el.tagName}:${el.textContent || ""}` : "";
             })
             .catch(() => "");
           expect(activeTag.length).toBeGreaterThan(0);
@@ -441,7 +436,12 @@ test.describe("Accessibility — Keyboard Navigation", () => {
     // Find the mobile menu toggle button (hamburger icon)
     const menuToggle = page
       .locator('button[class*="mobile"], button[aria-label*="menu"], button[aria-label*="Menu"]')
-      .or(page.locator("button").filter({ has: page.locator("svg") }).first());
+      .or(
+        page
+          .locator("button")
+          .filter({ has: page.locator("svg") })
+          .first(),
+      );
 
     if (await menuToggle.isVisible().catch(() => false)) {
       // Open mobile menu
@@ -504,10 +504,12 @@ test.describe("Accessibility — Keyboard Navigation", () => {
           }
 
           // After cycling through, focus should still be on a dialog element
-          const activeElement = await page.evaluate(() => {
-            const el = document.activeElement;
-            return el ? el.id || el.className || el.tagName : "";
-          }).catch(() => "");
+          const activeElement = await page
+            .evaluate(() => {
+              const el = document.activeElement;
+              return el ? el.id || el.className || el.tagName : "";
+            })
+            .catch(() => "");
 
           expect(activeElement.length).toBeGreaterThan(0);
         }
@@ -565,11 +567,14 @@ test.describe("Accessibility — ARIA Attributes", () => {
     const navLinks = page.locator("aside a, nav a");
     const linkCount = await navLinks.count();
 
-    let linksWithAriaLabel = 0;
+    let _linksWithAriaLabel = 0;
     for (let i = 0; i < linkCount; i++) {
-      const label = await navLinks.nth(i).getAttribute("aria-label").catch(() => null);
+      const label = await navLinks
+        .nth(i)
+        .getAttribute("aria-label")
+        .catch(() => null);
       if (label && label.trim().length > 0) {
-        linksWithAriaLabel++;
+        _linksWithAriaLabel++;
       }
     }
 
@@ -621,15 +626,6 @@ test.describe("Accessibility — ARIA Attributes", () => {
     const buttonCount = await iconButtons.count();
 
     if (buttonCount > 0) {
-      let hasLabel = false;
-      for (let i = 0; i < Math.min(buttonCount, 5); i++) {
-        const ariaLabel = await iconButtons.nth(i).getAttribute("aria-label").catch(() => null);
-        if (ariaLabel && ariaLabel.trim().length > 0) {
-          hasLabel = true;
-          break;
-        }
-      }
-
       // Icon buttons visible count
       const visibleButtons = await iconButtons.filter({ visible: true }).count();
       expect(visibleButtons).toBeGreaterThanOrEqual(0);
@@ -659,20 +655,18 @@ test.describe("Accessibility — Focus Management", () => {
       if (isFocused) {
         // Check that the focused element has a visible focus indicator
         // This can be outline, box-shadow, or ring
-        const outlineStyle = await focused.evaluate((el) => {
-          const style = window.getComputedStyle(el);
-          return {
-            outline: style.outline,
-            outlineWidth: style.outlineWidth,
-            boxShadow: style.boxShadow,
-          };
-        }).catch(() => null);
+        const outlineStyle = await focused
+          .evaluate((el) => {
+            const style = window.getComputedStyle(el);
+            return {
+              outline: style.outline,
+              outlineWidth: style.outlineWidth,
+              boxShadow: style.boxShadow,
+            };
+          })
+          .catch(() => null);
 
         if (outlineStyle) {
-          const hasOutline =
-            (outlineStyle.outline && outlineStyle.outline !== "none" && outlineStyle.outlineWidth !== "0px") ||
-            (outlineStyle.boxShadow && outlineStyle.boxShadow !== "none");
-
           // Browser default outlines are acceptable
           expect(true).toBe(true);
         }
@@ -706,12 +700,14 @@ test.describe("Accessibility — Focus Management", () => {
 
       if (dialogVisible) {
         // The focus should be on an element inside the dialog
-        const activeElementInDialog = await page.evaluate(() => {
-          const active = document.activeElement;
-          if (!active) return "";
-          const dialog = active.closest('[role="dialog"]');
-          return dialog ? active.tagName + ":" + (active.textContent || "").trim() : "";
-        }).catch(() => "");
+        const activeElementInDialog = await page
+          .evaluate(() => {
+            const active = document.activeElement;
+            if (!active) return "";
+            const dialog = active.closest('[role="dialog"]');
+            return dialog ? `${active.tagName}:${(active.textContent || "").trim()}` : "";
+          })
+          .catch(() => "");
 
         // Or at minimum, focus is somewhere reasonable
         const hasFocus = activeElementInDialog.length > 0;
@@ -736,9 +732,6 @@ test.describe("Accessibility — Focus Management", () => {
       .first();
 
     if (await triggerBtn.isVisible().catch(() => false)) {
-      // Remember the trigger element before clicking
-      const triggerText = await triggerBtn.textContent().catch(() => "");
-
       await triggerBtn.click();
       await page.waitForTimeout(500);
 
@@ -753,7 +746,7 @@ test.describe("Accessibility — Focus Management", () => {
         const activeTag = await page
           .evaluate(() => {
             const el = document.activeElement;
-            return el ? el.tagName + ":" + (el.textContent || "").trim().substring(0, 30) : "";
+            return el ? `${el.tagName}:${(el.textContent || "").trim().substring(0, 30)}` : "";
           })
           .catch(() => "");
 
@@ -772,30 +765,6 @@ test.describe("Accessibility — Form Labels", () => {
     const inputCount = await inputs.count();
 
     if (inputCount > 0) {
-      let allLabeled = true;
-
-      for (let i = 0; i < inputCount; i++) {
-        const input = inputs.nth(i);
-        const inputId = await input.getAttribute("id").catch(() => null);
-        const ariaLabel = await input.getAttribute("aria-label").catch(() => null);
-        const ariaLabelledby = await input.getAttribute("aria-labelledby").catch(() => null);
-
-        const isLabeled = !!(
-          // Has associated label via for attribute
-          (inputId && (await page.locator(`label[for="${inputId}"]`).isVisible().catch(() => false))) ||
-          // Has aria-label
-          (ariaLabel && ariaLabel.trim().length > 0) ||
-          // Has aria-labelledby pointing to an existing element
-          (ariaLabelledby && (await page.locator(`#${ariaLabelledby}`).isVisible().catch(() => false))) ||
-          // Wrapped in a label element
-          (await input.evaluate((el) => el.closest("label") !== null).catch(() => false))
-        );
-
-        if (!isLabeled) {
-          allLabeled = false;
-        }
-      }
-
       // At minimum, some inputs should be visible
       const visibleInputs = await inputs.filter({ visible: true }).count();
       expect(visibleInputs).toBeGreaterThan(0);
@@ -815,8 +784,11 @@ test.describe("Accessibility — Form Labels", () => {
       const inputs = page.locator("input");
       let hasAriaDescribedBy = false;
 
-      for (let i = 0; i < await inputs.count(); i++) {
-        const describedBy = await inputs.nth(i).getAttribute("aria-describedby").catch(() => null);
+      for (let i = 0; i < (await inputs.count()); i++) {
+        const describedBy = await inputs
+          .nth(i)
+          .getAttribute("aria-describedby")
+          .catch(() => null);
         if (describedBy && describedBy.trim().length > 0) {
           // Verify the referenced element exists in the DOM
           const ids = describedBy.split(/\s+/);
@@ -833,7 +805,9 @@ test.describe("Accessibility — Form Labels", () => {
       }
 
       // Also check for role="alert" or aria-live regions for error announcements
-      const alertRegions = page.locator('[role="alert"], [aria-live="polite"], [aria-live="assertive"]');
+      const alertRegions = page.locator(
+        '[role="alert"], [aria-live="polite"], [aria-live="assertive"]',
+      );
       const hasAlertRegion = (await alertRegions.count().catch(() => 0)) > 0;
 
       expect(hasAriaDescribedBy || hasAlertRegion).toBe(true);
@@ -903,7 +877,10 @@ test.describe("Accessibility — Keyboard Navigation Extended", () => {
     }
 
     // Find a button that opens a modal
-    const dangerBtn = page.locator("button").filter({ hasText: /delete|remove|supprimer/i }).first();
+    const dangerBtn = page
+      .locator("button")
+      .filter({ hasText: /delete|remove|supprimer/i })
+      .first();
     if (await dangerBtn.isVisible().catch(() => false)) {
       await dangerBtn.click();
       await page.waitForTimeout(500);
@@ -954,9 +931,17 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
       const ariaLabelledby = await input.getAttribute("aria-labelledby").catch(() => "");
 
       const isLabeled = !!(
-        (inputId && (await page.locator(`label[for="${inputId}"]`).isVisible().catch(() => false))) ||
+        (inputId &&
+          (await page
+            .locator(`label[for="${inputId}"]`)
+            .isVisible()
+            .catch(() => false))) ||
         (ariaLabel && ariaLabel.trim().length > 0) ||
-        (ariaLabelledby && (await page.locator(`#${ariaLabelledby}`).isVisible().catch(() => false))) ||
+        (ariaLabelledby &&
+          (await page
+            .locator(`#${ariaLabelledby}`)
+            .isVisible()
+            .catch(() => false))) ||
         (await input.evaluate((el) => el.closest("label") !== null).catch(() => false))
       );
       expect(isLabeled).toBe(true);
@@ -983,13 +968,13 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
       if (isFocused) {
         foundFocused = true;
         // Check for visible focus styles (outline or box-shadow)
-        const styles = await focused.evaluate((el) => {
-          const s = window.getComputedStyle(el);
-          return { outline: s.outline, outlineWidth: s.outlineWidth, boxShadow: s.boxShadow };
-        }).catch(() => null);
+        const styles = await focused
+          .evaluate((el) => {
+            const s = window.getComputedStyle(el);
+            return { outline: s.outline, outlineWidth: s.outlineWidth, boxShadow: s.boxShadow };
+          })
+          .catch(() => null);
         if (styles) {
-          const hasVisible = (styles.outline && styles.outline !== "none" && styles.outlineWidth !== "0px") ||
-            (styles.boxShadow && styles.boxShadow !== "none");
           // Either visible focus or browser default outline
           expect(true).toBe(true);
           break;
@@ -1009,10 +994,11 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
       return;
     }
 
-    const triggerBtn = page.locator("button").filter({ hasText: /delete|remove|supprimer/i }).first();
+    const triggerBtn = page
+      .locator("button")
+      .filter({ hasText: /delete|remove|supprimer/i })
+      .first();
     if (await triggerBtn.isVisible().catch(() => false)) {
-      const triggerText = await triggerBtn.textContent().catch(() => "");
-
       await triggerBtn.click();
       await page.waitForTimeout(500);
 
@@ -1022,10 +1008,12 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
         await page.waitForTimeout(500);
 
         // Focus should be back on a reasonable element
-        const activeTag = await page.evaluate(() => {
-          const el = document.activeElement;
-          return el ? el.tagName + ":" + (el.textContent || "").trim().substring(0, 30) : "";
-        }).catch(() => "");
+        const activeTag = await page
+          .evaluate(() => {
+            const el = document.activeElement;
+            return el ? `${el.tagName}:${(el.textContent || "").trim().substring(0, 30)}` : "";
+          })
+          .catch(() => "");
         expect(activeTag.length).toBeGreaterThan(0);
       }
     }
@@ -1038,19 +1026,20 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
     const imageCount = await images.count();
 
     if (imageCount > 0) {
-      let allHaveAlt = true;
-      for (let i = 0; i < imageCount; i++) {
-        const alt = await images.nth(i).getAttribute("alt").catch(() => null);
-        if (alt === null) {
-          allHaveAlt = false;
-          break;
-        }
-      }
       // At minimum, decorative images without alt should have role="presentation" or aria-hidden
       for (let i = 0; i < imageCount; i++) {
-        const alt = await images.nth(i).getAttribute("alt").catch(() => null);
-        const role = await images.nth(i).getAttribute("role").catch(() => "");
-        const ariaHidden = await images.nth(i).getAttribute("aria-hidden").catch(() => "");
+        const alt = await images
+          .nth(i)
+          .getAttribute("alt")
+          .catch(() => null);
+        const role = await images
+          .nth(i)
+          .getAttribute("role")
+          .catch(() => "");
+        const ariaHidden = await images
+          .nth(i)
+          .getAttribute("aria-hidden")
+          .catch(() => "");
         if (alt === null) {
           // If no alt, should have role="presentation" or aria-hidden
           const isDecorative = role === "presentation" || ariaHidden === "true";
@@ -1069,12 +1058,25 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
 
     if (iconCount > 0) {
       for (let i = 0; i < Math.min(iconCount, 10); i++) {
-        const ariaHidden = await icons.nth(i).getAttribute("aria-hidden").catch(() => null);
-        const role = await icons.nth(i).getAttribute("role").catch(() => "");
+        const ariaHidden = await icons
+          .nth(i)
+          .getAttribute("aria-hidden")
+          .catch(() => null);
+        const role = await icons
+          .nth(i)
+          .getAttribute("role")
+          .catch(() => "");
         if (ariaHidden === null && role !== "img") {
           // Icons without aria-hidden should have an aria-label if they convey information
-          const ariaLabel = await icons.nth(i).getAttribute("aria-label").catch(() => "");
-          const hasTitle = await icons.nth(i).locator("title").count().catch(() => 0);
+          const ariaLabel = await icons
+            .nth(i)
+            .getAttribute("aria-label")
+            .catch(() => "");
+          const hasTitle = await icons
+            .nth(i)
+            .locator("title")
+            .count()
+            .catch(() => 0);
           if (ariaLabel === null && hasTitle === 0) {
             // This icon might need aria-hidden="true"
             expect(true).toBe(true);
@@ -1095,8 +1097,11 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
       // Check for aria-describedby on inputs
       const inputs = page.locator("input");
       let hasDescribedBy = false;
-      for (let i = 0; i < await inputs.count(); i++) {
-        const describedBy = await inputs.nth(i).getAttribute("aria-describedby").catch(() => null);
+      for (let i = 0; i < (await inputs.count()); i++) {
+        const describedBy = await inputs
+          .nth(i)
+          .getAttribute("aria-describedby")
+          .catch(() => null);
         if (describedBy && describedBy.trim().length > 0) {
           const ids = describedBy.split(/\s+/);
           for (const id of ids) {
@@ -1110,7 +1115,13 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
         }
         if (hasDescribedBy) break;
       }
-      expect(hasDescribedBy || (await page.locator('[role="alert"]').count().catch(() => 0)) > 0).toBe(true);
+      expect(
+        hasDescribedBy ||
+          (await page
+            .locator('[role="alert"]')
+            .count()
+            .catch(() => 0)) > 0,
+      ).toBe(true);
     }
   });
 
@@ -1124,7 +1135,9 @@ test.describe("Accessibility — ARIA & Screen Reader", () => {
     }
 
     // Check for aria-live regions
-    const liveRegions = page.locator('[aria-live="polite"], [aria-live="assertive"], [role="status"], [role="alert"]');
+    const liveRegions = page.locator(
+      '[aria-live="polite"], [aria-live="assertive"], [role="status"], [role="alert"]',
+    );
     const regionCount = await liveRegions.count();
     // Live regions should exist for dynamic content announcements
     expect(regionCount).toBeGreaterThanOrEqual(0);
@@ -1161,29 +1174,33 @@ test.describe("Accessibility — Reduced Motion & Zoom", () => {
     await page.goto("/");
 
     // Check for animations and transitions that could be disabled
-    const animatedElements = page.locator('[class*="animate"], [class*="transition"], [class*="motion"]');
+    const animatedElements = page.locator(
+      '[class*="animate"], [class*="transition"], [class*="motion"]',
+    );
     const count = await animatedElements.count();
 
     if (count > 0) {
       // Check that animations use the prefers-reduced-motion media feature
       // This is a proxy check — verify that CSS includes motion-safe/reduce
-      const hasReducedMotionSupport = await page.evaluate(() => {
-        const sheets = document.styleSheets;
-        for (let i = 0; i < sheets.length; i++) {
-          try {
-            const rules = sheets[i].cssRules || sheets[i].rules;
-            for (let j = 0; j < rules.length; j++) {
-              const cssText = rules[j].cssText || "";
-              if (cssText.includes("prefers-reduced-motion")) {
-                return true;
+      await page
+        .evaluate(() => {
+          const sheets = document.styleSheets;
+          for (let i = 0; i < sheets.length; i++) {
+            try {
+              const rules = sheets[i].cssRules || sheets[i].rules;
+              for (let j = 0; j < rules.length; j++) {
+                const cssText = rules[j].cssText || "";
+                if (cssText.includes("prefers-reduced-motion")) {
+                  return true;
+                }
               }
+            } catch {
+              // Cross-origin stylesheets may throw
             }
-          } catch {
-            // Cross-origin stylesheets may throw
           }
-        }
-        return false;
-      }).catch(() => false);
+          return false;
+        })
+        .catch(() => false);
       expect(true).toBe(true);
     }
   });
@@ -1214,14 +1231,18 @@ test.describe("Accessibility — Touch Targets & Focus Trap", () => {
     const interactiveElements = page.locator("button, a, input, select");
     const count = await interactiveElements.count();
 
-    let allMeetMinimum = true;
     for (let i = 0; i < Math.min(count, 10); i++) {
       const box = await interactiveElements.nth(i).boundingBox();
       if (box) {
         // Minimum 44x44 CSS pixels (Apple HIG standard)
         const meetsMin = box.width >= 44 && box.height >= 44;
-        if (!meetsMin && await interactiveElements.nth(i).isVisible().catch(() => false)) {
-          allMeetMinimum = false;
+        if (
+          !meetsMin &&
+          (await interactiveElements
+            .nth(i)
+            .isVisible()
+            .catch(() => false))
+        ) {
         }
       }
     }
@@ -1239,14 +1260,19 @@ test.describe("Accessibility — Touch Targets & Focus Trap", () => {
       return;
     }
 
-    const triggerBtn = page.locator("button").filter({ hasText: /delete|remove|supprimer/i }).first();
+    const triggerBtn = page
+      .locator("button")
+      .filter({ hasText: /delete|remove|supprimer/i })
+      .first();
     if (await triggerBtn.isVisible().catch(() => false)) {
       await triggerBtn.click();
       await page.waitForTimeout(500);
 
       const dialog = page.getByRole("dialog");
       if (await dialog.isVisible().catch(() => false)) {
-        const focusableElements = dialog.locator("button, a, input, select, textarea, [tabindex]:not([tabindex='-1'])");
+        const focusableElements = dialog.locator(
+          "button, a, input, select, textarea, [tabindex]:not([tabindex='-1'])",
+        );
         const focusableCount = await focusableElements.count();
 
         if (focusableCount > 0) {
@@ -1258,11 +1284,13 @@ test.describe("Accessibility — Touch Targets & Focus Trap", () => {
             await page.waitForTimeout(100);
           }
           // Focus should still be within the dialog
-          const activeInDialog = await page.evaluate(() => {
-            const el = document.activeElement;
-            if (!el) return false;
-            return el.closest('[role="dialog"]') !== null;
-          }).catch(() => false);
+          const activeInDialog = await page
+            .evaluate(() => {
+              const el = document.activeElement;
+              if (!el) return false;
+              return el.closest('[role="dialog"]') !== null;
+            })
+            .catch(() => false);
           expect(activeInDialog).toBe(true);
         }
       }

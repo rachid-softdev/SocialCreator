@@ -17,9 +17,9 @@ test.describe("Publish Queue", () => {
       }
 
       // Queue heading should be visible
-      await expect(
-        page.getByRole("heading", { name: /queue|publish queue/i }).first(),
-      ).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("heading", { name: /queue|publish queue/i }).first()).toBeVisible(
+        { timeout: 10000 },
+      );
     });
 
     test("should show queue heading", async ({ page }) => {
@@ -63,7 +63,9 @@ test.describe("Publish Queue", () => {
       expect(hasList || isEmpty).toBe(true);
     });
 
-    test("should show job status badges (pending, running, completed, failed)", async ({ page }) => {
+    test("should show job status badges (pending, running, completed, failed)", async ({
+      page,
+    }) => {
       await page.goto("/content/queue");
 
       const currentUrl = new URL(page.url());
@@ -77,7 +79,9 @@ test.describe("Publish Queue", () => {
         .locator('[class*="badge"]')
         .or(page.locator('[class*="pill"]'))
         .or(page.locator('[class*="status"]'))
-        .filter({ hasText: /pending|running|completed|failed|processing|success|error|cancelled/i });
+        .filter({
+          hasText: /pending|running|completed|failed|processing|success|error|cancelled/i,
+        });
 
       const badgeCount = await statusBadges.count();
       // Either badges exist or queue is empty
@@ -122,11 +126,16 @@ test.describe("Publish Queue", () => {
       }
 
       // Check for empty state message
-      const emptyState = page.getByText(/no jobs|no queued items|nothing to publish|empty|no scheduled/i);
+      const emptyState = page.getByText(
+        /no jobs|no queued items|nothing to publish|empty|no scheduled/i,
+      );
       const hasEmptyState = await emptyState.isVisible().catch(() => false);
 
       // If no jobs table either, empty state should be present
-      const hasTable = await page.locator("table").isVisible().catch(() => false);
+      const hasTable = await page
+        .locator("table")
+        .isVisible()
+        .catch(() => false);
       if (!hasTable) {
         expect(hasEmptyState || !hasTable).toBe(true);
       }
@@ -144,11 +153,14 @@ test.describe("Publish Queue", () => {
       }
 
       // Find retry buttons for failed jobs
-      const retryButtons = page
-        .getByRole("button")
-        .filter({ hasText: /retry|try again/i });
+      const retryButtons = page.getByRole("button").filter({ hasText: /retry|try again/i });
 
-      if (await retryButtons.first().isVisible().catch(() => false)) {
+      if (
+        await retryButtons
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         await retryButtons.first().click();
         await page.waitForTimeout(500);
 
@@ -211,9 +223,7 @@ test.describe("Publish Queue", () => {
       }
 
       // Look for cancel buttons
-      const cancelButtons = page
-        .getByRole("button")
-        .filter({ hasText: /cancel|remove/i });
+      const cancelButtons = page.getByRole("button").filter({ hasText: /cancel|remove/i });
 
       const cancelCount = await cancelButtons.count();
       if (cancelCount > 0) {
@@ -274,7 +284,9 @@ test.describe("Publish Queue", () => {
 });
 
 test.describe("Queue — Job Lifecycle", () => {
-  test("should display queue stats (queued, running, completed, failed, total)", async ({ page }) => {
+  test("should display queue stats (queued, running, completed, failed, total)", async ({
+    page,
+  }) => {
     await page.goto("/content/queue");
 
     const currentUrl = new URL(page.url());
@@ -287,7 +299,10 @@ test.describe("Queue — Job Lifecycle", () => {
     const stats = page
       .locator('[class*="stats"], [class*="summary"]')
       .or(page.getByText(/queued|running|completed|failed|total/i));
-    const hasStats = await stats.first().isVisible().catch(() => false);
+    const hasStats = await stats
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Check API for queue stats
     const response = await page.request.get("/api/content/queue/stats");
@@ -398,7 +413,10 @@ test.describe("Queue — Job Lifecycle", () => {
       .getByRole("button")
       .filter({ hasText: /publish|schedule|retry|all type|social|content/i })
       .or(page.locator("select"));
-    const hasTypeFilter = await typeFilters.first().isVisible().catch(() => false);
+    const hasTypeFilter = await typeFilters
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Verify via API
     const response = await page.request.get("/api/content/queue?type=publish");
@@ -469,7 +487,9 @@ test.describe("Queue — Job Lifecycle", () => {
 
     if (response.status() === 409) {
       const json = await response.json().catch(() => ({}));
-      expect(json.error || json.message || "").toMatch(/not failed|already running|invalid status/i);
+      expect(json.error || json.message || "").toMatch(
+        /not failed|already running|invalid status/i,
+      );
     }
   });
 
@@ -511,8 +531,7 @@ test.describe("Queue — Job Lifecycle", () => {
     }
 
     // Check for empty state message
-    const emptyState = page
-      .getByText(/no jobs|no items|empty|nothing queued|no scheduled posts/i);
+    const emptyState = page.getByText(/no jobs|no items|empty|nothing queued|no scheduled posts/i);
     const hasEmpty = await emptyState.isVisible().catch(() => false);
 
     // Verify via API
@@ -528,7 +547,9 @@ test.describe("Queue — Job Lifecycle", () => {
     expect(hasEmpty || true).toBe(true);
   });
 
-  test("should enforce job priority ordering (critical > high > normal > low)", async ({ page }) => {
+  test("should enforce job priority ordering (critical > high > normal > low)", async ({
+    page,
+  }) => {
     await page.goto("/content/queue");
 
     const currentUrl = new URL(page.url());
@@ -605,7 +626,9 @@ test.describe("Queue — Job State Machine", () => {
     }
   });
 
-  test("should transition job: queued → running → failed (all retries exhausted)", async ({ page }) => {
+  test("should transition job: queued → running → failed (all retries exhausted)", async ({
+    page,
+  }) => {
     await page.goto("/content/queue");
 
     const currentUrl = new URL(page.url());
@@ -646,7 +669,9 @@ test.describe("Queue — Job State Machine", () => {
     }
   });
 
-  test("should reset job on retry: attempts=0, error=undefined, status=queued", async ({ page }) => {
+  test("should reset job on retry: attempts=0, error=undefined, status=queued", async ({
+    page,
+  }) => {
     await page.goto("/content/queue");
 
     const currentUrl = new URL(page.url());
@@ -676,9 +701,7 @@ test.describe("Queue — Job State Machine", () => {
         });
 
         // Retry the job - should reset to queued with zero attempts
-        const retryResponse = await page.request.post(
-          `/api/content/queue/${jobId}/retry`,
-        );
+        const retryResponse = await page.request.post(`/api/content/queue/${jobId}/retry`);
         if (retryResponse.status() === 200) {
           const retriedJob = await retryResponse.json();
           expect(retriedJob.status || "").toMatch(/queued|pending/i);

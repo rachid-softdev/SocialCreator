@@ -4,8 +4,8 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { RegisterPage } from "./pages/register.page";
 import { CGUPage, OnboardingAgentPage, OnboardingProfilePage } from "./pages/onboarding.page";
+import { RegisterPage } from "./pages/register.page";
 import { VideoPipelinePage } from "./pages/video-pipeline.page";
 
 const TEST_PASSWORD = "TestPass123!";
@@ -166,7 +166,10 @@ test.describe("Video Lifecycle - Processing", () => {
         .or(page.getByText(/transcribe/i))
         .or(page.getByText(/segment/i))
         .or(page.getByText(/clip/i));
-      const stepperVisible = await pipelineStepper.first().isVisible().catch(() => false);
+      const stepperVisible = await pipelineStepper
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(anyStageFound || stepperVisible).toBe(true);
     }
   });

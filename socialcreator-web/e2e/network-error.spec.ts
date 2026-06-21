@@ -5,7 +5,6 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { LoginPage } from "./pages/login.page";
 
 // Helper: skip test if redirected to login
 function skipIfLogin(page: import("@playwright/test").Page): boolean {
@@ -42,10 +41,16 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const errorFeedback = page
         .locator('[role="alert"]')
         .or(page.getByText(/error|failed|unable to load|something went wrong|internal server/i));
-      const hasError = await errorFeedback.first().isVisible({ timeout: 10000 }).catch(() => false);
+      const hasError = await errorFeedback
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false);
 
       // Even with errors, the page shell should be visible
-      const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+      const bodyVisible = await page
+        .locator("body")
+        .isVisible()
+        .catch(() => false);
       expect(hasError || bodyVisible).toBe(true);
     });
 
@@ -79,7 +84,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const rateLimitMsg = page.getByText(
         /rate limit|too many requests|trop de requêtes|réessayer|limite|429/i,
       );
-      const hasMsg = await rateLimitMsg.first().isVisible({ timeout: 10000 }).catch(() => false);
+      const hasMsg = await rateLimitMsg
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false);
 
       // Or general error feedback
       const hasError = await page
@@ -165,7 +173,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const forbiddenMsg = page.getByText(
         /forbidden|access denied|permission|not authorized|not allowed|droits|autorisé/i,
       );
-      const hasMsg = await forbiddenMsg.first().isVisible({ timeout: 10000 }).catch(() => false);
+      const hasMsg = await forbiddenMsg
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false);
 
       // Or general error feedback
       const hasError = await page
@@ -203,10 +214,16 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const offlineMsg = page.getByText(
         /offline|no internet|connection|network error|unable to connect|hors ligne|connexion/i,
       );
-      const hasMsg = await offlineMsg.first().isVisible({ timeout: 10000 }).catch(() => false);
+      const hasMsg = await offlineMsg
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false);
 
       // Page body must still be rendered (no white screen)
-      const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+      const bodyVisible = await page
+        .locator("body")
+        .isVisible()
+        .catch(() => false);
       expect(bodyVisible).toBe(true);
 
       // Either has error messaging or at minimum page loads
@@ -279,7 +296,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
         .catch(() => false);
 
       // Page shell must be intact
-      const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+      const bodyVisible = await page
+        .locator("body")
+        .isVisible()
+        .catch(() => false);
       expect(bodyVisible).toBe(true);
 
       // Either error feedback is shown or page continues gracefully
@@ -288,7 +308,9 @@ test.describe("Network Errors — Cross-Cutting", () => {
   });
 
   test.describe("Partial Failures & Recovery", () => {
-    test("should show partial content when some API calls fail and others succeed", async ({ page }) => {
+    test("should show partial content when some API calls fail and others succeed", async ({
+      page,
+    }) => {
       let callCount = 0;
       await page.route("**/api/**", async (route) => {
         const url = route.request().url();
@@ -329,7 +351,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
         .isVisible({ timeout: 10000 })
         .catch(() => false);
 
-      const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+      const bodyVisible = await page
+        .locator("body")
+        .isVisible()
+        .catch(() => false);
       expect(bodyVisible).toBe(true);
 
       // Some content sections might show errors but page is stable
@@ -363,7 +388,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const skeletonOrSpinner = page.locator(
         '[class*="skeleton"], [class*="loading"], [class*="spinner"], [class*="shimmer"], [aria-busy="true"]',
       );
-      const hasLoading = await skeletonOrSpinner.first().isVisible({ timeout: 5000 }).catch(() => false);
+      const hasLoading = await skeletonOrSpinner
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false);
 
       // Wait for responses to complete
       await page.waitForTimeout(5000);
@@ -427,7 +455,10 @@ test.describe("Network Errors — Cross-Cutting", () => {
         expect(recovered).toBe(true);
       } else {
         // No retry button visible — page may have auto-recovered or shown graceful error
-        const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+        const bodyVisible = await page
+          .locator("body")
+          .isVisible()
+          .catch(() => false);
         expect(bodyVisible).toBe(true);
       }
     });
@@ -480,7 +511,9 @@ test.describe("Network Errors — Cross-Cutting", () => {
   });
 
   test.describe("Error Boundary Recovery", () => {
-    test("should show recovery button when error boundary catches a rendering error", async ({ page }) => {
+    test("should show recovery button when error boundary catches a rendering error", async ({
+      page,
+    }) => {
       await page.goto("/dashboard");
 
       if (skipIfLogin(page)) {
@@ -489,11 +522,13 @@ test.describe("Network Errors — Cross-Cutting", () => {
       }
 
       // Simulate a rendering error via unhandled rejection
-      await page.evaluate(() => {
-        setTimeout(() => {
-          throw new Error("Simulated rendering error for error boundary test");
-        }, 500);
-      }).catch(() => {});
+      await page
+        .evaluate(() => {
+          setTimeout(() => {
+            throw new Error("Simulated rendering error for error boundary test");
+          }, 500);
+        })
+        .catch(() => {});
 
       await page.waitForTimeout(2000);
 
@@ -504,14 +539,20 @@ test.describe("Network Errors — Cross-Cutting", () => {
       const hasBtn = await recoveryBtn.isVisible({ timeout: 5000 }).catch(() => false);
 
       // Or the app may have recovered on its own
-      const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+      const bodyVisible = await page
+        .locator("body")
+        .isVisible()
+        .catch(() => false);
       expect(hasBtn || bodyVisible).toBe(true);
 
       if (hasBtn) {
         // Clicking recovery button should restore the page
         await recoveryBtn.click();
         await page.waitForTimeout(2000);
-        const recovered = await page.locator("body").isVisible().catch(() => false);
+        const recovered = await page
+          .locator("body")
+          .isVisible()
+          .catch(() => false);
         expect(recovered).toBe(true);
       }
     });

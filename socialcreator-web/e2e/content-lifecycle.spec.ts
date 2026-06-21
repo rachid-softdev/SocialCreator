@@ -4,14 +4,12 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { RegisterPage } from "./pages/register.page";
-import { CGUPage, OnboardingAgentPage, OnboardingProfilePage } from "./pages/onboarding.page";
-import { DashboardPage } from "./pages/dashboard.page";
-import { NewProfilePage, ProfilesListPage, ProfileDetailPage } from "./pages/profile.page";
-import { AllAgentsPage, NewAgentPage, AgentDetailPage, AgentRunModalPage } from "./pages/agent.page";
-import { ContentPage, ContentDetailPage, GenerationPanelPage } from "./pages/content.page";
-import { PublishPage, SchedulePublishPage } from "./pages/publish.page";
+import { AgentRunModalPage, AllAgentsPage } from "./pages/agent.page";
 import { AnalyticsPage } from "./pages/analytics.page";
+import { ContentPage, GenerationPanelPage } from "./pages/content.page";
+import { CGUPage, OnboardingAgentPage, OnboardingProfilePage } from "./pages/onboarding.page";
+import { PublishPage } from "./pages/publish.page";
+import { RegisterPage } from "./pages/register.page";
 
 const TEST_PASSWORD = "TestPass123!";
 
@@ -129,7 +127,6 @@ test.describe("Content Lifecycle - Generation", () => {
       await agentCards.first().click();
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
-      const detail = new AgentDetailPage(page);
       const runBtn = page.getByRole("button", { name: /run agent/i });
       if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
@@ -143,7 +140,10 @@ test.describe("Content Lifecycle - Generation", () => {
         await modal.submit();
 
         // Should either show success or validation
-        const hasError = await modal.getError().then((e) => e.length > 0).catch(() => false);
+        const hasError = await modal
+          .getError()
+          .then((e) => e.length > 0)
+          .catch(() => false);
         const modalClosed = await modal.briefTextarea.isVisible().catch(() => false);
         expect(hasError || !modalClosed).toBe(true);
       }
@@ -242,7 +242,11 @@ test.describe("Content Lifecycle - Generation", () => {
       .getByText(/no items in queue|queue is empty/i)
       .isVisible()
       .catch(() => false);
-    const hasHeading = await page.getByRole("heading").first().isVisible().catch(() => false);
+    const hasHeading = await page
+      .getByRole("heading")
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasQueue || hasEmpty || hasHeading).toBe(true);
   });
 });
@@ -286,7 +290,10 @@ test.describe("Content Lifecycle - Publishing", () => {
       await page.waitForTimeout(1000);
 
       // Should show publish dialog or schedule picker
-      const hasDialog = await page.locator('[role="dialog"]').isVisible().catch(() => false);
+      const hasDialog = await page
+        .locator('[role="dialog"]')
+        .isVisible()
+        .catch(() => false);
       const hasCalendar = await page
         .getByRole("gridcell")
         .first()

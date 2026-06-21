@@ -289,10 +289,6 @@ test.describe("Video Pipeline", () => {
           await page.waitForURL(/\/video/, { timeout: 10000 });
 
           // Check for segment-related UI
-          const hasSegmentsUI = await page
-            .getByText(/segment/i)
-            .isVisible()
-            .catch(() => false);
           // Either pipeline has segments step or it's early in the flow
           expect(true).toBe(true);
         }
@@ -320,7 +316,7 @@ test.describe("Video Pipeline", () => {
         await page.waitForURL(/\/video/, { timeout: 10000 });
 
         // Should navigate to video detail/upload page
-        const pageContent = await page.textContent("body");
+        const pageContent = (await page.textContent("body")) ?? "";
         expect(pageContent.length).toBeGreaterThan(0);
       }
     });
@@ -374,7 +370,7 @@ test.describe("Video Pipeline", () => {
           await page.waitForTimeout(3000);
 
           // Page should have content
-          const bodyText = await page.textContent("body");
+          const bodyText = (await page.textContent("body")) ?? "";
           expect(bodyText.length).toBeGreaterThan(0);
         }
       }
@@ -430,7 +426,9 @@ test.describe("Video Library", () => {
     }
 
     // Check for thumbnail images or placeholder elements
-    const thumbnails = page.locator("img[src*='video'], img[src*='thumbnail'], [class*='thumbnail']");
+    const thumbnails = page.locator(
+      "img[src*='video'], img[src*='thumbnail'], [class*='thumbnail']",
+    );
     const thumbnailCount = await thumbnails.count();
     expect(thumbnailCount).toBeGreaterThanOrEqual(0);
   });
@@ -445,14 +443,6 @@ test.describe("Video Library", () => {
     }
 
     // Metadata tags or text with duration/size info
-    const hasDuration = await page
-      .getByText(/\d+:\d+|minutes?|seconds?|duration/i)
-      .isVisible()
-      .catch(() => false);
-    const hasDate = await page
-      .getByText(/202\d|today|yesterday|ago|date/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 });
@@ -467,10 +457,6 @@ test.describe("Video Processing Status", () => {
       return;
     }
 
-    const hasProcessing = await page
-      .getByText(/processing|uploading|transcribing|generating/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -483,10 +469,6 @@ test.describe("Video Processing Status", () => {
       return;
     }
 
-    const hasCompleted = await page
-      .getByText(/ready|completed|done|transcribed|segments? ready|clips? ready/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -499,10 +481,6 @@ test.describe("Video Processing Status", () => {
       return;
     }
 
-    const hasFailed = await page
-      .getByText(/error|failed|retry/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 });
@@ -519,7 +497,8 @@ test.describe("Video Actions", () => {
 
     const viewBtns = page.getByRole("button").filter({ hasText: /view|details/i });
     const viewLinks = page.locator("a").filter({ hasText: /view|details/i });
-    const hasView = (await viewBtns.isVisible().catch(() => false)) ||
+    const hasView =
+      (await viewBtns.isVisible().catch(() => false)) ||
       (await viewLinks.isVisible().catch(() => false));
     expect(hasView || true).toBe(true);
   });
@@ -536,7 +515,10 @@ test.describe("Video Actions", () => {
     const deleteBtns = page.getByRole("button").filter({ hasText: /delete|remove/i });
     if (await deleteBtns.isVisible().catch(() => false)) {
       await deleteBtns.first().click();
-      const hasDialog = await page.getByRole("dialog").isVisible().catch(() => false);
+      const hasDialog = await page
+        .getByRole("dialog")
+        .isVisible()
+        .catch(() => false);
       expect(hasDialog).toBe(true);
     }
   });
@@ -550,10 +532,6 @@ test.describe("Video Actions", () => {
       return;
     }
 
-    const downloadBtns = page.getByRole("button").filter({ hasText: /download/i });
-    const downloadLinks = page.locator("a").filter({ hasText: /download/i });
-    const hasDownload = (await downloadBtns.isVisible().catch(() => false)) ||
-      (await downloadLinks.isVisible().catch(() => false));
     expect(true).toBe(true);
   });
 });
@@ -591,7 +569,9 @@ test.describe("Video Filtering", () => {
     }
 
     // Search input should be available
-    const searchInput = page.locator('input[type="search"], input[placeholder*="search"i], input[placeholder*="find"i]');
+    const searchInput = page.locator(
+      'input[type="search"], input[placeholder*="search"i], input[placeholder*="find"i]',
+    );
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill("test");
       const value = await searchInput.inputValue();
@@ -617,10 +597,6 @@ test.describe("Video Filtering", () => {
       await statusFilter.click();
       await page.waitForTimeout(500);
       // The clicked filter or another element should indicate active state
-      const hasActiveState = await page
-        .getByText(/active|selected|current/i)
-        .isVisible()
-        .catch(() => false);
       expect(true).toBe(true);
     }
   });

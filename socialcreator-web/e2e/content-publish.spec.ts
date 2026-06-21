@@ -302,9 +302,7 @@ test.describe("Bulk Publishing", () => {
     if (checkboxCount > 0) {
       await itemCheckboxes.first().check();
 
-      const bulkBtn = page
-        .getByRole("button", { name: /bulk publish|publish selected/i })
-        .first();
+      const bulkBtn = page.getByRole("button", { name: /bulk publish|publish selected/i }).first();
       if (await bulkBtn.isVisible().catch(() => false)) {
         await bulkBtn.click();
 
@@ -439,7 +437,9 @@ test.describe("Publish Errors", () => {
       await publishBtn.click();
 
       // Check for error about missing connections
-      const noAccountError = page.getByText(/no (connected|social) account|connect.*account|no platform/i);
+      const noAccountError = page.getByText(
+        /no (connected|social) account|connect.*account|no platform/i,
+      );
       const hasError = await noAccountError.isVisible({ timeout: 5000 }).catch(() => false);
       expect(typeof hasError).toBe("boolean");
     }
@@ -536,7 +536,7 @@ test.describe("History Detail View", () => {
     if (entryCount > 0) {
       const detailsLink = historyEntries
         .first()
-        .locator('a, button')
+        .locator("a, button")
         .filter({ hasText: /view|details|expand/i })
         .first();
       if (await detailsLink.isVisible().catch(() => false)) {
@@ -595,7 +595,7 @@ test.describe("History Detail View", () => {
       // Click on the first failed entry to expand error details
       const expandBtn = failedEntries
         .first()
-        .locator('button, a')
+        .locator("button, a")
         .filter({ hasText: /expand|details|view|show/i })
         .first();
       if (await expandBtn.isVisible().catch(() => false)) {
@@ -618,7 +618,9 @@ test.describe("History Detail View", () => {
 test.describe("Publish — State & Error Handling", () => {
   const uniqueSuffix = Date.now();
 
-  test("should show error when publishing non-APPROVED content (try publishing DRAFT content)", async ({ page }) => {
+  test("should show error when publishing non-APPROVED content (try publishing DRAFT content)", async ({
+    page,
+  }) => {
     const content = new ContentPage(page);
     await content.goto();
 
@@ -736,7 +738,9 @@ test.describe("Publish — State & Error Handling", () => {
       await publishBtn.click();
 
       // Alert should appear with error feedback
-      await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      await expect(page.locator('[role="alert"]'))
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => {});
     }
   });
 
@@ -825,12 +829,9 @@ test.describe("Publish — Scheduling", () => {
 
     // Try to schedule with a past date via API
     const pastDate = new Date(Date.now() - 86400000).toISOString();
-    const res = await page.request.put(
-      `/api/content/past-schedule-test-${uniqueSuffix}/schedule`,
-      {
-        data: { scheduledPublishAt: pastDate, scheduledTimezone: "UTC" },
-      },
-    );
+    const res = await page.request.put(`/api/content/past-schedule-test-${uniqueSuffix}/schedule`, {
+      data: { scheduledPublishAt: pastDate, scheduledTimezone: "UTC" },
+    });
     const data = await res.json();
 
     // Should return error for past date (either 400 or 422)
@@ -860,10 +861,9 @@ test.describe("Publish — Scheduling", () => {
       expect(typeof hasDraft).toBe("boolean");
     } else {
       // Test via API call
-      const res = await page.request.post(
-        `/api/content/cancel-schedule-${Date.now()}/unschedule`,
-        { data: {} },
-      );
+      const res = await page.request.post(`/api/content/cancel-schedule-${Date.now()}/unschedule`, {
+        data: {},
+      });
       const data = await res.json();
       // Validates the endpoint exists (will 404 on non-existent content)
       expect(data).toHaveProperty("error");
@@ -880,10 +880,9 @@ test.describe("Publish — Scheduling", () => {
     }
 
     // Attempt to unschedule content that doesn't exist or isn't scheduled
-    const res = await page.request.post(
-      `/api/content/non-scheduled-${Date.now()}/unschedule`,
-      { data: {} },
-    );
+    const res = await page.request.post(`/api/content/non-scheduled-${Date.now()}/unschedule`, {
+      data: {},
+    });
     const data = await res.json();
 
     // Should return error (not found or wrong status)
@@ -949,10 +948,7 @@ test.describe("Publish — Bulk Operations", () => {
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          approved: [
-            `bulk-approve-1-${uniqueSuffix}`,
-            `bulk-approve-2-${uniqueSuffix}`,
-          ],
+          approved: [`bulk-approve-1-${uniqueSuffix}`, `bulk-approve-2-${uniqueSuffix}`],
           failed: [],
         }),
       });
@@ -972,9 +968,7 @@ test.describe("Publish — Bulk Operations", () => {
       if (await bulkApproveBtn.isVisible().catch(() => false)) {
         await bulkApproveBtn.click();
         const successFeedback = page.getByText(/approved|success/i);
-        const hasFeedback = await successFeedback
-          .isVisible({ timeout: 5000 })
-          .catch(() => false);
+        const hasFeedback = await successFeedback.isVisible({ timeout: 5000 }).catch(() => false);
         expect(typeof hasFeedback).toBe("boolean");
       }
     }
@@ -1000,10 +994,7 @@ test.describe("Publish — Bulk Operations", () => {
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          published: [
-            `bulk-pub-1-${uniqueSuffix}`,
-            `bulk-pub-2-${uniqueSuffix}`,
-          ],
+          published: [`bulk-pub-1-${uniqueSuffix}`, `bulk-pub-2-${uniqueSuffix}`],
           failed: [],
         }),
       });
@@ -1024,9 +1015,7 @@ test.describe("Publish — Bulk Operations", () => {
         await bulkPublishBtn.click();
 
         const confirmDialog = page.getByText(/confirm publication|publish all/i);
-        const hasDialog = await confirmDialog
-          .isVisible({ timeout: 5000 })
-          .catch(() => false);
+        const hasDialog = await confirmDialog.isVisible({ timeout: 5000 }).catch(() => false);
         expect(typeof hasDialog).toBe("boolean");
       }
     }
@@ -1049,10 +1038,7 @@ test.describe("Publish — Bulk Operations", () => {
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          rejected: [
-            `bulk-reject-1-${uniqueSuffix}`,
-            `bulk-reject-2-${uniqueSuffix}`,
-          ],
+          rejected: [`bulk-reject-1-${uniqueSuffix}`, `bulk-reject-2-${uniqueSuffix}`],
           failed: [],
         }),
       });
@@ -1072,9 +1058,7 @@ test.describe("Publish — Bulk Operations", () => {
       if (await bulkRejectBtn.isVisible().catch(() => false)) {
         await bulkRejectBtn.click();
         const rejectFeedback = page.getByText(/rejected/i);
-        const hasFeedback = await rejectFeedback
-          .isVisible({ timeout: 5000 })
-          .catch(() => false);
+        const hasFeedback = await rejectFeedback.isVisible({ timeout: 5000 }).catch(() => false);
         expect(typeof hasFeedback).toBe("boolean");
       }
     }
@@ -1145,12 +1129,8 @@ test.describe("Publish — Bulk Operations", () => {
     if (await bulkApproveBtn.isVisible().catch(() => false)) {
       await bulkApproveBtn.click();
 
-      const authError = page.getByText(
-        /unauthorized|permission|not allowed|forbidden/i,
-      );
-      const hasAuthError = await authError
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const authError = page.getByText(/unauthorized|permission|not allowed|forbidden/i);
+      const hasAuthError = await authError.isVisible({ timeout: 5000 }).catch(() => false);
       expect(typeof hasAuthError).toBe("boolean");
     }
   });
@@ -1201,7 +1181,9 @@ test.describe("Publish — Bulk Operations", () => {
 test.describe("Publish — Idempotency", () => {
   const uniqueSuffix = Date.now();
 
-  test("should return alreadyPublished=true when re-publishing PUBLISHED content", async ({ page }) => {
+  test("should return alreadyPublished=true when re-publishing PUBLISHED content", async ({
+    page,
+  }) => {
     await page.goto("/content");
 
     const currentUrl = new URL(page.url());
@@ -1232,9 +1214,7 @@ test.describe("Publish — Idempotency", () => {
       const alreadyPubMsg = page.getByText(
         /already published|already posted|previously published/i,
       );
-      const hasMsg = await alreadyPubMsg
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const hasMsg = await alreadyPubMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(typeof hasMsg).toBe("boolean");
     }
   });
@@ -1291,12 +1271,8 @@ test.describe("Publish — Idempotency", () => {
         await publishBtn2.click();
 
         // Should show "already published" rather than creating duplicate
-        const duplicateMsg = page.getByText(
-          /already published|no duplicate|already posted/i,
-        );
-        const hasMsg = await duplicateMsg
-          .isVisible({ timeout: 5000 })
-          .catch(() => false);
+        const duplicateMsg = page.getByText(/already published|no duplicate|already posted/i);
+        const hasMsg = await duplicateMsg.isVisible({ timeout: 5000 }).catch(() => false);
         expect(typeof hasMsg).toBe("boolean");
       }
     }
@@ -1334,7 +1310,9 @@ test.describe("Publish — Idempotency", () => {
     }
   });
 
-  test("should show per-platform error when publishing to multiple platforms and one fails", async ({ page }) => {
+  test("should show per-platform error when publishing to multiple platforms and one fails", async ({
+    page,
+  }) => {
     await page.goto("/content");
 
     const currentUrl = new URL(page.url());
@@ -1380,7 +1358,9 @@ test.describe("Publish — Idempotency", () => {
     }
   });
 
-  test("should show expired token prompt when publishing with expired platform connection", async ({ page }) => {
+  test("should show expired token prompt when publishing with expired platform connection", async ({
+    page,
+  }) => {
     await page.goto("/content");
 
     const currentUrl = new URL(page.url());

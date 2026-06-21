@@ -80,4 +80,12 @@ const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+nextConfig.webpack = (config, { isServer }) => {
+  if (isServer) {
+    // prom-client uses Node.js cluster module which webpack can't bundle
+    config.externals = [...(config.externals || []), "prom-client"];
+  }
+  return config;
+};
+
 export default withAnalyzer(nextConfig);

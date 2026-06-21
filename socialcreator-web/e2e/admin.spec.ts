@@ -66,15 +66,10 @@ test.describe("Admin Dashboard", () => {
       }
 
       // Look for admin-specific navigation in sidebar
-      const adminSidebarLinks = page
-        .locator("aside")
-        .first()
-        .locator('a[href*="/admin"]');
+      const adminSidebarLinks = page.locator("aside").first().locator('a[href*="/admin"]');
       const linkCount = await adminSidebarLinks.count().catch(() => 0);
       // Could also be a dedicated admin navigation section
-      const adminSection = page
-        .getByText(/administration|admin panel/i)
-        .first();
+      const adminSection = page.getByText(/administration|admin panel/i).first();
       const hasSection = await adminSection.isVisible().catch(() => false);
       expect(linkCount > 0 || hasSection).toBe(true);
     });
@@ -131,10 +126,11 @@ test.describe("Admin Dashboard", () => {
       const hasSearch = await searchInput.isVisible().catch(() => false);
 
       // Or filter buttons/dropdowns
-      const filterButtons = page
-        .locator("button")
-        .filter({ hasText: /filter|search|sort/i });
-      const hasFilter = await filterButtons.first().isVisible().catch(() => false);
+      const filterButtons = page.locator("button").filter({ hasText: /filter|search|sort/i });
+      const hasFilter = await filterButtons
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       expect(hasSearch || hasFilter).toBe(true);
     });
@@ -317,7 +313,11 @@ test.describe("Admin — Loading & Empty States", () => {
     }
 
     // Zero values should render; no error banners
-    const hasZero = await page.getByText(/0/).first().isVisible().catch(() => false);
+    const hasZero = await page
+      .getByText(/0/)
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasZero).toBe(true);
     const errorShown = await page
       .getByText(/error|failed|unable to load/i)
@@ -343,7 +343,9 @@ test.describe("Admin — Loading & Empty States", () => {
       return;
     }
 
-    const emptyMsg = page.getByText(/no subscription|no plan|free plan|aucun|not available|no data/i);
+    const emptyMsg = page.getByText(
+      /no subscription|no plan|free plan|aucun|not available|no data/i,
+    );
     await expect(emptyMsg).toBeVisible({ timeout: 5000 });
   });
 
@@ -388,7 +390,9 @@ test.describe("Admin — Loading & Empty States", () => {
       await page.waitForTimeout(500);
       await page.waitForLoadState("networkidle", { timeout: 5000 });
 
-      const emptyMsg = page.getByText(/aucun utilisateur trouvé|aucun résultat|no users found|no results/i);
+      const emptyMsg = page.getByText(
+        /aucun utilisateur trouvé|aucun résultat|no users found|no results/i,
+      );
       await expect(emptyMsg).toBeVisible({ timeout: 5000 });
     } else {
       test.skip();
@@ -416,7 +420,9 @@ test.describe("Admin — Loading & Empty States", () => {
       await page.waitForTimeout(500);
       await page.waitForLoadState("networkidle", { timeout: 5000 });
 
-      const emptyMsg = page.getByText(/aucune organisation trouvée|aucun résultat|no organizations found|no results/i);
+      const emptyMsg = page.getByText(
+        /aucune organisation trouvée|aucun résultat|no organizations found|no results/i,
+      );
       await expect(emptyMsg).toBeVisible({ timeout: 5000 });
     } else {
       test.skip();
@@ -500,7 +506,9 @@ test.describe("Admin — Detail Pages & Actions", () => {
       return;
     }
 
-    const errorMsg = page.getByText(/not found|404|error|does not exist|introuvable|inexistant/i).first();
+    const errorMsg = page
+      .getByText(/not found|404|error|does not exist|introuvable|inexistant/i)
+      .first();
     await expect(errorMsg).toBeVisible({ timeout: 5000 });
   });
 
@@ -518,7 +526,9 @@ test.describe("Admin — Detail Pages & Actions", () => {
       return;
     }
 
-    const errorMsg = page.getByText(/not found|404|error|does not exist|introuvable|inexistant/i).first();
+    const errorMsg = page
+      .getByText(/not found|404|error|does not exist|introuvable|inexistant/i)
+      .first();
     await expect(errorMsg).toBeVisible({ timeout: 5000 });
   });
 
@@ -610,7 +620,9 @@ test.describe("Admin — Detail Pages & Actions", () => {
       await backLink.click();
       await page.waitForLoadState("networkidle", { timeout: 5000 });
 
-      const orgsHeading = page.getByRole("heading", { name: /organization management|organizations/i }).first();
+      const orgsHeading = page
+        .getByRole("heading", { name: /organization management|organizations/i })
+        .first();
       await expect(orgsHeading).toBeVisible({ timeout: 5000 });
     }
   });
@@ -621,7 +633,9 @@ test.describe("Admin — Detail Pages & Actions", () => {
 // ============================================================
 
 test.describe("Admin — Entitlements & Permissions", () => {
-  test("should switch between tabs on entitlements page (Overrides, Plans, Features)", async ({ page }) => {
+  test("should switch between tabs on entitlements page (Overrides, Plans, Features)", async ({
+    page,
+  }) => {
     const entitlements = new AdminEntitlementsPage(page);
     await entitlements.goto();
 
@@ -690,8 +704,12 @@ test.describe("Admin — Entitlements & Permissions", () => {
 
     // If API was called, expect an error message about self-demotion
     if (roleChangeIntercepted) {
-      const errorMsg = page.getByText(/cannot demote|cannot change|forbidden|403|erreur|interdit/i).first();
-      await expect(errorMsg).toBeVisible({ timeout: 5000 }).catch(() => {});
+      const errorMsg = page
+        .getByText(/cannot demote|cannot change|forbidden|403|erreur|interdit/i)
+        .first();
+      await expect(errorMsg)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => {});
     }
   });
 
@@ -747,7 +765,9 @@ test.describe("Admin — Entitlements & Permissions", () => {
     if (!isDashboard && !isAdmin) {
       // Fallback: check for forbidden/error message on the page
       const forbiddenMsg = page.getByText(/forbidden|unauthorized|access denied|not allowed/i);
-      await expect(forbiddenMsg).toBeVisible({ timeout: 5000 }).catch(() => {});
+      await expect(forbiddenMsg)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => {});
     }
   });
 

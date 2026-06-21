@@ -3,7 +3,7 @@
  * Covers agent creation, configuration, runs, results viewing, and pause/activation
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class AllAgentsPage extends BasePage {

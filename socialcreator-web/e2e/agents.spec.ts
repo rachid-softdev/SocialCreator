@@ -7,7 +7,6 @@ import { expect, test } from "@playwright/test";
 import {
   AgentDetailPage,
   AgentRunModalPage,
-  AgentsListPage,
   AllAgentsPage,
   NewAgentPage,
 } from "./pages/agent.page";
@@ -119,7 +118,7 @@ test.describe("AI Agent Management", () => {
 
         const profileId = new URL(page.url()).pathname.split("/").pop();
         const newAgent = new NewAgentPage(page);
-        await newAgent.goto(profileId!);
+        await newAgent.goto(profileId as string);
 
         await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
         await expect(newAgent.nameInput).toBeVisible();
@@ -150,7 +149,7 @@ test.describe("AI Agent Management", () => {
         const profileId = new URL(page.url()).pathname.split("/").pop();
 
         const newAgent = new NewAgentPage(page);
-        await newAgent.goto(profileId!);
+        await newAgent.goto(profileId as string);
         await newAgent.submit();
 
         const error = await newAgent.getError();
@@ -591,7 +590,7 @@ test.describe("Agent CRUD", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       // Fill required fields
@@ -709,9 +708,7 @@ test.describe("Agent CRUD", () => {
         await configLinks.click();
 
         // Should see configurable fields
-        const configFields = page.locator(
-          'select, input[type="text"], textarea, [role="switch"]',
-        );
+        const configFields = page.locator('select, input[type="text"], textarea, [role="switch"]');
         const fieldCount = await configFields.count();
         expect(fieldCount).toBeGreaterThanOrEqual(0);
       } else {
@@ -867,9 +864,7 @@ test.describe("Agent Execution Re-run", () => {
       if (await runsTab.isVisible().catch(() => false)) {
         await runsTab.click();
 
-        const rerunBtn = page
-          .getByRole("button", { name: /re.?run|run again|re-run/i })
-          .first();
+        const rerunBtn = page.getByRole("button", { name: /re.?run|run again|re-run/i }).first();
         if (await rerunBtn.isVisible().catch(() => false)) {
           await rerunBtn.click();
 
@@ -912,9 +907,7 @@ test.describe("Agent Execution Re-run", () => {
         const initialCount = await initialRunRows.count();
 
         // Find and click rerun
-        const rerunBtn = page
-          .getByRole("button", { name: /re.?run|run again/i })
-          .first();
+        const rerunBtn = page.getByRole("button", { name: /re.?run|run again/i }).first();
         if (await rerunBtn.isVisible().catch(() => false)) {
           await rerunBtn.click();
 
@@ -987,9 +980,7 @@ test.describe("Agent Pause/Activate", () => {
     }
 
     // Check for paused status badges on agent cards
-    const pausedBadges = page
-      .locator('[class*="rounded-full"]')
-      .filter({ hasText: /paused/i });
+    const pausedBadges = page.locator('[class*="rounded-full"]').filter({ hasText: /paused/i });
     const pausedCount = await pausedBadges.count();
     expect(pausedCount).toBeGreaterThanOrEqual(0);
   });
@@ -1194,9 +1185,7 @@ test.describe("Agents — Error Boundaries", () => {
     }
 
     // Find a paused agent card
-    const pausedBadges = page
-      .locator('[class*="rounded-full"]')
-      .filter({ hasText: /paused/i });
+    const pausedBadges = page.locator('[class*="rounded-full"]').filter({ hasText: /paused/i });
     const hasPausedAgent = await pausedBadges
       .first()
       .isVisible()
@@ -1221,7 +1210,9 @@ test.describe("Agents — Error Boundaries", () => {
     }
   });
 
-  test("should show validation error when no platforms selected during creation", async ({ page }) => {
+  test("should show validation error when no platforms selected during creation", async ({
+    page,
+  }) => {
     await page.goto("/profiles");
 
     const currentUrl = new URL(page.url());
@@ -1244,14 +1235,15 @@ test.describe("Agents — Error Boundaries", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       await newAgent.fillName(`No Platform Agent ${Date.now()}`);
 
       // Deselect any pre-selected platforms
-      const selectedPlatforms = page
-        .locator('button[aria-pressed="true"], button[data-selected="true"]');
+      const selectedPlatforms = page.locator(
+        'button[aria-pressed="true"], button[data-selected="true"]',
+      );
       const count = await selectedPlatforms.count();
       for (let i = 0; i < count; i++) {
         await selectedPlatforms.first().click();
@@ -1312,7 +1304,7 @@ test.describe("Agents — Error Boundaries", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       await newAgent.fillName(`Network Error Agent ${Date.now()}`);
@@ -1393,9 +1385,7 @@ test.describe("Agents — State Transitions", () => {
     }
 
     // Find a paused agent
-    const pausedBadges = page
-      .locator('[class*="rounded-full"]')
-      .filter({ hasText: /paused/i });
+    const pausedBadges = page.locator('[class*="rounded-full"]').filter({ hasText: /paused/i });
     const hasPausedAgent = await pausedBadges
       .first()
       .isVisible()
@@ -1403,12 +1393,7 @@ test.describe("Agents — State Transitions", () => {
 
     if (hasPausedAgent) {
       // Navigate to the paused agent's detail
-      const pausedCard = pausedBadges
-        .first()
-        .locator("..")
-        .locator("..")
-        .locator("a")
-        .first();
+      const pausedCard = pausedBadges.first().locator("..").locator("..").locator("a").first();
       if (await pausedCard.isVisible().catch(() => false)) {
         await pausedCard.click();
       } else {
@@ -1434,21 +1419,14 @@ test.describe("Agents — State Transitions", () => {
     }
 
     // Find a paused agent and activate it
-    const pausedBadges = page
-      .locator('[class*="rounded-full"]')
-      .filter({ hasText: /paused/i });
+    const pausedBadges = page.locator('[class*="rounded-full"]').filter({ hasText: /paused/i });
     const hasPausedAgent = await pausedBadges
       .first()
       .isVisible()
       .catch(() => false);
 
     if (hasPausedAgent) {
-      const pausedCard = pausedBadges
-        .first()
-        .locator("..")
-        .locator("..")
-        .locator("a")
-        .first();
+      const pausedCard = pausedBadges.first().locator("..").locator("..").locator("a").first();
       if (await pausedCard.isVisible().catch(() => false)) {
         await pausedCard.click();
       } else {
@@ -1468,7 +1446,9 @@ test.describe("Agents — State Transitions", () => {
     }
   });
 
-  test("should transition agent status from active to paused and verify badge change", async ({ page }) => {
+  test("should transition agent status from active to paused and verify badge change", async ({
+    page,
+  }) => {
     await page.goto("/agents");
 
     const currentUrl = new URL(page.url());
@@ -1502,7 +1482,9 @@ test.describe("Agents — State Transitions", () => {
     }
   });
 
-  test("should transition agent status from paused to active and verify badge change", async ({ page }) => {
+  test("should transition agent status from paused to active and verify badge change", async ({
+    page,
+  }) => {
     await page.goto("/agents");
 
     const currentUrl = new URL(page.url());
@@ -1559,7 +1541,7 @@ test.describe("Agents — State Transitions", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       const agentName = `Immediate List Agent ${Date.now()}`;
@@ -1609,10 +1591,7 @@ test.describe("Agents — State Transitions", () => {
       if (await editBtn.isVisible().catch(() => false)) {
         await editBtn.click();
 
-        const nameInput = page
-          .locator("#name")
-          .or(page.locator('input[name="name"]'))
-          .first();
+        const nameInput = page.locator("#name").or(page.locator('input[name="name"]')).first();
         if (await nameInput.isVisible().catch(() => false)) {
           await nameInput.fill(newName);
 
@@ -1658,10 +1637,7 @@ test.describe("Agents — Run Execution", () => {
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
       const runBtn = page.getByRole("button", { name: /run agent/i });
-      if (
-        (await runBtn.isVisible().catch(() => false)) &&
-        !(await runBtn.isDisabled())
-      ) {
+      if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
 
         const runModal = new AgentRunModalPage(page);
@@ -1702,10 +1678,7 @@ test.describe("Agents — Run Execution", () => {
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
       const runBtn = page.getByRole("button", { name: /run agent/i });
-      if (
-        (await runBtn.isVisible().catch(() => false)) &&
-        !(await runBtn.isDisabled())
-      ) {
+      if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
 
         const textarea = page.locator("textarea").first();
@@ -1747,10 +1720,7 @@ test.describe("Agents — Run Execution", () => {
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
       const runBtn = page.getByRole("button", { name: /run agent/i });
-      if (
-        (await runBtn.isVisible().catch(() => false)) &&
-        !(await runBtn.isDisabled())
-      ) {
+      if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
 
         const textarea = page.locator("textarea").first();
@@ -1788,10 +1758,7 @@ test.describe("Agents — Run Execution", () => {
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
       const runBtn = page.getByRole("button", { name: /run agent/i });
-      if (
-        (await runBtn.isVisible().catch(() => false)) &&
-        !(await runBtn.isDisabled())
-      ) {
+      if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
 
         const textarea = page.locator("textarea").first();
@@ -1835,10 +1802,7 @@ test.describe("Agents — Run Execution", () => {
       await page.waitForURL(/\/agents\//, { timeout: 10000 });
 
       const runBtn = page.getByRole("button", { name: /run agent/i });
-      if (
-        (await runBtn.isVisible().catch(() => false)) &&
-        !(await runBtn.isDisabled())
-      ) {
+      if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
         await runBtn.click();
 
         const textarea = page.locator("textarea").first();
@@ -1889,15 +1853,12 @@ test.describe("Agents — Run Execution", () => {
         }
 
         const runBtn = page.getByRole("button", { name: /run agent/i });
-        if (
-          (await runBtn.isVisible().catch(() => false)) &&
-          !(await runBtn.isDisabled())
-        ) {
+        if ((await runBtn.isVisible().catch(() => false)) && !(await runBtn.isDisabled())) {
           await runBtn.click();
 
           const textarea = page.locator("textarea").first();
           if (await textarea.isVisible({ timeout: 3000 }).catch(() => false)) {
-            await textarea.fill("Test run for runs tab verification " + Date.now());
+            await textarea.fill(`Test run for runs tab verification ${Date.now()}`);
             const submitBtn = page.getByRole("button", { name: /run/i }).last();
             await submitBtn.click();
             await page.waitForTimeout(2000);
@@ -1931,9 +1892,7 @@ test.describe("Agents — Pagination & Filtering", () => {
     }
 
     const searchInput = page
-      .locator(
-        'input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]',
-      )
+      .locator('input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]')
       .first();
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill(`ZZZZ_NO_MATCH_${Date.now()}`);
@@ -1960,9 +1919,7 @@ test.describe("Agents — Pagination & Filtering", () => {
     }
 
     const searchInput = page
-      .locator(
-        'input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]',
-      )
+      .locator('input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]')
       .first();
     if (await searchInput.isVisible().catch(() => false)) {
       // Get the first agent name visible
@@ -2057,9 +2014,7 @@ test.describe("Agents — Pagination & Filtering", () => {
 
     // Apply a search filter first
     const searchInput = page
-      .locator(
-        'input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]',
-      )
+      .locator('input[type="search"], input[placeholder*="search"], input[placeholder*="filter"]')
       .first();
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill("ZZZZ_NO_MATCH");
@@ -2086,7 +2041,9 @@ test.describe("Agents — Pagination & Filtering", () => {
 });
 
 test.describe("Agents — CRUD Complete", () => {
-  test("should create agent with all fields (name, type, multiple platforms, schedule)", async ({ page }) => {
+  test("should create agent with all fields (name, type, multiple platforms, schedule)", async ({
+    page,
+  }) => {
     await page.goto("/profiles");
 
     const currentUrl = new URL(page.url());
@@ -2109,7 +2066,7 @@ test.describe("Agents — CRUD Complete", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       // Fill all fields
@@ -2137,9 +2094,7 @@ test.describe("Agents — CRUD Complete", () => {
 
       // Set schedule if available
       const scheduleInput = page
-        .locator(
-          'select[name*="schedule"], [aria-label*="schedule"], [data-testid*="schedule"]',
-        )
+        .locator('select[name*="schedule"], [aria-label*="schedule"], [data-testid*="schedule"]')
         .first();
       if (await scheduleInput.isVisible().catch(() => false)) {
         await scheduleInput.selectOption({ index: 1 }).catch(() => {});
@@ -2153,14 +2108,14 @@ test.describe("Agents — CRUD Complete", () => {
         .waitForURL(/\/agents\/[a-f0-9]/, { timeout: 10000 })
         .then(() => true)
         .catch(() => false);
-      const hasSuccessFeedback = await successMsg
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const hasSuccessFeedback = await successMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(isOnDetailPage || hasSuccessFeedback).toBe(true);
     }
   });
 
-  test("should verify agent creation via API (POST /api/agents returns agent with correct data)", async ({ page }) => {
+  test("should verify agent creation via API (POST /api/agents returns agent with correct data)", async ({
+    page,
+  }) => {
     const agentName = `API Verify Agent ${Date.now()}`;
     const response = await page.request.post("/api/agents", {
       data: {
@@ -2210,10 +2165,7 @@ test.describe("Agents — CRUD Complete", () => {
         await editBtn.click();
 
         // Should land on edit form
-        const nameInput = page
-          .locator("#name")
-          .or(page.locator('input[name="name"]'))
-          .first();
+        const nameInput = page.locator("#name").or(page.locator('input[name="name"]')).first();
         if (await nameInput.isVisible().catch(() => false)) {
           const newName = `Edited Config ${Date.now()}`;
           await nameInput.fill(newName);
@@ -2308,9 +2260,7 @@ test.describe("Agents — CRUD Complete", () => {
         .getByRole("button", { name: /delete|remove/i })
         .or(page.locator('[aria-label*="delete"]'))
         .first();
-      if (
-        (await deleteBtn.isVisible().catch(() => false)) && agentName
-      ) {
+      if ((await deleteBtn.isVisible().catch(() => false)) && agentName) {
         await deleteBtn.click();
 
         const confirmDialog = page.getByText(/confirm|are you sure|delete agent/i);
@@ -2325,9 +2275,7 @@ test.describe("Agents — CRUD Complete", () => {
           await expect(agents.heading).toBeVisible({ timeout: 10000 });
 
           // The deleted agent should no longer be in the list
-          const isStillVisible = await agents
-            .isAgentVisible(agentName)
-            .catch(() => false);
+          const isStillVisible = await agents.isAgentVisible(agentName).catch(() => false);
           expect(isStillVisible).toBe(false);
         }
       }
@@ -2398,7 +2346,7 @@ test.describe("Agents — Edge Cases", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       const specialName = `Agent !@#$%^&*() ${Date.now()}`;
@@ -2410,9 +2358,7 @@ test.describe("Agents — Edge Cases", () => {
         .waitForURL(/\/agents\/[a-f0-9]/, { timeout: 10000 })
         .then(() => true)
         .catch(() => false);
-      const hasSuccessFeedback = await successMsg
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const hasSuccessFeedback = await successMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(isOnDetailPage || hasSuccessFeedback).toBe(true);
     }
   });
@@ -2440,7 +2386,7 @@ test.describe("Agents — Edge Cases", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       const unicodeName = `Agente no no ${Date.now()}`;
@@ -2452,9 +2398,7 @@ test.describe("Agents — Edge Cases", () => {
         .waitForURL(/\/agents\/[a-f0-9]/, { timeout: 10000 })
         .then(() => true)
         .catch(() => false);
-      const hasSuccessFeedback = await successMsg
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const hasSuccessFeedback = await successMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(isOnDetailPage || hasSuccessFeedback).toBe(true);
     }
   });
@@ -2482,7 +2426,7 @@ test.describe("Agents — Edge Cases", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       await newAgent.fillName(`All Platforms Agent ${Date.now()}`);
@@ -2504,9 +2448,7 @@ test.describe("Agents — Edge Cases", () => {
         .waitForURL(/\/agents\/[a-f0-9]/, { timeout: 10000 })
         .then(() => true)
         .catch(() => false);
-      const hasSuccessFeedback = await successMsg
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
+      const hasSuccessFeedback = await successMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(isOnDetailPage || hasSuccessFeedback).toBe(true);
     }
   });
@@ -2534,7 +2476,7 @@ test.describe("Agents — Edge Cases", () => {
       const profileId = new URL(page.url()).pathname.split("/").pop();
 
       const newAgent = new NewAgentPage(page);
-      await newAgent.goto(profileId!);
+      await newAgent.goto(profileId as string);
       await expect(newAgent.heading).toBeVisible({ timeout: 10000 });
 
       await newAgent.fillName(`Max Per Day Agent ${Date.now()}`);
@@ -2556,7 +2498,9 @@ test.describe("Agents — Edge Cases", () => {
         .waitForURL(/\/agents\/[a-f0-9]/, { timeout: 10000 })
         .then(() => true)
         .catch(() => false);
-      expect(isOnDetailPage || (await successMsg.isVisible({ timeout: 5000 }).catch(() => false))).toBe(true);
+      expect(
+        isOnDetailPage || (await successMsg.isVisible({ timeout: 5000 }).catch(() => false)),
+      ).toBe(true);
     }
   });
 

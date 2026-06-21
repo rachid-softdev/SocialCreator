@@ -16,7 +16,9 @@ test.describe("OAuth Social Sign-In", () => {
 
       // Look for Google OAuth button by various selectors
       const googleBtn = page
-        .locator('button:has-text("Continue with Google"), button:has-text("Google"), [data-testid="oauth-button"]')
+        .locator(
+          'button:has-text("Continue with Google"), button:has-text("Google"), [data-testid="oauth-button"]',
+        )
         .first();
       await expect(googleBtn).toBeVisible({ timeout: 5000 });
     });
@@ -26,7 +28,9 @@ test.describe("OAuth Social Sign-In", () => {
       await register.goto();
 
       const googleBtn = page
-        .locator('button:has-text("Continue with Google"), button:has-text("Google"), [data-testid="oauth-button"]')
+        .locator(
+          'button:has-text("Continue with Google"), button:has-text("Google"), [data-testid="oauth-button"]',
+        )
         .first();
       await expect(googleBtn).toBeVisible({ timeout: 5000 });
     });
@@ -35,9 +39,7 @@ test.describe("OAuth Social Sign-In", () => {
       const login = new LoginPage(page);
       await login.goto();
 
-      const googleBtn = page
-        .locator('button:has-text("Continue with Google")')
-        .first();
+      const googleBtn = page.locator('button:has-text("Continue with Google")').first();
       await expect(googleBtn).toBeVisible({ timeout: 5000 });
       // Button should be enabled initially
       await expect(googleBtn).toBeEnabled({ timeout: 3000 });
@@ -56,9 +58,6 @@ test.describe("OAuth Social Sign-In", () => {
 
   test.describe("OAuth Redirect Flow", () => {
     test("should call signIn when Google OAuth button is clicked", async ({ page }) => {
-      // Intercept the signIn call to Google
-      let signInCalled = false;
-
       await page.route("**/api/auth/session", async (route) => {
         await route.fulfill({ json: null });
       });
@@ -88,7 +87,6 @@ test.describe("OAuth Social Sign-In", () => {
         // Set up a listener for the navigation/redirect
         page.on("request", (request) => {
           if (request.url().includes("google") || request.url().includes("accounts.google.com")) {
-            signInCalled = true;
           }
         });
 
@@ -123,7 +121,11 @@ test.describe("OAuth Social Sign-In", () => {
 
         // Button should show loading state (spinner or disabled)
         const isDisabled = await googleBtn.isDisabled().catch(() => false);
-        const hasSpinner = await page.locator(".animate-spin, [class*='spinner']").first().isVisible().catch(() => false);
+        const hasSpinner = await page
+          .locator(".animate-spin, [class*='spinner']")
+          .first()
+          .isVisible()
+          .catch(() => false);
         expect(isDisabled || hasSpinner || true).toBe(true);
       }
     });
@@ -161,12 +163,17 @@ test.describe("OAuth Social Sign-In", () => {
 
       if (!isDashboard && !isLogin) {
         // Check for success message or session
-        const hasSession = await page.getByText(/OAuth User/i).isVisible().catch(() => false);
+        const hasSession = await page
+          .getByText(/OAuth User/i)
+          .isVisible()
+          .catch(() => false);
         expect(hasSession || true).toBe(true);
       }
     });
 
-    test("should handle OAuth callback for new user (redirect to onboarding/CGU)", async ({ page }) => {
+    test("should handle OAuth callback for new user (redirect to onboarding/CGU)", async ({
+      page,
+    }) => {
       // Mock callback to redirect new user to CGU
       await page.route("**/api/auth/callback/google**", async (route) => {
         await route.fulfill({
@@ -203,9 +210,7 @@ test.describe("OAuth Social Sign-In", () => {
       await page.waitForTimeout(500);
 
       // Should display an error message
-      const errorMsg = page
-        .getByText(/error|failed|canceled|sign in|could not|OAuth/i)
-        .first();
+      const errorMsg = page.getByText(/error|failed|canceled|sign in|could not|OAuth/i).first();
       const hasError = await errorMsg.isVisible().catch(() => false);
 
       // Should stay on login page
@@ -221,9 +226,7 @@ test.describe("OAuth Social Sign-In", () => {
       await page.waitForTimeout(500);
 
       // Should show an error message about access denied
-      const deniedMsg = page
-        .getByText(/access denied|denied|canceled|not authorized/i)
-        .first();
+      const deniedMsg = page.getByText(/access denied|denied|canceled|not authorized/i).first();
       const hasDenied = await deniedMsg.isVisible().catch(() => false);
 
       const errorAlert = page.locator('[role="alert"]').first();
@@ -246,9 +249,7 @@ test.describe("OAuth Social Sign-In", () => {
       await page.waitForTimeout(500);
 
       // Should show error about invalid data
-      const errorMsg = page
-        .getByText(/invalid|expired|error|failed|code/i)
-        .first();
+      const errorMsg = page.getByText(/invalid|expired|error|failed|code/i).first();
       const hasError = await errorMsg.isVisible().catch(() => false);
       expect(hasError || true).toBe(true);
     });
@@ -281,9 +282,7 @@ test.describe("OAuth Social Sign-In", () => {
       await page.waitForTimeout(500);
 
       // Should show error about missing params
-      const errorMsg = page
-        .getByText(/missing|error|invalid|parameter/i)
-        .first();
+      const errorMsg = page.getByText(/missing|error|invalid|parameter/i).first();
       const hasError = await errorMsg.isVisible().catch(() => false);
       expect(hasError || true).toBe(true);
     });
@@ -304,12 +303,11 @@ test.describe("OAuth Social Sign-In", () => {
       await page.waitForTimeout(1000);
 
       // Should either link successfully or show appropriate message
-      const currentUrl = new URL(page.url());
-      const isDashboard = currentUrl.pathname.startsWith("/dashboard");
-      const isLogin = currentUrl.pathname === "/login";
-
       // Should not crash or show 500 error
-      const hasCrash = await page.getByText(/Application error|500|Something went wrong/i).isVisible().catch(() => false);
+      const hasCrash = await page
+        .getByText(/Application error|500|Something went wrong/i)
+        .isVisible()
+        .catch(() => false);
       expect(hasCrash).toBe(false);
     });
 
@@ -353,7 +351,11 @@ test.describe("OAuth Social Sign-In", () => {
         // Should show error state
         const errorAlert = page.locator('[role="alert"]').first();
         const hasError = await errorAlert.isVisible().catch(() => false);
-        const errorText = await page.getByText(/error|failed|could not/i).first().isVisible().catch(() => false);
+        const errorText = await page
+          .getByText(/error|failed|could not/i)
+          .first()
+          .isVisible()
+          .catch(() => false);
 
         expect(hasError || errorText || true).toBe(true);
       }

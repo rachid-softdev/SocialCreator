@@ -27,7 +27,6 @@ test.describe("Agent Edit Page", () => {
   test.describe("SUCCESS: Page loads with existing data", () => {
     test("should load edit page with existing agent data pre-filled", async ({ page }) => {
       await page.route("**/api/agents/**", async (route) => {
-        const url = route.request().url();
         if (route.request().method() === "GET") {
           await route.fulfill({ json: { agent: MOCK_AGENT } });
         } else {
@@ -77,7 +76,10 @@ test.describe("Agent Edit Page", () => {
       });
 
       // Text post type should have active styling (border-primary)
-      const textPostBtn = page.locator("button").filter({ hasText: /text post/i }).first();
+      const textPostBtn = page
+        .locator("button")
+        .filter({ hasText: /text post/i })
+        .first();
       const borderClass = await textPostBtn.getAttribute("class");
       expect(borderClass).toContain("border-primary");
     });
@@ -124,7 +126,7 @@ test.describe("Agent Edit Page", () => {
 
       // Verify the request body had the updated name
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody!);
+      const parsed = JSON.parse(patchBody as string);
       expect(parsed.name).toBe("Updated Agent Name");
     });
 
@@ -158,15 +160,24 @@ test.describe("Agent Edit Page", () => {
 
       // Type selection should be visible (edit mode shows all steps at once)
       // Select VIDEO_CLIP type
-      const videoClipBtn = page.locator("button").filter({ hasText: /video clip/i }).first();
+      const videoClipBtn = page
+        .locator("button")
+        .filter({ hasText: /video clip/i })
+        .first();
       await videoClipBtn.click();
 
       // Toggle platform selections - deselect Twitter, select Instagram
-      const twitterBtn = page.locator("button").filter({ hasText: /twitter|x/i }).first();
+      const twitterBtn = page
+        .locator("button")
+        .filter({ hasText: /twitter|x/i })
+        .first();
       if (await twitterBtn.isVisible().catch(() => false)) {
         await twitterBtn.click();
       }
-      const instagramBtn = page.locator("button").filter({ hasText: /instagram/i }).first();
+      const instagramBtn = page
+        .locator("button")
+        .filter({ hasText: /instagram/i })
+        .first();
       if (await instagramBtn.isVisible().catch(() => false)) {
         await instagramBtn.click();
       }
@@ -178,7 +189,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody!);
+      const parsed = JSON.parse(patchBody as string);
       expect(parsed.type).toBe("VIDEO_CLIP");
     });
 
@@ -218,7 +229,10 @@ test.describe("Agent Edit Page", () => {
       }
 
       // Toggle auto-publish on
-      const autoPublishToggle = page.locator("button").filter({ hasText: /auto-publish/i }).first();
+      const autoPublishToggle = page
+        .locator("button")
+        .filter({ hasText: /auto-publish/i })
+        .first();
       if (await autoPublishToggle.isVisible().catch(() => false)) {
         await autoPublishToggle.click();
       }
@@ -444,7 +458,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody!);
+      const parsed = JSON.parse(patchBody as string);
       expect(parsed.name).toBe(longName);
     });
 
@@ -486,7 +500,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody!);
+      const parsed = JSON.parse(patchBody as string);
       expect(parsed.name).toBe(specialName);
     });
 

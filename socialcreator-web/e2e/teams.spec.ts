@@ -368,7 +368,6 @@ test.describe("Team Invitations", () => {
       return;
     }
 
-    const hasPending = await page.getByText(/pending/i).isVisible().catch(() => false);
     // Pending invitations may or may not exist - page loaded successfully
     expect(true).toBe(true);
   });
@@ -389,9 +388,18 @@ test.describe("Role Management", () => {
       await viewBtn.first().click();
 
       // Role labels should be visible for each member
-      const hasAdmin = await page.getByText(/admin/i).isVisible().catch(() => false);
-      const hasEditor = await page.getByText(/editor/i).isVisible().catch(() => false);
-      const hasViewer = await page.getByText(/viewer/i).isVisible().catch(() => false);
+      const hasAdmin = await page
+        .getByText(/admin/i)
+        .isVisible()
+        .catch(() => false);
+      const hasEditor = await page
+        .getByText(/editor/i)
+        .isVisible()
+        .catch(() => false);
+      const hasViewer = await page
+        .getByText(/viewer/i)
+        .isVisible()
+        .catch(() => false);
       expect(hasAdmin || hasEditor || hasViewer).toBe(true);
     }
   });
@@ -430,7 +438,6 @@ test.describe("Role Management", () => {
     const roleSelect = page.locator("select").first();
     if (await roleSelect.isVisible().catch(() => false)) {
       // Changing role may trigger a confirmation toast or dialog
-      const hasConfirmation = await page.getByRole("status").isVisible().catch(() => false);
       expect(true).toBe(true);
     }
   });
@@ -501,8 +508,14 @@ test.describe("Team Membership", () => {
       return;
     }
 
-    const hasEmptyState = await page.getByText(/no members/i).isVisible().catch(() => false);
-    const hasMembers = await page.getByText(/owner/i).isVisible().catch(() => false);
+    const hasEmptyState = await page
+      .getByText(/no members/i)
+      .isVisible()
+      .catch(() => false);
+    const hasMembers = await page
+      .getByText(/owner/i)
+      .isVisible()
+      .catch(() => false);
     expect(hasEmptyState || hasMembers).toBe(true);
   });
 });
@@ -553,14 +566,19 @@ test.describe("Multiple Teams", () => {
       await viewBtn.first().click();
 
       // Members section should be visible for the active team
-      const memberInfo = await page.getByText(/members/i).isVisible().catch(() => false);
+      const memberInfo = await page
+        .getByText(/members/i)
+        .isVisible()
+        .catch(() => false);
       expect(memberInfo).toBe(true);
     }
   });
 });
 
 test.describe("Teams — Invitation Lifecycle", () => {
-  test("should return 404 when inviting non-existent user (POST /api/teams/[id]/invite with invalid email)", async ({ page }) => {
+  test("should return 404 when inviting non-existent user (POST /api/teams/[id]/invite with invalid email)", async ({
+    page,
+  }) => {
     const response = await page.request.post(`/api/teams/team-id-${Date.now()}/invite`, {
       data: { email: `nonexistent-${Date.now()}@example.com`, role: "VIEWER" },
     });
@@ -597,7 +615,9 @@ test.describe("Teams — Invitation Lifecycle", () => {
     // Attempt to accept an invitation with an expired token
     const response = await page.request.post("/api/teams/invitations/expired-token/accept");
     const body = await response.json().catch(() => ({}));
-    expect(response.status() === 400 || response.status() === 410 || response.status() === 404).toBe(true);
+    expect(
+      response.status() === 400 || response.status() === 410 || response.status() === 404,
+    ).toBe(true);
     expect(body.error || body.message || true).toBeTruthy();
   });
 
@@ -605,7 +625,9 @@ test.describe("Teams — Invitation Lifecycle", () => {
     // Attempt to accept an invitation that was already accepted or declined
     const response = await page.request.post("/api/teams/invitations/already-handled-token/accept");
     const body = await response.json().catch(() => ({}));
-    expect(response.status() === 400 || response.status() === 409 || response.status() === 404).toBe(true);
+    expect(
+      response.status() === 400 || response.status() === 409 || response.status() === 404,
+    ).toBe(true);
     expect(body.error || body.message || true).toBeTruthy();
   });
 
@@ -690,7 +712,6 @@ test.describe("Teams — Permission Enforcement", () => {
 
   test("should block team deletion when active profiles exist", async ({ page }) => {
     const response = await page.request.delete(`/api/teams/team-with-profiles-${Date.now()}`);
-    const body = await response.json().catch(() => ({}));
     // Should fail because team has profiles, or 404 because team doesn't exist
     expect(response.status() === 400 || response.status() === 404).toBe(true);
   });
@@ -702,7 +723,9 @@ test.describe("Teams — Permission Enforcement", () => {
 
   test("should not allow accessing another team's data", async ({ page }) => {
     const response = await page.request.get(`/api/teams/some-other-team-id-${Date.now()}`);
-    expect(response.status() === 401 || response.status() === 403 || response.status() === 404).toBe(true);
+    expect(
+      response.status() === 401 || response.status() === 403 || response.status() === 404,
+    ).toBe(true);
   });
 });
 
@@ -748,11 +771,6 @@ test.describe("Teams — Edge Cases", () => {
     }
 
     // Loading skeleton may be visible briefly
-    const hasSkeleton = await page
-      .locator('[class*="skeleton"], [class*="loading"], [class*="placeholder"]')
-      .first()
-      .isVisible()
-      .catch(() => false);
     // Page eventually loads with content
     await expect(page.locator("body")).toBeVisible({ timeout: 10000 });
   });
@@ -816,7 +834,9 @@ test.describe("Teams — Edge Cases", () => {
     expect(hasOwnerBadge || true).toBe(true);
   });
 
-  test("EDGE: Member with multiple roles across teams shows role per team correctly", async ({ page }) => {
+  test("EDGE: Member with multiple roles across teams shows role per team correctly", async ({
+    page,
+  }) => {
     await page.goto("/settings/teams");
 
     const currentUrl = new URL(page.url());

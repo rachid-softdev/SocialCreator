@@ -405,8 +405,6 @@ test.describe("Responsive Design", () => {
       }
 
       // Sidebar may be collapsed or in a reduced state
-      const sidebar = page.locator("aside").first();
-      const sidebarVisible = await sidebar.isVisible().catch(() => false);
       const header = page.locator("header").first();
       await expect(header).toBeVisible({ timeout: 5000 });
 
@@ -466,7 +464,12 @@ test.describe("Responsive Design", () => {
 
       // On mobile, profile cards should stack vertically
       const cards = page.locator('[class*="card"], [class*="profile-card"]');
-      if (await cards.first().isVisible().catch(() => false)) {
+      if (
+        await cards
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         const firstCard = cards.first();
         const box = await firstCard.boundingBox();
         if (box) {

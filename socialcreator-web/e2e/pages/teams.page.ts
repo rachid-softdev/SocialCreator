@@ -41,14 +41,14 @@ export class TeamsPage extends BasePage {
     await cancelBtn.click();
   }
 
-  async viewTeamDetails(teamName: string) {
+  async viewTeamDetails(_teamName: string) {
     const viewBtn = this.page.getByRole("button", { name: /view details/i }).first();
     if (await viewBtn.isVisible()) {
       await viewBtn.click();
     }
   }
 
-  async inviteMember(teamId: string, email: string, role = "VIEWER") {
+  async inviteMember(_teamId: string, email: string, role = "VIEWER") {
     // Click the invite button (Plus icon) for the team
     const inviteBtn = this.page.locator(`button[title="Invite member"]`).first();
     await inviteBtn.click();
@@ -75,13 +75,13 @@ export class TeamsPage extends BasePage {
 
   async changeMemberRole(memberEmail: string, newRole: string) {
     // Find the member row and change their role via the select
-    const memberRow = this.page.locator("text=" + memberEmail).locator("..");
+    const memberRow = this.page.locator(`text=${memberEmail}`).locator("..");
     const roleSelect = memberRow.locator("select");
     await roleSelect.selectOption(newRole);
   }
 
   async removeMember(memberEmail: string) {
-    const memberRow = this.page.locator("text=" + memberEmail).locator("..");
+    const memberRow = this.page.locator(`text=${memberEmail}`).locator("..");
     const removeBtn = memberRow.locator('button[title="Remove member"]');
     await removeBtn.click();
   }

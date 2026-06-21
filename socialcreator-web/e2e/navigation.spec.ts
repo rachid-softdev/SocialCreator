@@ -460,7 +460,10 @@ test.describe("Navigation", () => {
     test("should show 404 for invalid deeply nested route", async ({ page }) => {
       await page.goto("/dashboard/settings/profiles/edit/123/advanced/nonexistent");
       // Should show a 404 or handle gracefully
-      const has404 = await page.getByText("404").isVisible({ timeout: 10000 }).catch(() => false);
+      const has404 = await page
+        .getByText("404")
+        .isVisible({ timeout: 10000 })
+        .catch(() => false);
       const hasNotFound = await page
         .getByText(/page not found|not found|doesn't exist/i)
         .isVisible()
@@ -477,9 +480,13 @@ test.describe("Navigation", () => {
 
       const finalPath = new URL(page.url()).pathname;
       // Should either show 404, redirect to login, or handle the route gracefully
-      const acceptablePaths = ["/login", "/content", "/404"];
       const startsWithContent = finalPath.startsWith("/content");
-      const is404 = finalPath === "/404" || page.getByText("404").isVisible().catch(() => false);
+      const is404 =
+        finalPath === "/404" ||
+        page
+          .getByText("404")
+          .isVisible()
+          .catch(() => false);
       expect(startsWithContent || is404 || finalPath === "/login").toBe(true);
     });
   });

@@ -38,7 +38,6 @@ test.describe("Protected Routes", () => {
     const finalPath = new URL(page.url()).pathname;
     const isLogin = finalPath === "/login";
     const isForbidden = finalPath === "/admin/unauthorized" || finalPath === "/403";
-    const is404 = finalPath === "/404" || page.getByText("404").isVisible();
     expect(isLogin || isForbidden).toBe(true);
   });
 

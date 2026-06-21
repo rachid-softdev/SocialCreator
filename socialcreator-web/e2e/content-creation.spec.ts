@@ -5,8 +5,6 @@
 
 import { expect, test } from "@playwright/test";
 import { ContentDetailPage, ContentPage, GenerationPanelPage } from "./pages/content.page";
-import { DashboardPage } from "./pages/dashboard.page";
-import { LoginPage } from "./pages/login.page";
 
 test.describe("Content Creation", () => {
   // We need an authenticated user for these tests
@@ -14,8 +12,6 @@ test.describe("Content Creation", () => {
 
   test.describe("Navigation", () => {
     test("should navigate to content page", async ({ page }) => {
-      // Login first
-      const dashboard = new DashboardPage(page);
       // Try to access content directly - it will redirect to login if not authenticated
       const content = new ContentPage(page);
       await content.goto();
@@ -496,15 +492,17 @@ test.describe("Approval Flow", () => {
     }
 
     // Look for approve and reject buttons on content cards
-    const approveBtns = page
-      .getByRole("button")
-      .filter({ hasText: /^approve$|^approve/i });
-    const rejectBtns = page
-      .getByRole("button")
-      .filter({ hasText: /^reject$|^reject/i });
+    const approveBtns = page.getByRole("button").filter({ hasText: /^approve$|^approve/i });
+    const rejectBtns = page.getByRole("button").filter({ hasText: /^reject$|^reject/i });
 
-    const hasApprove = await approveBtns.first().isVisible().catch(() => false);
-    const hasReject = await rejectBtns.first().isVisible().catch(() => false);
+    const hasApprove = await approveBtns
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasReject = await rejectBtns
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasApprove === true || hasApprove === false).toBe(true);
     expect(hasReject === true || hasReject === false).toBe(true);
   });
@@ -519,7 +517,10 @@ test.describe("Approval Flow", () => {
       return;
     }
 
-    const approveBtn = page.getByRole("button").filter({ hasText: /^approve$/i }).first();
+    const approveBtn = page
+      .getByRole("button")
+      .filter({ hasText: /^approve$/i })
+      .first();
     if (await approveBtn.isVisible().catch(() => false)) {
       await approveBtn.click();
 
@@ -528,7 +529,9 @@ test.describe("Approval Flow", () => {
         .locator('[class*="badge"]')
         .or(page.getByText(/approved/i))
         .first();
-      const hasApprovalFeedback = await approvedBadge.isVisible({ timeout: 5000 }).catch(() => false);
+      const hasApprovalFeedback = await approvedBadge
+        .isVisible({ timeout: 5000 })
+        .catch(() => false);
       expect(typeof hasApprovalFeedback).toBe("boolean");
     }
   });
@@ -543,7 +546,10 @@ test.describe("Approval Flow", () => {
       return;
     }
 
-    const rejectBtn = page.getByRole("button").filter({ hasText: /^reject$/i }).first();
+    const rejectBtn = page
+      .getByRole("button")
+      .filter({ hasText: /^reject$/i })
+      .first();
     if (await rejectBtn.isVisible().catch(() => false)) {
       await rejectBtn.click();
 
@@ -759,7 +765,9 @@ test.describe("Content — Generation Quota & Errors", () => {
       if (await retryBtn.isVisible().catch(() => false)) {
         await retryBtn.click();
         // After retry click, the form should be active and another generate attempt made
-        await expect(page.locator('[role="alert"]')).not.toBeVisible({ timeout: 8000 }).catch(() => {});
+        await expect(page.locator('[role="alert"]'))
+          .not.toBeVisible({ timeout: 8000 })
+          .catch(() => {});
       }
     }
   });
@@ -808,12 +816,16 @@ test.describe("Content — Generation Quota & Errors", () => {
       await genPage.clickGenerate();
 
       // Check for loading spinner or "Generating..." text
-      const loadingIndicator = page.locator('[class*="spinner"], [class*="loading"], [aria-busy="true"]').or(page.getByText(/generating/i));
+      const loadingIndicator = page
+        .locator('[class*="spinner"], [class*="loading"], [aria-busy="true"]')
+        .or(page.getByText(/generating/i));
       await expect(loadingIndicator).toBeVisible({ timeout: 3000 });
     }
   });
 
-  test("should disable generate button during generation (prevent double-click)", async ({ page }) => {
+  test("should disable generate button during generation (prevent double-click)", async ({
+    page,
+  }) => {
     const genPage = new GenerationPanelPage(page);
     await genPage.goto();
 
@@ -856,20 +868,19 @@ test.describe("Content — Generation Quota & Errors", () => {
     if (!isDisabled) {
       await genPage.clickGenerate();
       // After clicking, the button should switch to "Generating..." which makes it disabled
-      await expect(genPage.generateButton.or(page.getByRole("button", { name: /generating/i }))).toBeDisabled({
-        timeout: 3000,
-      }).catch(() => {
-        // Button may have transitioned to disabled state or text changed to "Generating..."
-        // Either way the generating button should not be clickable
-      });
+      await expect(genPage.generateButton.or(page.getByRole("button", { name: /generating/i })))
+        .toBeDisabled({
+          timeout: 3000,
+        })
+        .catch(() => {
+          // Button may have transitioned to disabled state or text changed to "Generating..."
+          // Either way the generating button should not be clickable
+        });
     }
   });
 });
 
 test.describe("Content — Full State Machine", () => {
-  const uniqueSuffix = Date.now();
-  const contentId = `e2e-state-${uniqueSuffix}`;
-
   test("should transition DRAFT → APPROVED → PUBLISHED", async ({ page }) => {
     const currentUrl = new URL(page.url());
     if (currentUrl.pathname === "/login") {
@@ -878,7 +889,6 @@ test.describe("Content — Full State Machine", () => {
     }
 
     const ts = Date.now();
-    const testContentId = `state-draft-approved-published-${ts}`;
 
     // Step 1: Generate content as DRAFT via API
     const generateRes = await page.request.post("/api/v1/content/generate", {
@@ -924,7 +934,6 @@ test.describe("Content — Full State Machine", () => {
     }
 
     const ts = Date.now();
-    const testContentId = `state-scheduled-${ts}`;
 
     const generateRes = await page.request.post("/api/v1/content/generate", {
       data: {
@@ -941,7 +950,9 @@ test.describe("Content — Full State Machine", () => {
 
       if (newContentId) {
         // Approved
-        const approveRes = await page.request.post(`/api/content/${newContentId}/approve`, { data: {} });
+        const approveRes = await page.request.post(`/api/content/${newContentId}/approve`, {
+          data: {},
+        });
         expect(approveRes.status()).toBe(200);
 
         // Schedule for future
@@ -1008,8 +1019,12 @@ test.describe("Content — Full State Machine", () => {
       const approveBtn = parent.getByRole("button", { name: /^approve$/i });
       const rejectBtn = parent.getByRole("button", { name: /^reject$/i });
 
-      await expect(approveBtn).not.toBeVisible({ timeout: 3000 }).catch(() => {});
-      await expect(rejectBtn).not.toBeVisible({ timeout: 3000 }).catch(() => {});
+      await expect(approveBtn)
+        .not.toBeVisible({ timeout: 3000 })
+        .catch(() => {});
+      await expect(rejectBtn)
+        .not.toBeVisible({ timeout: 3000 })
+        .catch(() => {});
     }
   });
 
@@ -1030,7 +1045,9 @@ test.describe("Content — Full State Machine", () => {
     if (publishedCount > 0) {
       const parent = publishedItems.first().locator("..");
       const editLink = parent.getByRole("link", { name: /edit/i });
-      await expect(editLink).not.toBeVisible({ timeout: 3000 }).catch(() => {});
+      await expect(editLink)
+        .not.toBeVisible({ timeout: 3000 })
+        .catch(() => {});
     }
   });
 
@@ -1175,7 +1192,9 @@ test.describe("Content — Editing & Saving", () => {
           const saveBtn = page.getByRole("button", { name: /save draft/i });
           if (await saveBtn.isVisible().catch(() => false)) {
             await saveBtn.click();
-            await expect(page.getByText(/draft saved|saved|updated/i).or(page.getByText(/no changes/i))).toBeVisible({
+            await expect(
+              page.getByText(/draft saved|saved|updated/i).or(page.getByText(/no changes/i)),
+            ).toBeVisible({
               timeout: 5000,
             });
           }
@@ -1235,7 +1254,9 @@ test.describe("Content — Editing & Saving", () => {
       if (await cancelBtn.isVisible().catch(() => false)) {
         await cancelBtn.click();
         // After cancel, should return to view mode — content should be visible
-        await expect(page.locator("textarea")).not.toBeVisible({ timeout: 3000 }).catch(() => {});
+        await expect(page.locator("textarea"))
+          .not.toBeVisible({ timeout: 3000 })
+          .catch(() => {});
       }
     }
   });
@@ -1388,7 +1409,10 @@ test.describe("Content — Multi-Variation & Platform", () => {
       await genPage.waitForGenerationComplete(15000);
 
       // Check that keywords-related content is shown
-      const hasKeywords = await page.getByText(/AI|marketing|automation/i).isVisible().catch(() => false);
+      const hasKeywords = await page
+        .getByText(/AI|marketing|automation/i)
+        .isVisible()
+        .catch(() => false);
       expect(typeof hasKeywords).toBe("boolean");
     }
   });
@@ -1448,8 +1472,6 @@ test.describe("Content — Multi-Variation & Platform", () => {
 // =============================================================================
 
 test.describe("Content Creation — Edge Cases", () => {
-  const uniqueSuffix = Date.now();
-
   test("should handle very long brief text (10k+ chars) gracefully", async ({ page }) => {
     const genPage = new GenerationPanelPage(page);
     await genPage.goto();

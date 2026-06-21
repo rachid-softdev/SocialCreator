@@ -47,7 +47,9 @@ export class VideoPipelinePage extends BasePage {
   }
 
   async getSegmentCount(): Promise<number> {
-    return this.page.locator("[class*='segment'], [class*='segment-card'], [role='listitem']").count();
+    return this.page
+      .locator("[class*='segment'], [class*='segment-card'], [role='listitem']")
+      .count();
   }
 
   async waitForTranscription(timeout = 60000): Promise<boolean> {

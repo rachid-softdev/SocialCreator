@@ -122,7 +122,9 @@ test.describe("Admin Org Detail", () => {
 
       // Overrides section should show count
       await expect(page.getByText(/Surcharges/i).first()).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(String(org._count.entitlementOverrides)).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(String(org._count.entitlementOverrides)).first()).toBeVisible({
+        timeout: 5000,
+      });
     });
 
     test("should show breadcrumb with navigation back to org list", async ({ page }) => {
@@ -190,7 +192,10 @@ test.describe("Admin Org Detail", () => {
       const orgId = `forbidden-org-${Date.now()}`;
 
       await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
-        await route.fulfill({ status: 403, json: { error: "Forbidden: not authorized to access this organization" } });
+        await route.fulfill({
+          status: 403,
+          json: { error: "Forbidden: not authorized to access this organization" },
+        });
       });
 
       await page.goto(`/admin/orgs/${orgId}`);
@@ -247,7 +252,9 @@ test.describe("Admin Org Detail", () => {
       }
 
       // Should show cancellation warning
-      const cancelMsg = page.getByText(/annulation en cours|annulé|configuré pour être annulé/i).first();
+      const cancelMsg = page
+        .getByText(/annulation en cours|annulé|configuré pour être annulé/i)
+        .first();
       await expect(cancelMsg).toBeVisible({ timeout: 5000 });
     });
 
@@ -389,8 +396,12 @@ test.describe("Admin Org Detail", () => {
 
       const currentUrl = new URL(page.url());
       const isLogin = currentUrl.pathname === "/login";
-      const isForbidden = currentUrl.pathname.includes("unauthorized") || currentUrl.pathname.includes("403");
-      const hasError = await page.getByText(/unauthorized|forbidden|access denied/i).isVisible().catch(() => false);
+      const isForbidden =
+        currentUrl.pathname.includes("unauthorized") || currentUrl.pathname.includes("403");
+      const hasError = await page
+        .getByText(/unauthorized|forbidden|access denied/i)
+        .isVisible()
+        .catch(() => false);
 
       expect(isLogin || isForbidden || hasError).toBe(true);
     });

@@ -99,12 +99,9 @@ test.describe("Teams API", () => {
     });
 
     test("should return 404 when inviting to non-existent team", async ({ request }) => {
-      const response = await request.post(
-        `/api/teams/nonexistent-${Date.now()}/invite`,
-        {
-          data: { email: `test-${Date.now()}@example.com`, role: "member" },
-        },
-      );
+      const response = await request.post(`/api/teams/nonexistent-${Date.now()}/invite`, {
+        data: { email: `test-${Date.now()}@example.com`, role: "member" },
+      });
       expect([404, 401, 302]).toContain(response.status());
     });
   });

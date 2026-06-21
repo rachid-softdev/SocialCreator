@@ -4,8 +4,8 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { BillingSettingsPage, PricingPage } from "./pages/billing.page";
 import { RegisterPage } from "./pages/register.page";
-import { PricingPage, BillingSettingsPage } from "./pages/billing.page";
 
 const TEST_PASSWORD = "TestPass123!";
 
@@ -29,13 +29,15 @@ test.describe("Subscription Lifecycle - Free Tier", () => {
   test("should check current plan is Free", async ({ page }) => {
     // Register user via API
     const testEmail = `check-plan-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: {
-        name: "Check Plan User",
-        email: testEmail,
-        password: TEST_PASSWORD,
-      },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: {
+          name: "Check Plan User",
+          email: testEmail,
+          password: TEST_PASSWORD,
+        },
+      })
+      .catch(() => {});
 
     const billing = new BillingSettingsPage(page);
     await billing.goto();
@@ -53,7 +55,10 @@ test.describe("Subscription Lifecycle - Free Tier", () => {
       .getByText(/free|free tier|start scaling/i)
       .isVisible()
       .catch(() => false);
-    const hasPlanName = await billing.getCurrentPlanName().then((n) => n.length > 0).catch(() => false);
+    const hasPlanName = await billing
+      .getCurrentPlanName()
+      .then((n) => n.length > 0)
+      .catch(() => false);
     expect(hasFreeTier || hasPlanName).toBe(true);
   });
 
@@ -131,26 +136,34 @@ test.describe("Subscription Lifecycle - Upgrade", () => {
   test("should redirect to Stripe checkout", async ({ page }) => {
     // Register user first, then attempt checkout
     const testEmail = `stripe-redirect-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: {
-        name: "Stripe Redirect User",
-        email: testEmail,
-        password: TEST_PASSWORD,
-      },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: {
+          name: "Stripe Redirect User",
+          email: testEmail,
+          password: TEST_PASSWORD,
+        },
+      })
+      .catch(() => {});
 
     const pricing = new PricingPage(page);
     await pricing.goto();
 
     // Find and click a "Select Plan" button
     const selectButtons = page.getByRole("button", { name: /select plan/i });
-    if (await selectButtons.first().isVisible().catch(() => false)) {
+    if (
+      await selectButtons
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await selectButtons.first().click();
       await page.waitForLoadState("networkidle", { timeout: 10000 });
 
       // Should navigate to stripe checkout or pricing page with modal
       const currentUrl = new URL(page.url());
-      const isStripe = currentUrl.hostname.includes("stripe") || currentUrl.pathname.includes("stripe");
+      const isStripe =
+        currentUrl.hostname.includes("stripe") || currentUrl.pathname.includes("stripe");
       const hasStripeElement = await page
         .locator('[class*="stripe"], [class*="Stripe"], iframe[src*="stripe"]')
         .first()
@@ -224,9 +237,11 @@ test.describe("Subscription Lifecycle - Management", () => {
 
   test("should show remaining trial days for free users", async ({ page }) => {
     const testEmail = `trial-days-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: { name: "Trial Days User", email: testEmail, password: TEST_PASSWORD },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: { name: "Trial Days User", email: testEmail, password: TEST_PASSWORD },
+      })
+      .catch(() => {});
 
     await page.goto("/settings/billing");
 
@@ -265,9 +280,11 @@ test.describe("Subscription Lifecycle - Management", () => {
 test.describe("Subscription Lifecycle — Downgrade", () => {
   test("should show downgrade option takes effect at period end", async ({ page }) => {
     const testEmail = `downgrade-end-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: { name: "Downgrade User", email: testEmail, password: TEST_PASSWORD },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: { name: "Downgrade User", email: testEmail, password: TEST_PASSWORD },
+      })
+      .catch(() => {});
 
     // Mock active subscription
     await page.route("**/api/stripe/subscription", async (route) => {

@@ -197,10 +197,6 @@ test.describe("Billing & Subscription", () => {
       }
 
       // Invoice history may or may not be visible (depends on subscription)
-      const hasInvoiceHistory = await page
-        .getByText(/invoice history/i)
-        .isVisible()
-        .catch(() => false);
       // Either it's visible or not - we just verify the page loaded
       expect(true).toBe(true);
     });
@@ -243,10 +239,6 @@ test.describe("Plan Upgrade/Downgrade", () => {
       return;
     }
 
-    const hasProrated = await page
-      .getByText(/prorat|credit|refund/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -260,10 +252,6 @@ test.describe("Plan Upgrade/Downgrade", () => {
       return;
     }
 
-    const hasConfirmation = await page
-      .getByText(/confirm|are you sure/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 });
@@ -327,10 +315,6 @@ test.describe("Invoice History", () => {
       return;
     }
 
-    const hasInvoices = await page
-      .getByText(/invoice/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -343,10 +327,6 @@ test.describe("Invoice History", () => {
       return;
     }
 
-    const hasAmounts = await page
-      .getByText(/\$|€|£/)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -359,10 +339,6 @@ test.describe("Invoice History", () => {
       return;
     }
 
-    const downloadBtn = page.getByRole("button", { name: /download/i });
-    const downloadLink = page.locator('a[href*="invoice"][href*="download"]');
-    const hasDownload = (await downloadBtn.isVisible().catch(() => false)) ||
-      (await downloadLink.isVisible().catch(() => false));
     expect(true).toBe(true);
   });
 });
@@ -567,16 +543,15 @@ test.describe("Billing — Subscription States", () => {
       return;
     }
 
-    // Check if manage subscription button exists
-    const manageBtn = page.getByRole("button", { name: /manage subscription/i });
-    const hasManage = await manageBtn.isVisible().catch(() => false);
     // Either visible for paid users or not - page loaded
     expect(true).toBe(true);
   });
 });
 
 test.describe("Billing — Stripe Integration", () => {
-  test("should return 400 for invalid plan selection (POST /api/stripe/checkout with invalid plan)", async ({ page }) => {
+  test("should return 400 for invalid plan selection (POST /api/stripe/checkout with invalid plan)", async ({
+    page,
+  }) => {
     const response = await page.request.post("/api/stripe/checkout", {
       data: { plan: `invalid-plan-${Date.now()}` },
     });
@@ -649,8 +624,6 @@ test.describe("Billing — Plan Changes", () => {
     await page.goto("/pricing");
 
     // On the pricing page, the user's current plan should be marked
-    const currentPlanBadge = page.getByText(/current plan/i);
-    const hasBadge = await currentPlanBadge.isVisible().catch(() => false);
     // Either the badge exists or the page loaded (for non-logged-in users it won't)
     expect(true).toBe(true);
   });
@@ -701,7 +674,9 @@ test.describe("Billing — Plan Changes", () => {
     });
 
     // Try to trigger checkout
-    const selectPlanBtn = page.getByRole("button", { name: /select plan|upgrade|purchase|subscribe/i }).first();
+    const selectPlanBtn = page
+      .getByRole("button", { name: /select plan|upgrade|purchase|subscribe/i })
+      .first();
     if (await selectPlanBtn.isVisible().catch(() => false)) {
       await selectPlanBtn.click();
       await page.waitForLoadState("networkidle");
@@ -710,7 +685,10 @@ test.describe("Billing — Plan Changes", () => {
       const paymentError = page
         .locator('[role="alert"]')
         .or(page.getByText(/payment|declined|card error|transaction|failed/i));
-      const hasError = await paymentError.first().isVisible({ timeout: 5000 }).catch(() => false);
+      const hasError = await paymentError
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false);
       expect(typeof hasError).toBe("boolean");
     }
   });
@@ -766,9 +744,11 @@ test.describe("Billing — Plan Changes", () => {
     });
 
     // Find coupon input if it exists
-    const couponInput = page.locator(
-      'input[name="coupon"], input[id*="coupon"], input[placeholder*="coupon" i], input[placeholder*="promo" i]',
-    ).first();
+    const couponInput = page
+      .locator(
+        'input[name="coupon"], input[id*="coupon"], input[placeholder*="coupon" i], input[placeholder*="promo" i]',
+      )
+      .first();
 
     if (await couponInput.isVisible().catch(() => false)) {
       await couponInput.fill("INVALID-COUPON-123");
@@ -783,7 +763,10 @@ test.describe("Billing — Plan Changes", () => {
         const couponError = page
           .locator('[role="alert"]')
           .or(page.getByText(/invalid.*coupon|coupon.*expired|promo.*invalid/i));
-        const hasError = await couponError.first().isVisible({ timeout: 5000 }).catch(() => false);
+        const hasError = await couponError
+          .first()
+          .isVisible({ timeout: 5000 })
+          .catch(() => false);
         expect(typeof hasError).toBe("boolean");
       }
     }
@@ -820,7 +803,9 @@ test.describe("Billing — Free Plan", () => {
     }
 
     // Usage metrics like profiles used, posts published etc.
-    const usageMetric = page.getByText(/usage|profiles used|posts published|used\/|remaining|limits/i);
+    const usageMetric = page.getByText(
+      /usage|profiles used|posts published|used\/|remaining|limits/i,
+    );
     const hasUsage = await usageMetric.isVisible().catch(() => false);
     const progressBar = page.locator('[role="progressbar"], progress, [class*="progress-bar"]');
     const hasProgress = await progressBar.isVisible().catch(() => false);
@@ -851,8 +836,6 @@ test.describe("Billing — Pro Upgrade Flow", () => {
       await selectBtn.click();
       // Should either redirect to Stripe or call the API
       await page.waitForLoadState("networkidle", { timeout: 10000 });
-      const currentUrl = page.url();
-      const redirectedToStripe = currentUrl.includes("stripe.com") || currentUrl.includes("checkout");
       expect(true).toBe(true);
     }
   });
@@ -918,7 +901,9 @@ test.describe("Billing — Stripe Error States", () => {
       await page.waitForLoadState("networkidle", { timeout: 10000 });
 
       // Should show error message
-      const errorMsg = page.locator('[role="alert"]').or(page.getByText(/error|failed|unable.*checkout/i));
+      const errorMsg = page
+        .locator('[role="alert"]')
+        .or(page.getByText(/error|failed|unable.*checkout/i));
       const hasError = await errorMsg.isVisible({ timeout: 5000 }).catch(() => false);
       expect(hasError || page.url().includes("/pricing")).toBe(true);
     }
@@ -971,14 +956,18 @@ test.describe("Billing — Stripe Error States", () => {
     await pricing.goto();
 
     // Look for a coupon input field if it exists
-    const couponInput = page.locator('input[placeholder*="coupon"], input[placeholder*="promo"], input[name*="coupon"]');
+    const couponInput = page.locator(
+      'input[placeholder*="coupon"], input[placeholder*="promo"], input[name*="coupon"]',
+    );
     if (await couponInput.isVisible().catch(() => false)) {
       await couponInput.fill("INVALIDCODE");
       const applyBtn = page.getByRole("button", { name: /apply/i });
       if (await applyBtn.isVisible().catch(() => false)) {
         await applyBtn.click();
         await page.waitForLoadState("networkidle", { timeout: 5000 });
-        const errorMsg = page.locator('[role="alert"]').or(page.getByText(/invalid|coupon.*not|expired/i));
+        const errorMsg = page
+          .locator('[role="alert"]')
+          .or(page.getByText(/invalid|coupon.*not|expired/i));
         const hasError = await errorMsg.isVisible({ timeout: 5000 }).catch(() => false);
         expect(hasError || true).toBe(true);
       }
@@ -1010,7 +999,9 @@ test.describe("Billing — Subscription Edge Cases", () => {
       return;
     }
 
-    const periodEndMsg = page.getByText(/period end|end of billing|end of cycle|downgrade.*end|end of period/i);
+    const periodEndMsg = page.getByText(
+      /period end|end of billing|end of cycle|downgrade.*end|end of period/i,
+    );
     const hasMsg = await periodEndMsg.isVisible({ timeout: 5000 }).catch(() => false);
     expect(hasMsg || true).toBe(true);
   });
@@ -1095,8 +1086,22 @@ test.describe("Billing — Invoice History", () => {
     await page.route("**/api/invoices", async (route) => {
       await route.fulfill({
         json: [
-          { id: "inv_001", date: "2026-06-01", amount: 29, currency: "usd", status: "paid", pdfUrl: "/invoices/inv_001.pdf" },
-          { id: "inv_002", date: "2026-05-01", amount: 29, currency: "usd", status: "paid", pdfUrl: "/invoices/inv_002.pdf" },
+          {
+            id: "inv_001",
+            date: "2026-06-01",
+            amount: 29,
+            currency: "usd",
+            status: "paid",
+            pdfUrl: "/invoices/inv_001.pdf",
+          },
+          {
+            id: "inv_002",
+            date: "2026-05-01",
+            amount: 29,
+            currency: "usd",
+            status: "paid",
+            pdfUrl: "/invoices/inv_002.pdf",
+          },
         ],
       });
     });

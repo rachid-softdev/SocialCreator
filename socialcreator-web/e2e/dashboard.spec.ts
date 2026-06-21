@@ -21,7 +21,9 @@ test.describe("Dashboard Overview", () => {
       await expect(dashboard.heading).toBeVisible({ timeout: 10000 });
     });
 
-    test("should show stats grid (total content, published, scheduled, drafts)", async ({ page }) => {
+    test("should show stats grid (total content, published, scheduled, drafts)", async ({
+      page,
+    }) => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
 
@@ -59,7 +61,9 @@ test.describe("Dashboard Overview", () => {
       expect(hasTotalContent || hasPublished || hasScheduled || hasDrafts).toBe(true);
     });
 
-    test("should show quick action buttons (Create Content, View Analytics, etc.)", async ({ page }) => {
+    test("should show quick action buttons (Create Content, View Analytics, etc.)", async ({
+      page,
+    }) => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
 
@@ -154,7 +158,9 @@ test.describe("Dashboard Overview", () => {
   });
 
   test.describe("Dashboard Empty State", () => {
-    test("should show welcome message for new users (or skip if content exists)", async ({ page }) => {
+    test("should show welcome message for new users (or skip if content exists)", async ({
+      page,
+    }) => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
 
@@ -192,9 +198,9 @@ test.describe("Dashboard Overview", () => {
       }
 
       // Look for onboarding/CTA buttons
-      const ctaButtons = page
-        .locator("button, a")
-        .filter({ hasText: /create profile|create agent|add platform|get started|create content/i });
+      const ctaButtons = page.locator("button, a").filter({
+        hasText: /create profile|create agent|add platform|get started|create content/i,
+      });
 
       const ctaCount = await ctaButtons.count();
       // Either CTAs are visible or dashboard has content (user is past onboarding)
@@ -366,9 +372,7 @@ test.describe("Dashboard — New User Experience", () => {
     const stepCount = await stepCards.count();
 
     // Or count numbered steps / step indicators
-    const steps = page.locator(
-      '[class*="step"], [role="progressbar"], [aria-label*="step" i]',
-    );
+    const steps = page.locator('[class*="step"], [role="progressbar"], [aria-label*="step" i]');
     const foundSteps = await steps.count();
 
     const hasOnboardingSection = await page
@@ -401,8 +405,14 @@ test.describe("Dashboard — New User Experience", () => {
     // Find and click "Create Your First Profile" button/link
     const cta = page
       .getByRole("link")
-      .locator('a:has-text("Create Your First Profile"), a:has-text("Create Profile"), a:has-text("Nouveau profil"), a:has-text("Créer")')
-      .or(page.getByRole("button").filter({ hasText: /create.*profile|nouveau profil|first profile|créer.*profil/i }))
+      .locator(
+        'a:has-text("Create Your First Profile"), a:has-text("Create Profile"), a:has-text("Nouveau profil"), a:has-text("Créer")',
+      )
+      .or(
+        page
+          .getByRole("button")
+          .filter({ hasText: /create.*profile|nouveau profil|first profile|créer.*profil/i }),
+      )
       .first();
 
     const ctaLink = page
@@ -410,7 +420,11 @@ test.describe("Dashboard — New User Experience", () => {
       .filter({ hasText: /create|profile|nouveau|first/i })
       .first();
 
-    const target = await cta.isVisible().catch(() => false) ? cta : (await ctaLink.isVisible().catch(() => false) ? ctaLink : null);
+    const target = (await cta.isVisible().catch(() => false))
+      ? cta
+      : (await ctaLink.isVisible().catch(() => false))
+        ? ctaLink
+        : null;
 
     if (target) {
       const href = await target.getAttribute("href").catch(() => null);
@@ -419,7 +433,9 @@ test.describe("Dashboard — New User Experience", () => {
 
       // Should navigate to profiles/new or profiles/create
       const finalUrl = new URL(page.url());
-      const isProfileCreation = finalUrl.pathname.includes("/profiles/new") || finalUrl.pathname.includes("/profiles/create");
+      const isProfileCreation =
+        finalUrl.pathname.includes("/profiles/new") ||
+        finalUrl.pathname.includes("/profiles/create");
       expect(href?.includes("/profiles/new") || isProfileCreation).toBe(true);
     } else {
       // No CTA found - user might already have content
@@ -479,7 +495,9 @@ test.describe("Dashboard — New User Experience", () => {
 
     if (await viewContent.isVisible().catch(() => false)) {
       // If it's a link, check href; if clicked, navigate
-      const tagName = await viewContent.evaluate((el) => el.tagName.toLowerCase()).catch(() => "unknown");
+      const tagName = await viewContent
+        .evaluate((el) => el.tagName.toLowerCase())
+        .catch(() => "unknown");
 
       if (tagName === "a") {
         const href = await viewContent.getAttribute("href").catch(() => null);
@@ -501,7 +519,9 @@ test.describe("Dashboard — New User Experience", () => {
 // ============================================================
 
 test.describe("Dashboard — Stats & Content", () => {
-  test("should display 4 stat cards with specific labels (Total Profiles, Active Agents, Pending Drafts, Published This Week)", async ({ page }) => {
+  test("should display 4 stat cards with specific labels (Total Profiles, Active Agents, Pending Drafts, Published This Week)", async ({
+    page,
+  }) => {
     await page.route("**/api/dashboard/**", async (route) => {
       await route.fulfill({
         json: {
@@ -550,7 +570,12 @@ test.describe("Dashboard — Stats & Content", () => {
       .isVisible()
       .catch(() => false);
 
-    const found = [hasTotalProfiles, hasActiveAgents, hasPendingDrafts, hasPublishedThisWeek].filter(Boolean).length;
+    const found = [
+      hasTotalProfiles,
+      hasActiveAgents,
+      hasPendingDrafts,
+      hasPublishedThisWeek,
+    ].filter(Boolean).length;
     // At least 3 of 4 stat cards should be visible
     expect(found).toBeGreaterThanOrEqual(3);
   });
@@ -560,8 +585,20 @@ test.describe("Dashboard — Stats & Content", () => {
       await route.fulfill({
         json: {
           recentContent: [
-            { id: "c1", title: "AI trends 2026", platform: "twitter", status: "published", publishedAt: "2026-06-20" },
-            { id: "c2", title: "Content strategy guide", platform: "linkedin", status: "draft", updatedAt: "2026-06-19" },
+            {
+              id: "c1",
+              title: "AI trends 2026",
+              platform: "twitter",
+              status: "published",
+              publishedAt: "2026-06-20",
+            },
+            {
+              id: "c2",
+              title: "Content strategy guide",
+              platform: "linkedin",
+              status: "draft",
+              updatedAt: "2026-06-19",
+            },
           ],
           stats: { totalProfiles: 3, activeAgents: 2, pendingDrafts: 5, publishedThisWeek: 12 },
           activeAgentsList: [],
@@ -608,8 +645,20 @@ test.describe("Dashboard — Stats & Content", () => {
       await route.fulfill({
         json: {
           activeAgentsList: [
-            { id: "a1", name: "Twitter Bot", type: "scheduler", platform: "twitter", status: "running" },
-            { id: "a2", name: "LinkedIn Curator", type: "curator", platform: "linkedin", status: "idle" },
+            {
+              id: "a1",
+              name: "Twitter Bot",
+              type: "scheduler",
+              platform: "twitter",
+              status: "running",
+            },
+            {
+              id: "a2",
+              name: "LinkedIn Curator",
+              type: "curator",
+              platform: "linkedin",
+              status: "idle",
+            },
           ],
           stats: { totalProfiles: 3, activeAgents: 2, pendingDrafts: 5, publishedThisWeek: 12 },
           recentContent: [],
@@ -776,8 +825,7 @@ test.describe("Dashboard — Stats & Content", () => {
     const header = page.locator("header, [class*='header'], [class*='top-bar']").first();
     const headerText = await header.textContent().catch(() => "");
 
-    const hasDate =
-      headerText ? /\b(2026|2025|2024)\b/.test(headerText) : false;
+    const hasDate = headerText ? /\b(2026|2025|2024)\b/.test(headerText) : false;
 
     // Also check for date-related text anywhere visible
     const hasDateElement = await page
@@ -790,10 +838,8 @@ test.describe("Dashboard — Stats & Content", () => {
   });
 
   test("should show PublishChart with loading then 'No data yet' states", async ({ page }) => {
-    let apiResolved = false;
     await page.route("**/api/dashboard/charts", async (route) => {
       await new Promise((r) => setTimeout(r, 2000));
-      apiResolved = true;
       await route.fulfill({
         json: {
           publishChart: [],
@@ -820,7 +866,9 @@ test.describe("Dashboard — Stats & Content", () => {
     const hasChartSection = await chartSection.isVisible().catch(() => false);
 
     // Check for "No data yet" empty state after load
-    const noDataMsg = page.getByText(/no data yet|aucune donnée|no chart data|pas de données/i).first();
+    const noDataMsg = page
+      .getByText(/no data yet|aucune donnée|no chart data|pas de données/i)
+      .first();
     const hasNoData = await noDataMsg.isVisible({ timeout: 8000 }).catch(() => false);
 
     // Check for chart placeholder
@@ -868,7 +916,9 @@ test.describe("Dashboard — Stats & Content", () => {
     expect(errorShown).toBe(false);
   });
 
-  test("should display partial content when stats API fails but other APIs succeed", async ({ page }) => {
+  test("should display partial content when stats API fails but other APIs succeed", async ({
+    page,
+  }) => {
     // Mock stats to fail, but recent content and agents to succeed
     await page.route("**/api/dashboard/stats", async (route) => {
       await route.fulfill({
@@ -881,9 +931,7 @@ test.describe("Dashboard — Stats & Content", () => {
     // Keep other dashboard routes working
     await page.route("**/api/dashboard/content", async (route) => {
       await route.fulfill({
-        json: [
-          { id: "c1", title: "Recent Post 1", status: "published" },
-        ],
+        json: [{ id: "c1", title: "Recent Post 1", status: "published" }],
       });
     });
 
@@ -935,7 +983,13 @@ test.describe("Dashboard — Stats & Content", () => {
           stats: { totalProfiles: 5, activeAgents: 3, pendingDrafts: 50, publishedThisWeek: 55 },
           recentContent: manyItems,
           activeAgentsList: [
-            { id: "a1", name: "Main Bot", type: "scheduler", platform: "twitter", status: "running" },
+            {
+              id: "a1",
+              name: "Main Bot",
+              type: "scheduler",
+              platform: "twitter",
+              status: "running",
+            },
           ],
         },
       });
