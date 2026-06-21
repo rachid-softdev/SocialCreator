@@ -61,8 +61,8 @@ export const xValidator: ContentValidator = characterLimitValidator(4000);
 export const tiktokValidator: ContentValidator = async (content: PublishContent) => {
   const errors: string[] = [];
 
-  if (!content.mediaUrls.some((u) => u.replace(/\?.*$/, "").match(/\.(mp4|mov|avi)$/i))) {
-    errors.push("TikTok requires at least one video file (.mp4, .mov, .avi)");
+  if (!content.mediaUrls.some((u) => u.replace(/\?.*$/, "").match(/\.(mp4|mov|webm)$/i))) {
+    errors.push("TikTok requires at least one video file (.mp4, .mov, .webm)");
   }
 
   return { valid: errors.length === 0, errors, warnings: [] };

@@ -207,8 +207,8 @@ describe("tiktokValidator", () => {
     expect(result.valid).toBe(true);
   });
 
-  it("returns valid when content has a .avi video", async () => {
-    const content = makeContent({ mediaUrls: ["https://example.com/video.avi"] });
+  it("returns valid when content has a .webm video", async () => {
+    const content = makeContent({ mediaUrls: ["https://example.com/video.webm"] });
 
     const result = await tiktokValidator(content);
 
@@ -221,7 +221,7 @@ describe("tiktokValidator", () => {
     const result = await tiktokValidator(content);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("TikTok requires at least one video file (.mp4, .mov, .avi)");
+    expect(result.errors).toContain("TikTok requires at least one video file (.mp4, .mov, .webm)");
   });
 
   it("returns invalid when content has no media at all", async () => {

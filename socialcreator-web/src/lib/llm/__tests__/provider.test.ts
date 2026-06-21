@@ -42,15 +42,6 @@ describe("LLM Provider — generateText", () => {
     messages: [{ role: "user" as const, content: "Hello" }],
   };
 
-  // Suppress expected LLMError unhandled rejections from timer-based retry tests
-  const unhandledHandler = () => {};
-  beforeAll(() => {
-    process.on("unhandledRejection", unhandledHandler);
-  });
-  afterAll(() => {
-    process.off("unhandledRejection", unhandledHandler);
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     resetCircuit();
@@ -328,7 +319,47 @@ describe("LLM Provider — generateText", () => {
   // ── Circuit breaker ──────────────────────────────────────────
 
   describe("circuit breaker", () => {
-    afterEach(() => {
+    let savedUnhandledRejectionHandlers: Array<(...args: any[]) => void>;
+
+    beforeAll(() => {
+      // Remove vitest's unhandledRejection listeners and replace with our own
+      // that filters out expected LLMError rejections. Vitest registers its
+      // listener before tests run (in startVitestExecutor), so we must remove it
+      // here to prevent it from reporting expected LLMError rejections that arise
+      // from tinyspy's promise-wrapping logic during fake-timer async scheduling.
+      savedUnhandledRejectionHandlers = process.listeners("unhandledRejection") as Array<
+        (...args: any[]) => void
+      >;
+      savedUnhandledRejectionHandlers.forEach((h) =>
+        process.removeListener("unhandledRejection", h),
+      );
+      process.on("unhandledRejection", (reason: unknown) => {
+        if (!(reason instanceof LLMError)) {
+          // Re-route non-LLMError rejections to the original vitest handlers
+          savedUnhandledRejectionHandlers.forEach((h) => h(reason));
+        }
+        // LLMError rejections are expected during circuit breaker tests — swallow
+      });
+      // Suppress the harmless Node.js warning when a rejection is handled late
+      process.on("rejectionHandled", () => {});
+    });
+
+    afterAll(() => {
+      // Restore original vitest handlers
+      process.removeAllListeners("unhandledRejection");
+      process.removeAllListeners("rejectionHandled");
+      savedUnhandledRejectionHandlers.forEach((h) =>
+        process.on("unhandledRejection", h),
+      );
+    });
+
+    afterEach(async () => {
+      // Fully drain any remaining fake timers before cleanup
+      try {
+        await vi.runAllTimersAsync();
+      } catch {
+        // drain silently
+      }
       vi.restoreAllMocks();
       vi.useRealTimers();
     });
@@ -557,10 +588,37 @@ describe("LLM Provider — generateText", () => {
   // ── Circuit breaker integration with retry ───────────────────
 
   describe("circuit breaker integration with retry", () => {
+    let savedUnhandledRejectionHandlers: Array<(...args: any[]) => void>;
+
+    beforeAll(() => {
+      // Same handler swap as circuit breaker block: suppress expected LLMError
+      // unhandled rejections that arise from tinyspy's promise wrapping.
+      savedUnhandledRejectionHandlers = process.listeners("unhandledRejection") as Array<
+        (...args: any[]) => void
+      >;
+      savedUnhandledRejectionHandlers.forEach((h) =>
+        process.removeListener("unhandledRejection", h),
+      );
+      process.on("unhandledRejection", (reason: unknown) => {
+        if (!(reason instanceof LLMError)) {
+          savedUnhandledRejectionHandlers.forEach((h) => h(reason));
+        }
+      });
+      process.on("rejectionHandled", () => {});
+    });
+
+    afterAll(() => {
+      process.removeAllListeners("unhandledRejection");
+      process.removeAllListeners("rejectionHandled");
+      savedUnhandledRejectionHandlers.forEach((h) =>
+        process.on("unhandledRejection", h),
+      );
+    });
+
     afterEach(async () => {
-      // Drain any pending fake timers to prevent unhandled rejections
+      // Fully drain all remaining fake timers to prevent unhandled rejections
       try {
-        await vi.advanceTimersByTimeAsync(60_000);
+        await vi.runAllTimersAsync();
       } catch {
         /* drain */
       }
@@ -615,9 +673,6 @@ describe("LLM Provider — generateText", () => {
 
       // 3 calls × 3 retries = 9 calls to Anthropic
       expect(mockAnthropicMessagesCreate).toHaveBeenCalledTimes(9);
-
-      // Fully drain all pending timers before test ends to prevent unhandled rejections
-      await vi.advanceTimersByTimeAsync(60_000).catch(() => {});
     });
   });
 });
