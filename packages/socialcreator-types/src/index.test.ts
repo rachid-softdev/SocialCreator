@@ -99,8 +99,8 @@ describe("@socialcreator/types - zod schemas", () => {
     it("should reject name shorter than 2 characters", () => {
       const result = createProfileSchema.safeParse({ name: "A" });
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error!.issues[0].path).toContain("name");
+      if (!result.success && result.error?.issues[0]) {
+        expect(result.error.issues[0].path).toContain("name");
       }
     });
 
