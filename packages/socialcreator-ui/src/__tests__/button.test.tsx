@@ -74,7 +74,7 @@ describe("@socialcreator/ui - Button", () => {
       </Button>,
     );
     expect(ref).toBeInstanceOf(HTMLButtonElement);
-    expect(ref?.textContent).toBe("Ref test");
+    expect((ref as HTMLElement).textContent).toBe("Ref test");
     cleanup();
   });
 
