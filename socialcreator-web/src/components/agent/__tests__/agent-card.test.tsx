@@ -61,10 +61,10 @@ vi.mock("@/components/admin/confirm-dialog", () => ({
     open ? (
       <div data-testid="confirm-dialog">
         <p>{description}</p>
-        <button data-testid="confirm-btn" onClick={onConfirm}>
+        <button type="button" data-testid="confirm-btn" onClick={onConfirm}>
           {confirmLabel || "Confirm"}
         </button>
-        <button data-testid="cancel-btn" onClick={() => {}}>
+        <button type="button" data-testid="cancel-btn" onClick={() => {}}>
           Cancel
         </button>
       </div>
