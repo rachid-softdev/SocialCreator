@@ -69,9 +69,7 @@ test.describe("Connected Accounts API", () => {
     });
 
     test("should return 404 for platform that was never connected", async ({ request }) => {
-      const response = await request.post(
-        `/api/accounts/nonexistent-${Date.now()}/disconnect`,
-      );
+      const response = await request.post(`/api/accounts/nonexistent-${Date.now()}/disconnect`);
       expect([404, 401, 302]).toContain(response.status());
     });
   });

@@ -106,7 +106,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
   test.describe("Refresh Flow", () => {
     test("should trigger refresh and update data on click", async ({ page }) => {
       const accountId = `refresh-account-${Date.now()}`;
-      const account = makeMockAccount({ id: accountId, expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() });
+      const account = makeMockAccount({
+        id: accountId,
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      });
 
       let refreshCalled = false;
 
@@ -129,7 +132,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
         await route.fulfill({
           json: {
             success: true,
-            account: { ...account, expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() },
+            account: {
+              ...account,
+              expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+            },
           },
         });
       });
@@ -229,7 +235,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       }
 
       // Should show "Connect" button
-      const connectBtn = page.getByRole("button").filter({ hasText: /Connecter/i }).first();
+      const connectBtn = page
+        .getByRole("button")
+        .filter({ hasText: /Connecter/i })
+        .first();
       const hasConnect = await connectBtn.isVisible().catch(() => false);
 
       // Or show empty state
@@ -262,7 +271,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       }
 
       // Click the "Connect" button
-      const connectBtn = page.getByRole("button").filter({ hasText: /Connecter/i }).first();
+      const connectBtn = page
+        .getByRole("button")
+        .filter({ hasText: /Connecter/i })
+        .first();
       if (await connectBtn.isVisible().catch(() => false)) {
         await connectBtn.click();
         await page.waitForTimeout(500);
@@ -323,8 +335,6 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       const accountId = `keep-data-${Date.now()}`;
       const account = makeMockAccount({ id: accountId, accountName: "Keep My Data" });
 
-      let refreshFailed = false;
-
       await page.route("**/api/auth/session", async (route) => {
         await route.fulfill({
           json: {
@@ -335,14 +345,13 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       });
 
       // First call returns account, second call (after refresh) also returns same account
-      let callCount = 0;
+      let _callCount = 0;
       await page.route("**/api/v1/connected-accounts**", async (route) => {
-        callCount++;
+        _callCount++;
         await route.fulfill({ json: { accounts: [account] } });
       });
 
       await page.route(`**/api/v1/connected-accounts/${accountId}/refresh`, async (route) => {
-        refreshFailed = true;
         await route.fulfill({ status: 500, json: { error: "Internal error" } });
       });
 
@@ -385,14 +394,15 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       }
 
       // Should show disconnect button (trash icon)
-      const disconnectBtn = page.locator('button:has(svg[class*="trash"]), button:has([class*="Trash2"])').first();
+      const disconnectBtn = page
+        .locator('button:has(svg[class*="trash"]), button:has([class*="Trash2"])')
+        .first();
       const hasDisconnect = await disconnectBtn.isVisible().catch(() => false);
       expect(hasDisconnect || true).toBe(true);
     });
 
     test("should show confirmation dialog before disconnecting", async ({ page }) => {
       const account = makeMockAccount({});
-      let disconnectApiCalled = false;
 
       await page.route("**/api/auth/session", async (route) => {
         await route.fulfill({
@@ -409,7 +419,6 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
 
       await page.route(`/api/v1/connected-accounts/${account.id}`, async (route) => {
         if (route.request().method() === "DELETE") {
-          disconnectApiCalled = true;
           await route.fulfill({ json: { success: true } });
         } else {
           await route.fulfill({ json: { accounts: [account] } });
@@ -425,9 +434,9 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       }
 
       // Click disconnect button
-      const disconnectBtn = page.locator(
-        'button:has(svg[class*="trash"]), button:has([class*="Trash2"])',
-      ).first();
+      const disconnectBtn = page
+        .locator('button:has(svg[class*="trash"]), button:has([class*="Trash2"])')
+        .first();
 
       if (await disconnectBtn.isVisible().catch(() => false)) {
         await disconnectBtn.click();
@@ -440,7 +449,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
         if (hasDialog) {
           // Dialog should show account info and confirm button
           await expect(confirmDialog).toBeVisible({ timeout: 3000 });
-          const confirmBtn = confirmDialog.getByRole("button").filter({ hasText: /Déconnecter|Confirmer/i }).first();
+          const confirmBtn = confirmDialog
+            .getByRole("button")
+            .filter({ hasText: /Déconnecter|Confirmer/i })
+            .first();
           const hasConfirmBtn = await confirmBtn.isVisible().catch(() => false);
           expect(hasConfirmBtn).toBe(true);
         }
@@ -489,9 +501,9 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       }
 
       // Click disconnect and confirm
-      const disconnectBtn = page.locator(
-        'button:has(svg[class*="trash"]), button:has([class*="Trash2"])',
-      ).first();
+      const disconnectBtn = page
+        .locator('button:has(svg[class*="trash"]), button:has([class*="Trash2"])')
+        .first();
 
       if (await disconnectBtn.isVisible().catch(() => false)) {
         await disconnectBtn.click();
@@ -499,7 +511,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
 
         const confirmDialog = page.locator('[role="dialog"]').first();
         if (await confirmDialog.isVisible().catch(() => false)) {
-          const confirmBtn = confirmDialog.getByRole("button").filter({ hasText: /Déconnecter/i }).first();
+          const confirmBtn = confirmDialog
+            .getByRole("button")
+            .filter({ hasText: /Déconnecter/i })
+            .first();
           if (await confirmBtn.isVisible().catch(() => false)) {
             await confirmBtn.click();
             await page.waitForTimeout(1000);
@@ -507,7 +522,10 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
             // After disconnect, should show empty state or connect button
             const emptyState = page.getByText(/Aucun compte connecté/i).first();
             const hasEmpty = await emptyState.isVisible().catch(() => false);
-            const connectBtn = page.getByRole("button").filter({ hasText: /Connecter/i }).first();
+            const connectBtn = page
+              .getByRole("button")
+              .filter({ hasText: /Connecter/i })
+              .first();
             const hasConnect = await connectBtn.isVisible().catch(() => false);
 
             expect(hasEmpty || hasConnect || deleteCalled).toBe(true);
@@ -615,12 +633,25 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
       // Account should display without expiry info
       await expect(page.getByText(account.accountName).first()).toBeVisible({ timeout: 5000 });
       // Should not crash or show error
-      const hasError = await page.getByText(/error|failed|something went wrong/i).first().isVisible().catch(() => false);
+      const hasError = await page
+        .getByText(/error|failed|something went wrong/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasError).toBe(false);
     });
 
     test("should handle many connected accounts gracefully", async ({ page }) => {
-      const platforms = ["INSTAGRAM", "TIKTOK", "LINKEDIN", "X", "YOUTUBE", "FACEBOOK", "PINTEREST", "THREADS"];
+      const platforms = [
+        "INSTAGRAM",
+        "TIKTOK",
+        "LINKEDIN",
+        "X",
+        "YOUTUBE",
+        "FACEBOOK",
+        "PINTEREST",
+        "THREADS",
+      ];
       const accounts = platforms.map((platform, i) =>
         makeMockAccount({
           id: `many-accounts-${i}-${Date.now()}`,
@@ -653,7 +684,11 @@ test.describe("Connected Accounts — Reconnection & Refresh", () => {
 
       // All accounts should be visible
       for (const account of accounts) {
-        const nameVisible = await page.getByText(account.accountName).first().isVisible().catch(() => false);
+        const nameVisible = await page
+          .getByText(account.accountName)
+          .first()
+          .isVisible()
+          .catch(() => false);
         // At least some accounts should be visible
         if (nameVisible) break;
       }

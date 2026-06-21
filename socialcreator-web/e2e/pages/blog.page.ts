@@ -3,7 +3,7 @@
  * Covers blog list and blog detail pages
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class BlogListPage extends BasePage {
@@ -51,7 +51,7 @@ export class BlogDetailPage extends BasePage {
   }
 
   async getSEOTitle(): Promise<string> {
-    const titleEl = this.page.locator('head title');
+    const titleEl = this.page.locator("head title");
     return (await titleEl.textContent()) || "";
   }
 

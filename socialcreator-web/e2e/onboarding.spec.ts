@@ -4,7 +4,6 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { LoginPage } from "./pages/login.page";
 import { CGUPage, OnboardingAgentPage, OnboardingProfilePage } from "./pages/onboarding.page";
 import { RegisterPage } from "./pages/register.page";
 
@@ -200,7 +199,9 @@ test.describe("Onboarding Flow", () => {
 test.describe("Onboarding \u2014 Full End-to-End Flow", () => {
   const PASSWORD = "TestPass123!";
 
-  test("should complete full onboarding: register \u2192 CGU \u2192 profile \u2192 agent \u2192 dashboard", async ({ page }) => {
+  test("should complete full onboarding: register \u2192 CGU \u2192 profile \u2192 agent \u2192 dashboard", async ({
+    page,
+  }) => {
     const ts = Date.now();
     const email = `e2e-${ts}@example.com`;
     const profileName = `E2E Profile ${ts}`;
@@ -238,7 +239,9 @@ test.describe("Onboarding \u2014 Full End-to-End Flow", () => {
     await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 10000 });
   });
 
-  test("should redirect to /onboarding/profile when accessing /onboarding/agent without profileId", async ({ page }) => {
+  test("should redirect to /onboarding/profile when accessing /onboarding/agent without profileId", async ({
+    page,
+  }) => {
     const ts = Date.now();
 
     // Register
@@ -391,7 +394,9 @@ test.describe("Onboarding \u2014 Error Handling", () => {
     await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5000 });
   });
 
-  test("should redirect to dashboard when CGU already accepted (skip CGU step)", async ({ page }) => {
+  test("should redirect to dashboard when CGU already accepted (skip CGU step)", async ({
+    page,
+  }) => {
     const ts = Date.now();
 
     // Register
@@ -596,10 +601,12 @@ test.describe("Onboarding — Advanced Scenarios", () => {
     await expect(agent.heading).toBeVisible({ timeout: 10000 });
 
     const skipBtn = page.getByRole("button", { name: /skip|not now|later|skip for now/i });
-    const skipLink = page.locator('a').filter({ hasText: /skip|dashboard|later|skip for now/i });
-    const canSkip = await skipBtn.isVisible().catch(() => false) || await skipLink.isVisible().catch(() => false);
+    const skipLink = page.locator("a").filter({ hasText: /skip|dashboard|later|skip for now/i });
+    const canSkip =
+      (await skipBtn.isVisible().catch(() => false)) ||
+      (await skipLink.isVisible().catch(() => false));
     if (canSkip) {
-      await (await skipBtn.isVisible() ? skipBtn : skipLink).click();
+      await ((await skipBtn.isVisible()) ? skipBtn : skipLink).click();
       await page.waitForLoadState("networkidle", { timeout: 10000 });
       // Should end up on dashboard
       const currentPath = new URL(page.url()).pathname;
@@ -628,10 +635,12 @@ test.describe("Onboarding — Advanced Scenarios", () => {
     await expect(profile.heading).toBeVisible({ timeout: 10000 });
 
     const backBtn = page.getByRole("button", { name: /back|previous|go back/i });
-    const backLink = page.locator('a').filter({ hasText: /back|previous/i });
-    const canGoBack = await backBtn.isVisible().catch(() => false) || await backLink.isVisible().catch(() => false);
+    const backLink = page.locator("a").filter({ hasText: /back|previous/i });
+    const canGoBack =
+      (await backBtn.isVisible().catch(() => false)) ||
+      (await backLink.isVisible().catch(() => false));
     if (canGoBack) {
-      const target = await backBtn.isVisible() ? backBtn : backLink;
+      const target = (await backBtn.isVisible()) ? backBtn : backLink;
       await target.click();
       // Should go back to CGU page
       await expect(page).toHaveURL(/.*\/onboarding\/cgu/, { timeout: 10000 });
@@ -663,7 +672,10 @@ test.describe("Onboarding — Advanced Scenarios", () => {
 
     // Should either accept the name (truncated) or show validation error
     const currentUrl = new URL(page.url()).pathname;
-    const hasError = await page.locator('[role="alert"]').isVisible().catch(() => false);
+    const hasError = await page
+      .locator('[role="alert"]')
+      .isVisible()
+      .catch(() => false);
     const advanced = currentUrl.includes("/onboarding/agent") || hasError;
     expect(advanced).toBe(true);
   });
@@ -731,7 +743,11 @@ test.describe("Onboarding — Loading States", () => {
     await page.route("**/api/cgu**", async (route) => {
       if (route.request().method() === "POST" || route.request().method() === "PUT") {
         await new Promise((r) => setTimeout(r, 3000));
-        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ accepted: true }) });
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ accepted: true }),
+        });
       } else {
         await route.continue();
       }
@@ -743,7 +759,9 @@ test.describe("Onboarding — Loading States", () => {
     await cgu.submit();
 
     // Loading indicator should appear during submission
-    const loading = page.locator('[class*="loading"], [role="status"], [aria-busy="true"], button:disabled');
+    const loading = page.locator(
+      '[class*="loading"], [role="status"], [aria-busy="true"], button:disabled',
+    );
     const hasLoading = await loading.isVisible({ timeout: 3000 }).catch(() => false);
     if (hasLoading) {
       await expect(loading).toBeVisible({ timeout: 2000 });
@@ -786,7 +804,9 @@ test.describe("Onboarding — Loading States", () => {
     await profile.submit();
 
     // Loading indicator should appear during step transition
-    const loading = page.locator('[class*="loading"], [role="status"], [aria-busy="true"], button:disabled');
+    const loading = page.locator(
+      '[class*="loading"], [role="status"], [aria-busy="true"], button:disabled',
+    );
     const hasLoading = await loading.isVisible({ timeout: 3000 }).catch(() => false);
     if (hasLoading) {
       await expect(loading).toBeVisible({ timeout: 2000 });

@@ -36,18 +36,16 @@ export class ContentGenerationPage extends BasePage {
       .getByRole("button", { name: /^generate$/i })
       .filter({ hasNotText: /generating/i });
     this.generatingButton = page.getByRole("button", { name: /generating/i });
-    this.countButtons = page.locator(
-      'div.flex.items-center.gap-3 button[type="button"]',
-    );
+    this.countButtons = page.locator('div.flex.items-center.gap-3 button[type="button"]');
     this.resultsHeading = page.getByRole("heading", { name: /generated content/i });
-    this.errorAlert = page.locator(
-      'div.flex.items-start.gap-2.p-3.rounded-lg',
-    ).filter({ has: page.locator("svg.lucide-x") });
+    this.errorAlert = page
+      .locator("div.flex.items-start.gap-2.p-3.rounded-lg")
+      .filter({ has: page.locator("svg.lucide-x") });
     this.charCounter = page.locator("span.text-caption").filter({ hasText: /\/2000/ });
     this.validationError = page.getByText(/brief must be at least 10 characters/i);
-    this.resultsItems = page.locator(
-      '[class*="bg-surface-card"][class*="border"][class*="rounded-xl"]',
-    ).filter({ has: page.locator('[class*="platform-badge"]') });
+    this.resultsItems = page
+      .locator('[class*="bg-surface-card"][class*="border"][class*="rounded-xl"]')
+      .filter({ has: page.locator('[class*="platform-badge"]') });
     this.briefLabel = page.locator('label[for="gen-brief"]');
     this.editLinks = page.getByRole("link", { name: /edit/i });
   }

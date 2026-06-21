@@ -264,7 +264,7 @@ export function expressRequireFeature(featureKey: string) {
       return res.status(401).json({ error: "Organization not found" });
     }
 
-    getFeatureGateService()
+    return getFeatureGateService()
       .hasFeature(orgId, featureKey)
       .then((hasFeature) => {
         if (!hasFeature) {
@@ -289,7 +289,7 @@ export function expressConsumeFeature(featureKey: string, amount: number = 1) {
       return res.status(401).json({ error: "Organization not found" });
     }
 
-    getFeatureGateService()
+    return getFeatureGateService()
       .consume(orgId, featureKey, amount)
       .then((result) => {
         if (!result.success) {

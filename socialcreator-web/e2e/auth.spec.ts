@@ -421,10 +421,6 @@ test.describe("Rate Limiting", () => {
     }
 
     // Rate limit message may appear depending on environment
-    const rateLimited = await page
-      .getByText(/too many|rate limit|try again later/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 });
@@ -440,7 +436,7 @@ test.describe("CGU Re-acceptance", () => {
     }
 
     await expect(page.locator("body")).toBeVisible({ timeout: 10000 });
-    const pageContent = await page.textContent("body");
+    const pageContent = (await page.textContent("body")) ?? "";
     expect(pageContent.length).toBeGreaterThan(0);
   });
 
@@ -653,10 +649,6 @@ test.describe("Auth — OAuth Provider", () => {
       await googleBtn.click();
       // In test environment, OAuth will redirect or show an error
       await page.waitForTimeout(2000);
-      const hasError = await page
-        .getByText(/error|failed|could not|unable to|sign in with google/i)
-        .isVisible()
-        .catch(() => false);
       // OAuth failure in CI is expected; verify page handled it gracefully
       await expect(page.locator("body")).toBeVisible({ timeout: 5000 });
     }
@@ -876,7 +868,8 @@ test.describe("Auth — API Error States", () => {
         contentType: "application/json",
         body: JSON.stringify({
           error: "Too many requests",
-          message: "Vous avez été temporairement bloqué. Veuillez réessayer dans quelques instants.",
+          message:
+            "Vous avez été temporairement bloqué. Veuillez réessayer dans quelques instants.",
         }),
       });
     });
@@ -889,7 +882,9 @@ test.describe("Auth — API Error States", () => {
 
     // Should show rate limit message
     await expect(
-      page.locator('[role="alert"]').or(page.getByText(/too many|rate limit|trop de|réessayer|bloqué/i)),
+      page
+        .locator('[role="alert"]')
+        .or(page.getByText(/too many|rate limit|trop de|réessayer|bloqué/i)),
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -898,7 +893,10 @@ test.describe("Auth — API Error States", () => {
       await route.fulfill({
         status: 422,
         contentType: "application/json",
-        body: JSON.stringify({ error: "Validation failed", details: { email: "Invalid email format" } }),
+        body: JSON.stringify({
+          error: "Validation failed",
+          details: { email: "Invalid email format" },
+        }),
       });
     });
 

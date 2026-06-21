@@ -484,9 +484,11 @@ test.describe("Content Generation Panel UI", () => {
         if (newPlatformValue) {
           await genPage.selectPlatform(newPlatformValue);
           // After platform change, results should be cleared (component resets results state)
-          await expect(genPage.resultsHeading).not.toBeVisible({ timeout: 3000 }).catch(() => {
-            // The component only resets on new generate, so this is acceptable
-          });
+          await expect(genPage.resultsHeading)
+            .not.toBeVisible({ timeout: 3000 })
+            .catch(() => {
+              // The component only resets on new generate, so this is acceptable
+            });
         }
       }
     });
@@ -531,7 +533,9 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.waitForGenerationComplete(10000);
     });
 
-    test("EDGE: Generate button is disabled during generation (prevents double-click)", async ({ page }) => {
+    test("EDGE: Generate button is disabled during generation (prevents double-click)", async ({
+      page,
+    }) => {
       await page.route("**/api/v1/profiles", async (route) => {
         await route.fulfill({
           status: 200,
@@ -624,7 +628,9 @@ test.describe("Content Generation Panel UI", () => {
   });
 
   test.describe("Schema Version Handling", () => {
-    test("ERROR: Generated content with older schema version shows migration compatibility", async ({ page }) => {
+    test("ERROR: Generated content with older schema version shows migration compatibility", async ({
+      page,
+    }) => {
       await page.route("**/api/v1/profiles", async (route) => {
         await route.fulfill({
           status: 200,
@@ -674,7 +680,9 @@ test.describe("Content Generation Panel UI", () => {
       await expect(page.getByText(/Legacy content|older schema/i)).toBeVisible({ timeout: 3000 });
     });
 
-    test("ERROR: Generated content with newer schema version than app shows compatibility notice", async ({ page }) => {
+    test("ERROR: Generated content with newer schema version than app shows compatibility notice", async ({
+      page,
+    }) => {
       await page.route("**/api/v1/profiles", async (route) => {
         await route.fulfill({
           status: 200,
@@ -720,7 +728,10 @@ test.describe("Content Generation Panel UI", () => {
 
       // Page should still function — either show results gracefully or show compatibility notice
       const hasResults = await genPage.resultsHeading.isVisible().catch(() => false);
-      const hasNotice = await page.getByText(/compatibility|schema|version|future/i).isVisible().catch(() => false);
+      const hasNotice = await page
+        .getByText(/compatibility|schema|version|future/i)
+        .isVisible()
+        .catch(() => false);
       expect(hasResults || hasNotice).toBe(true);
     });
   });

@@ -26,9 +26,7 @@ test.describe("Analytics API", () => {
     });
 
     test("should support date range filtering", async ({ request }) => {
-      const response = await request.get(
-        "/api/analytics?from=2026-01-01&to=2026-12-31",
-      );
+      const response = await request.get("/api/analytics?from=2026-01-01&to=2026-12-31");
       expect([200, 401, 302]).toContain(response.status());
     });
   });
@@ -40,9 +38,7 @@ test.describe("Analytics API", () => {
     });
 
     test("should return 404 for non-existent profileId", async ({ request }) => {
-      const response = await request.get(
-        `/api/analytics/nonexistent-${Date.now()}`,
-      );
+      const response = await request.get(`/api/analytics/nonexistent-${Date.now()}`);
       expect([404, 401, 302]).toContain(response.status());
     });
 

@@ -20,7 +20,9 @@ export class AdminOrgDetailPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole("heading", { name: /administration/i });
-    this.backButton = page.locator('a[href*="/admin/orgs"] button, button:has-text("Retour")').first();
+    this.backButton = page
+      .locator('a[href*="/admin/orgs"] button, button:has-text("Retour")')
+      .first();
     this.orgName = page.locator("h2").first();
     this.orgInfoCard = page.locator(".rounded-lg.border").first();
     this.subscriptionSection = page.getByText(/Abonnement|Plan|Statut/i).first();
@@ -30,7 +32,7 @@ export class AdminOrgDetailPage extends BasePage {
     this.loadingSkeleton = page.locator('[class*="skeleton"]').first();
   }
 
-  async goto(orgId: string) {
+  override async goto(orgId: string) {
     await super.goto(`/admin/orgs/${orgId}`);
   }
 

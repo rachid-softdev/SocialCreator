@@ -4,15 +4,14 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { CGUPage, OnboardingProfilePage } from "./pages/onboarding.page";
 import {
   EditProfilePage,
   NewProfilePage,
   ProfileDetailPage,
   ProfilesListPage,
 } from "./pages/profile.page";
-import { LoginPage } from "./pages/login.page";
 import { RegisterPage } from "./pages/register.page";
-import { CGUPage, OnboardingProfilePage } from "./pages/onboarding.page";
 
 test.describe("Profile Management", () => {
   test.describe("Navigation", () => {
@@ -197,10 +196,6 @@ test.describe("Profile Management", () => {
           await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
           // Brand voice section should be present if configured
-          const hasBrandVoice = await page
-            .getByText(/brand voice/i)
-            .isVisible()
-            .catch(() => false);
           // Either it's visible or the profile has no brand voice - both valid
           expect(true).toBe(true);
         }
@@ -476,14 +471,15 @@ test.describe("Profile Brand Voice", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
-      const hasBrandVoice = await page
-        .getByText(/brand voice/i)
-        .isVisible()
-        .catch(() => false);
       expect(true).toBe(true);
     }
   });
@@ -500,7 +496,12 @@ test.describe("Profile Brand Voice", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -535,7 +536,12 @@ test.describe("Profile Connected Accounts", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -562,7 +568,12 @@ test.describe("Profile Connected Accounts", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -593,7 +604,12 @@ test.describe("Profile Connected Accounts", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -628,8 +644,6 @@ test.describe("Profile Deletion", () => {
       await editLinks.first().click();
       await page.waitForTimeout(2000);
 
-      const deleteBtn = page.getByRole("button", { name: /delete profile/i });
-      const hasDeleteOption = await deleteBtn.isVisible().catch(() => false);
       expect(true).toBe(true);
     }
   });
@@ -707,8 +721,6 @@ test.describe("Active Profile Switching", () => {
     }
 
     // Check for set active / make active buttons
-    const setActiveBtns = page.getByRole("button").filter({ hasText: /set active|make active|activate/i });
-    const hasSwitchOption = await setActiveBtns.isVisible().catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -724,7 +736,12 @@ test.describe("Active Profile Switching", () => {
     const profileLinks = page
       .locator('a[href*="/profiles/"][href*="/profiles/"]')
       .filter({ hasNotText: /new|edit/i });
-    if (await profileLinks.first().isVisible().catch(() => false)) {
+    if (
+      await profileLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await profileLinks.first().click();
       await page.waitForURL(/\/profiles\/(?!new)/, { timeout: 10000 });
 
@@ -903,7 +920,11 @@ test.describe("Profiles \u2014 Security & Authorization", () => {
       page.url().includes("404") ||
       bodyText?.toLowerCase().includes("not found") ||
       bodyText?.toLowerCase().includes("404") ||
-      (await page.locator('[class*="error"]').first().isVisible().catch(() => false));
+      (await page
+        .locator('[class*="error"]')
+        .first()
+        .isVisible()
+        .catch(() => false));
     expect(isNotFound).toBe(true);
   });
 
@@ -961,7 +982,11 @@ test.describe("Profiles \u2014 Security & Authorization", () => {
       page.url().includes("404") ||
       bodyText?.toLowerCase().includes("not found") ||
       bodyText?.toLowerCase().includes("404") ||
-      (await page.locator('[class*="error"]').first().isVisible().catch(() => false));
+      (await page
+        .locator('[class*="error"]')
+        .first()
+        .isVisible()
+        .catch(() => false));
     expect(isBlocked).toBe(true);
   });
 
@@ -1475,7 +1500,10 @@ test.describe("Profiles \u2014 Navigation & Loading", () => {
       .getByRole("button")
       .filter({ hasText: /cancel|back/i })
       .first();
-    const cancelLink = page.locator('a[href*="/profiles"]').filter({ hasText: /cancel|back/i }).first();
+    const cancelLink = page
+      .locator('a[href*="/profiles"]')
+      .filter({ hasText: /cancel|back/i })
+      .first();
 
     if (await cancelBtn.isVisible().catch(() => false)) {
       await cancelBtn.click();
@@ -1527,7 +1555,10 @@ test.describe("Profiles \u2014 Navigation & Loading", () => {
       .getByRole("button")
       .filter({ hasText: /cancel|back/i })
       .first();
-    const cancelLink = page.locator('a').filter({ hasText: /cancel|back/i }).first();
+    const cancelLink = page
+      .locator("a")
+      .filter({ hasText: /cancel|back/i })
+      .first();
 
     if (await cancelBtn.isVisible().catch(() => false)) {
       await cancelBtn.click();
@@ -1571,9 +1602,18 @@ test.describe("Profiles \u2014 Navigation & Loading", () => {
       newProfile.submitButton.isDisabled().then((r) => r),
       newProfile.submitButton
         .textContent()
-        .then((t) => t?.toLowerCase().includes("saving") || t?.toLowerCase().includes("loading") || false),
-      page.locator('[role="status"]').isVisible().then((r) => r),
-      page.locator('[aria-busy="true"]').isVisible().then((r) => r),
+        .then(
+          (t) =>
+            t?.toLowerCase().includes("saving") || t?.toLowerCase().includes("loading") || false,
+        ),
+      page
+        .locator('[role="status"]')
+        .isVisible()
+        .then((r) => r),
+      page
+        .locator('[aria-busy="true"]')
+        .isVisible()
+        .then((r) => r),
     ]);
 
     expect(loadingDetected).toBe(true);
@@ -1782,7 +1822,9 @@ test.describe("Profiles — Error Handling", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible({ timeout: 3000 });
 
-    const warningText = page.getByText(/active content|active.*agent|content will be|data loss|irreversible/i);
+    const warningText = page.getByText(
+      /active content|active.*agent|content will be|data loss|irreversible/i,
+    );
     const hasWarning = await warningText.isVisible({ timeout: 3000 }).catch(() => false);
     expect(hasWarning || true).toBe(true);
   });
@@ -1843,8 +1885,6 @@ test.describe("Profiles — Edge Cases", () => {
     await onboardProfile.submit();
 
     await expect(page).toHaveURL(/.*\/onboarding\/agent\?profileId=/, { timeout: 10000 });
-    const firstProfileId = new URL(page.url()).searchParams.get("profileId");
-
     // Create second profile
     await page.goto("/profiles/new");
     await page.waitForURL(/.*\/profiles\/new/, { timeout: 10000 });
@@ -1859,7 +1899,9 @@ test.describe("Profiles — Edge Cases", () => {
     await expect(profilesList.heading).toBeVisible({ timeout: 10000 });
 
     // Check that we can switch active profile
-    const setActiveBtns = page.getByRole("button").filter({ hasText: /set active|make active|activate/i });
+    const setActiveBtns = page
+      .getByRole("button")
+      .filter({ hasText: /set active|make active|activate/i });
     const hasSwitchOption = await setActiveBtns.isVisible().catch(() => false);
     if (hasSwitchOption) {
       await setActiveBtns.first().click();
@@ -1873,7 +1915,9 @@ test.describe("Profiles — Edge Cases", () => {
 test.describe("Profiles — Brand Voice Edge Cases", () => {
   const PASSWORD = "TestPass123!";
 
-  test("should show validation error when brand voice text exceeds character limit", async ({ page }) => {
+  test("should show validation error when brand voice text exceeds character limit", async ({
+    page,
+  }) => {
     const ts = Date.now();
 
     const register = new RegisterPage(page);
@@ -1904,7 +1948,10 @@ test.describe("Profiles — Brand Voice Edge Cases", () => {
 
     // Should show validation error or text should be truncated
     const errorText = await newProfile.getValidationError().catch(() => "");
-    const hasCharCount = await page.getByText(/\/500|max.*500|character.*limit/i).isVisible().catch(() => false);
+    const hasCharCount = await page
+      .getByText(/\/500|max.*500|character.*limit/i)
+      .isVisible()
+      .catch(() => false);
     expect(errorText.length > 0 || hasCharCount).toBe(true);
   });
 });
@@ -1944,7 +1991,9 @@ test.describe("Profiles — Loading States", () => {
     await profilesList.goto();
 
     // Loading skeleton should appear
-    const skeleton = page.locator('[class*="skeleton"], [class*="loading"], [role="status"]').first();
+    const skeleton = page
+      .locator('[class*="skeleton"], [class*="loading"], [role="status"]')
+      .first();
     const hasSkeleton = await skeleton.isVisible({ timeout: 3000 }).catch(() => false);
     if (hasSkeleton) {
       await expect(skeleton).toBeVisible({ timeout: 2000 });
@@ -1989,7 +2038,9 @@ test.describe("Profiles — Loading States", () => {
     await detailPage.goto(profileId!);
 
     // Loading skeleton should appear
-    const skeleton = page.locator('[class*="skeleton"], [class*="loading"], [role="status"]').first();
+    const skeleton = page
+      .locator('[class*="skeleton"], [class*="loading"], [role="status"]')
+      .first();
     const hasSkeleton = await skeleton.isVisible({ timeout: 3000 }).catch(() => false);
     if (hasSkeleton) {
       await expect(skeleton).toBeVisible({ timeout: 2000 });

@@ -3,7 +3,7 @@
  * Covers OAuth connection/disconnection for third-party platforms
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ConnectedAccountsPage extends BasePage {
@@ -46,7 +46,9 @@ export class ConnectedAccountsPage extends BasePage {
 
   async getConnectedPlatforms(): Promise<string[]> {
     const platforms: string[] = [];
-    const items = this.page.locator("[class*='platform-card'], [class*='account-item'], [role='listitem']");
+    const items = this.page.locator(
+      "[class*='platform-card'], [class*='account-item'], [role='listitem']",
+    );
     const count = await items.count();
     for (let i = 0; i < count; i++) {
       const text = await items.nth(i).textContent();
@@ -67,7 +69,9 @@ export class ConnectedAccountsPage extends BasePage {
   async isOAuthButtonVisible(platform: string): Promise<boolean> {
     return this.page
       .getByRole("button")
-      .filter({ hasText: new RegExp(`sign in with ${platform}|connect ${platform}|${platform} login`, "i") })
+      .filter({
+        hasText: new RegExp(`sign in with ${platform}|connect ${platform}|${platform} login`, "i"),
+      })
       .first()
       .isVisible()
       .catch(() => false);

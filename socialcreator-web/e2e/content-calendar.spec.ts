@@ -51,7 +51,9 @@ test.describe("Content Calendar", () => {
 
       // Current month/year should be displayed in the header
       const monthLabel = page
-        .getByText(/january|february|march|april|may|june|july|august|september|october|november|december/i)
+        .getByText(
+          /january|february|march|april|may|june|july|august|september|october|november|december/i,
+        )
         .first();
       await expect(monthLabel).toBeVisible({ timeout: 10000 });
     });
@@ -79,7 +81,6 @@ test.describe("Content Calendar", () => {
       const hasPrev = await prevBtn.isVisible().catch(() => false);
 
       if (hasNext) {
-        const initialMonth = await monthLabelText(page);
         await nextBtn.click();
         await page.waitForTimeout(500);
 
@@ -111,10 +112,15 @@ test.describe("Content Calendar", () => {
         .or(page.locator('[class*="badge"]'))
         .or(page.locator('[class*="indicator"]'))
         .first();
-      const scheduledItems = page.locator('[class*="scheduled"]').or(page.locator('[class*="content-item"]'));
+      const scheduledItems = page
+        .locator('[class*="scheduled"]')
+        .or(page.locator('[class*="content-item"]'));
 
       const hasDots = await contentDots.isVisible().catch(() => false);
-      const hasItems = await scheduledItems.first().isVisible().catch(() => false);
+      const hasItems = await scheduledItems
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       // Either dots/indicators exist or dates show content items, or empty state
       const isEmpty = await page
@@ -153,7 +159,10 @@ test.describe("Content Calendar", () => {
               .locator('[class*="detail"]')
               .or(page.locator('[role="dialog"]'))
               .or(page.locator('[class*="sidebar"]'));
-            const hasDetail = await detailPanel.first().isVisible().catch(() => false);
+            const hasDetail = await detailPanel
+              .first()
+              .isVisible()
+              .catch(() => false);
             if (hasDetail) {
               await expect(detailPanel.first()).toBeVisible({ timeout: 3000 });
             }
@@ -173,14 +182,7 @@ test.describe("Content Calendar", () => {
       }
 
       // Look for view toggle (month/week/day)
-      const weekToggle = page
-        .getByRole("button")
-        .filter({ hasText: /week/i })
-        .first();
-      const monthToggle = page
-        .getByRole("button")
-        .filter({ hasText: /month/i })
-        .first();
+      const weekToggle = page.getByRole("button").filter({ hasText: /week/i }).first();
 
       const hasWeekToggle = await weekToggle.isVisible().catch(() => false);
 
@@ -241,7 +243,9 @@ test.describe("Content Calendar", () => {
       }
 
       // Look for scheduled content items on the calendar
-      const scheduledItems = page.locator('a[href*="/content/"]').or(page.locator('[class*="scheduled"] a'));
+      const scheduledItems = page
+        .locator('a[href*="/content/"]')
+        .or(page.locator('[class*="scheduled"] a'));
       const itemCount = await scheduledItems.count();
 
       if (itemCount > 0) {
@@ -278,7 +282,9 @@ test.describe("Content Calendar", () => {
   });
 
   test.describe("Calendar Empty State", () => {
-    test("should show no content message for months with no scheduled content", async ({ page }) => {
+    test("should show no content message for months with no scheduled content", async ({
+      page,
+    }) => {
       await page.goto("/content/calendar");
 
       const currentUrl = new URL(page.url());
@@ -334,7 +340,10 @@ test.describe("Calendar — Loading & Error States", () => {
     const errorBanner = page
       .locator('[role="alert"], [class*="error"]')
       .filter({ hasText: /error|failed|unable to load/i });
-    const hasBanner = await errorBanner.first().isVisible().catch(() => false);
+    const hasBanner = await errorBanner
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // Or calendar still renders gracefully
     const calendar = page.locator("table, [class*='calendar'], [class*='grid']").first();
@@ -388,10 +397,19 @@ test.describe("Calendar — Loading & Error States", () => {
       .locator("td, [class*='day'], button")
       .filter({ hasText: new RegExp(`^${today}$|\\b${today}\\b`) });
 
-    const hasHighlight = await todayCell.first().isVisible().catch(() => false);
+    const hasHighlight = await todayCell
+      .first()
+      .isVisible()
+      .catch(() => false);
     if (hasHighlight) {
-      const classAttr = await todayCell.first().getAttribute("class").catch(() => "");
-      const styleAttr = await todayCell.first().getAttribute("style").catch(() => "");
+      const classAttr = await todayCell
+        .first()
+        .getAttribute("class")
+        .catch(() => "");
+      const styleAttr = await todayCell
+        .first()
+        .getAttribute("style")
+        .catch(() => "");
       const isHighlighted =
         classAttr?.includes("today") ||
         classAttr?.includes("active") ||
@@ -436,7 +454,10 @@ test.describe("Calendar — Loading & Error States", () => {
 
       // Should return to current month view
       const currentMonthLabel = new Date().toLocaleString("en-US", { month: "long" });
-      const monthVisible = await page.getByText(currentMonthLabel, { exact: false }).isVisible().catch(() => false);
+      const monthVisible = await page
+        .getByText(currentMonthLabel, { exact: false })
+        .isVisible()
+        .catch(() => false);
       expect(monthVisible || true).toBe(true);
     }
   });
@@ -454,7 +475,10 @@ test.describe("Calendar — Loading & Error States", () => {
     const filterChips = page
       .locator('[class*="chip"], [class*="filter"], [class*="badge"]')
       .filter({ hasText: /\d+/ });
-    const hasBadges = await filterChips.first().isVisible().catch(() => false);
+    const hasBadges = await filterChips
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // API should return counts
     const response = await page.request.get("/api/content?groupBy=platform");
@@ -645,7 +669,9 @@ test.describe("Calendar — Schedule Modal", () => {
 
     if (response.status() === 400 || response.status() === 422) {
       const json = await response.json().catch(() => ({}));
-      expect(json.error || json.message || "").toMatch(/past|backdate|in the past|cannot schedule/i);
+      expect(json.error || json.message || "").toMatch(
+        /past|backdate|in the past|cannot schedule/i,
+      );
     }
   });
 
@@ -720,7 +746,9 @@ test.describe("Calendar — Schedule Modal", () => {
  */
 async function monthLabelText(page: import("@playwright/test").Page): Promise<string> {
   const monthEl = page
-    .getByText(/january|february|march|april|may|june|july|august|september|october|november|december/i)
+    .getByText(
+      /january|february|march|april|may|june|july|august|september|october|november|december/i,
+    )
     .first();
   return (await monthEl.textContent()) || "";
 }

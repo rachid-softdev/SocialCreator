@@ -58,9 +58,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -93,9 +91,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -126,9 +122,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -159,9 +153,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -189,9 +181,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -218,9 +208,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -258,9 +246,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -302,9 +288,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -339,9 +323,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -351,9 +333,14 @@ test.describe("Agent Run Detail", () => {
 
       // Server-rendered page should show 404/not-found state
       // The server page calls notFound() when run is null, which shows Next.js default 404
-      const bodyText = await page.textContent("body").catch(() => "");
+      const bodyText = (await page.textContent("body").catch(() => null)) ?? "";
       // Either a custom 404 or the app's not-found page
-      const is404 = page.url().includes("404") || (await page.getByText(/not found/i).isVisible().catch(() => false));
+      const is404 =
+        page.url().includes("404") ||
+        (await page
+          .getByText(/not found/i)
+          .isVisible()
+          .catch(() => false));
       expect(is404 || bodyText.length > 0).toBe(true);
     });
 
@@ -369,9 +356,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -380,7 +365,7 @@ test.describe("Agent Run Detail", () => {
       }
 
       // Page should show some content (error boundary should catch this)
-      const bodyContent = await page.textContent("body").catch(() => "");
+      const bodyContent = (await page.textContent("body").catch(() => null)) ?? "";
       expect(bodyContent.length).toBeGreaterThan(0);
     });
   });
@@ -406,9 +391,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -443,9 +426,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -506,9 +487,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {
@@ -541,9 +520,7 @@ test.describe("Agent Run Detail", () => {
         }
       });
 
-      await page.goto(
-        `/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`,
-      );
+      await page.goto(`/profiles/${TEST_PROFILE_ID}/agents/${TEST_AGENT_ID}/runs/${TEST_RUN_ID}`);
 
       const currentUrl = new URL(page.url());
       if (currentUrl.pathname === "/login") {

@@ -76,9 +76,7 @@ test.describe("Video API", () => {
     });
 
     test("should return 404 when transcribing non-existent video", async ({ request }) => {
-      const response = await request.post(
-        `/api/video/nonexistent-${Date.now()}/transcribe`,
-      );
+      const response = await request.post(`/api/video/nonexistent-${Date.now()}/transcribe`);
       expect([404, 401, 302]).toContain(response.status());
     });
   });

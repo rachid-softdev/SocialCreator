@@ -21,7 +21,9 @@ test.describe("Settings Hub", () => {
       await expect(settings.heading).toBeVisible({ timeout: 10000 });
     });
 
-    test("should show sidebar navigation (links to Profile, Billing, API Keys, etc.)", async ({ page }) => {
+    test("should show sidebar navigation (links to Profile, Billing, API Keys, etc.)", async ({
+      page,
+    }) => {
       const settings = new SettingsPage(page);
       await settings.goto();
 
@@ -32,7 +34,9 @@ test.describe("Settings Hub", () => {
       }
 
       // Look for settings sub-navigation links
-      const profileLink = page.locator('a[href*="/settings/profile"], a[href*="/settings/account"]');
+      const profileLink = page.locator(
+        'a[href*="/settings/profile"], a[href*="/settings/account"]',
+      );
       const billingLink = page.locator('a[href*="/settings/billing"]');
       const apiKeysLink = page.locator('a[href*="/settings/api-keys"]');
       const teamsLink = page.locator('a[href*="/settings/teams"]');
@@ -62,7 +66,9 @@ test.describe("Settings Hub", () => {
         await billingLink.click();
         await page.waitForURL(/.*\/settings\/billing/, { timeout: 10000 });
         // Should see billing heading or page content
-        const billingHeading = page.getByRole("heading", { name: /billing|subscription|plan/i }).first();
+        const billingHeading = page
+          .getByRole("heading", { name: /billing|subscription|plan/i })
+          .first();
         await expect(billingHeading).toBeVisible({ timeout: 5000 });
       }
     });
@@ -128,7 +134,6 @@ test.describe("Settings Hub", () => {
         return;
       }
 
-      const hasMCP = await apiKeys.hasMCPTester();
       // MCP tester is optional - just verify page loaded
       expect(true).toBe(true);
     });
@@ -169,7 +174,9 @@ test.describe("Settings Hub", () => {
         await apiKeys.createKeyButton.click();
 
         // Look for the name input in the modal/form
-        const nameInput = page.locator("#key-name, [data-testid='key-name'], input[placeholder*='key name' i]").first();
+        const nameInput = page
+          .locator("#key-name, [data-testid='key-name'], input[placeholder*='key name' i]")
+          .first();
         if (await nameInput.isVisible().catch(() => false)) {
           await nameInput.fill(keyName);
 
@@ -206,7 +213,9 @@ test.describe("Settings Hub", () => {
       if (await apiKeys.createKeyButton.isVisible().catch(() => false)) {
         await apiKeys.createKeyButton.click();
 
-        const nameInput = page.locator("#key-name, [data-testid='key-name'], input[placeholder*='key name' i]").first();
+        const nameInput = page
+          .locator("#key-name, [data-testid='key-name'], input[placeholder*='key name' i]")
+          .first();
         if (await nameInput.isVisible().catch(() => false)) {
           await nameInput.fill(keyName);
           const submitBtn = page.getByRole("button", { name: /create|generate|confirm/i }).last();
@@ -291,7 +300,9 @@ test.describe("Settings — API Keys Security", () => {
   });
 
   test("should return 401 when revoking another user's key", async ({ page }) => {
-    const response = await page.request.delete(`/api/settings/api-keys/other-user-key-${Date.now()}`);
+    const response = await page.request.delete(
+      `/api/settings/api-keys/other-user-key-${Date.now()}`,
+    );
     expect(response.status() === 401 || response.status() === 403).toBe(true);
   });
 
@@ -352,10 +363,14 @@ test.describe("Settings — API Keys Security", () => {
     });
     const body = await response.json().catch(() => ({}));
     // Method not found error code
-    expect(body.error?.code === -32601 || body.error?.code === -32600 || response.status() === 400).toBe(true);
+    expect(
+      body.error?.code === -32601 || body.error?.code === -32600 || response.status() === 400,
+    ).toBe(true);
   });
 
-  test("should return error for invalid JSON-RPC structure (missing jsonrpc field)", async ({ page }) => {
+  test("should return error for invalid JSON-RPC structure (missing jsonrpc field)", async ({
+    page,
+  }) => {
     const response = await page.request.post("/api/mcp", {
       data: {
         method: "profiles/list",
@@ -364,12 +379,13 @@ test.describe("Settings — API Keys Security", () => {
     });
     const body = await response.json().catch(() => ({}));
     // Invalid request error code
-    expect(body.error?.code === -32600 || body.error?.code === -32601 || response.status() === 400).toBe(true);
+    expect(
+      body.error?.code === -32600 || body.error?.code === -32601 || response.status() === 400,
+    ).toBe(true);
   });
 
   test("should return rate limit error for excessive MCP requests", async ({ page }) => {
     // Send many requests rapidly to trigger rate limiting
-    let rateLimited = false;
     for (let i = 0; i < 20; i++) {
       const response = await page.request.post("/api/mcp", {
         data: {
@@ -379,7 +395,6 @@ test.describe("Settings — API Keys Security", () => {
         },
       });
       if (response.status() === 429) {
-        rateLimited = true;
         break;
       }
     }
@@ -506,10 +521,6 @@ test.describe("Settings — Navigation & Features", () => {
     }
 
     // Some settings sections may be marked as coming soon
-    const hasComingSoon = await page
-      .getByText(/coming soon|soon|in development/i)
-      .isVisible()
-      .catch(() => false);
     expect(true).toBe(true);
   });
 
@@ -526,8 +537,13 @@ test.describe("Settings — Navigation & Features", () => {
     // MCP tester section with preset action buttons
     const hasMCP = await apiKeys.hasMCPTester();
     if (hasMCP) {
-      const presetBtns = page.getByRole("button").filter({ hasText: /profiles|content|analytics|ping/i });
-      const hasPresets = await presetBtns.first().isVisible().catch(() => false);
+      const presetBtns = page
+        .getByRole("button")
+        .filter({ hasText: /profiles|content|analytics|ping/i });
+      const hasPresets = await presetBtns
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasPresets || true).toBe(true);
     }
   });
@@ -546,7 +562,10 @@ test.describe("Settings — Navigation & Features", () => {
     const hasMCP = await apiKeys.hasMCPTester();
     if (hasMCP) {
       // Click a preset button to send a request
-      const presetBtn = page.getByRole("button").filter({ hasText: /profiles|ping/i }).first();
+      const presetBtn = page
+        .getByRole("button")
+        .filter({ hasText: /profiles|ping/i })
+        .first();
       if (await presetBtn.isVisible().catch(() => false)) {
         await presetBtn.click();
         await page.waitForTimeout(1000);
@@ -645,7 +664,10 @@ test.describe("Settings — Profile & Brand Voice", () => {
       const errorFeedback = page
         .locator('[role="alert"]')
         .or(page.getByText(/error|failed|unable to save|something went wrong/i));
-      const hasError = await errorFeedback.first().isVisible({ timeout: 5000 }).catch(() => false);
+      const hasError = await errorFeedback
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false);
       expect(typeof hasError).toBe("boolean");
     }
   });
@@ -660,9 +682,9 @@ test.describe("Settings — Profile & Brand Voice", () => {
     }
 
     // Look for toggle switches or checkboxes
-    const toggle = page.locator(
-      'input[type="checkbox"], [role="switch"], [class*="toggle"]',
-    ).first();
+    const toggle = page
+      .locator('input[type="checkbox"], [role="switch"], [class*="toggle"]')
+      .first();
 
     if (await toggle.isVisible().catch(() => false)) {
       // Toggle the setting
@@ -690,9 +712,11 @@ test.describe("Settings — Profile & Brand Voice", () => {
     }
 
     // Find brand voice section/input
-    const brandVoiceInput = page.locator(
-      'textarea[name="brandVoice"], textarea[id*="brand"], textarea[placeholder*="brand" i], [data-testid*="brand-voice"]',
-    ).first();
+    const brandVoiceInput = page
+      .locator(
+        'textarea[name="brandVoice"], textarea[id*="brand"], textarea[placeholder*="brand" i], [data-testid*="brand-voice"]',
+      )
+      .first();
 
     if (await brandVoiceInput.isVisible().catch(() => false)) {
       const uniqueVoice = `E2E test brand voice — Professional and friendly ${Date.now()}`;
@@ -733,9 +757,11 @@ test.describe("Settings — Profile & Brand Voice", () => {
       return;
     }
 
-    const brandVoiceInput = page.locator(
-      'textarea[name="brandVoice"], textarea[id*="brand"], textarea[placeholder*="brand" i]',
-    ).first();
+    const brandVoiceInput = page
+      .locator(
+        'textarea[name="brandVoice"], textarea[id*="brand"], textarea[placeholder*="brand" i]',
+      )
+      .first();
 
     if (await brandVoiceInput.isVisible().catch(() => false)) {
       // Fill with very long text to exceed limit

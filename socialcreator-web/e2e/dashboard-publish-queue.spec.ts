@@ -181,7 +181,10 @@ test.describe("Dashboard Publish Queue", () => {
       expect(retryCount).toBeGreaterThanOrEqual(1);
 
       // Click the retry button in the table row for the failed job
-      const tableRetryBtns = page.locator("table tbody tr").last().getByRole("button", { name: /retry/i });
+      const tableRetryBtns = page
+        .locator("table tbody tr")
+        .last()
+        .getByRole("button", { name: /retry/i });
       if (await tableRetryBtns.isVisible()) {
         await tableRetryBtns.click();
         await page.waitForTimeout(1000);
@@ -376,7 +379,10 @@ test.describe("Dashboard Publish Queue", () => {
       await queue.goto();
 
       // Click retry on failed job
-      const tableRetryBtns = page.locator("table tbody tr").last().getByRole("button", { name: /retry/i });
+      const tableRetryBtns = page
+        .locator("table tbody tr")
+        .last()
+        .getByRole("button", { name: /retry/i });
       if (await tableRetryBtns.isVisible()) {
         await tableRetryBtns.click();
         await page.waitForTimeout(1000);

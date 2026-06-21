@@ -72,20 +72,26 @@ test.describe("Team Lifecycle - Setup", () => {
 
     // Should show success or team in the list
     const teamVisible = await teams.isTeamVisible(teamName);
-    const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+    const toastVisible = await page
+      .getByRole("status")
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(teamVisible || toastVisible).toBe(true);
   });
 
   test("should show team settings", async ({ page }) => {
     // Register and navigate to teams
     const testEmail = `settings-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: {
-        name: "Settings User",
-        email: testEmail,
-        password: TEST_PASSWORD,
-      },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: {
+          name: "Settings User",
+          email: testEmail,
+          password: TEST_PASSWORD,
+        },
+      })
+      .catch(() => {});
 
     const teams = new TeamsPage(page);
     await teams.goto();
@@ -112,13 +118,15 @@ test.describe("Team Lifecycle - Members", () => {
   test("should invite a member by email", async ({ page }) => {
     // Register and navigate to teams
     const testEmail = `invite-owner-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: {
-        name: "Invite Owner",
-        email: testEmail,
-        password: TEST_PASSWORD,
-      },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: {
+          name: "Invite Owner",
+          email: testEmail,
+          password: TEST_PASSWORD,
+        },
+      })
+      .catch(() => {});
 
     const teams = new TeamsPage(page);
     await teams.goto();
@@ -147,8 +155,15 @@ test.describe("Team Lifecycle - Members", () => {
       await sendBtn.click();
 
       // Should show success toast or update
-      const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
-      const dialogClosed = await page.locator("#invite-email").isVisible().catch(() => false);
+      const toastVisible = await page
+        .getByRole("status")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const dialogClosed = await page
+        .locator("#invite-email")
+        .isVisible()
+        .catch(() => false);
       expect(toastVisible || !dialogClosed).toBe(true);
     }
   });
@@ -190,11 +205,20 @@ test.describe("Team Lifecycle - Members", () => {
       .getByRole("button")
       .filter({ hasText: /cancel invitation|revoke|remove invitation/i });
 
-    if (await cancelBtns.first().isVisible().catch(() => false)) {
+    if (
+      await cancelBtns
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await cancelBtns.first().click();
 
       // Confirmation or action completes
-      const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+      const toastVisible = await page
+        .getByRole("status")
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(toastVisible || true).toBe(true);
     }
   });
@@ -255,7 +279,11 @@ test.describe("Team Lifecycle - Roles", () => {
           if (newOption) {
             await firstSelect.selectOption(newOption);
             // Role change should trigger a toast or update
-            const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+            const toastVisible = await page
+              .getByRole("status")
+              .first()
+              .isVisible()
+              .catch(() => false);
             expect(toastVisible || true).toBe(true);
           }
         }
@@ -287,7 +315,11 @@ test.describe("Team Lifecycle - Roles", () => {
       }
 
       // Should show success status
-      const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+      const toastVisible = await page
+        .getByRole("status")
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(toastVisible || true).toBe(true);
     }
   });
@@ -304,11 +336,14 @@ test.describe("Team Lifecycle - Cleanup", () => {
     }
 
     // Check for leave team button
-    const leaveBtns = page
-      .getByRole("button")
-      .filter({ hasText: /leave team|leave/i });
+    const leaveBtns = page.getByRole("button").filter({ hasText: /leave team|leave/i });
 
-    if (await leaveBtns.first().isVisible().catch(() => false)) {
+    if (
+      await leaveBtns
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await leaveBtns.first().click();
 
       // Confirmation dialog
@@ -322,7 +357,11 @@ test.describe("Team Lifecycle - Cleanup", () => {
       }
 
       // Should show success or redirect
-      const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+      const toastVisible = await page
+        .getByRole("status")
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(toastVisible || true).toBe(true);
     }
   });
@@ -330,13 +369,15 @@ test.describe("Team Lifecycle - Cleanup", () => {
   test("should delete a team with confirmation", async ({ page }) => {
     // Register a fresh user to ensure they own a team
     const testEmail = `delete-team-${Date.now()}@example.com`;
-    await page.request.post("/api/auth/register", {
-      data: {
-        name: "Delete Team User",
-        email: testEmail,
-        password: TEST_PASSWORD,
-      },
-    }).catch(() => {});
+    await page.request
+      .post("/api/auth/register", {
+        data: {
+          name: "Delete Team User",
+          email: testEmail,
+          password: TEST_PASSWORD,
+        },
+      })
+      .catch(() => {});
 
     const teams = new TeamsPage(page);
     await teams.goto();
@@ -363,7 +404,11 @@ test.describe("Team Lifecycle - Cleanup", () => {
         await confirmBtn.click();
 
         // Should show success toast or update
-        const toastVisible = await page.getByRole("status").first().isVisible().catch(() => false);
+        const toastVisible = await page
+          .getByRole("status")
+          .first()
+          .isVisible()
+          .catch(() => false);
         expect(toastVisible || true).toBe(true);
       }
     }

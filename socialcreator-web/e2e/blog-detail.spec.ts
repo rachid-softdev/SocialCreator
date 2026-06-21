@@ -47,10 +47,7 @@ test.describe("Blog Detail Page", () => {
         await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
         // Look for author name or avatar
-        const authorInfo = page
-          .getByText(/by /i)
-          .or(page.locator('[class*="author"]'))
-          .first();
+        const authorInfo = page.getByText(/by /i).or(page.locator('[class*="author"]')).first();
         await expect(authorInfo).toBeVisible({ timeout: 5000 });
       }
     });
@@ -163,8 +160,14 @@ test.describe("Blog Detail Page", () => {
 
       // Should land on a 404 or error page, not redirect to login
       const currentPath = new URL(page.url()).pathname;
-      const has404 = await page.getByText("404").isVisible().catch(() => false);
-      const hasNotFound = await page.getByText(/not found/i).isVisible().catch(() => false);
+      const has404 = await page
+        .getByText("404")
+        .isVisible()
+        .catch(() => false);
+      const hasNotFound = await page
+        .getByText(/not found/i)
+        .isVisible()
+        .catch(() => false);
       expect(has404 || hasNotFound || currentPath === "/404").toBe(true);
     });
 
@@ -180,7 +183,10 @@ test.describe("Blog Detail Page", () => {
         .getByText(/error|not found|404|sorry|unavailable/i)
         .isVisible()
         .catch(() => false);
-      const hasNav = await page.locator("nav").isVisible().catch(() => false);
+      const hasNav = await page
+        .locator("nav")
+        .isVisible()
+        .catch(() => false);
       expect(hasError || hasNav).toBe(true);
     });
   });
@@ -215,7 +221,7 @@ test.describe("Blog Detail Page", () => {
       const mainContent = page.locator("main").first();
       if (await mainContent.isVisible().catch(() => false)) {
         const box = await mainContent.boundingBox();
-        expect(box!.width).toBeLessThanOrEqual(375);
+        expect(box?.width).toBeLessThanOrEqual(375);
       }
     });
 
@@ -242,7 +248,12 @@ test.describe("Blog Detail Page", () => {
 
       // Page should render without layout issues
       await expect(page.locator("body")).toBeVisible({ timeout: 10000 });
-      await expect(page.locator("h1").first().or(page.getByText(/no posts/i))).toBeVisible({
+      await expect(
+        page
+          .locator("h1")
+          .first()
+          .or(page.getByText(/no posts/i)),
+      ).toBeVisible({
         timeout: 5000,
       });
     });
@@ -270,7 +281,12 @@ test.describe("Blog Detail Page", () => {
 
       // Page should render with full desktop layout
       await expect(page.locator("body")).toBeVisible({ timeout: 10000 });
-      await expect(page.locator("h1").first().or(page.getByText(/no posts/i))).toBeVisible({
+      await expect(
+        page
+          .locator("h1")
+          .first()
+          .or(page.getByText(/no posts/i)),
+      ).toBeVisible({
         timeout: 5000,
       });
     });
@@ -314,7 +330,6 @@ test.describe("Blog — Listing Page", () => {
 
     // Check for pagination navigation with "Page suivante" button
     const nextBtn = page.locator('button[aria-label="Page suivante"]');
-    const hasPagination = await nextBtn.isVisible().catch(() => false);
 
     // Pagination renders when posts.length > postsPerPage (6)
     const articleCount = await page.locator("article").count();
@@ -468,12 +483,19 @@ test.describe("Blog — Listing Page", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
       // The related posts section renders as "Articles Similaires" heading
-      const relatedHeading = page.getByRole("heading", { name: /articles similaires|articles similaires|related|you may also like/i });
+      const relatedHeading = page.getByRole("heading", {
+        name: /articles similaires|articles similaires|related|you may also like/i,
+      });
       const hasRelated = await relatedHeading.isVisible({ timeout: 5000 }).catch(() => false);
 
       if (hasRelated) {
@@ -490,7 +512,12 @@ test.describe("Blog — Listing Page", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
@@ -501,7 +528,10 @@ test.describe("Blog — Listing Page", () => {
       if (jsonLdCount > 0) {
         // Parse the JSON-LD content and verify Article schema
         for (let i = 0; i < jsonLdCount; i++) {
-          const content = await jsonLd.nth(i).textContent().catch(() => "");
+          const content = await jsonLd
+            .nth(i)
+            .textContent()
+            .catch(() => "");
           if (content) {
             try {
               const parsed = JSON.parse(content);
@@ -524,7 +554,12 @@ test.describe("Blog — Listing Page", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
@@ -535,7 +570,10 @@ test.describe("Blog — Listing Page", () => {
       if (tagCount > 0) {
         // Verify tags are clickable links
         await expect(tagLinks.first()).toBeVisible({ timeout: 3000 });
-        const href = await tagLinks.first().getAttribute("href").catch(() => "");
+        const href = await tagLinks
+          .first()
+          .getAttribute("href")
+          .catch(() => "");
         expect(href).toContain("/blog?tag=");
 
         // Click a tag link should navigate to filtered blog page
@@ -553,7 +591,12 @@ test.describe("Blog Detail — Content Rendering", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
@@ -575,7 +618,12 @@ test.describe("Blog Detail — Content Rendering", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
@@ -594,14 +642,28 @@ test.describe("Blog Detail — Content Rendering", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
       // Look for share functionality
-      const shareBtns = page.locator("button").filter({ hasText: /share|partager|tweet|linkedin|facebook/i });
-      const shareLinks = page.locator('a[href*="twitter.com/share"], a[href*="linkedin.com/share"], a[href*="facebook.com/sharer"]');
-      const hasShare = await shareBtns.isVisible().catch(() => false) || await shareLinks.first().isVisible().catch(() => false);
+      const shareBtns = page
+        .locator("button")
+        .filter({ hasText: /share|partager|tweet|linkedin|facebook/i });
+      const shareLinks = page.locator(
+        'a[href*="twitter.com/share"], a[href*="linkedin.com/share"], a[href*="facebook.com/sharer"]',
+      );
+      const hasShare =
+        (await shareBtns.isVisible().catch(() => false)) ||
+        (await shareLinks
+          .first()
+          .isVisible()
+          .catch(() => false));
       expect(hasShare || true).toBe(true);
     }
   });
@@ -612,8 +674,12 @@ test.describe("Blog Detail — Edge Cases", () => {
     await page.goto("/blog/this-post-does-not-exist-999999");
 
     const bodyText = await page.locator("body").textContent();
-    const has404 = bodyText?.includes("404") || bodyText?.toLowerCase().includes("not found") || false;
-    const hasError = await page.getByText(/not found|404/i).isVisible().catch(() => false);
+    const has404 =
+      bodyText?.includes("404") || bodyText?.toLowerCase().includes("not found") || false;
+    const hasError = await page
+      .getByText(/not found|404/i)
+      .isVisible()
+      .catch(() => false);
     expect(has404 || hasError).toBe(true);
   });
 
@@ -630,8 +696,14 @@ test.describe("Blog Detail — Edge Cases", () => {
     await page.goto("/blog/some-post");
 
     // Should show error or gracefully handle
-    const hasError = await page.getByText(/error|something went wrong|unavailable/i).isVisible().catch(() => false);
-    const hasNav = await page.locator("nav").isVisible().catch(() => false);
+    const hasError = await page
+      .getByText(/error|something went wrong|unavailable/i)
+      .isVisible()
+      .catch(() => false);
+    const hasNav = await page
+      .locator("nav")
+      .isVisible()
+      .catch(() => false);
     expect(hasError || hasNav).toBe(true);
   });
 
@@ -662,12 +734,19 @@ test.describe("Blog Detail — Edge Cases", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 
       // Check for images in the blog content
-      const articleImages = page.locator("article img, [class*='blog-content'] img, [class*='prose'] img, figure img");
+      const articleImages = page.locator(
+        "article img, [class*='blog-content'] img, [class*='prose'] img, figure img",
+      );
       const imageCount = await articleImages.count();
       // May or may not have images
       expect(imageCount >= 0).toBe(true);
@@ -678,7 +757,12 @@ test.describe("Blog Detail — Edge Cases", () => {
     await page.goto("/blog");
 
     const blogLinks = page.locator('a[href*="/blog/"]').filter({ hasText: /.+/ });
-    if (await blogLinks.first().isVisible().catch(() => false)) {
+    if (
+      await blogLinks
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await blogLinks.first().click();
       await page.waitForURL(/\/blog\//, { timeout: 10000 });
 

@@ -191,7 +191,12 @@ test.describe("Video Player & Clip Selector", () => {
 
       // Click on the second segment to deselect it
       const segmentButtons = page.locator("button").filter({ hasText: /here's what the data/i });
-      if (await segmentButtons.first().isVisible().catch(() => false)) {
+      if (
+        await segmentButtons
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         await segmentButtons.first().click();
       }
 
@@ -301,7 +306,6 @@ test.describe("Video Player & Clip Selector", () => {
       });
 
       // Should show identified clips heading but no clip cards
-      const clipCards = page.locator("button").filter({ hasText: /identified clips|select all/i });
       // Wait a moment for rendering
       await page.waitForTimeout(500);
 
@@ -398,7 +402,13 @@ test.describe("Video Player & Clip Selector", () => {
 
       await page.route("**/api/video/**", async (route) => {
         const url = route.request().url();
-        if (route.request().method() === "GET" && !url.includes("/clips") && !url.includes("/segments") && !url.includes("/transcribe") && !url.includes("/generate")) {
+        if (
+          route.request().method() === "GET" &&
+          !url.includes("/clips") &&
+          !url.includes("/segments") &&
+          !url.includes("/transcribe") &&
+          !url.includes("/generate")
+        ) {
           await route.fulfill({ json: MOCK_VIDEO_UPLOADED });
         } else if (route.request().method() === "POST" && url.includes("/segments")) {
           await route.fulfill({

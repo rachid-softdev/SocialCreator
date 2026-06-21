@@ -136,8 +136,6 @@ test.describe("Landing Page", () => {
 
     test("should have canonical URL or og:title", async ({ page }) => {
       await page.goto("/");
-      const ogTitle = page.locator('meta[property="og:title"]');
-      const hasOgTitle = await ogTitle.getAttribute("content").catch(() => null);
       // OG tags may or may not be present; just verify page loads
       expect(true).toBe(true);
     });
@@ -185,11 +183,20 @@ test.describe("Landing Page", () => {
 
       if (imageCount > 0) {
         for (let i = 0; i < imageCount; i++) {
-          const alt = await images.nth(i).getAttribute("alt").catch(() => null);
+          const alt = await images
+            .nth(i)
+            .getAttribute("alt")
+            .catch(() => null);
           if (alt === null) {
             // If no alt text, should have role="presentation" or aria-hidden
-            const role = await images.nth(i).getAttribute("role").catch(() => "");
-            const ariaHidden = await images.nth(i).getAttribute("aria-hidden").catch(() => "");
+            const role = await images
+              .nth(i)
+              .getAttribute("role")
+              .catch(() => "");
+            const ariaHidden = await images
+              .nth(i)
+              .getAttribute("aria-hidden")
+              .catch(() => "");
             if (role !== "presentation" && ariaHidden !== "true") {
               // Missing alt — log but don't fail hard for non-critical images
               expect(true).toBe(true);
@@ -220,8 +227,6 @@ test.describe("Landing Page", () => {
       // Hero should still be visible
       await expect(page.locator("h1").first()).toBeVisible({ timeout: 10000 });
       // CTA should still be accessible
-      const ctaBtn = page.getByRole("link", { name: /get started|start free/i });
-      const hasCTA = await ctaBtn.isVisible().catch(() => false);
       // Check no horizontal scroll
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
       const viewportWidth = await page.evaluate(() => window.innerWidth);

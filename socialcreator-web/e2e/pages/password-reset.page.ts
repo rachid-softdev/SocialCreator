@@ -22,8 +22,12 @@ export class PasswordResetPage extends BasePage {
     this.submitButton = page.locator('button[type="submit"]').first();
     this.heading = page.getByRole("heading").first();
     this.errorAlert = page.locator('[role="alert"]').first();
-    this.passwordInput = page.locator('input[name="password"], input[id="password"], input[type="password"]').first();
-    this.confirmPasswordInput = page.locator('input[name="confirmPassword"], input[id="confirmPassword"], input[type="password"]').nth(1);
+    this.passwordInput = page
+      .locator('input[name="password"], input[id="password"], input[type="password"]')
+      .first();
+    this.confirmPasswordInput = page
+      .locator('input[name="confirmPassword"], input[id="confirmPassword"], input[type="password"]')
+      .nth(1);
   }
 
   override async goto() {
@@ -60,15 +64,23 @@ export class PasswordResetPage extends BasePage {
   }
 
   async isOnResetPage(): Promise<boolean> {
-    return this.page.url().includes("/reset-password") || this.page.url().includes("/forgot-password");
+    return (
+      this.page.url().includes("/reset-password") || this.page.url().includes("/forgot-password")
+    );
   }
 
   async getSuccessMessage(): Promise<string> {
-    const successEl = this.page.getByText(/email sent|check your email|reset link|password.*updated|password.*changed/i).first();
+    const successEl = this.page
+      .getByText(/email sent|check your email|reset link|password.*updated|password.*changed/i)
+      .first();
     return (await successEl.textContent()) || "";
   }
 
   async hasSuccessMessage(): Promise<boolean> {
-    return this.page.getByText(/email sent|check your email|reset link|password.*updated|password.*changed/i).first().isVisible().catch(() => false);
+    return this.page
+      .getByText(/email sent|check your email|reset link|password.*updated|password.*changed/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
   }
 }

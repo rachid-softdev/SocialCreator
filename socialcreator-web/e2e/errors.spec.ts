@@ -32,7 +32,10 @@ test.describe("Error Handling", () => {
       }
 
       // Should either show 404 or an error state
-      const has404 = await page.getByText("404").isVisible().catch(() => false);
+      const has404 = await page
+        .getByText("404")
+        .isVisible()
+        .catch(() => false);
       const hasError = await page
         .getByText(/not found|doesn't exist|couldn't find|error/i)
         .first()
@@ -52,7 +55,10 @@ test.describe("Error Handling", () => {
       }
 
       // Should either show 404 or an error state
-      const has404 = await page.getByText("404").isVisible().catch(() => false);
+      const has404 = await page
+        .getByText("404")
+        .isVisible()
+        .catch(() => false);
       const hasError = await page
         .getByText(/not found|doesn't exist|couldn't find|error/i)
         .first()
@@ -123,7 +129,7 @@ test.describe("Error Handling", () => {
         .catch(() => false);
 
       // Either there's no error (normal state) or error boundary shows retry
-      expect(hasRetry === hasRetry || errorFallback === errorFallback).toBe(true);
+      expect(hasRetry || errorFallback).toBe(true);
     });
 
     test("should recover after clicking retry", async ({ page }) => {
@@ -142,7 +148,10 @@ test.describe("Error Handling", () => {
         await page.waitForTimeout(2000);
 
         // After retry, the page should recover
-        const bodyVisible = await page.locator("body").isVisible().catch(() => false);
+        const bodyVisible = await page
+          .locator("body")
+          .isVisible()
+          .catch(() => false);
         expect(bodyVisible).toBe(true);
       }
     });
@@ -180,7 +189,10 @@ test.describe("Error Handling", () => {
         .catch(() => false);
 
       // Or the page continues gracefully showing empty states
-      const hasContent = await page.locator("h1").isVisible().catch(() => false);
+      const hasContent = await page
+        .locator("h1")
+        .isVisible()
+        .catch(() => false);
 
       expect(hasErrorUI || hasContent).toBe(true);
     });
@@ -206,12 +218,6 @@ test.describe("Error Handling", () => {
       }
 
       // App should handle API failures gracefully
-      const hasErrorFeedback = await page
-        .getByText(/failed to load|error|unable to connect|offline|connection issue/i)
-        .first()
-        .isVisible()
-        .catch(() => false);
-
       // The page body must still be visible (no crash)
       await expect(page.locator("body")).toBeVisible({ timeout: 5000 });
     });
@@ -261,11 +267,17 @@ test.describe("Error Handling", () => {
         const errorSummary = page.locator(
           '[role="alert"], [role="status"], [class*="error"], [class*="alert"]',
         );
-        const hasSummary = await errorSummary.first().isVisible().catch(() => false);
+        const hasSummary = await errorSummary
+          .first()
+          .isVisible()
+          .catch(() => false);
 
         // Or check for field-level errors
         const fieldErrors = page.locator('[class*="error"], [class*="message"], [id*="error"]');
-        const hasFieldErrors = await fieldErrors.first().isVisible().catch(() => false);
+        const hasFieldErrors = await fieldErrors
+          .first()
+          .isVisible()
+          .catch(() => false);
 
         expect(hasSummary || hasFieldErrors).toBe(true);
       }
@@ -278,7 +290,10 @@ test.describe("Error Handling", () => {
       const emailInput = page.locator('input[type="email"], input[name="email"], input#email');
       const submitBtn = page.locator('button[type="submit"]');
 
-      if (await emailInput.isVisible().catch(() => false) && await submitBtn.isVisible().catch(() => false)) {
+      if (
+        (await emailInput.isVisible().catch(() => false)) &&
+        (await submitBtn.isVisible().catch(() => false))
+      ) {
         // Trigger validation
         await submitBtn.click();
         await page.waitForTimeout(500);
@@ -297,20 +312,8 @@ test.describe("Error Handling", () => {
         // (errors typically clear on input or on blur, both are valid)
         await page.waitForTimeout(300);
 
-        const stillHasError = await page
-          .getByText(/required|please enter|is required/i)
-          .first()
-          .isVisible()
-          .catch(() => false);
-
         // If there was an error, it should either clear or change
         if (hadError) {
-          // The specific "required" error should be gone after filling
-          const hasRequiredError = await page
-            .getByText(/required|please enter/i)
-            .first()
-            .isVisible()
-            .catch(() => false);
           // Either the error cleared or transformed into a different validation
           expect(true).toBe(true);
         }
@@ -407,7 +410,9 @@ test.describe("Error Handling", () => {
       // Empty state should have a CTA button to create something
       const ctaButton = page
         .locator("a, button")
-        .filter({ hasText: /create profile|new profile|create your first|get started|add profile/i })
+        .filter({
+          hasText: /create profile|new profile|create your first|get started|add profile/i,
+        })
         .first();
 
       const hasCTA = await ctaButton.isVisible().catch(() => false);
@@ -428,12 +433,8 @@ test.describe("Error Handling — 401 Session Expiry", () => {
   test("should show Session Expired UI when API returns 401", async ({ page }) => {
     // Intercept API requests to return 401 Unauthorized
     await page.route("**/api/**", async (route) => {
-      const url = route.request().url();
       // Only intercept API fetch/XHR requests, not navigations or static resources
-      if (
-        route.request().resourceType() === "xhr" ||
-        route.request().resourceType() === "fetch"
-      ) {
+      if (route.request().resourceType() === "xhr" || route.request().resourceType() === "fetch") {
         await route.fulfill({
           status: 401,
           contentType: "application/json",
@@ -464,7 +465,6 @@ test.describe("Error Handling — 401 Session Expiry", () => {
       .catch(() => false);
 
     // Or the app handles 401 by redirecting to login
-    const redirectedToLogin = currentUrl.pathname !== "/login" && new URL(page.url()).pathname === "/login";
     const currentPath = new URL(page.url()).pathname;
 
     expect(hasExpiredUI || currentPath === "/login").toBe(true);
@@ -472,10 +472,7 @@ test.describe("Error Handling — 401 Session Expiry", () => {
 
   test("should show Sign In button in session expired UI", async ({ page }) => {
     await page.route("**/api/**", async (route) => {
-      if (
-        route.request().resourceType() === "xhr" ||
-        route.request().resourceType() === "fetch"
-      ) {
+      if (route.request().resourceType() === "xhr" || route.request().resourceType() === "fetch") {
         await route.fulfill({
           status: 401,
           contentType: "application/json",
@@ -514,10 +511,7 @@ test.describe("Error Handling — 401 Session Expiry", () => {
 
   test("should show Create Account button in session expired UI", async ({ page }) => {
     await page.route("**/api/**", async (route) => {
-      if (
-        route.request().resourceType() === "xhr" ||
-        route.request().resourceType() === "fetch"
-      ) {
+      if (route.request().resourceType() === "xhr" || route.request().resourceType() === "fetch") {
         await route.fulfill({
           status: 401,
           contentType: "application/json",
@@ -541,8 +535,14 @@ test.describe("Error Handling — 401 Session Expiry", () => {
 
     // Check for Create Account / S'inscrire / Register button
     const registerBtn = page
-      .getByRole("link", { name: /create account|s'inscrire|register|sign up|compte|commencer gratuitement/i })
-      .or(page.getByRole("button", { name: /create account|s'inscrire|register|sign up|compte|commencer gratuitement/i }));
+      .getByRole("link", {
+        name: /create account|s'inscrire|register|sign up|compte|commencer gratuitement/i,
+      })
+      .or(
+        page.getByRole("button", {
+          name: /create account|s'inscrire|register|sign up|compte|commencer gratuitement/i,
+        }),
+      );
 
     const hasRegister = await registerBtn.isVisible({ timeout: 5000 }).catch(() => false);
 
@@ -551,7 +551,9 @@ test.describe("Error Handling — 401 Session Expiry", () => {
     } else {
       // May have been redirected to login page which typically has a register link
       const loginRegisterLink = page.locator('a[href*="/register"], a[href*="/inscription"]');
-      await expect(loginRegisterLink.first().or(page.locator("body"))).toBeVisible({ timeout: 3000 });
+      await expect(loginRegisterLink.first().or(page.locator("body"))).toBeVisible({
+        timeout: 3000,
+      });
     }
   });
 });
@@ -615,12 +617,6 @@ test.describe("Error Handling — Network Errors", () => {
     await page.waitForTimeout(2000);
 
     // After recovery, the page should load normally
-    const recovered = await page
-      .locator("h1")
-      .first()
-      .isVisible({ timeout: 10000 })
-      .catch(() => false);
-
     // Or the page navigated to a valid location (e.g., login redirect is normal)
     const finalPath = new URL(page.url()).pathname;
     expect(finalPath.length).toBeGreaterThan(0);
@@ -670,19 +666,22 @@ test.describe("Error Handling — Error Boundary", () => {
 
     // Generate a rendering error by triggering an error boundary
     // Use page.evaluate to force a React error
-    await page.evaluate(() => {
-      // Dispatch an error event that could trigger error boundary
-      window.dispatchEvent(new ErrorEvent("error", {
-        message: "Test error for boundary",
-        error: new Error("Test error for boundary"),
-      }));
-    }).catch(() => {});
+    await page
+      .evaluate(() => {
+        // Dispatch an error event that could trigger error boundary
+        window.dispatchEvent(
+          new ErrorEvent("error", {
+            message: "Test error for boundary",
+            error: new Error("Test error for boundary"),
+          }),
+        );
+      })
+      .catch(() => {});
 
     await page.waitForTimeout(1000);
 
     // Look for Try Again button (from error.tsx or error boundary fallback)
-    const tryAgainBtn = page
-      .getByRole("button", { name: /try again|retry|essayer/i });
+    const tryAgainBtn = page.getByRole("button", { name: /try again|retry|essayer/i });
     const hasTryAgain = await tryAgainBtn.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasTryAgain) {
@@ -704,15 +703,19 @@ test.describe("Error Handling — Error Boundary", () => {
     await page.waitForTimeout(1000);
 
     // Look for navigation button back to dashboard/home
-    const dashboardLink = page
-      .getByRole("link", { name: /go to dashboard|dashboard|back to home|home|go home/i });
+    const dashboardLink = page.getByRole("link", {
+      name: /go to dashboard|dashboard|back to home|home|go home/i,
+    });
     const hasDashboardLink = await dashboardLink.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasDashboardLink) {
       await expect(dashboardLink.first()).toBeVisible({ timeout: 3000 });
     } else {
       // At minimum verify the 404 page provides some navigation
-      const hasNav = await page.locator("nav").isVisible().catch(() => false);
+      const hasNav = await page
+        .locator("nav")
+        .isVisible()
+        .catch(() => false);
       expect(hasNav).toBe(true);
     }
   });
@@ -727,8 +730,7 @@ test.describe("Error Handling — Error Boundary", () => {
     }
 
     // Check if an error boundary is showing with a retry button
-    const retryBtn = page
-      .getByRole("button", { name: /try again|retry|essayer/i });
+    const retryBtn = page.getByRole("button", { name: /try again|retry|essayer/i });
 
     if (await retryBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await retryBtn.first().click();
@@ -787,11 +789,19 @@ test.describe("Error Handling — Form Validation Display", () => {
       const errorSummary = page.locator(
         '[role="alert"], [role="status"], [aria-live="polite"], [aria-live="assertive"]',
       );
-      const hasSummary = await errorSummary.first().isVisible().catch(() => false);
+      const hasSummary = await errorSummary
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       // Or look for a validation summary list
-      const summaryList = page.locator('ul[class*="error"], div[class*="error-summary"], div[class*="summary"]');
-      const hasSummaryList = await summaryList.first().isVisible().catch(() => false);
+      const summaryList = page.locator(
+        'ul[class*="error"], div[class*="error-summary"], div[class*="summary"]',
+      );
+      const hasSummaryList = await summaryList
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       expect(hasSummary || hasSummaryList).toBe(true);
     }
@@ -800,17 +810,25 @@ test.describe("Error Handling — Form Validation Display", () => {
   test("should clear errors when input is corrected", async ({ page }) => {
     await page.goto("/login");
 
-    const emailInput = page.locator('input[type="email"], input[name="email"], input#email').first();
+    const emailInput = page
+      .locator('input[type="email"], input[name="email"], input#email')
+      .first();
     const submitBtn = page.locator('button[type="submit"]');
 
-    if (await emailInput.isVisible().catch(() => false) && await submitBtn.isVisible().catch(() => false)) {
+    if (
+      (await emailInput.isVisible().catch(() => false)) &&
+      (await submitBtn.isVisible().catch(() => false))
+    ) {
       // Submit empty form to trigger validation
       await submitBtn.click();
       await page.waitForTimeout(500);
 
       // Capture the initial error state
       const errorTexts = page.getByText(/required|please enter|is required|obligatoire/i);
-      const hadError = await errorTexts.first().isVisible().catch(() => false);
+      const hadError = await errorTexts
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       // Now fill in valid data
       const uniqueEmail = `test-${Date.now()}@example.com`;
@@ -821,17 +839,12 @@ test.describe("Error Handling — Form Validation Display", () => {
       await page.waitForTimeout(300);
 
       // Check if the required-field error cleared after correction
-      const stillHasRequiredError = await errorTexts.first().isVisible().catch(() => false);
+      const stillHasRequiredError = await errorTexts
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       if (hadError) {
-        // The "required" error should clear after input is filled
-        // (validation transforms from "required" to potentially other validations)
-        const requiredStillVisible = await page
-          .getByText(/required|obligatoire|please enter/i)
-          .first()
-          .isVisible()
-          .catch(() => false);
-
         // Either the specific "required" error cleared, or it changed
         // aria-invalid should be removed after correction
         const invalidAfter = await emailInput.getAttribute("aria-invalid").catch(() => "");

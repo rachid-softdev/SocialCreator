@@ -21,9 +21,7 @@ export class ContentHistoryPage extends BasePage {
     this.previousButton = page.getByRole("button", { name: /previous/i });
     this.nextButton = page.getByRole("button", { name: /next/i });
     this.pageIndicator = page.locator("span").filter({ hasText: /page \d+ of \d+/i });
-    this.historyItems = page.locator(
-      '[class*="rounded-lg"][class*="border"][class*="bg-canvas"]',
-    );
+    this.historyItems = page.locator('[class*="rounded-lg"][class*="border"][class*="bg-canvas"]');
   }
 
   override async goto() {
@@ -62,10 +60,7 @@ export class ContentHistoryPage extends BasePage {
   }
 
   async getErrorTextAt(index: number): Promise<string | null> {
-    const errorEl = this.historyItems
-      .nth(index)
-      .locator("p.text-semantic-error")
-      .first();
+    const errorEl = this.historyItems.nth(index).locator("p.text-semantic-error").first();
     if (await errorEl.isVisible().catch(() => false)) {
       return errorEl.textContent().then((t) => (t ?? "").trim());
     }

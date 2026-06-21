@@ -3,7 +3,7 @@
  * Covers analytics dashboard with date range and profile selection, metrics, and charts
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class AnalyticsPage extends BasePage {
@@ -63,7 +63,9 @@ export class AnalyticsPage extends BasePage {
 
   async getPlatformBreakdown(): Promise<Record<string, string>> {
     const breakdown: Record<string, string> = {};
-    const items = this.page.locator("[class*='platform-item'], [class*='platform-breakdown'] > div");
+    const items = this.page.locator(
+      "[class*='platform-item'], [class*='platform-breakdown'] > div",
+    );
     const count = await items.count();
     for (let i = 0; i < count; i++) {
       const item = items.nth(i);

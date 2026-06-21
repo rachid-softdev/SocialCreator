@@ -26,12 +26,10 @@ export class DashboardPublishQueuePage extends BasePage {
     this.autoRefreshCheckbox = page.getByLabel(/auto-refresh/i);
     this.emptyState = page.getByText("No jobs in the queue.");
     this.loadingSpinner = page.locator(".animate-spin");
-    this.errorBanner = page.locator(
-      'div.flex.items-center.gap-2.px-4.py-3.rounded-lg.bg-red-50',
-    );
+    this.errorBanner = page.locator("div.flex.items-center.gap-2.px-4.py-3.rounded-lg.bg-red-50");
     this.jobsTable = page.locator("table");
     this.jobRows = page.locator("table tbody tr");
-    this.statCards = page.locator('.grid.grid-cols-2.md\\:grid-cols-4 > div');
+    this.statCards = page.locator(".grid.grid-cols-2.md\\:grid-cols-4 > div");
   }
 
   override async goto() {
