@@ -537,4 +537,61 @@ describe("agent-store [integration] — fetchAgents, fetchRuns, runAgent", () =>
       expect(state.error).toBeNull();
     });
   });
+
+  describe("fetchAgents — fallback when response has no agents property", () => {
+    it("falls back to raw data when data.agents is undefined", async () => {
+      const rawData = [{ id: "agent-1", name: "Inline Agent" }];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(rawData),
+      });
+
+      await useRealAgentStore.getState().fetchAgents("profile-1");
+
+      expect(useRealAgentStore.getState().agents).toStrictEqual(rawData);
+    });
+  });
+
+  describe("fetchRuns — HTTP error and fallback", () => {
+    it("sets error on HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 403 });
+
+      await useRealAgentStore.getState().fetchRuns("agent-1");
+
+      expect(useRealAgentStore.getState().error).toBe("HTTP 403");
+    });
+
+    it("falls back to raw data when data.runs is undefined", async () => {
+      const rawData = [{ id: "run-1", status: "SUCCESS" }];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(rawData),
+      });
+
+      await useRealAgentStore.getState().fetchRuns("agent-1");
+
+      expect(useRealAgentStore.getState().runs["agent-1"]).toStrictEqual(rawData);
+    });
+  });
+
+  describe("runAgent — handles fetchRuns failure after success", () => {
+    it("succeeds but sets error when subsequent fetchRuns fails", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ runId: "run-1" }),
+      });
+      // fetchRuns (called inside runAgent, not awaited) fails
+      mockFetch.mockRejectedValueOnce(new Error("Failed to fetch runs"));
+
+      const runId = await useRealAgentStore.getState().runAgent("agent-1");
+
+      expect(runId).toBe("run-1");
+      expect(useRealAgentStore.getState().isRunning).toBe(false);
+
+      // Wait for the un-awaited fetchRuns to settle
+      await vi.waitFor(() => {
+        expect(useRealAgentStore.getState().error).toBe("Failed to fetch runs");
+      });
+    });
+  });
 });

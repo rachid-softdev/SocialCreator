@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { publishToPinterest } from "../../publishers/pinterest";
+import {
+  createPinterestBoard,
+  getPinterestBoards,
+  getPinterestProfile,
+  publishToPinterest,
+} from "../../publishers/pinterest";
 
 vi.mock("@/lib/fetch-timeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -295,5 +300,208 @@ describe("publishToPinterest", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe("Unknown Pinterest publish error");
     });
+  });
+});
+
+// ── getPinterestBoards ─────────────────────────────────────────────────────
+
+describe("getPinterestBoards", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should return boards on success", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: {
+          items: [
+            { id: "board_1", name: "Board One" },
+            { id: "board_2", name: "Board Two" },
+          ],
+        },
+      }),
+    );
+
+    const result = await getPinterestBoards("valid-token");
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ id: "board_1", name: "Board One" });
+    expect(result[1]).toEqual({ id: "board_2", name: "Board Two" });
+  });
+
+  it("should return empty array on 401 error", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 401, json: {} }));
+
+    const result = await getPinterestBoards("bad-token");
+
+    expect(result).toStrictEqual([]);
+  });
+
+  it("should return empty array on 403 error", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 403, json: {} }));
+
+    const result = await getPinterestBoards("forbidden-token");
+
+    expect(result).toStrictEqual([]);
+  });
+
+  it("should return empty array on network error (catch silent)", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await getPinterestBoards("token");
+
+    expect(result).toStrictEqual([]);
+  });
+});
+
+// ── createPinterestBoard ───────────────────────────────────────────────────
+
+describe("createPinterestBoard", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should create a board successfully", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { id: "new_board_42" } }));
+
+    const result = await createPinterestBoard("My Board", "A description", "token");
+
+    expect(result.success).toBe(true);
+    expect(result.boardId).toBe("new_board_42");
+    expect(result.error).toBeUndefined();
+  });
+
+  it("should handle empty name", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { id: "empty_name_board" } }));
+
+    const result = await createPinterestBoard("", "desc", "token");
+
+    expect(result.success).toBe(true);
+    expect(result.boardId).toBe("empty_name_board");
+  });
+
+  it("should handle very long name", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { id: "long_name_board" } }));
+
+    const longName = "x".repeat(500);
+    const result = await createPinterestBoard(longName, "desc", "token");
+
+    expect(result.success).toBe(true);
+    expect(result.boardId).toBe("long_name_board");
+
+    // Verify the long name was sent in the request body
+    const callBody = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+    expect(callBody.name).toBe(longName);
+  });
+
+  it("should return error when response is not ok", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 400, json: {} }));
+
+    const result = await createPinterestBoard("Board", "desc", "token");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("400");
+  });
+
+  it("should return error on network failure", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+    const result = await createPinterestBoard("Board", "desc", "token");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Network error");
+  });
+
+  it("should handle non-Error thrown values gracefully", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce("String rejection");
+
+    const result = await createPinterestBoard("Board", "desc", "token");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Unknown error");
+  });
+});
+
+// ── getPinterestProfile ────────────────────────────────────────────────────
+
+describe("getPinterestProfile", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should return profile on success", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: {
+          id: "user_1",
+          username: "pintester",
+          full_name: "Pin Tester",
+          boards_count: 12,
+        },
+      }),
+    );
+
+    const result = await getPinterestProfile("token");
+
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe("user_1");
+    expect(result!.username).toBe("pintester");
+    expect(result!.full_name).toBe("Pin Tester");
+    expect(result!.boards_count).toBe(12);
+  });
+
+  it("should fall back full_name to username when full_name is missing", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: { id: "user_2", username: "no_fullname" },
+      }),
+    );
+
+    const result = await getPinterestProfile("token");
+
+    expect(result!.full_name).toBe("no_fullname");
+  });
+
+  it("should default boards_count to 0 when missing", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: { id: "user_3", username: "u", full_name: "User" },
+      }),
+    );
+
+    const result = await getPinterestProfile("token");
+
+    expect(result!.boards_count).toBe(0);
+  });
+
+  it("should return null when response is not ok", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 401, json: {} }));
+
+    const result = await getPinterestProfile("bad-token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on network error", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await getPinterestProfile("token");
+
+    expect(result).toBeNull();
   });
 });

@@ -390,5 +390,35 @@ describe("ui-store [integration] — persist, toast, modal", () => {
       expect(parsed.state).not.toHaveProperty("activeModal");
       expect(parsed.state).not.toHaveProperty("modalData");
     });
+
+    it("merge rehydrates persisted theme and sidebar from localStorage", async () => {
+      const { store } = mockLocalStorage();
+      store.set(
+        "sc-ui-storage",
+        JSON.stringify({ state: { theme: "dark", sidebar: "collapsed" }, version: 0 }),
+      );
+
+      vi.resetModules();
+      const { useUIStore: rehydratedStore } = await import("@/lib/stores/ui-store");
+
+      expect(rehydratedStore.getState().theme).toBe("dark");
+      expect(rehydratedStore.getState().sidebar).toBe("collapsed");
+      // non-persisted fields remain at defaults
+      expect(rehydratedStore.getState().toasts).toStrictEqual([]);
+      expect(rehydratedStore.getState().activeModal).toBeNull();
+      expect(rehydratedStore.getState().modalData).toBeNull();
+    });
+  });
+
+  describe("openModal — argument count behavior", () => {
+    it("openModal with name only sets modalData to undefined (vs initial null)", () => {
+      expect(useRealUIStore.getState().modalData).toBeNull();
+
+      useRealUIStore.getState().openModal("test");
+
+      // modalData was explicitly set to undefined (not null)
+      expect(useRealUIStore.getState().modalData).toBeUndefined();
+      expect(useRealUIStore.getState().activeModal).toBe("test");
+    });
   });
 });

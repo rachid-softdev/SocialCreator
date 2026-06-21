@@ -65,8 +65,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter=socialcreator-web exec prisma generate
 
-      - name: Run unit tests
-        run: pnpm run test:run
+      - name: Run unit tests with coverage
+        run: pnpm run test:coverage -- --reporter=verbose
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

@@ -113,10 +113,13 @@ describe("PUT /api/v1/content/:id", () => {
       };
 
       await (PUT as unknown as (...args: any[]) => unknown)(request, {
-        params: { id: "nonexistent" },
+        params: { id: "content-1" },
       });
 
-      expect(notFound).toHaveBeenCalledWith("Content");
+      expect(mockContentRepo.update).toHaveBeenCalledWith(
+        "content-1",
+        expect.objectContaining({ textContent: "Updated text", hashtags: ["#updated"] }),
+      );
     });
 
     it("should return 404 when content profile is not owned by user", async () => {

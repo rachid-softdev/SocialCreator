@@ -39,9 +39,16 @@ vi.mock("@socialcreator/ui/button", () => ({
 
 vi.mock("lucide-react", () => ({
   Home: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-home" {...props} />,
+  Lock: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-lock" {...props} />,
   RefreshCw: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="icon-refresh-cw" {...props} />
   ),
+  AlertTriangle: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="icon-alert-triangle" {...props} />
+  ),
+  Search: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-search" {...props} />,
+  WifiOff: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-wifi-off" {...props} />,
+  X: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-x" {...props} />,
 }));
 
 const mockLogger = vi.hoisted(() => ({

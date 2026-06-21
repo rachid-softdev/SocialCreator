@@ -12,6 +12,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    $transaction: vi.fn((ops: unknown) => {
+      const arr = Array.isArray(ops) ? ops : [];
+      return Promise.all(arr);
+    }),
     generatedContent: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -19,6 +23,7 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      updateManyAndReturn: vi.fn(),
     },
   },
 }));
@@ -923,6 +928,255 @@ describe("PrismaContentRepository", () => {
       const result = await repo.findByProfileId("profile-1", { page: 1, pageSize: 10 });
 
       expect(result.totalPages).toBe(11);
+    });
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Advanced Queries (supplementary edge cases)
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("advanced queries", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("findPendingScheduled", () => {
+    it("should return empty array when before date is very old (all content is after)", async () => {
+      const veryOld = new Date("2020-01-01T00:00:00.000Z");
+      (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        [],
+      );
+
+      const result = await repo.findPendingScheduled(veryOld);
+
+      expect(prisma.generatedContent.findMany).toHaveBeenCalledWith({
+        where: {
+          status: "SCHEDULED",
+          scheduledPublishAt: { lte: veryOld },
+        },
+      });
+      expect(result).toStrictEqual([]);
+    });
+  });
+
+  describe("countPublishedToday", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should pass startOfDay with hours/minutes/seconds/ms set to 0", async () => {
+      vi.setSystemTime(new Date("2024-06-15T14:30:45.123Z"));
+      (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(3);
+
+      await repo.countPublishedToday("profile-1", "X" as any);
+
+      const callArg = (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+      const gteDate = callArg.where.publishedAt.gte as Date;
+      expect(gteDate.getHours()).toBe(0);
+      expect(gteDate.getMinutes()).toBe(0);
+      expect(gteDate.getSeconds()).toBe(0);
+      expect(gteDate.getMilliseconds()).toBe(0);
+    });
+  });
+
+  describe("findByRunId", () => {
+    it("should return content sorted by createdAt descending", async () => {
+      const contents = [
+        makeContent({ id: "c-2", runId: "run-1", createdAt: new Date("2024-02-01") }),
+        makeContent({ id: "c-1", runId: "run-1", createdAt: new Date("2024-01-01") }),
+      ];
+      (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        contents,
+      );
+
+      const result = await repo.findByRunId("run-1");
+
+      expect(prisma.generatedContent.findMany).toHaveBeenCalledWith({
+        where: { runId: "run-1" },
+        orderBy: { createdAt: "desc" },
+      });
+      // Verify the actual returned order is descending by createdAt
+      expect(result[0].createdAt).toEqual(contents[0].createdAt);
+      expect(result[1].createdAt).toEqual(contents[1].createdAt);
+    });
+  });
+
+  describe("findScheduledByProfileAndTime", () => {
+    it("should return all SCHEDULED content for profile when window is very wide", async () => {
+      const wideStart = new Date("2020-01-01T00:00:00.000Z");
+      const wideEnd = new Date("2030-12-31T23:59:59.000Z");
+      const allScheduled = [
+        makeContent({
+          id: "s-1",
+          status: "SCHEDULED",
+          scheduledPublishAt: new Date("2024-06-15"),
+        }),
+        makeContent({
+          id: "s-2",
+          status: "SCHEDULED",
+          scheduledPublishAt: new Date("2024-08-20"),
+        }),
+      ];
+      (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        allScheduled,
+      );
+
+      const result = await repo.findScheduledByProfileAndTime("profile-1", wideStart, wideEnd);
+
+      expect(prisma.generatedContent.findMany).toHaveBeenCalledWith({
+        where: {
+          profileId: "profile-1",
+          status: "SCHEDULED",
+          scheduledPublishAt: { gte: wideStart, lte: wideEnd },
+        },
+        orderBy: { scheduledPublishAt: "asc" },
+      });
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  describe("findScheduledByDateRange", () => {
+    it("should not include platform filter when platform is omitted", async () => {
+      (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        [],
+      );
+
+      await repo.findScheduledByDateRange("user-1", new Date("2024-06-01"), new Date("2024-06-30"));
+
+      const callArg = (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+      expect(callArg.where.platform).toBeUndefined();
+    });
+  });
+
+  describe("findFailed", () => {
+    it("should use default pagination (page=1, pageSize=20) when options object is empty", async () => {
+      (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        [],
+      );
+      (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+      const result = await repo.findFailed({});
+
+      expect(prisma.generatedContent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      );
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(20);
+      expect(result.total).toBe(0);
+    });
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Status Management (supplementary edge cases)
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("status management", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("claimScheduled", () => {
+    it("should claim SCHEDULED content with scheduledPublishAt ≤ before", async () => {
+      const before = new Date("2024-06-15T12:00:00.000Z");
+      const claimed = [
+        makeContent({
+          id: "c-1",
+          status: "PUBLISHING",
+          scheduledPublishAt: new Date("2024-06-15T10:00:00.000Z"),
+        }),
+        makeContent({
+          id: "c-2",
+          status: "PUBLISHING",
+          scheduledPublishAt: new Date("2024-06-14T08:00:00.000Z"),
+        }),
+      ];
+      (
+        prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(claimed);
+
+      const result = await repo.claimScheduled(before);
+
+      expect(prisma.generatedContent.updateManyAndReturn).toHaveBeenCalledWith({
+        where: {
+          status: "SCHEDULED",
+          scheduledPublishAt: { lte: before },
+        },
+        data: { status: "PUBLISHING" },
+      });
+      expect(result).toHaveLength(2);
+      expect(result[0].status).toBe("PUBLISHING");
+      expect(result[1].status).toBe("PUBLISHING");
+    });
+
+    it("should return empty array when no content to claim", async () => {
+      (
+        prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([]);
+
+      const result = await repo.claimScheduled(new Date("2024-01-01"));
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it("should only affect SCHEDULED content (not DRAFT, APPROVED, etc.)", async () => {
+      const before = new Date("2024-06-15T12:00:00.000Z");
+      (
+        prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([]);
+
+      await repo.claimScheduled(before);
+
+      expect(prisma.generatedContent.updateManyAndReturn).toHaveBeenCalledWith({
+        where: {
+          status: "SCHEDULED",
+          scheduledPublishAt: { lte: before },
+        },
+        data: { status: "PUBLISHING" },
+      });
+    });
+
+    it("should reject when prisma throws", async () => {
+      (
+        prisma.generatedContent.updateManyAndReturn as unknown as ReturnType<typeof vi.fn>
+      ).mockRejectedValue(new Error("DB error"));
+
+      await expect(repo.claimScheduled(new Date())).rejects.toThrow("DB error");
+    });
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Batch Operations (supplementary edge cases)
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("batch operations", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("batchReschedule", () => {
+    it("should reject when prisma.$transaction throws", async () => {
+      const items = [
+        { id: "c-1", scheduledPublishAt: new Date("2024-07-01T10:00:00.000Z") },
+        { id: "c-2", scheduledPublishAt: new Date("2024-07-02T10:00:00.000Z") },
+      ];
+
+      (prisma.generatedContent.update as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        {} as any,
+      );
+      (prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error("Transaction failed"),
+      );
+
+      await expect(repo.batchReschedule(items)).rejects.toThrow("Transaction failed");
     });
   });
 });

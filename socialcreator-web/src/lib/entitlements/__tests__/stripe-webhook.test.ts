@@ -1190,4 +1190,72 @@ describe("Stripe Webhook Handler", () => {
       });
     });
   });
+
+  // ============================================
+  // 13. Additional cleanup scenarios
+  // ============================================
+  describe("additional cleanup and idempotency scenarios", () => {
+    describe("cleanupOldWebhookEvents", () => {
+      it("should log info when old webhook events are cleaned up (count > 0)", async () => {
+        vi.resetModules();
+        const { handleStripeWebhook } = await import("../stripe-webhook");
+
+        mockPrisma.webhookEvent.deleteMany.mockResolvedValue({ count: 5 });
+
+        const event = makeEvent("customer.subscription.created", makeSubscription());
+        mockStripe.webhooks.constructEvent.mockReturnValue(event);
+
+        const result = await handleStripeWebhook("{}", "valid-sig");
+
+        expect(mockPrisma.webhookEvent.deleteMany).toHaveBeenCalledWith({
+          where: { createdAt: { lt: expect.any(Date) } },
+        });
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          { count: 5 },
+          "Cleaned up old webhook event records",
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("should not log cleanup info when no old events exist (count = 0)", async () => {
+        vi.resetModules();
+        const { handleStripeWebhook } = await import("../stripe-webhook");
+
+        // Ensure deleteMany returns count 0 (explicitly set to avoid leaking state from prior test)
+        mockPrisma.webhookEvent.deleteMany.mockResolvedValue({ count: 0 });
+        const event = makeEvent("customer.subscription.created", makeSubscription());
+        mockStripe.webhooks.constructEvent.mockReturnValue(event);
+
+        await handleStripeWebhook("{}", "valid-sig");
+
+        expect(mockPrisma.webhookEvent.deleteMany).toHaveBeenCalled();
+        expect(mockLogger.info).not.toHaveBeenCalledWith(
+          expect.any(Object),
+          "Cleaned up old webhook event records",
+        );
+      });
+    });
+
+    describe("maybeCleanup", () => {
+      it("should skip cleanup on subsequent webhook calls within the 24h interval", async () => {
+        vi.resetModules();
+        const { handleStripeWebhook } = await import("../stripe-webhook");
+
+        const event = makeEvent("customer.subscription.created", makeSubscription());
+        mockStripe.webhooks.constructEvent.mockReturnValue(event);
+        mockPrisma.webhookEvent.deleteMany.mockResolvedValue({ count: 0 });
+
+        // First call: lastCleanup is 0 → interval exceeded → cleanup runs
+        await handleStripeWebhook("{}", "valid-sig");
+        expect(mockPrisma.webhookEvent.deleteMany).toHaveBeenCalledTimes(1);
+
+        // Clear call tracking to verify second call behavior
+        mockPrisma.webhookEvent.deleteMany.mockClear();
+
+        // Second call: lastCleanup was just updated → cleanup skipped
+        await handleStripeWebhook("{}", "valid-sig");
+        expect(mockPrisma.webhookEvent.deleteMany).not.toHaveBeenCalled();
+      });
+    });
+  });
 });

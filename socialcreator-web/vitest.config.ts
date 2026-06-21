@@ -18,15 +18,26 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
+      reportsDirectory: "./coverage",
+      include: ["src/**"],
       exclude: [
         "node_modules",
         "dist",
         ".next",
         "**/*.d.ts",
         "**/*.config.ts",
-        "**/__tests__/**",
+        "**/*.test.*",
+        "**/*.spec.*",
         "**/__mocks__/**",
+        "**/*.integration.test.ts",
+        "e2e/**",
       ],
+      thresholds: {
+        statements: 65,
+        branches: 80,
+        functions: 70,
+        lines: 65,
+      },
     },
   },
   resolve: {

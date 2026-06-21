@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { publishToYouTube } from "../../publishers/youtube";
+import {
+  getYouTubeVideoDetails,
+  postToYouTubeCommunity,
+  publishToYouTube,
+} from "../../publishers/youtube";
 
 // Mock fetchWithTimeout
 vi.mock("@/lib/fetch-timeout", () => ({
@@ -471,5 +475,97 @@ describe("publishToYouTube", () => {
       expect(result.success).toBe(true);
       expect(result.postId).toBeUndefined();
     });
+  });
+});
+
+// ── postToYouTubeCommunity ─────────────────────────────────────────────────
+
+describe("postToYouTubeCommunity", () => {
+  it("should return static error (stub — community posts not yet supported)", async () => {
+    const result = await postToYouTubeCommunity(
+      { textContent: "Hello community", mediaUrls: [] },
+      { accountId: "ch_123", accessToken: "token" },
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Community posts require additional YouTube API setup");
+  });
+});
+
+// ── getYouTubeVideoDetails ─────────────────────────────────────────────────
+
+describe("getYouTubeVideoDetails", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should return video details on success", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: {
+          items: [
+            {
+              id: "vid_123",
+              snippet: { title: "My Video" },
+              status: { uploadStatus: "uploaded", privacyStatus: "public" },
+            },
+          ],
+        },
+      }),
+    );
+
+    const result = await getYouTubeVideoDetails("vid_123", "token");
+
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe("vid_123");
+    expect(result!.title).toBe("My Video");
+    expect(result!.status).toBe("uploaded");
+    expect(result!.privacyStatus).toBe("public");
+  });
+
+  it("should return null when items array is empty", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { items: [] } }));
+
+    const result = await getYouTubeVideoDetails("vid_invalid", "token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null when items is undefined", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: {} }));
+
+    const result = await getYouTubeVideoDetails("vid_missing", "token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on 401 response", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 401, json: {} }));
+
+    const result = await getYouTubeVideoDetails("vid_123", "bad-token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on 403 response", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 403, json: {} }));
+
+    const result = await getYouTubeVideoDetails("vid_123", "forbidden");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on network error (catch)", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await getYouTubeVideoDetails("vid_123", "token");
+
+    expect(result).toBeNull();
   });
 });

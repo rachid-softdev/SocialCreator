@@ -31,6 +31,15 @@ vi.mock("@/lib/logger", () => ({
   default: mockLogger,
 }));
 
+// Mock timeouts so the timeout test can advance fake timers through
+// both withTimeout windows + retry delay without waiting 60s
+const MOCK_SHORT_TIMEOUT = vi.hoisted(() => 50);
+vi.mock("../timeouts", () => ({
+  EXTERNAL_TIMEOUTS: {
+    DEEPGRAM_TRANSCRIPTION: MOCK_SHORT_TIMEOUT,
+  },
+}));
+
 import { getTranscriptWithTimestamps, transcribeVideo } from "../deepgram";
 
 describe("Deepgram speech-to-text", () => {
@@ -119,13 +128,14 @@ describe("Deepgram speech-to-text", () => {
 
       expect(mockPreRecorded).toHaveBeenCalledWith(
         { url: "https://example.com/video.mp4" },
-        {
+        expect.objectContaining({
           punctuate: true,
           paragraphs: true,
           timestamps: true,
           model: "nova-2",
           language: "multi",
-        },
+          "x-idempotency-key": expect.stringMatching(/^dg_/),
+        }),
       );
     });
 
@@ -145,6 +155,81 @@ describe("Deepgram speech-to-text", () => {
 
       expect(result.transcript).toBe("");
       expect(result.paragraphs).toEqual([]);
+    });
+
+    it("passes a unique idempotency key prefixed with dg_ to Deepgram", async () => {
+      mockPreRecorded.mockResolvedValue(sampleResponse);
+
+      await transcribeVideo("https://example.com/video.mp4");
+
+      const options = mockPreRecorded.mock.calls[0][1];
+      expect(options).toHaveProperty("x-idempotency-key");
+      expect(options["x-idempotency-key"]).toMatch(/^dg_/);
+    });
+  });
+
+  // ============================================
+  // Retry behavior
+  // ============================================
+
+  describe("retry behavior", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("throws the last error after all retries are exhausted", async () => {
+      vi.useFakeTimers();
+
+      const testError = new Error("Deepgram service unavailable");
+      mockPreRecorded.mockRejectedValue(testError);
+
+      const promise = transcribeVideo("https://example.com/video.mp4");
+
+      // Attach rejection handler before advancing timers
+      const caught = promise.then(
+        () => {
+          throw new Error("Expected rejection but got resolution");
+        },
+        (e: unknown) => e,
+      );
+
+      // Advance past the retry delay (1000ms for first attempt → 1 retry)
+      await vi.advanceTimersByTimeAsync(1001);
+
+      const error = await caught;
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("Deepgram service unavailable");
+      // Called twice: initial attempt + 1 retry (maxRetries=2)
+      expect(mockPreRecorded).toHaveBeenCalledTimes(2);
+    });
+
+    it("reuses the same idempotency key across retry attempts", async () => {
+      vi.useFakeTimers();
+
+      mockPreRecorded.mockRejectedValue(new Error("temporary failure"));
+
+      const promise = transcribeVideo("https://example.com/video.mp4");
+
+      // Attach rejection handler before advancing timers
+      const caught = promise.then(
+        () => {
+          throw new Error("Expected rejection but got resolution");
+        },
+        (e: unknown) => e,
+      );
+
+      await vi.advanceTimersByTimeAsync(1001);
+
+      const error = await caught;
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe("temporary failure");
+
+      // The same idempotency key is used across retries (idempotency guarantee)
+      const key1 = mockPreRecorded.mock.calls[0][1]["x-idempotency-key"];
+      const key2 = mockPreRecorded.mock.calls[1][1]["x-idempotency-key"];
+      expect(key1).toMatch(/^dg_/);
+      expect(key2).toMatch(/^dg_/);
+      expect(key1).toBe(key2);
     });
   });
 
@@ -188,11 +273,12 @@ describe("Deepgram speech-to-text", () => {
 
       expect(mockPreRecorded).toHaveBeenCalledWith(
         { url: "https://example.com/video.mp4" },
-        {
+        expect.objectContaining({
           punctuate: true,
           model: "nova-2",
           detect_language: true,
-        },
+          "x-idempotency-key": expect.stringMatching(/^dg_/),
+        }),
       );
     });
 
@@ -227,19 +313,23 @@ describe("Deepgram speech-to-text", () => {
         (e: unknown) => e, // swallow — we inspect below
       );
 
-      // Advance past 30s to fire the timeout
-      await vi.advanceTimersByTimeAsync(30001);
+      // Advance past both timeout windows (50ms each) + retry delay (1000ms)
+      // to let the retry loop exhaust and the final timeout error propagate
+      await vi.advanceTimersByTimeAsync(1200);
 
       // Retrieve the error that was caught
       const error = await caught;
       expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toMatch(/request timed out after 30000ms/);
+      expect((error as Error).message).toMatch(/request timed out after 50ms/);
 
       // Verify a timeout warning was logged
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.objectContaining({ timeoutMs: 30000, service: "Deepgram.transcribeVideo" }),
+        expect.objectContaining({ timeoutMs: 50, service: "Deepgram.transcribeVideo" }),
         expect.stringContaining("timed out"),
       );
+
+      // Called twice: initial attempt + 1 retry (maxRetries=2)
+      expect(mockPreRecorded).toHaveBeenCalledTimes(2);
 
       vi.useRealTimers();
     });

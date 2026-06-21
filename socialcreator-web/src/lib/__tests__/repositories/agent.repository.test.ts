@@ -26,6 +26,15 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/infrastructure/cache", () => ({
+  getCacheService: () => ({
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    exists: vi.fn(),
+  }),
+}));
+
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { prisma } from "@/lib/prisma";
@@ -121,6 +130,7 @@ describe("PrismaAgentRepository", () => {
       expect(prisma.agent.findMany).toHaveBeenCalledWith({
         where: { profileId: "profile-1" },
         orderBy: { createdAt: "desc" },
+        take: 100,
       });
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("agent-2");

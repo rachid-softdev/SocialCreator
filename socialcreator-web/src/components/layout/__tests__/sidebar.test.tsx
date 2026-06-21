@@ -24,6 +24,7 @@ const mockUseUIStore = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   usePathname: mockPathname,
+  useRouter: vi.fn(() => ({ push: vi.fn() })),
 }));
 
 vi.mock("next-auth/react", () => ({
@@ -90,6 +91,11 @@ vi.mock("lucide-react", () => ({
     <svg data-testid="icon-sparkles" {...props} />
   ),
   Users: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-users" {...props} />,
+  Keyboard: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="icon-keyboard" {...props} />
+  ),
+  Search: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-search" {...props} />,
+  X: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-x" {...props} />,
 }));
 
 // ── Tests ────────────────────────────────────────────────────────────

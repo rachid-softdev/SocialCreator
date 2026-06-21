@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { publishToTikTok } from "../../publishers/tiktok";
+import {
+  getTikTokPostStatus,
+  getTikTokProfile,
+  publishToTikTok,
+  validateTikTokVideo,
+} from "../../publishers/tiktok";
 
 vi.mock("@/lib/fetch-timeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -479,5 +484,196 @@ describe("publishToTikTok", () => {
       const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
       expect(body.description).toContain("#test");
     });
+  });
+});
+
+// ── validateTikTokVideo ────────────────────────────────────────────────────
+
+describe("validateTikTokVideo", () => {
+  it("should return valid for a .mp4 URL", () => {
+    const result = validateTikTokVideo("https://example.com/video.mp4");
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return valid for a .mov URL", () => {
+    const result = validateTikTokVideo("https://example.com/clip.mov");
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return valid for a .webm URL", () => {
+    const result = validateTikTokVideo("https://example.com/clip.webm");
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return valid for URL with query parameters", () => {
+    const result = validateTikTokVideo("https://example.com/video.mp4?token=abc&expires=123");
+    expect(result.valid).toBe(true);
+  });
+
+  it("should return error for URL without valid extension", () => {
+    const result = validateTikTokVideo("https://example.com/video.avi");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("Invalid video format");
+  });
+
+  it("should return error for URL with .jpg extension", () => {
+    const result = validateTikTokVideo("https://example.com/image.jpg");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("Invalid video format");
+  });
+
+  it("should return error for empty URL", () => {
+    const result = validateTikTokVideo("");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("Video URL is required");
+  });
+
+  it("should ignore unused size and duration params (they are accepted)", () => {
+    // The function accepts _maxSizeMB and _maxDurationSeconds but currently ignores them
+    const result = validateTikTokVideo("https://example.com/video.mp4", 1, 1);
+    expect(result.valid).toBe(true);
+  });
+});
+
+// ── getTikTokPostStatus ────────────────────────────────────────────────────
+
+describe("getTikTokPostStatus", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should return pending status", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { status: "pending" } }));
+
+    const result = await getTikTokPostStatus("post_1", "token");
+
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe("pending");
+    expect(result!.error).toBeUndefined();
+  });
+
+  it("should return processing status", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { status: "processing" } }));
+
+    const result = await getTikTokPostStatus("post_2", "token");
+
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe("processing");
+    expect(result!.error).toBeUndefined();
+  });
+
+  it("should return finished status", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { status: "finished" } }));
+
+    const result = await getTikTokPostStatus("post_3", "token");
+
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe("finished");
+    expect(result!.error).toBeUndefined();
+  });
+
+  it("should return failed status with error message", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ json: { status: "failed" } }));
+
+    const result = await getTikTokPostStatus("post_4", "token");
+
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe("failed");
+    expect(result!.error).toBe("Post processing failed");
+  });
+
+  it("should return null when response is not ok", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 401, json: {} }));
+
+    const result = await getTikTokPostStatus("post_5", "token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on network error (catch)", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await getTikTokPostStatus("post_6", "token");
+
+    expect(result).toBeNull();
+  });
+});
+
+// ── getTikTokProfile ───────────────────────────────────────────────────────
+
+describe("getTikTokProfile", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should return profile on success", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: {
+          data: {
+            user: {
+              open_id: "open_123",
+              display_name: "TikTokUser",
+              avatar_url: "https://example.com/avatar.jpg",
+            },
+          },
+        },
+      }),
+    );
+
+    const result = await getTikTokProfile("token");
+
+    expect(result).not.toBeNull();
+    expect(result!.open_id).toBe("open_123");
+    expect(result!.display_name).toBe("TikTokUser");
+    expect(result!.avatar_url).toBe("https://example.com/avatar.jpg");
+  });
+
+  it("should return profile without avatar_url if missing", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(
+      createMockResponse({
+        json: {
+          data: {
+            user: {
+              open_id: "open_456",
+              display_name: "NoAvatar",
+            },
+          },
+        },
+      }),
+    );
+
+    const result = await getTikTokProfile("token");
+
+    expect(result).not.toBeNull();
+    expect(result!.open_id).toBe("open_456");
+    expect(result!.display_name).toBe("NoAvatar");
+    expect(result!.avatar_url).toBeUndefined();
+  });
+
+  it("should return null when response is not ok", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockResolvedValueOnce(createMockResponse({ ok: false, status: 401, json: {} }));
+
+    const result = await getTikTokProfile("bad-token");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null on network error (catch)", async () => {
+    const mockFetch = vi.mocked(fetchWithTimeout);
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await getTikTokProfile("token");
+
+    expect(result).toBeNull();
   });
 });

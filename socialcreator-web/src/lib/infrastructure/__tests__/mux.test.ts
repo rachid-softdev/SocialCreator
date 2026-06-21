@@ -196,6 +196,14 @@ describe("Mux video client", () => {
 
       expect(result.playbackId).toBeUndefined();
     });
+
+    it("throws when asset is not found (404)", async () => {
+      const notFoundError = new Error("Asset not found");
+      (notFoundError as any).status = 404;
+      mockAssetsRetrieve.mockRejectedValue(notFoundError);
+
+      await expect(getMuxAsset("nonexistent-asset")).rejects.toThrow("Asset not found");
+    });
   });
 
   // ============================================

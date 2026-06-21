@@ -484,4 +484,45 @@ describe("content-store [integration] — fetchContent, filters, CRUD", () => {
       expect(state.filters).toStrictEqual({ page: 1, pageSize: 20 });
     });
   });
+
+  describe("removeItem — total becomes negative", () => {
+    it("decrements total below zero when items array is already empty", () => {
+      useRealContentStore.setState({ items: [], total: 0 });
+
+      useRealContentStore.getState().removeItem("nonexistent");
+
+      expect(useRealContentStore.getState().total).toBe(-1);
+    });
+  });
+
+  describe("fetchContent — fallback when response lacks expected properties", () => {
+    it("falls back to raw data and zero defaults", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({}),
+      });
+
+      await useRealContentStore.getState().fetchContent();
+
+      const state = useRealContentStore.getState();
+      // data.contents is undefined → falls back to the whole data object {}
+      expect(state.items).toStrictEqual({});
+      expect(state.total).toBe(0);
+      expect(state.totalPages).toBe(0);
+      expect(state.isLoading).toBe(false);
+    });
+  });
+
+  describe("addItem — duplicate id", () => {
+    it("adds duplicate id without deduplication", () => {
+      useRealContentStore.getState().addItem(mockContentItem);
+      useRealContentStore.getState().addItem(mockContentItem);
+
+      const items = useRealContentStore.getState().items;
+      expect(items).toHaveLength(2);
+      expect(items[0].id).toBe("content-1");
+      expect(items[1].id).toBe("content-1");
+      expect(useRealContentStore.getState().total).toBe(2);
+    });
+  });
 });

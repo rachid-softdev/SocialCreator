@@ -37,6 +37,23 @@ vi.mock("@socialcreator/ui/button", () => ({
   ),
 }));
 
+vi.mock("lucide-react", () => ({
+  X: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-x" {...props} />,
+  Plus: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-plus" {...props} />,
+  Copy: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-copy" {...props} />,
+  Eye: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-eye" {...props} />,
+  EyeOff: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-eye-off" {...props} />,
+  Trash2: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-trash2" {...props} />,
+  Key: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-key" {...props} />,
+  Check: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon-check" {...props} />,
+  AlertCircle: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="icon-alert-circle" {...props} />
+  ),
+  AlertTriangle: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="icon-alert-triangle" {...props} />
+  ),
+}));
+
 vi.mock("@/lib/logger", () => ({
   default: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
@@ -49,9 +66,20 @@ Object.defineProperty(navigator, "clipboard", {
   writable: true,
 });
 
-// Mock confirm dialog
-const mockConfirm = vi.hoisted(() => vi.fn());
-vi.stubGlobal("confirm", mockConfirm);
+vi.mock("@/components/admin/confirm-dialog", () => ({
+  ConfirmDialog: ({ open, onConfirm, description, confirmLabel }: any) =>
+    open ? (
+      <div data-testid="confirm-dialog">
+        <p>{description}</p>
+        <button data-testid="confirm-btn" onClick={onConfirm}>
+          {confirmLabel || "Confirm"}
+        </button>
+        <button data-testid="cancel-btn" onClick={() => {}}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
 
 // ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -88,7 +116,6 @@ const mockInitialKeys = [...mockActiveKeys, ...mockRevokedKeys];
 describe("ApiKeyManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockConfirm.mockReturnValue(true);
   });
 
   // ── Empty state ──────────────────────────────────────────────────────
@@ -337,7 +364,7 @@ describe("ApiKeyManager", () => {
       const revokeBtn = screen.getAllByText("Revoke")[0];
       await user.click(revokeBtn);
 
-      expect(mockConfirm).toHaveBeenCalled();
+      expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
     });
 
     it("calls onRevoke when confirmed", async () => {
@@ -348,19 +375,24 @@ describe("ApiKeyManager", () => {
       const revokeBtn = screen.getAllByText("Revoke")[0];
       await user.click(revokeBtn);
 
+      // Click confirm in the dialog
+      await user.click(screen.getByTestId("confirm-btn"));
+
       await waitFor(() => {
         expect(onRevoke).toHaveBeenCalledWith("key-1");
       });
     });
 
     it("does not call onRevoke when confirm is cancelled", async () => {
-      mockConfirm.mockReturnValue(false);
       const onRevoke = vi.fn().mockResolvedValue(undefined);
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
       const revokeBtn = screen.getAllByText("Revoke")[0];
       await user.click(revokeBtn);
+
+      // Click cancel in the dialog
+      await user.click(screen.getByTestId("cancel-btn"));
 
       expect(onRevoke).not.toHaveBeenCalled();
     });
@@ -372,6 +404,9 @@ describe("ApiKeyManager", () => {
 
       const revokeBtn = screen.getAllByText("Revoke")[0];
       await user.click(revokeBtn);
+
+      // Click confirm in the dialog
+      await user.click(screen.getByTestId("confirm-btn"));
 
       await waitFor(() => {
         expect(screen.getByText("Revoked Keys")).toBeInTheDocument();
@@ -408,6 +443,9 @@ describe("ApiKeyManager", () => {
 
       const revokeBtn = screen.getAllByText("Revoke")[0];
       await user.click(revokeBtn);
+
+      // Confirm in the dialog
+      await user.click(screen.getByTestId("confirm-btn"));
 
       await waitFor(() => {
         expect(logger.default.error).toHaveBeenCalled();

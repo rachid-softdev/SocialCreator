@@ -6,6 +6,7 @@ import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class RegisterPage extends BasePage {
+  readonly nameInput: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly confirmPasswordInput: Locator;
@@ -13,6 +14,7 @@ export class RegisterPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    this.nameInput = page.locator("#name").first();
     this.emailInput = page.locator('input[type="email"]').first();
     this.passwordInput = page.locator('input[type="password"]').first();
     this.confirmPasswordInput = page
@@ -23,6 +25,12 @@ export class RegisterPage extends BasePage {
 
   override async goto() {
     await super.goto("/register");
+  }
+
+  async fillName(name: string) {
+    if (await this.nameInput.isVisible()) {
+      await this.nameInput.fill(name);
+    }
   }
 
   async fillEmail(email: string) {

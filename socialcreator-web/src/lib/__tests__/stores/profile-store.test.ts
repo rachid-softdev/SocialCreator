@@ -367,5 +367,81 @@ describe("profile-store [integration] — fetchProfiles, CRUD, persist", () => {
       expect(parsed.state).not.toHaveProperty("profiles");
       expect(parsed.state).not.toHaveProperty("isLoading");
     });
+
+    it("merge rehydrates selectedProfileId from persisted data", async () => {
+      const { store } = mockLocalStorage();
+      store.set(
+        "sc-profile-storage",
+        JSON.stringify({ state: { selectedProfileId: "profile-1" }, version: 0 }),
+      );
+
+      vi.resetModules();
+      const { useProfileStore: rehydratedStore } = await import("@/lib/stores/profile-store");
+
+      expect(rehydratedStore.getState().selectedProfileId).toBe("profile-1");
+      // Non-persisted fields keep their defaults
+      expect(rehydratedStore.getState().profiles).toStrictEqual([]);
+      expect(rehydratedStore.getState().isLoading).toBe(false);
+    });
+  });
+
+  describe("fetchProfiles — fallback when response has no profiles property", () => {
+    it("falls back to raw data when data.profiles is undefined", async () => {
+      const rawData = [{ id: "profile-1", name: "Inline Profile" }];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(rawData),
+      });
+
+      await useRealProfileStore.getState().fetchProfiles();
+
+      expect(useRealProfileStore.getState().profiles).toStrictEqual(rawData);
+    });
+  });
+
+  describe("reset — documented isLoading inconsistency", () => {
+    it("does NOT reset isLoading to false", () => {
+      useRealProfileStore.setState({
+        isLoading: true,
+        profiles: [mockProfile],
+        selectedProfileId: "profile-1",
+        error: "some error",
+      });
+
+      useRealProfileStore.getState().reset();
+
+      const state = useRealProfileStore.getState();
+      // isLoading is NOT cleared by reset
+      expect(state.isLoading).toBe(true);
+      // Other fields ARE cleared
+      expect(state.profiles).toStrictEqual([]);
+      expect(state.selectedProfileId).toBeNull();
+      expect(state.error).toBeNull();
+    });
+  });
+
+  describe("updateProfile / deleteProfile — do NOT set isLoading (inconsistency)", () => {
+    it("does NOT set isLoading during updateProfile", async () => {
+      useRealProfileStore.setState({ isLoading: false, profiles: [mockProfile] });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ name: "Updated" }),
+      });
+
+      await useRealProfileStore.getState().updateProfile("profile-1", { name: "Updated" });
+
+      // isLoading was never set to true by updateProfile
+      expect(useRealProfileStore.getState().isLoading).toBe(false);
+    });
+
+    it("does NOT set isLoading during deleteProfile", async () => {
+      useRealProfileStore.setState({ isLoading: false, profiles: [mockProfile] });
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+
+      await useRealProfileStore.getState().deleteProfile("profile-1");
+
+      // isLoading was never set to true by deleteProfile
+      expect(useRealProfileStore.getState().isLoading).toBe(false);
+    });
   });
 });

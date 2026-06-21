@@ -42,6 +42,15 @@ describe("LLM Provider — generateText", () => {
     messages: [{ role: "user" as const, content: "Hello" }],
   };
 
+  // Suppress expected LLMError unhandled rejections from timer-based retry tests
+  const unhandledHandler = () => {};
+  beforeAll(() => {
+    process.on("unhandledRejection", unhandledHandler);
+  });
+  afterAll(() => {
+    process.off("unhandledRejection", unhandledHandler);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetCircuit();
@@ -320,6 +329,7 @@ describe("LLM Provider — generateText", () => {
 
   describe("circuit breaker", () => {
     afterEach(() => {
+      vi.restoreAllMocks();
       vi.useRealTimers();
     });
 
@@ -493,7 +503,7 @@ describe("LLM Provider — generateText", () => {
 
       for (let i = 0; i < 3; i++) {
         const promise = generateText(baseRequest);
-        await vi.advanceTimersByTimeAsync(30_000);
+        await vi.runAllTimersAsync();
         await expect(promise).rejects.toThrow(LLMError);
       }
       expect(getCircuitState("anthropic")).toBe("open");
@@ -507,7 +517,7 @@ describe("LLM Provider — generateText", () => {
           fallback: "openai",
         });
         // Primary fails immediately (circuit open), fallback retries 2 times
-        await vi.advanceTimersByTimeAsync(30_000);
+        await vi.runAllTimersAsync();
         await expect(promise).rejects.toThrow(LLMError);
       }
 
@@ -520,7 +530,8 @@ describe("LLM Provider — generateText", () => {
           fallback: "openai",
         }),
       ).rejects.toThrow(/both providers failed/i);
-    });
+      await vi.runAllTimersAsync();
+    }, 30_000);
   });
 
   // ── Error cases ──────────────────────────────────────────────
@@ -546,7 +557,13 @@ describe("LLM Provider — generateText", () => {
   // ── Circuit breaker integration with retry ───────────────────
 
   describe("circuit breaker integration with retry", () => {
-    afterEach(() => {
+    afterEach(async () => {
+      // Drain any pending fake timers to prevent unhandled rejections
+      try {
+        await vi.advanceTimersByTimeAsync(60_000);
+      } catch {
+        /* drain */
+      }
       vi.useRealTimers();
     });
 
@@ -594,9 +611,13 @@ describe("LLM Provider — generateText", () => {
 
       // 4th call — immediately denied, no Anthropic calls
       await expect(generateText(baseRequest)).rejects.toThrow(/circuit is open/);
+      await vi.advanceTimersByTimeAsync(60_000);
 
       // 3 calls × 3 retries = 9 calls to Anthropic
       expect(mockAnthropicMessagesCreate).toHaveBeenCalledTimes(9);
+
+      // Fully drain all pending timers before test ends to prevent unhandled rejections
+      await vi.advanceTimersByTimeAsync(60_000).catch(() => {});
     });
   });
 });

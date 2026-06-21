@@ -122,7 +122,11 @@ describe("ContentEditor", () => {
     render(<ContentEditor content={content} onSave={onSave} onCancel={onCancel} />);
 
     // Should show over-limit error (300 - 280 = 20 chars over)
-    expect(screen.getByText("Content exceeds platform limit by 20 characters")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This is 20 characters over the limit for this platform. Try shortening your text.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows Save Draft and Publish Now buttons for DRAFT status", () => {

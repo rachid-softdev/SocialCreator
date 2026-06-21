@@ -39,6 +39,34 @@ const tiktokValidator: ContentValidator = async (content: PublishContent) => {
   return { valid: errors.length === 0, errors, warnings: [] };
 };
 
+function mediaRequiredValidator(requiredCount: number, allowedTypes?: string[]): ContentValidator {
+  return async (content: PublishContent) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (content.mediaUrls.length < requiredCount) {
+      errors.push(
+        `At least ${requiredCount} media file(s) required, got ${content.mediaUrls.length}`,
+      );
+    }
+
+    if (allowedTypes && content.mediaUrls.length > 0) {
+      const hasAllowedType = content.mediaUrls.some((url) =>
+        allowedTypes.some((ext) => url.toLowerCase().endsWith(ext)),
+      );
+      if (!hasAllowedType) {
+        warnings.push(`No media file matches allowed types: ${allowedTypes.join(", ")}`);
+      }
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
+  };
+}
+
+const instagramValidator: ContentValidator = mediaRequiredValidator(1);
+
+const linkedinValidator: ContentValidator = characterLimitValidator(3000);
+
 // ========== Tests ==========
 
 describe("Content Validators", () => {
@@ -219,6 +247,200 @@ describe("Content Validators", () => {
       };
 
       const result = await tiktokValidator(content);
+
+      expect(result.valid).toBe(true);
+    });
+
+    it("should fail for URL with anchor hash (not stripped by regex)", async () => {
+      const content: PublishContent = {
+        textContent: "Anchor hash",
+        mediaUrls: ["https://example.com/video.mp4#section"],
+        hashtags: [],
+      };
+
+      const result = await tiktokValidator(content);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("TikTok requires at least one video file");
+    });
+  });
+
+  describe("instagramValidator", () => {
+    it("should pass when at least one media URL is present", async () => {
+      const content: PublishContent = {
+        textContent: "Instagram post",
+        mediaUrls: ["https://example.com/image.jpg"],
+        hashtags: [],
+      };
+
+      const result = await instagramValidator(content);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toStrictEqual([]);
+    });
+
+    it("should fail when no media URLs are provided", async () => {
+      const content: PublishContent = {
+        textContent: "No media",
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await instagramValidator(content);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("At least 1 media file(s) required, got 0");
+    });
+
+    it("should pass with multiple media URLs", async () => {
+      const content: PublishContent = {
+        textContent: "Multiple media",
+        mediaUrls: ["https://example.com/photo1.jpg", "https://example.com/photo2.png"],
+        hashtags: [],
+      };
+
+      const result = await instagramValidator(content);
+
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe("linkedinValidator", () => {
+    it("should pass when text is within 3000 characters", async () => {
+      const content: PublishContent = {
+        textContent: "A".repeat(3000),
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await linkedinValidator(content);
+
+      expect(result.valid).toBe(true);
+    });
+
+    it("should fail when text exceeds 3000 characters", async () => {
+      const content: PublishContent = {
+        textContent: "A".repeat(3001),
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await linkedinValidator(content);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Text exceeds 3000 char limit");
+    });
+
+    it("should pass for empty text (under limit)", async () => {
+      const content: PublishContent = {
+        textContent: "",
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await linkedinValidator(content);
+
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe("mediaRequiredValidator", () => {
+    describe("with allowedTypes filtering", () => {
+      const imageOnlyValidator = mediaRequiredValidator(1, [".jpg", ".png"]);
+
+      it("should pass when media matches an allowed type", async () => {
+        const content: PublishContent = {
+          textContent: "Image post",
+          mediaUrls: ["https://example.com/photo.jpg"],
+          hashtags: [],
+        };
+
+        const result = await imageOnlyValidator(content);
+
+        expect(result.valid).toBe(true);
+      });
+
+      it("should pass when at least one media matches allowed types among many", async () => {
+        const content: PublishContent = {
+          textContent: "Mixed media",
+          mediaUrls: ["https://example.com/doc.pdf", "https://example.com/photo.jpg"],
+          hashtags: [],
+        };
+
+        const result = await imageOnlyValidator(content);
+
+        expect(result.valid).toBe(true);
+        expect(result.warnings).toStrictEqual([]);
+      });
+
+      it("should warn when no media matches allowed types", async () => {
+        const content: PublishContent = {
+          textContent: "Wrong format",
+          mediaUrls: ["https://example.com/video.mp4"],
+          hashtags: [],
+        };
+
+        const result = await imageOnlyValidator(content);
+
+        expect(result.valid).toBe(true); // still valid because mediaUrls.length >= 1
+        expect(result.warnings).toContain("No media file matches allowed types: .jpg, .png");
+      });
+    });
+
+    describe("with requiredCount = 0", () => {
+      const optionalMediaValidator = mediaRequiredValidator(0);
+
+      it("should pass when no media is provided", async () => {
+        const content: PublishContent = {
+          textContent: "Text only",
+          mediaUrls: [],
+          hashtags: [],
+        };
+
+        const result = await optionalMediaValidator(content);
+
+        expect(result.valid).toBe(true);
+        expect(result.errors).toStrictEqual([]);
+      });
+
+      it("should pass even when media is provided", async () => {
+        const content: PublishContent = {
+          textContent: "With media",
+          mediaUrls: ["https://example.com/image.jpg"],
+          hashtags: [],
+        };
+
+        const result = await optionalMediaValidator(content);
+
+        expect(result.valid).toBe(true);
+      });
+    });
+  });
+
+  describe("characterLimitValidator with maxChars = 0", () => {
+    const noTextValidator = characterLimitValidator(0);
+
+    it("should fail when text is non-empty", async () => {
+      const content: PublishContent = {
+        textContent: "Any text",
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await noTextValidator(content);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Text exceeds 0 char limit");
+    });
+
+    it("should pass when text is empty", async () => {
+      const content: PublishContent = {
+        textContent: "",
+        mediaUrls: [],
+        hashtags: [],
+      };
+
+      const result = await noTextValidator(content);
 
       expect(result.valid).toBe(true);
     });

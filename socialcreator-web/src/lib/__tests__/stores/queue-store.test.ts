@@ -385,4 +385,54 @@ describe("queue-store [integration] — cache, retry, edge cases", () => {
       expect(useRealQueueStore.getState().error).toBe("Failed to retry job");
     });
   });
+
+  describe("fetchStatus — does NOT set isLoading (documented inconsistency)", () => {
+    it("leaves isLoading unchanged during fetch", async () => {
+      let resolveFetch!: (value: unknown) => void;
+      mockFetch.mockReturnValue(
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+      );
+
+      const promise = useRealQueueStore.getState().fetchStatus();
+      // fetchStatus does NOT set isLoading, so it should remain false
+      expect(useRealQueueStore.getState().isLoading).toBe(false);
+
+      resolveFetch({
+        ok: true,
+        json: () => Promise.resolve({ queued: 0, running: 0, completed: 0, failed: 0, total: 0 }),
+      });
+      await promise;
+    });
+  });
+
+  describe("retryJob — fetchStatus succeeds but fetchJobs fails", () => {
+    it("sets error when fetchJobs fails after successful retry and fetchStatus", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ queued: 0, running: 0, completed: 0, failed: 0, total: 0 }),
+      });
+      mockFetch.mockRejectedValueOnce(new Error("Failed to fetch jobs"));
+
+      await useRealQueueStore.getState().retryJob("job-1");
+
+      expect(useRealQueueStore.getState().error).toBe("Failed to fetch jobs");
+    });
+  });
+
+  describe("fetchJobs — does not clear existing jobs on error", () => {
+    it("keeps existing jobs when fetch fails", async () => {
+      const existingJob = { ...mockJob, id: "existing-job" };
+      useRealQueueStore.setState({ jobs: [existingJob] });
+
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      await useRealQueueStore.getState().fetchJobs();
+
+      // jobs array should still contain the previous job after an error
+      expect(useRealQueueStore.getState().jobs).toStrictEqual([existingJob]);
+    });
+  });
 });

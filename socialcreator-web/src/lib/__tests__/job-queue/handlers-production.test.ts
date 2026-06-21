@@ -26,6 +26,14 @@ vi.mock("@/lib/repositories", () => ({
   getRepositories: () => mockGetRepositories(),
 }));
 
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    generatedContent: {
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    },
+  },
+}));
+
 vi.mock("@/lib/publishers", () => ({
   publishContent: vi.fn(),
 }));
@@ -129,6 +137,7 @@ describe("Production Job Handlers", () => {
         findByAgentId: vi.fn(),
       },
       publishLog: {
+        findSuccessfulByContentHash: vi.fn().mockResolvedValue(null),
         countPublishedToday: vi.fn().mockResolvedValue(0),
         create: vi.fn(),
       },

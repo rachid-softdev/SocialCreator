@@ -30,6 +30,22 @@ vi.mock("lucide-react", () => ({
   MoreVertical: "svg-more-vertical",
   Pencil: "svg-pencil",
   Trash2: "svg-trash2",
+  X: "svg-x",
+}));
+
+vi.mock("@/components/admin/confirm-dialog", () => ({
+  ConfirmDialog: ({ open, onConfirm, description, confirmLabel }: any) =>
+    open ? (
+      <div data-testid="confirm-dialog">
+        <p>{description}</p>
+        <button data-testid="confirm-btn" onClick={onConfirm}>
+          {confirmLabel || "Confirm"}
+        </button>
+        <button data-testid="cancel-btn" onClick={() => {}}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
@@ -154,8 +170,6 @@ describe("ProfileCard", () => {
 
   it("renders delete button in dropdown and calls onDelete on confirm", async () => {
     const onDelete = vi.fn();
-    // Mock window.confirm
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(<ProfileCard profile={baseProfile as any} onDelete={onDelete} />);
 
@@ -167,15 +181,16 @@ describe("ProfileCard", () => {
     const deleteBtn = screen.getByText("Delete");
     await userEvent.click(deleteBtn);
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(onDelete).toHaveBeenCalledWith("profile-1");
+    // ConfirmDialog should appear
+    expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
 
-    confirmSpy.mockRestore();
+    // Click confirm
+    await userEvent.click(screen.getByTestId("confirm-btn"));
+    expect(onDelete).toHaveBeenCalledWith("profile-1");
   });
 
   it("does not call onDelete when confirm is cancelled", async () => {
     const onDelete = vi.fn();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(<ProfileCard profile={baseProfile as any} onDelete={onDelete} />);
 
@@ -185,10 +200,12 @@ describe("ProfileCard", () => {
     const deleteBtn = screen.getByText("Delete");
     await userEvent.click(deleteBtn);
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(onDelete).not.toHaveBeenCalled();
+    // ConfirmDialog should appear
+    expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
 
-    confirmSpy.mockRestore();
+    // Click cancel
+    await userEvent.click(screen.getByTestId("cancel-btn"));
+    expect(onDelete).not.toHaveBeenCalled();
   });
 
   it("links to the profile detail page", () => {

@@ -286,5 +286,77 @@ describe("auth-store [integration] — syncAuthSession & persist", () => {
       expect(rehydratedStore.getState().isAuthenticated).toBe(false);
       expect(rehydratedStore.getState().user).toBeNull();
     });
+
+    it("handles corrupted persisted data gracefully", async () => {
+      const { store } = mockLocalStorage();
+      store.set("sc-auth-storage", JSON.stringify({ state: "corrupted string", version: 0 }));
+
+      vi.resetModules();
+      const { useAuthStore: rehydratedStore } = await import("@/lib/stores/auth-store");
+
+      expect(rehydratedStore.getState().isLoading).toBe(true);
+      expect(rehydratedStore.getState().isAuthenticated).toBe(false);
+      expect(rehydratedStore.getState().user).toBeNull();
+    });
+  });
+
+  describe("setUser with empty email", () => {
+    it("accepts user with empty email string", () => {
+      useRealAuthStore.getState().setUser({
+        id: "user-2",
+        email: "",
+        name: null,
+        image: null,
+        role: "USER",
+      });
+
+      const state = useRealAuthStore.getState();
+      expect(state.user?.email).toBe("");
+      expect(state.isAuthenticated).toBe(true);
+    });
+  });
+});
+
+// ========== Additional syncAuthSession scenarios ==========
+
+describe("syncAuthSession — edge cases", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useRealAuthStore.setState({
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+    });
+  });
+
+  describe("session.user.id missing", () => {
+    it("sets isLoading false when user exists but id is absent", async () => {
+      mockAuth.mockResolvedValue({
+        user: { email: "a@b.com", name: "Test", image: null },
+        // no id
+      });
+
+      await syncAuthSession();
+
+      const state = useRealAuthStore.getState();
+      expect(state.isLoading).toBe(false);
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe("session.user.role absent", () => {
+    it("defaults role to USER when session.user.role is not provided", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "1", email: "a@b.com", name: null, image: null },
+        // no role
+      });
+
+      await syncAuthSession();
+
+      const state = useRealAuthStore.getState();
+      expect(state.user?.role).toBe("USER");
+      expect(state.user?.id).toBe("1");
+    });
   });
 });

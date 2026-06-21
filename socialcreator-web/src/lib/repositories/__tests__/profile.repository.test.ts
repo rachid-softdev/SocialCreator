@@ -27,6 +27,15 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/infrastructure/cache", () => ({
+  getCacheService: () => ({
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    exists: vi.fn(),
+  }),
+}));
+
 // ── Imports (after mocks) ──────────────────────────────────────────────────
 
 import { prisma } from "@/lib/prisma";
