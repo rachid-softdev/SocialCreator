@@ -36,7 +36,8 @@ export async function generateContent(
     },
   );
 
-  const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+  const firstBlock = msg.content[0];
+  const text = firstBlock?.type === "text" ? firstBlock.text : "";
 
   // Parse JSON response
   try {

@@ -68,7 +68,7 @@ export function requireLimit(limitKey: string): MiddlewareHandler {
       const used = entitlements.usage[limitKey] || 0;
       const resetAt = entitlements.resetAt[limitKey];
 
-      const error = createLimitReachedError(limitKey, limit, used, resetAt);
+      const error = createLimitReachedError(limitKey, limit, used, resetAt ?? new Date());
 
       return new Response(JSON.stringify(error), {
         status: 402,
@@ -162,7 +162,7 @@ export function withEntitlements(...middlewares: MiddlewareHandler[]): Middlewar
 
     // Build middleware chain in reverse
     for (let i = middlewares.length - 1; i >= 0; i--) {
-      const middleware = middlewares[i];
+      const middleware = middlewares[i]!;
       const nextHandler = currentHandler;
       currentHandler = () => middleware(context, nextHandler);
     }

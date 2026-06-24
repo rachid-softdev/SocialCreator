@@ -17,7 +17,11 @@ export async function publishToInstagram(
     const caption = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
 
     if (mediaUrls.length > 0) {
-      const urlValidation = validateMediaUrl(mediaUrls[0]);
+      const mediaUrl = mediaUrls[0];
+      if (!mediaUrl) {
+        return { success: false, error: "Invalid media URL: URL is required" };
+      }
+      const urlValidation = validateMediaUrl(mediaUrl);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
@@ -33,7 +37,7 @@ export async function publishToInstagram(
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            image_url: mediaUrls[0],
+            image_url: mediaUrl,
             caption,
           }),
         },

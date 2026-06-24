@@ -79,7 +79,11 @@ export async function publishToPinterest(
       const title = textContent.slice(0, 100);
       const description = `${textContent}\n\n${hashtags.map((t) => `#${t}`).join(" ")}`;
 
-      const urlValidation = validateMediaUrl(mediaUrls[0]);
+      const mediaUrl = mediaUrls[0];
+      if (!mediaUrl) {
+        return { success: false, error: "Invalid media URL: URL is required" };
+      }
+      const urlValidation = validateMediaUrl(mediaUrl);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
@@ -88,10 +92,10 @@ export async function publishToPinterest(
       const pinOptions: PinterestPinOptions = {
         title: title,
         description: description,
-        link: mediaUrls[0], // Link to the source
+        link: mediaUrl, // Link to the source
         mediaSource: {
           source_type: "image_url",
-          url: mediaUrls[0],
+          url: mediaUrl,
         },
       };
 

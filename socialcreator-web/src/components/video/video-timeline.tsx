@@ -40,7 +40,10 @@ export function VideoTimeline({
   className,
 }: VideoTimelineProps) {
   // Calculate total duration from words if not provided
-  const totalDuration = duration || (words.length > 0 ? words[words.length - 1].end : 0);
+  const totalDuration = duration || (words.length > 0
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by length check above
+    ? words[words.length - 1]!.end
+    : 0);
 
   // Create time markers every 30 seconds
   const timeMarkers: number[] = [];
