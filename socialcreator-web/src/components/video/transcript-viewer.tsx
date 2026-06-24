@@ -56,13 +56,15 @@ export function TranscriptViewer({
       currentGroup.push(word);
       lastEnd = word.end;
     } else {
-      wordGroups.push({ words: currentGroup, start: currentGroup[0].start });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- length > 0 guaranteed by else branch
+      wordGroups.push({ words: currentGroup, start: currentGroup[0]!.start });
       currentGroup = [word];
       lastEnd = word.end;
     }
   }
   if (currentGroup.length > 0) {
-    wordGroups.push({ words: currentGroup, start: currentGroup[0].start });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by length check above
+    wordGroups.push({ words: currentGroup, start: currentGroup[0]!.start });
   }
 
   return (

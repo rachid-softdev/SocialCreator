@@ -102,8 +102,9 @@ function parseWindowToSeconds(window: string): number {
   const match = window.match(/^(\d+)(s|m|h)$/);
   if (!match) return 60;
 
-  const value = parseInt(match[1], 10);
-  const unit = match[2];
+  // match succeeded, so capture groups exist
+  const value = parseInt(match[1]!, 10);
+  const unit = match[2]!;
 
   switch (unit) {
     case "s":
@@ -222,7 +223,8 @@ function getConfigForPath(path: string): RateLimitConfig | null {
 
   // Default
   if (path.startsWith("/api/")) {
-    return RATE_LIMIT_CONFIGS.default;
+    // default is always present in RATE_LIMIT_CONFIGS
+    return RATE_LIMIT_CONFIGS.default!;
   }
 
   return null;

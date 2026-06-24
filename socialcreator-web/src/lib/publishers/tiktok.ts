@@ -90,7 +90,14 @@ export async function publishToTikTok(
 
   // Validate media URL for SSRF prevention
   if (hasVideo) {
-    const urlValidation = validateMediaUrl(mediaUrls[0]);
+    const videoUrl = mediaUrls[0];
+    if (!videoUrl) {
+      return {
+        success: false,
+        error: "Invalid video URL: URL is required",
+      };
+    }
+    const urlValidation = validateMediaUrl(videoUrl);
     if (!urlValidation.valid) {
       return {
         success: false,
@@ -150,6 +157,9 @@ export async function publishToTikTok(
 
           // SSRF validation before fetching media
           const mediaUrl = mediaUrls[0];
+          if (!mediaUrl) {
+            throw new Error("Invalid video URL: URL is required");
+          }
           const mediaUrlValidation = validateMediaUrl(mediaUrl);
           if (!mediaUrlValidation.valid) {
             throw new Error(`Invalid video URL: ${mediaUrlValidation.error}`);

@@ -154,13 +154,13 @@ export class PrismaPublishLogRepository implements IPublishLogRepository {
     const grouped: Record<string, { success: number; failed: number }> = {};
     for (let i = 0; i < days; i++) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const key = d.toISOString().split("T")[0];
+      const key = d.toISOString().split("T")[0]!;
       grouped[key] = { success: 0, failed: 0 };
     }
 
     // Fill in actual data
     for (const log of logs) {
-      const key = log.publishedAt.toISOString().split("T")[0];
+      const key = log.publishedAt.toISOString().split("T")[0]!;
       if (grouped[key]) {
         if (log.success) grouped[key].success++;
         else grouped[key].failed++;

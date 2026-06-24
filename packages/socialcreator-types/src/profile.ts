@@ -20,6 +20,7 @@ export const CONTENT_STATUS_LABELS: Record<ContentStatus, string> = {
   FAILED: "Failed",
   REJECTED: "Rejected",
   SCHEDULED: "Scheduled",
+  PUBLISHING: "Publishing",
 };
 
 export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
@@ -29,6 +30,7 @@ export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
   FAILED: "bg-red-100 text-red-800",
   REJECTED: "bg-red-100 text-red-800",
   SCHEDULED: "bg-blue-100 text-blue-800",
+  PUBLISHING: "bg-blue-100 text-blue-800",
 };
 
 export { PLATFORM_DISPLAY as PLATFORMS };

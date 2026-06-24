@@ -103,6 +103,9 @@ export async function publishToYouTube(
       // Note: In production, you'd implement chunked upload for large files
       // For this implementation, we'll do a simple upload
       const mediaUrl = mediaUrls[0];
+      if (!mediaUrl) {
+        throw new Error("Invalid video URL: URL is required");
+      }
       const urlValidation = validateMediaUrl(mediaUrl);
       if (!urlValidation.valid) {
         throw new Error(`Invalid video URL: ${urlValidation.error}`);
