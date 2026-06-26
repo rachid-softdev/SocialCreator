@@ -56,7 +56,12 @@ export function describeCron(expression: string): string {
   const parts = expression.split(" ");
   if (parts.length < 5) return "Invalid cron expression";
 
-  const [minute, hour, dayOfMonth, _month, dayOfWeek] = parts;
+  // parts.length >= 5 guaranteed by the guard above
+  const minute = parts[0]!;
+  const hour = parts[1]!;
+  const dayOfMonth = parts[2]!;
+  const _month = parts[3]!;
+  const dayOfWeek = parts[4]!;
 
   const descriptions: string[] = [];
 
@@ -80,7 +85,10 @@ export function describeCron(expression: string): string {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const dayNum = parseInt(dayOfWeek, 10);
     if (!Number.isNaN(dayNum) && dayNum >= 0 && dayNum <= 6) {
-      descriptions.push(`on ${days[dayNum]}`);
+      const dayName = days[dayNum];
+      if (dayName) {
+        descriptions.push(`on ${dayName}`);
+      }
     }
   }
 

@@ -50,7 +50,7 @@ export class InMemoryQueueBackend implements QueueBackend {
     const idx = this.jobs.findIndex((j) => j.status === "queued");
     if (idx === -1) return null;
 
-    const job = this.jobs[idx];
+    const job = this.jobs[idx]!;
     job.status = "running";
     job.startedAt = Date.now();
     job.attempts++;
@@ -75,7 +75,7 @@ export class InMemoryQueueBackend implements QueueBackend {
   async fail(id: string, error: string): Promise<void> {
     const jobIndex = this.jobs.findIndex((j) => j.id === id);
     if (jobIndex === -1) return;
-    const job = this.jobs[jobIndex];
+    const job = this.jobs[jobIndex]!;
 
     if (job.attempts < job.maxAttempts) {
       this.jobs.splice(jobIndex, 1);

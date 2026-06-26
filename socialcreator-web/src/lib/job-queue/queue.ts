@@ -81,7 +81,7 @@ export function dequeueJob(): Job | null {
   const idx = jobQueue.findIndex((j) => j.status === "queued");
   if (idx === -1) return null;
 
-  const job = jobQueue[idx];
+  const job = jobQueue[idx]!;
   job.status = "running";
   job.startedAt = Date.now();
   job.attempts++;
@@ -113,7 +113,7 @@ export function completeJob(id: string, result?: unknown): void {
 export function failJob(id: string, error: string): void {
   const jobIndex = jobQueue.findIndex((j) => j.id === id);
   if (jobIndex === -1) return;
-  const job = jobQueue[jobIndex];
+  const job = jobQueue[jobIndex]!;
 
   if (job.attempts < job.maxAttempts) {
     // Reinsert at correct priority position instead of relying on stale array order

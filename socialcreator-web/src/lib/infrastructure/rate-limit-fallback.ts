@@ -109,7 +109,8 @@ function getConfigForPath(path: string): WindowConfig {
   for (const [key, config] of Object.entries(FALLBACK_LIMITS)) {
     if (key !== "default" && path.startsWith(key)) return config;
   }
-  return FALLBACK_LIMITS.default;
+  // default is always present in FALLBACK_LIMITS
+  return FALLBACK_LIMITS.default!;
 }
 
 /**

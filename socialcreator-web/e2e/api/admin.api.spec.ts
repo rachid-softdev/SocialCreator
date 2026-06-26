@@ -782,4 +782,147 @@ test.describe("Admin API", () => {
       expect([400, 401, 302, 403, 422]).toContain(response.status());
     });
   });
+
+  // ============================================================
+  // Admin API — HTTP Method Validation
+  // ============================================================
+
+  test.describe("HTTP method validation", () => {
+    test("should return 405 when POSTing to /api/admin/stats", async ({ request }) => {
+      const response = await request.post("/api/admin/stats");
+      expect([405, 401, 403]).toContain(response.status());
+    });
+
+    test("should return 405 when PUTting to /api/admin/users/[id]", async ({ request }) => {
+      const response = await request.put("/api/admin/users/test-user-id");
+      expect([405, 401, 403]).toContain(response.status());
+    });
+
+    test("should return 405 when DELETEing /api/admin/stats", async ({ request }) => {
+      const response = await request.delete("/api/admin/stats");
+      expect([405, 401, 403]).toContain(response.status());
+    });
+
+    test("should return CORS headers on OPTIONS /api/admin/stats", async ({ request }) => {
+      const response = await request.fetch("/api/admin/stats", { method: "OPTIONS" });
+      expect([200, 204, 401, 403]).toContain(response.status());
+      if ([200, 204].includes(response.status())) {
+        const headers = response.headers();
+        const corsHeaderNames = Object.keys(headers).filter((k) => k.startsWith("access-control-"));
+        expect(corsHeaderNames.length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  // ============================================================
+  // Admin API — Concurrent Operations (Race Conditions)
+  // ============================================================
+
+  test.describe("Concurrent operations", () => {
+    test("should handle two rapid PATCH requests on same user", async ({ request }) => {
+      const userId = "test-user-id";
+      const [r1, r2] = await Promise.all([
+        request.patch(`/api/admin/users/${userId}`, { data: { role: "ADMIN" } }),
+        request.patch(`/api/admin/users/${userId}`, { data: { role: "USER" } }),
+      ]);
+      expect([200, 400, 401, 403, 429, 422]).toContain(r1.status());
+      expect([200, 400, 401, 403, 429, 422]).toContain(r2.status());
+    });
+
+    test("should return 404 when GETting a user after DELETE", async ({ request }) => {
+      const deleteResponse = await request.delete("/api/admin/users/test-user-id-to-delete");
+      expect([200, 401, 302, 403, 404]).toContain(deleteResponse.status());
+
+      const getResponse = await request.get("/api/admin/users/test-user-id-to-delete");
+      if (deleteResponse.status() === 200) {
+        expect([404, 401, 302]).toContain(getResponse.status());
+      } else {
+        expect([200, 401, 302, 403, 404]).toContain(getResponse.status());
+      }
+    });
+
+    test("should reflect role change after PATCH", async ({ request }) => {
+      const userId = "test-user-id";
+      const newRole = "USER";
+
+      const patchResponse = await request.patch(`/api/admin/users/${userId}`, {
+        data: { role: newRole },
+      });
+      expect([200, 400, 401, 302, 403, 422]).toContain(patchResponse.status());
+
+      if (patchResponse.status() === 200) {
+        const getResponse = await request.get(`/api/admin/users/${userId}`);
+        expect([200, 401, 302, 403]).toContain(getResponse.status());
+
+        if (getResponse.status() === 200) {
+          const json = await getResponse.json();
+          expect(json).toHaveProperty("role");
+          expect(json.role).toBe(newRole);
+        }
+      }
+    });
+  });
+
+  // ============================================================
+  // Admin API — Request Validation
+  // ============================================================
+
+  test.describe("Request validation", () => {
+    test("should reject POST with missing Content-Type header", async ({ request }) => {
+      const response = await request.post("/api/admin/users", {
+        data: {
+          email: "missing-ct@test.com",
+          name: "No Content-Type",
+          role: "USER",
+        },
+        headers: { "Content-Type": "" },
+      });
+      expect([400, 401, 403, 415, 422]).toContain(response.status());
+    });
+
+    test("should handle very long query string (3000 chars)", async ({ request }) => {
+      const longParam = "x".repeat(3000);
+      const response = await request.get(`/api/admin/users?q=${encodeURIComponent(longParam)}`);
+      expect([200, 400, 401, 403, 414, 422]).toContain(response.status());
+    });
+
+    test("should handle unicode in query parameters", async ({ request }) => {
+      const response = await request.get(
+        "/api/admin/users?search=%E2%82%AC%E2%82%AC%C3%A9%C3%A0%C3%BC%C3%B1%C3%A9",
+      );
+      expect([200, 400, 401, 302, 403]).toContain(response.status());
+
+      if (response.status() === 200) {
+        const json = await response.json();
+        expect(json).toHaveProperty("data");
+        expect(Array.isArray(json.data)).toBe(true);
+      }
+    });
+  });
+
+  // ============================================================
+  // Admin API — Edge Endpoints
+  // ============================================================
+
+  test.describe("Edge endpoints", () => {
+    test("GET /api/admin/audit-log should return audit logs", async ({ request }) => {
+      const response = await request.get("/api/admin/audit-log");
+      expect([200, 401, 302, 403, 404]).toContain(response.status());
+
+      if (response.status() === 200) {
+        const json = await response.json();
+        expect(typeof json).toBe("object");
+      }
+    });
+
+    test("POST on /api/admin/audit-log should be rejected", async ({ request }) => {
+      const response = await request.post("/api/admin/audit-log");
+      expect([405, 401, 403, 404]).toContain(response.status());
+    });
+
+    test("PATCH on read-only GET endpoints should be rejected", async ({ request }) => {
+      const response = await request.patch("/api/admin/stats");
+      expect([405, 401, 403]).toContain(response.status());
+    });
+  });
 });

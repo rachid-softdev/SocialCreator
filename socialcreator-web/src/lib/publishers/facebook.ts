@@ -20,11 +20,15 @@ export async function publishToFacebook(
     };
 
     if (mediaUrls.length > 0) {
-      const urlValidation = validateMediaUrl(mediaUrls[0]);
+      const url = mediaUrls[0];
+      if (!url) {
+        return { success: false, error: "Invalid media URL: URL is required" };
+      }
+      const urlValidation = validateMediaUrl(url);
       if (!urlValidation.valid) {
         return { success: false, error: `Invalid media URL: ${urlValidation.error}` };
       }
-      body.link = mediaUrls[0];
+      body.link = url;
     }
 
     const response = await fetchWithTimeout(`https://graph.facebook.com/v18.0/${accountId}/feed`, {
