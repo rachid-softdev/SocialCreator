@@ -29,6 +29,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+      {
+        protocol: "https",
         hostname: "stream.mux.com",
       },
     ],
@@ -60,7 +64,7 @@ const nextConfig = {
               // TODO: Investigate nonce/hash-based CSP for production hardening
               `script-src 'self'${isDev ? " 'unsafe-eval'" : ""} 'unsafe-inline'`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: uploadthing.com googleusercontent.com images.unsplash.com avatars.githubusercontent.com image.mux.com",
+              "img-src 'self' data: blob: uploadthing.com googleusercontent.com images.unsplash.com avatars.githubusercontent.com image.mux.com api.dicebear.com",
               "media-src 'self' data: blob: stream.mux.com",
               "font-src 'self' data:",
               "connect-src 'self' https://api.anthropic.com https://api.stripe.com https://api.deepgram.com https://api.uploadthing.com https://api.mux.com https://*.upstash.io wss://*.trigger.dev",
