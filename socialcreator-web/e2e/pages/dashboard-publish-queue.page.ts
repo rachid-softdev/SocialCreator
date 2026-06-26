@@ -113,4 +113,32 @@ export class DashboardPublishQueuePage extends BasePage {
     }
     return null;
   }
+
+  async getJobAttemptsAt(index: number): Promise<string> {
+    return this.jobRows
+      .nth(index)
+      .locator("td:nth-child(5)")
+      .textContent()
+      .then((t) => (t ?? "").trim());
+  }
+
+  async getJobCreatedAtAt(index: number): Promise<string> {
+    return this.jobRows
+      .nth(index)
+      .locator("td:nth-child(6)")
+      .textContent()
+      .then((t) => (t ?? "").trim());
+  }
+
+  async isRetryButtonVisibleAt(index: number): Promise<boolean> {
+    const retryBtn = this.jobRows.nth(index).getByRole("button", { name: /retry/i });
+    return retryBtn.isVisible().catch(() => false);
+  }
+
+  async isRecentErrorsSectionVisible(): Promise<boolean> {
+    return this.page
+      .getByRole("heading", { name: /recent errors/i })
+      .isVisible()
+      .catch(() => false);
+  }
 }

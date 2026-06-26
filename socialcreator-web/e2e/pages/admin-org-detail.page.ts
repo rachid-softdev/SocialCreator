@@ -16,13 +16,21 @@ export class AdminOrgDetailPage extends BasePage {
   readonly overridesSection: Locator;
   readonly errorAlert: Locator;
   readonly loadingSkeleton: Locator;
+  readonly orgCreationDate: Locator;
+  readonly subscriptionPlanKey: Locator;
+  readonly subscriptionStatus: Locator;
+  readonly subscriptionPeriodStart: Locator;
+  readonly subscriptionPeriodEnd: Locator;
+  readonly cancelWarning: Locator;
+  readonly teamOwnerInfo: Locator;
+  readonly teamMemberCount: Locator;
+  readonly overridesCount: Locator;
+  readonly breadcrumb: Locator;
 
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole("heading", { name: /administration/i });
-    this.backButton = page
-      .locator('a[href*="/admin/orgs"] button, button:has-text("Retour")')
-      .first();
+    this.backButton = page.locator('a[href*="/admin/orgs"]').first();
     this.orgName = page.locator("h2").first();
     this.orgInfoCard = page.locator(".rounded-lg.border").first();
     this.subscriptionSection = page.getByText(/Abonnement|Plan|Statut/i).first();
@@ -30,6 +38,22 @@ export class AdminOrgDetailPage extends BasePage {
     this.overridesSection = page.getByText(/Surcharges|Nombre total/i).first();
     this.errorAlert = page.locator(".rounded-lg.bg-danger\\/10, [class*='bg-danger']").first();
     this.loadingSkeleton = page.locator('[class*="skeleton"]').first();
+    this.orgCreationDate = page.getByText("Créée le");
+    this.subscriptionPlanKey = page
+      .locator(".flex.items-center.justify-between")
+      .first()
+      .locator(".badge");
+    this.subscriptionStatus = page
+      .locator(".flex.items-center.justify-between")
+      .nth(1)
+      .locator(".badge");
+    this.subscriptionPeriodStart = page.getByText("Début de période");
+    this.subscriptionPeriodEnd = page.getByText("Fin de période");
+    this.cancelWarning = page.getByText(/configuré pour être annulé/);
+    this.teamOwnerInfo = page.getByText(/Propriétaire/);
+    this.teamMemberCount = page.locator(".badge").filter({ hasText: /membre/ });
+    this.overridesCount = page.locator(".text-display-sm.font-semibold").last();
+    this.breadcrumb = page.getByText("Administration").locator("..");
   }
 
   override async goto(orgId: string) {

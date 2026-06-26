@@ -122,6 +122,104 @@ test.describe("Dashboard Publish Queue", () => {
       expect(await queue.getJobPriorityAt(2)).toBe("Critical");
     });
 
+    test("SUCCESS: Job with cancelled status renders with fallback badge", async ({ page }) => {
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockStatus),
+        });
+      });
+      const jobsWithCancelled = [
+        ...mockJobs,
+        {
+          id: "job-004-cancelled",
+          type: "publish",
+          status: "cancelled" as const,
+          priority: "normal" as const,
+          attempts: 0,
+          maxAttempts: 3,
+          createdAt: Date.now() - 2400000,
+        },
+      ];
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(jobsWithCancelled),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      // Cancelled job should be in the table at index 3
+      expect(await queue.getJobCount()).toBe(4);
+      expect(await queue.getJobStatusAt(3)).toBe("cancelled");
+    });
+
+    test("SUCCESS: Job with low priority renders correctly", async ({ page }) => {
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockStatus),
+        });
+      });
+      const jobsWithLowPriority = [
+        ...mockJobs,
+        {
+          id: "job-005-lowprio",
+          type: "generate",
+          status: "queued" as const,
+          priority: "low" as const,
+          attempts: 0,
+          maxAttempts: 3,
+          createdAt: Date.now() - 1200000,
+        },
+      ];
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(jobsWithLowPriority),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      expect(await queue.getJobCount()).toBe(4);
+      expect(await queue.getJobPriorityAt(3)).toBe("Low");
+    });
+
+    test("SUCCESS: Job attempts display correct counts", async ({ page }) => {
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockStatus),
+        });
+      });
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockJobs),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      // Job 1: attempts=1, maxAttempts=3
+      expect(await queue.getJobAttemptsAt(0)).toBe("1/3");
+      // Job 2: attempts=1, maxAttempts=3
+      expect(await queue.getJobAttemptsAt(1)).toBe("1/3");
+      // Job 3: attempts=2, maxAttempts=3
+      expect(await queue.getJobAttemptsAt(2)).toBe("2/3");
+    });
+
     test("SUCCESS: Total jobs count is displayed", async ({ page }) => {
       await page.route("**/api/v1/queue/status", async (route) => {
         await route.fulfill({
@@ -190,6 +288,92 @@ test.describe("Dashboard Publish Queue", () => {
         await page.waitForTimeout(1000);
         expect(retryCalled).toBe(true);
       }
+    });
+
+    test("SUCCESS: Retry button only visible for failed jobs", async ({ page }) => {
+      const mixedJobs = [
+        {
+          id: "job-completed-1",
+          type: "publish",
+          status: "completed" as const,
+          priority: "normal" as const,
+          attempts: 1,
+          maxAttempts: 3,
+          createdAt: Date.now() - 3600000,
+          completedAt: Date.now() - 1800000,
+        },
+        {
+          id: "job-running-1",
+          type: "generate",
+          status: "running" as const,
+          priority: "high" as const,
+          attempts: 1,
+          maxAttempts: 3,
+          createdAt: Date.now() - 600000,
+        },
+        {
+          id: "job-queued-1",
+          type: "schedule",
+          status: "queued" as const,
+          priority: "low" as const,
+          attempts: 0,
+          maxAttempts: 3,
+          createdAt: Date.now() - 300000,
+        },
+        {
+          id: "job-failed-1",
+          type: "publish",
+          status: "failed" as const,
+          priority: "critical" as const,
+          attempts: 2,
+          maxAttempts: 3,
+          createdAt: Date.now() - 7200000,
+          completedAt: Date.now() - 3600000,
+          error: "Connection refused",
+        },
+        {
+          id: "job-cancelled-1",
+          type: "delete",
+          status: "cancelled" as const,
+          priority: "normal" as const,
+          attempts: 0,
+          maxAttempts: 3,
+          createdAt: Date.now() - 4800000,
+        },
+      ];
+
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            queued: 1,
+            running: 1,
+            completed: 1,
+            failed: 1,
+            total: 5,
+          }),
+        });
+      });
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mixedJobs),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      // Retry should NOT be visible for completed (0), running (1), queued (2), cancelled (4)
+      expect(await queue.isRetryButtonVisibleAt(0)).toBe(false);
+      expect(await queue.isRetryButtonVisibleAt(1)).toBe(false);
+      expect(await queue.isRetryButtonVisibleAt(2)).toBe(false);
+      expect(await queue.isRetryButtonVisibleAt(4)).toBe(false);
+
+      // Retry SHOULD be visible for the failed job (3)
+      expect(await queue.isRetryButtonVisibleAt(3)).toBe(true);
     });
 
     test("SUCCESS: Auto-refresh checkbox can be toggled", async ({ page }) => {
@@ -392,6 +576,50 @@ test.describe("Dashboard Publish Queue", () => {
         expect(errorText).toBeTruthy();
       }
     });
+
+    test("ERROR: Retry returns 404 when job was already removed", async ({ page }) => {
+      let retryCalled = false;
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockStatus),
+        });
+      });
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockJobs),
+        });
+      });
+      await page.route("**/api/v1/queue/jobs/**/retry", async (route) => {
+        retryCalled = true;
+        await route.fulfill({
+          status: 404,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Job not found" }),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      // Click retry on the failed job (index 2)
+      const retryBtn = page
+        .locator("table tbody tr")
+        .last()
+        .getByRole("button", { name: /retry/i });
+      if (await retryBtn.isVisible()) {
+        await retryBtn.click();
+        await page.waitForTimeout(1000);
+        expect(retryCalled).toBe(true);
+
+        // Error banner should appear for the 404 response
+        const errorText = await queue.getErrorBannerText();
+        expect(errorText).toBeTruthy();
+      }
+    });
   });
 
   test.describe("Edge Cases", () => {
@@ -473,6 +701,32 @@ test.describe("Dashboard Publish Queue", () => {
       expect(await queue.getStatCardValue("Running")).toBe(1);
       expect(await queue.getStatCardValue("Completed")).toBe(1);
       expect(await queue.getStatCardValue("Failed")).toBe(1);
+    });
+
+    test("EDGE: Recent errors section hidden when no jobs have errors", async ({ page }) => {
+      const jobsWithoutErrors = mockJobs.map((j) => ({ ...j, error: undefined }));
+
+      await page.route("**/api/v1/queue/status", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(mockStatus),
+        });
+      });
+      await page.route("**/api/v1/queue/jobs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(jobsWithoutErrors),
+        });
+      });
+
+      const queue = new DashboardPublishQueuePage(page);
+      await queue.goto();
+
+      // Recent errors section should NOT be visible
+      const isVisible = await queue.isRecentErrorsSectionVisible();
+      expect(isVisible).toBe(false);
     });
 
     test("EDGE: Recent errors section shows when jobs have errors", async ({ page }) => {

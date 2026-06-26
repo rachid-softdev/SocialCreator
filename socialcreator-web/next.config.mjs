@@ -29,6 +29,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+      {
+        protocol: "https",
         hostname: "stream.mux.com",
       },
     ],
@@ -60,7 +64,7 @@ const nextConfig = {
               // TODO: Investigate nonce/hash-based CSP for production hardening
               `script-src 'self'${isDev ? " 'unsafe-eval'" : ""} 'unsafe-inline'`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: uploadthing.com googleusercontent.com images.unsplash.com avatars.githubusercontent.com image.mux.com",
+              "img-src 'self' data: blob: uploadthing.com googleusercontent.com images.unsplash.com avatars.githubusercontent.com image.mux.com api.dicebear.com",
               "media-src 'self' data: blob: stream.mux.com",
               "font-src 'self' data:",
               "connect-src 'self' https://api.anthropic.com https://api.stripe.com https://api.deepgram.com https://api.uploadthing.com https://api.mux.com https://*.upstash.io wss://*.trigger.dev",
@@ -82,8 +86,18 @@ const withAnalyzer = withBundleAnalyzer({
 
 nextConfig.webpack = (config, { isServer }) => {
   if (isServer) {
-    // prom-client uses Node.js cluster module which webpack can't bundle
-    config.externals = [...(config.externals || []), "prom-client"];
+    // Ensure Node.js built-in modules are externalized (webpack's
+    // externalsPresets.node handles bare imports like 'crypto', 'fs',
+    // 'path', and the 'node:*' scheme). This is needed because Next.js
+    // does not always set externalsPresets.node = true.
+    config.externalsPresets = {
+      ...config.externalsPresets,
+      node: true,
+    };
+
+    // Additional modules that use worker threads at runtime and must
+    // not be bundled by webpack:
+    config.externals = [...(config.externals || []), "prom-client", "pino-pretty", "thread-stream"];
   }
   return config;
 };

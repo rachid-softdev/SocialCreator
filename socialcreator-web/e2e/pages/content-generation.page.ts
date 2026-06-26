@@ -119,4 +119,43 @@ export class ContentGenerationPage extends BasePage {
   async fillVeryLongBrief(): Promise<void> {
     await this.briefTextarea.fill("A".repeat(2000));
   }
+
+  // ── Result inspection helpers ───────────────────────────────
+
+  /** Get the platform badge text from the nth result card (0-indexed) */
+  async getResultPlatformBadge(index: number): Promise<string> {
+    return await this.resultsItems.nth(index).locator('[class*="rounded-full"]').innerText();
+  }
+
+  /** Get the char count text (e.g. "42 chars") from the nth result card */
+  async getResultCharCount(index: number): Promise<string> {
+    const header = this.resultsItems.nth(index).locator("> div").first();
+    const charSpan = header.locator("span.text-muted").last();
+    return (await charSpan.textContent()) ?? "";
+  }
+
+  /** Get the text content of the nth result card */
+  async getResultContentText(index: number): Promise<string> {
+    return await this.resultsItems.nth(index).locator("p").first().innerText();
+  }
+
+  /** Get all hashtag texts (with # prefix) from the nth result card */
+  async getResultHashtags(index: number): Promise<string[]> {
+    const hashtagContainer = this.resultsItems.nth(index).locator("div.flex.flex-wrap.gap-1");
+    if ((await hashtagContainer.count()) === 0) return [];
+    return await hashtagContainer.locator("span.text-caption.text-muted").allInnerTexts();
+  }
+
+  /** Get the Edit link href from the nth result card */
+  async getResultEditHref(index: number): Promise<string | null> {
+    return await this.resultsItems
+      .nth(index)
+      .getByRole("link", { name: /edit/i })
+      .getAttribute("href");
+  }
+
+  /** Wait for results to disappear (e.g. after clearing) */
+  async waitForResultsCleared(timeout = 3000): Promise<void> {
+    await this.resultsHeading.waitFor({ state: "hidden", timeout }).catch(() => {});
+  }
 }
