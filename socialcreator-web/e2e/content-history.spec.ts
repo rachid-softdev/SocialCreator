@@ -384,5 +384,174 @@ test.describe("Content History", () => {
       // Pagination should show page 1 of 1
       expect(await history.getPageText()).toMatch(/page 1 of 1/i);
     });
+
+    test("EDGE: handles items with null publishedAt gracefully", async ({ page }) => {
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            logs: [
+              {
+                id: "log-null-date",
+                platform: "X",
+                contentId: "c-null-date",
+                contentHash: "h-null",
+                success: false,
+                error: "Publish failed before timestamp",
+                publishedAt: null,
+              },
+            ],
+            totalPages: 1,
+            page: 1,
+            pageSize: 20,
+          }),
+        });
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Item should still render (no crash)
+      expect(await history.getHistoryItemCount()).toBe(1);
+      // Failed item shows error message
+      const errorMsg = await history.getErrorTextAt(0);
+      expect(errorMsg).toContain("Publish failed before timestamp");
+    });
+
+    test("EDGE: handles zero pages (totalPages: 0) without pagination crash", async ({ page }) => {
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            logs: [],
+            totalPages: 0,
+            page: 0,
+            pageSize: 20,
+          }),
+        });
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Empty state should show, no pagination
+      await expect(history.emptyState).toBeVisible({ timeout: 10000 });
+      await expect(history.previousButton).not.toBeVisible();
+      await expect(history.nextButton).not.toBeVisible();
+    });
+
+    test("EDGE: handles large dataset (100 items across 5 pages)", async ({ page }) => {
+      const allLogs = Array.from({ length: 100 }, (_, i) => ({
+        id: `log-big-${i}`,
+        platform: ["X", "LINKEDIN", "INSTAGRAM", "TIKTOK", "FACEBOOK"][i % 5],
+        contentId: `content-${i}`,
+        contentHash: `hash-${i}`,
+        success: i % 3 !== 0, // 2/3 success, 1/3 failed
+        error: i % 3 === 0 ? "Rate limit exceeded" : null,
+        publishedAt: new Date(Date.now() - i * 3600000).toISOString(),
+      }));
+
+      let callCount = 0;
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        callCount++;
+        const url = new URL(route.request().url());
+        const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
+        const start = (pageParam - 1) * 20;
+        const end = start + 20;
+        const pageLogs = allLogs.slice(start, end);
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            logs: pageLogs,
+            totalPages: 5,
+            page: pageParam,
+            pageSize: 20,
+          }),
+        });
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Page 1 should have 20 items
+      await expect(history.pageIndicator).toBeVisible({ timeout: 10000 });
+      expect(await history.getPageText()).toMatch(/page 1 of 5/i);
+      expect(await history.getHistoryItemCount()).toBe(20);
+
+      // Navigate through all 5 pages
+      for (let p = 2; p <= 5; p++) {
+        await history.clickNext();
+        await page.waitForTimeout(300);
+        expect(await history.getPageText()).toMatch(new RegExp(`page ${p} of 5`, "i"));
+      }
+
+      // Last page has 20 items (100 items / 5 pages)
+      expect(await history.getHistoryItemCount()).toBe(20);
+
+      // Next should be disabled on last page
+      expect(await history.isNextDisabled()).toBe(true);
+
+      // Navigate back to page 1
+      for (let p = 4; p >= 1; p--) {
+        await history.clickPrevious();
+        await page.waitForTimeout(300);
+      }
+      expect(await history.getPageText()).toMatch(/page 1 of 5/i);
+
+      // Should have called the API 5 times (once per page)
+      expect(callCount).toBeGreaterThanOrEqual(5);
+    });
+  });
+
+  test.describe("Error Handling — Extended", () => {
+    test("ERROR: shows error state on 401 Unauthorized", async ({ page }) => {
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        await route.fulfill({
+          status: 401,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Unauthorized" }),
+        });
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Should handle 401 gracefully (empty state or redirect)
+      const isLoginRedirect = new URL(page.url()).pathname === "/login";
+      const isEmptyVisible = await history.emptyState.isVisible().catch(() => false);
+      expect(isLoginRedirect || isEmptyVisible).toBe(true);
+    });
+
+    test("ERROR: shows error state on 403 Forbidden", async ({ page }) => {
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        await route.fulfill({
+          status: 403,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Forbidden" }),
+        });
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Should handle 403 gracefully
+      await expect(history.emptyState).toBeVisible({ timeout: 10000 });
+    });
+
+    test("ERROR: shows error state on network abort/connection refused", async ({ page }) => {
+      await page.route("**/api/v1/publish-logs**", async (route) => {
+        await route.abort("connectionrefused");
+      });
+
+      const history = new ContentHistoryPage(page);
+      await history.goto();
+
+      // Should catch connection error and show empty state
+      await expect(history.emptyState).toBeVisible({ timeout: 10000 });
+    });
   });
 });

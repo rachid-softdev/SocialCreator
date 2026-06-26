@@ -82,8 +82,18 @@ const withAnalyzer = withBundleAnalyzer({
 
 nextConfig.webpack = (config, { isServer }) => {
   if (isServer) {
-    // prom-client uses Node.js cluster module which webpack can't bundle
-    config.externals = [...(config.externals || []), "prom-client"];
+    // Ensure Node.js built-in modules are externalized (webpack's
+    // externalsPresets.node handles bare imports like 'crypto', 'fs',
+    // 'path', and the 'node:*' scheme). This is needed because Next.js
+    // does not always set externalsPresets.node = true.
+    config.externalsPresets = {
+      ...config.externalsPresets,
+      node: true,
+    };
+
+    // Additional modules that use worker threads at runtime and must
+    // not be bundled by webpack:
+    config.externals = [...(config.externals || []), "prom-client", "pino-pretty", "thread-stream"];
   }
   return config;
 };
