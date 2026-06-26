@@ -13,6 +13,9 @@ export class ContentHistoryPage extends BasePage {
   readonly nextButton: Locator;
   readonly pageIndicator: Locator;
   readonly historyItems: Locator;
+  readonly loadingSkeleton: Locator;
+  readonly searchInput: Locator;
+  readonly filterButtons: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -22,6 +25,13 @@ export class ContentHistoryPage extends BasePage {
     this.nextButton = page.getByRole("button", { name: /next/i });
     this.pageIndicator = page.locator("span").filter({ hasText: /page \d+ of \d+/i });
     this.historyItems = page.locator('[class*="rounded-lg"][class*="border"][class*="bg-canvas"]');
+    this.loadingSkeleton = page.locator(".animate-pulse, [class*='skeleton']");
+    this.searchInput = page.locator(
+      'input[type="search"], input[placeholder*="search" i], input[placeholder*="filter" i]',
+    );
+    this.filterButtons = page.locator(
+      '[class*="filter"] button, [role="tab"], button:has-text("All")',
+    );
   }
 
   override async goto() {
@@ -85,5 +95,43 @@ export class ContentHistoryPage extends BasePage {
 
   async getPageText(): Promise<string> {
     return this.pageIndicator.textContent().then((t) => (t ?? "").trim());
+  }
+
+  async filterByPlatform(platform: string): Promise<void> {
+    const btn = this.page.getByRole("button").filter({ hasText: new RegExp(`^${platform}$`, "i") });
+    if (await btn.isVisible().catch(() => false)) {
+      await btn.click();
+    }
+  }
+
+  async filterByStatus(status: string): Promise<void> {
+    const btn = this.page.getByRole("button").filter({ hasText: new RegExp(`^${status}$`, "i") });
+    if (await btn.isVisible().catch(() => false)) {
+      await btn.click();
+    }
+  }
+
+  async searchHistory(query: string): Promise<void> {
+    if (await this.searchInput.isVisible().catch(() => false)) {
+      await this.searchInput.fill(query);
+    }
+  }
+
+  async getPlatformLabelAt(index: number): Promise<string> {
+    return this.historyItems
+      .nth(index)
+      .locator('[class*="platform-badge"], [class*="badge"]')
+      .first()
+      .textContent()
+      .then((t) => (t ?? "").trim());
+  }
+
+  async getDateFormattedAt(index: number): Promise<string> {
+    return this.historyItems
+      .nth(index)
+      .locator("time, p.text-label-xs, span.text-caption")
+      .first()
+      .textContent()
+      .then((t) => (t ?? "").trim());
   }
 }

@@ -409,3 +409,220 @@ test.describe("Admin User Detail", () => {
     });
   });
 });
+
+test.describe("Admin User Detail — Navigation & Actions", () => {
+  test("should navigate back to users list via Retour button", async ({ page }) => {
+    const userId = `nav-back-${Date.now()}`;
+    const user = {
+      id: userId,
+      email: "back@example.com",
+      name: "Back User",
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 0, publishedContent: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Click back button (link with ArrowLeft icon)
+    const backLink = page.locator('a[href*="/admin/users"]').first();
+    await expect(backLink).toBeVisible({ timeout: 5000 });
+    await backLink.click();
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
+
+    // Should navigate to users list
+    expect(page.url()).toContain("/admin/users");
+    expect(page.url()).not.toContain(userId);
+  });
+
+  test("should navigate to users list via breadcrumb", async ({ page }) => {
+    const userId = `breadcrumb-nav-${Date.now()}`;
+    const user = {
+      id: userId,
+      email: "breadcrumb@example.com",
+      name: "Breadcrumb User",
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 0, publishedContent: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Click "Utilisateurs" in breadcrumb
+    await page.getByText("Utilisateurs").first().click();
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
+
+    // Should navigate to users list
+    expect(page.url()).toContain("/admin/users");
+    expect(page.url()).not.toContain(userId);
+  });
+
+  test("should display avatar with first letter of name", async ({ page }) => {
+    const userId = `avatar-${Date.now()}`;
+    const user = {
+      id: userId,
+      email: "avatar@example.com",
+      name: "Alice Wonder",
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 0, publishedContent: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Avatar should show "A" (first letter of name)
+    const avatar = page.locator(".w-16.h-16.rounded-full").first();
+    await expect(avatar).toBeVisible();
+    await expect(avatar).toContainText("A");
+  });
+
+  test("should display email initial when name is null in avatar", async ({ page }) => {
+    const userId = `avatar-email-${Date.now()}`;
+    const email = `email.initial@example.com`;
+    const user = {
+      id: userId,
+      email: email,
+      name: null,
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 0, publishedContent: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Avatar should show "e" (first letter of email)
+    const avatar = page.locator(".w-16.h-16.rounded-full").first();
+    await expect(avatar).toBeVisible();
+    await expect(avatar).toContainText("e");
+  });
+
+  test("should display 'Membre depuis' date", async ({ page }) => {
+    const userId = `member-since-${Date.now()}`;
+    const user = {
+      id: userId,
+      email: "member@example.com",
+      name: "Member User",
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 0, publishedContent: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    await expect(page.getByText(/Membre depuis/)).toBeVisible();
+  });
+
+  test("should display profile count in section title", async ({ page }) => {
+    const userId = `profile-count-${Date.now()}`;
+    const user = {
+      id: userId,
+      email: "profiles@example.com",
+      name: "Profile User",
+      image: null,
+      role: "USER",
+      cguAccepted: true,
+      createdAt: "2026-01-15T00:00:00Z",
+      profiles: [
+        {
+          id: "p1",
+          name: "Main",
+          platforms: ["INSTAGRAM"],
+          _count: { agents: 1, generatedContents: 5 },
+        },
+        {
+          id: "p2",
+          name: "Secondary",
+          platforms: ["TIKTOK", "LINKEDIN"],
+          _count: { agents: 2, generatedContents: 10 },
+        },
+      ],
+      ownedTeams: [],
+      teamMemberships: [],
+      stats: { totalContent: 15, publishedContent: 8 },
+    };
+
+    await page.route(new RegExp(`/api/admin/users/${userId}`), async (route) => {
+      await route.fulfill({ json: user });
+    });
+
+    await page.goto(`/admin/users/${userId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Profile section should show count
+    await expect(page.getByText(/Profils \(2\)/)).toBeVisible();
+  });
+});

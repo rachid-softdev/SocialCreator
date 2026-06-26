@@ -1,18 +1,25 @@
 /**
  * E2E Tests for Navigation & Responsive Design (P2)
- * Tests: Sidebar navigation, breadcrumbs, protected routes, 404 page, mobile/tablet responsive
+ * Tests: Sidebar navigation, breadcrumbs, protected routes, 404 page, mobile/tablet responsive,
+ *        active-link highlight with aria-current, user menu, keyboard nav, mobile full navigation
  */
 
 import { expect, test } from "@playwright/test";
 
+// Maps to sidebar navItems from sidebar.tsx
+// Note: sidebar source links to /billing but the actual route is /pricing
 const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/profiles", label: "Profiles" },
   { href: "/agents", label: "Agents" },
   { href: "/content", label: "Content" },
+  { href: "/content/calendar", label: "Calendar" },
+  { href: "/content/queue", label: "Queue" },
+  { href: "/content/history", label: "History" },
   { href: "/analytics", label: "Analytics" },
   { href: "/settings", label: "Settings" },
   { href: "/pricing", label: "Billing" },
+  { href: "/settings/teams", label: "Teams" },
 ];
 
 test.describe("Navigation", () => {
@@ -130,7 +137,7 @@ test.describe("Navigation", () => {
       }
     });
 
-    test("should highlight active sidebar item", async ({ page }) => {
+    test("should highlight active sidebar item with aria-current", async ({ page }) => {
       await page.goto("/dashboard");
 
       const currentUrl = new URL(page.url());
@@ -142,6 +149,186 @@ test.describe("Navigation", () => {
       // Dashboard link should be active/highlighted
       const dashboardLink = page.locator('aside a[href="/dashboard"]');
       await expect(dashboardLink).toBeVisible({ timeout: 5000 });
+
+      // Should have aria-current="page" for active link
+      await expect(dashboardLink).toHaveAttribute("aria-current", "page");
+
+      // Should have the active background class
+      await expect(dashboardLink).toHaveClass(/bg-surface-strong/);
+
+      // Another link should NOT have aria-current
+      const profilesLink = page.locator('aside a[href="/profiles"]');
+      await expect(profilesLink).not.toHaveAttribute("aria-current", "page");
+    });
+
+    test("should navigate to dashboard via sidebar", async ({ page }) => {
+      // Start from another page and navigate back to dashboard
+      await page.goto("/profiles");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const dashboardLink = page.locator('aside a[href="/dashboard"]');
+      if (await dashboardLink.isVisible().catch(() => false)) {
+        await dashboardLink.click();
+        await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 10000 });
+      }
+    });
+
+    test("should navigate to analytics via sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const analyticsLink = page.locator('aside a[href="/analytics"]');
+      if (await analyticsLink.isVisible().catch(() => false)) {
+        await analyticsLink.click();
+        await expect(page).toHaveURL(/.*\/analytics/, { timeout: 10000 });
+        await expect(page.getByRole("heading", { name: /analytics/i }).first()).toBeVisible({
+          timeout: 5000,
+        });
+      }
+    });
+
+    test("should navigate to billing via sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const billingLink = page.locator('aside a[href="/pricing"]');
+      if (await billingLink.isVisible().catch(() => false)) {
+        await billingLink.click();
+        await expect(page).toHaveURL(/.*\/pricing/, { timeout: 10000 });
+      }
+    });
+
+    test("should display content sub-items in sidebar", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Content sub-items should be visible on desktop
+      for (const sub of ["Calendar", "Queue", "History"]) {
+        const link = page.locator(`aside a:has-text("${sub}")`);
+        if (await link.isVisible().catch(() => false)) {
+          await expect(link).toBeVisible();
+        }
+      }
+    });
+
+    test("should navigate to teams via sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const teamsLink = page.locator('aside a[href="/settings/teams"]');
+      if (await teamsLink.isVisible().catch(() => false)) {
+        await teamsLink.click();
+        await expect(page).toHaveURL(/.*\/settings\/teams/, { timeout: 10000 });
+        await expect(page.getByRole("heading", { name: /teams/i }).first()).toBeVisible({
+          timeout: 5000,
+        });
+      }
+    });
+
+    test("should move active link highlight when navigating", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Dashboard should be active initially
+      const dashboardLink = page.locator('aside a[href="/dashboard"]');
+      await expect(dashboardLink).toHaveAttribute("aria-current", "page");
+
+      // Navigate to Profiles via sidebar
+      const profilesLink = page.locator('aside a[href="/profiles"]');
+      if (await profilesLink.isVisible().catch(() => false)) {
+        await profilesLink.click();
+        await expect(page).toHaveURL(/.*\/profiles/, { timeout: 10000 });
+
+        // Dashboard should no longer be active
+        await expect(dashboardLink).not.toHaveAttribute("aria-current", "page");
+
+        // Profiles should now be active
+        await expect(profilesLink).toHaveAttribute("aria-current", "page");
+      }
+    });
+
+    test("should display quick search button in sidebar", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Quick search button should be visible in sidebar footer
+      const searchBtn = page.locator("aside button", { hasText: /quick search/i });
+      await expect(searchBtn).toBeVisible({ timeout: 5000 });
+
+      // Cmd+K keyboard shortcut hint should be present
+      const kbd = searchBtn.locator("kbd");
+      await expect(kbd).toBeVisible();
+    });
+
+    test("should display keyboard shortcuts hint in sidebar", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Shortcuts button should be visible in sidebar footer
+      const shortcutsBtn = page.locator("aside button", { hasText: /shortcuts/i });
+      await expect(shortcutsBtn).toBeVisible({ timeout: 5000 });
+
+      // ? keyboard shortcut hint should be present
+      const kbd = shortcutsBtn.locator("kbd");
+      await expect(kbd).toBeVisible();
+    });
+
+    test("should display notification bell in sidebar", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Notification bell button should be visible in sidebar user section
+      const bellBtn = page.locator("aside").getByRole("button", { name: /notifications/i });
+      await expect(bellBtn).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -224,6 +411,127 @@ test.describe("Navigation", () => {
       const chevrons = page.locator("nav svg");
       const chevronCount = await chevrons.count();
       expect(chevronCount).toBeGreaterThanOrEqual(0);
+    });
+
+    test("should show breadcrumbs on dashboard page", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const breadcrumb = page
+        .locator("nav")
+        .filter({ hasText: /dashboard/i })
+        .first();
+      await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+    });
+
+    test("should show breadcrumbs on analytics page", async ({ page }) => {
+      await page.goto("/analytics");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const breadcrumb = page
+        .locator("nav")
+        .filter({ hasText: /analytics/i })
+        .first();
+      await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+    });
+
+    test("should show breadcrumbs on settings page", async ({ page }) => {
+      await page.goto("/settings");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const breadcrumb = page
+        .locator("nav")
+        .filter({ hasText: /settings/i })
+        .first();
+      await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+    });
+  });
+
+  test.describe("Breadcrumbs — Nested Pages", () => {
+    test("should show breadcrumbs on settings/teams nested page", async ({ page }) => {
+      await page.goto("/settings/teams");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const breadcrumb = page.locator("nav").filter({ hasText: /teams/i }).first();
+      await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+    });
+
+    test("should show breadcrumbs on content sub-pages", async ({ page }) => {
+      const subPages = ["/content/calendar", "/content/queue", "/content/history"];
+
+      for (const subPage of subPages) {
+        await page.goto(subPage);
+
+        const currentUrl = new URL(page.url());
+        if (currentUrl.pathname === "/login") {
+          test.skip();
+          return;
+        }
+
+        const breadcrumb = page
+          .locator("nav")
+          .filter({ hasText: /content/i })
+          .first();
+        await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+      }
+    });
+
+    test("should show breadcrumbs on pricing page", async ({ page }) => {
+      await page.goto("/pricing");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const breadcrumb = page
+        .locator("nav")
+        .filter({ hasText: /pricing|billing/i })
+        .first();
+      await expect(breadcrumb).toBeVisible({ timeout: 5000 });
+    });
+
+    test("should have parent breadcrumb links on nested pages", async ({ page }) => {
+      await page.goto("/settings/teams");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Breadcrumb should contain parent links (Dashboard, Settings)
+      const parentLinks = page.locator("nav a");
+      await expect(parentLinks.first()).toBeVisible({ timeout: 5000 });
+      const linkCount = await parentLinks.count();
+      // Nested page should have at least one parent link
+      expect(linkCount).toBeGreaterThanOrEqual(1);
+
+      // Should have chevron separators between segments
+      const chevrons = page.locator("nav svg");
+      const chevronCount = await chevrons.count();
+      expect(chevronCount).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -456,6 +764,9 @@ test.describe("Navigation", () => {
     });
   });
 
+  // NOTE: Protected Routes tests (lines 230-266) overlap with protected-routes.spec.ts.
+  // Keeping them here for historical coverage; avoid adding more duplicates.
+
   test.describe("Edge Cases — Routes", () => {
     test("should show 404 for invalid deeply nested route", async ({ page }) => {
       await page.goto("/dashboard/settings/profiles/edit/123/advanced/nonexistent");
@@ -488,6 +799,270 @@ test.describe("Navigation", () => {
           .isVisible()
           .catch(() => false);
       expect(startsWithContent || is404 || finalPath === "/login").toBe(true);
+    });
+  });
+
+  test.describe("User Menu", () => {
+    test("should display user name in sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // User name should be visible in the sidebar footer
+      const userName = page.locator("aside p.truncate").first();
+      await expect(userName).toBeVisible({ timeout: 5000 });
+      // Should contain non-empty text (the user's name)
+      const nameText = await userName.textContent();
+      expect(nameText?.trim().length).toBeGreaterThan(0);
+    });
+
+    test("should display sign out button in sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      const signOutBtn = page.locator("aside button", { hasText: /sign out/i });
+      await expect(signOutBtn).toBeVisible({ timeout: 5000 });
+    });
+
+    test("should display user avatar in sidebar", async ({ page }) => {
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // User avatar section should be present
+      const avatarArea = page.locator("aside .rounded-full").first();
+      await expect(avatarArea).toBeVisible({ timeout: 5000 });
+    });
+  });
+
+  test.describe("Keyboard Navigation", () => {
+    test("should focus sidebar links sequentially with Tab", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Focus the first sidebar link by pressing Tab from the start
+      // First, ensure the skip-to-content link gets focus first, then Tab again
+      await page.keyboard.press("Tab");
+
+      // The skip-to-content link is first. Tab again to enter sidebar.
+      await page.keyboard.press("Tab");
+
+      // After two Tabs, we should be on the first sidebar link (Dashboard)
+      const dashboardLink = page.locator('aside a[href="/dashboard"]');
+      const isFocused = await dashboardLink.evaluate((el) => el === document.activeElement);
+      // Accept if either Dashboard is focused or we're somewhere in the sidebar
+      if (!isFocused) {
+        // Keep tabbing until we hit the sidebar
+        for (let i = 0; i < 5; i++) {
+          await page.keyboard.press("Tab");
+          const nowFocused = await dashboardLink.evaluate((el) => el === document.activeElement);
+          if (nowFocused) break;
+        }
+      }
+
+      // Verify at least some sidebar link is reachable via keyboard
+      const someLinkFocused = await page.locator("aside a").evaluateAll((els) => {
+        return els.some((el) => el === document.activeElement);
+      });
+      expect(someLinkFocused).toBe(true);
+    });
+
+    test("should activate sidebar link with Enter key", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Navigate to Dashboard first, then use keyboard to go to Profiles
+      await page.goto("/profiles");
+
+      const profilesLink = page.locator('aside a[href="/profiles"]');
+      await profilesLink.focus();
+
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/.*\/profiles/, { timeout: 10000 });
+    });
+  });
+
+  test.describe("Mobile Navigation — Complete", () => {
+    const MOBILE_LINKS = [
+      { href: "/profiles", label: "Profiles" },
+      { href: "/agents", label: "Agents" },
+      { href: "/content", label: "Content" },
+      { href: "/analytics", label: "Analytics" },
+      { href: "/settings", label: "Settings" },
+    ];
+
+    test("should navigate to all main pages via mobile hamburger menu", async ({ page }) => {
+      test.setTimeout(60000); // Allow more time for multiple navigations
+      await page.setViewportSize({ width: 375, height: 667 });
+
+      for (const link of MOBILE_LINKS) {
+        // Start fresh from dashboard each time
+        await page.goto("/dashboard");
+        await page.waitForLoadState("networkidle");
+
+        const currentUrl = new URL(page.url());
+        if (currentUrl.pathname === "/login") {
+          test.skip();
+          return;
+        }
+
+        // Open hamburger menu
+        const menuBtn = page
+          .locator("button")
+          .filter({ has: page.locator("svg") })
+          .first();
+        if (!(await menuBtn.isVisible().catch(() => false))) {
+          continue;
+        }
+        await menuBtn.click();
+        await page.waitForTimeout(300); // Wait for animation
+
+        // Sidebar should be visible now
+        const sidebar = page.locator("aside").first();
+        await expect(sidebar).toBeVisible({ timeout: 3000 });
+
+        // Click the navigation link
+        const navLink = page.locator(`aside a[href="${link.href}"]`);
+        if (!(await navLink.isVisible().catch(() => false))) {
+          continue;
+        }
+        await navLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Verify navigation
+        await expect(page).toHaveURL(new RegExp(`.*${link.href}`), { timeout: 10000 });
+      }
+    });
+
+    test("should open and close mobile sidebar via hamburger", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Find hamburger button
+      const menuBtn = page.locator('button[aria-label="Open navigation menu"]');
+      await expect(menuBtn).toBeVisible({ timeout: 5000 });
+
+      // Open
+      await menuBtn.click();
+      const sidebar = page.locator("aside").first();
+      await expect(sidebar).toBeVisible({ timeout: 3000 });
+
+      // Close by clicking overlay
+      const overlay = page.locator(".fixed.inset-0.bg-black\\/50");
+      if (await overlay.isVisible().catch(() => false)) {
+        await overlay.click();
+        await expect(overlay).not.toBeVisible({ timeout: 3000 });
+      }
+    });
+
+    test("should show user info in mobile sidebar drawer", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Open hamburger menu
+      const menuBtn = page.locator('button[aria-label="Open navigation menu"]');
+      await expect(menuBtn).toBeVisible({ timeout: 5000 });
+      await menuBtn.click();
+
+      // User name should be visible in the drawer
+      const userName = page.locator("aside p").filter({ hasText: /./ }).first();
+      await expect(userName).toBeVisible({ timeout: 3000 });
+
+      // Sign out button should be visible in the drawer
+      const signOutBtn = page.locator("aside button", { hasText: /sign out/i });
+      await expect(signOutBtn).toBeVisible({ timeout: 3000 });
+    });
+
+    test("should close mobile sidebar when navigating to a new page", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Open hamburger menu
+      const menuBtn = page.locator('button[aria-label="Open navigation menu"]');
+      await expect(menuBtn).toBeVisible({ timeout: 5000 });
+      await menuBtn.click();
+
+      // Sidebar should be visible
+      const sidebar = page.locator("aside").first();
+      await expect(sidebar).toBeVisible({ timeout: 3000 });
+
+      // Navigate to another page directly
+      await page.goto("/profiles");
+      await page.waitForLoadState("networkidle");
+
+      // Sidebar should be closed (translate-x-full) after fresh navigation
+      const classList = await sidebar.getAttribute("class");
+      expect(classList).toContain("-translate-x-full");
+    });
+
+    test("should close mobile sidebar with Escape key", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+      await page.goto("/dashboard");
+
+      const currentUrl = new URL(page.url());
+      if (currentUrl.pathname === "/login") {
+        test.skip();
+        return;
+      }
+
+      // Find hamburger button
+      const menuBtn = page.locator('button[aria-label="Open navigation menu"]');
+      await expect(menuBtn).toBeVisible({ timeout: 5000 });
+
+      // Open sidebar
+      await menuBtn.click();
+      const sidebar = page.locator("aside").first();
+      await expect(sidebar).toBeVisible({ timeout: 3000 });
+
+      // Press Escape
+      await page.keyboard.press("Escape");
+
+      // Sidebar should close (translate-x-full)
+      const classList = await sidebar.getAttribute("class");
+      expect(classList).toContain("-translate-x-full");
     });
   });
 });

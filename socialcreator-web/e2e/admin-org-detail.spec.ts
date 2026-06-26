@@ -407,3 +407,191 @@ test.describe("Admin Org Detail", () => {
     });
   });
 });
+
+test.describe("Admin Org Detail — Navigation & Actions", () => {
+  test("should navigate back to orgs list via Retour button", async ({ page }) => {
+    const orgId = `nav-back-${Date.now()}`;
+    const org = {
+      id: orgId,
+      name: "Nav Back Org",
+      teamId: "team-1",
+      createdAt: "2026-01-15T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      subscription: null,
+      team: null,
+      _count: { entitlementOverrides: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
+      await route.fulfill({ json: { data: org } });
+    });
+
+    await page.goto(`/admin/orgs/${orgId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Click back button
+    const backButton = page.locator('a[href*="/admin/orgs"]').first();
+    await expect(backButton).toBeVisible({ timeout: 5000 });
+    await backButton.click();
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
+
+    // Should be on orgs list page
+    expect(page.url()).toContain("/admin/orgs");
+  });
+
+  test("should navigate to orgs list via breadcrumb", async ({ page }) => {
+    const orgId = `breadcrumb-nav-${Date.now()}`;
+    const org = {
+      id: orgId,
+      name: "Breadcrumb Org",
+      teamId: "team-1",
+      createdAt: "2026-01-15T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      subscription: null,
+      team: null,
+      _count: { entitlementOverrides: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
+      await route.fulfill({ json: { data: org } });
+    });
+
+    await page.goto(`/admin/orgs/${orgId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Click "Organisations" in breadcrumb
+    await page.getByText("Organisations").first().click();
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
+
+    // Should navigate to orgs list
+    expect(page.url()).toContain("/admin/orgs");
+    expect(page.url()).not.toContain(orgId);
+  });
+
+  test("should show subscription period start and end dates", async ({ page }) => {
+    const orgId = `dates-${Date.now()}`;
+    const org = {
+      id: orgId,
+      name: "Dates Org",
+      teamId: "team-1",
+      createdAt: "2026-01-15T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      subscription: {
+        planKey: "PRO",
+        status: "ACTIVE",
+        cancelAtPeriodEnd: false,
+        currentPeriodStart: "2026-06-01T00:00:00Z",
+        currentPeriodEnd: "2026-07-01T00:00:00Z",
+      },
+      team: {
+        id: "team-1",
+        name: "Dates Team",
+        owner: { id: "owner-1", name: "Owner Name", email: "owner@test.com" },
+        _count: { members: 5 },
+      },
+      _count: { entitlementOverrides: 2 },
+    };
+
+    await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
+      await route.fulfill({ json: { data: org } });
+    });
+
+    await page.goto(`/admin/orgs/${orgId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Period start and end should be visible
+    await expect(page.getByText("Début de période").first()).toBeVisible();
+    await expect(page.getByText("Fin de période").first()).toBeVisible();
+  });
+
+  test("should display team owner name and member count", async ({ page }) => {
+    const orgId = `team-info-${Date.now()}`;
+    const org = {
+      id: orgId,
+      name: "Team Info Org",
+      teamId: "team-1",
+      createdAt: "2026-01-15T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      subscription: {
+        planKey: "PRO",
+        status: "ACTIVE",
+        cancelAtPeriodEnd: false,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+      },
+      team: {
+        id: "team-1",
+        name: "My Team",
+        owner: { id: "owner-1", name: "John Smith", email: "john@test.com" },
+        _count: { members: 8 },
+      },
+      _count: { entitlementOverrides: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
+      await route.fulfill({ json: { data: org } });
+    });
+
+    await page.goto(`/admin/orgs/${orgId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Team owner and member count
+    await expect(page.getByText(/Propriétaire : John Smith/)).toBeVisible();
+    await expect(page.getByText(/8 membres?/i)).toBeVisible();
+  });
+
+  test("should display cancelAtPeriodEnd warning in subscription detail", async ({ page }) => {
+    const orgId = `cancel-detail-${Date.now()}`;
+    const org = {
+      id: orgId,
+      name: "Cancel Detail Org",
+      teamId: "team-1",
+      createdAt: "2026-01-15T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      subscription: {
+        planKey: "BUSINESS",
+        status: "ACTIVE",
+        cancelAtPeriodEnd: true,
+        currentPeriodStart: "2026-06-01T00:00:00Z",
+        currentPeriodEnd: "2026-07-01T00:00:00Z",
+      },
+      team: {
+        id: "team-1",
+        name: "Cancel Team",
+        owner: { id: "owner-1", name: "Owner", email: "owner@test.com" },
+        _count: { members: 3 },
+      },
+      _count: { entitlementOverrides: 0 },
+    };
+
+    await page.route(new RegExp(`/api/admin/orgs/${orgId}`), async (route) => {
+      await route.fulfill({ json: { data: org } });
+    });
+
+    await page.goto(`/admin/orgs/${orgId}`);
+    const currentUrl = new URL(page.url());
+    if (currentUrl.pathname === "/login") {
+      test.skip();
+      return;
+    }
+
+    // Detailed cancel warning text
+    await expect(page.getByText(/configuré pour être annulé/)).toBeVisible();
+  });
+});
