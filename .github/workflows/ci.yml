@@ -78,8 +78,26 @@ jobs:
           fail_if_error: false
 
   test-e2e:
-    name: E2E Tests
+    name: E2E Tests (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: socialcreator_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready -U postgres
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,11 +122,17 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter=socialcreator-web exec prisma generate
 
+      - name: Apply database migrations
+        run: pnpm --filter=socialcreator-web exec prisma migrate deploy
+
+      - name: Seed entitlements
+        run: pnpm --filter=socialcreator-web db:seed
+
       - name: Build upstream dependencies
         run: pnpm exec turbo build --filter=socialcreator-web^...
 
       - name: Run Playwright tests
-        run: pnpm --filter=socialcreator-web exec playwright test
+        run: pnpm --filter=socialcreator-web exec playwright test --shard=${{ matrix.shard }}/4
         env:
           BASE_URL: http://localhost:3000
           AUTH_SECRET: ci-test-secret-not-for-production-abcdef123456
