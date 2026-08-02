@@ -1,4 +1,4 @@
-import { Redis } from "@upstash/redis";
+import type { Redis } from "@upstash/redis";
 import { getRedis } from "@/lib/infrastructure/rate-limit-redis";
 
 export interface CacheService {

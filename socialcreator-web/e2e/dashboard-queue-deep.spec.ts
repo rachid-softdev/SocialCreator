@@ -196,7 +196,7 @@ test.describe("Dashboard Queue Deep", () => {
     });
 
     test("Loading skeleton appears before data loads", async ({ page }) => {
-      let fulfillItems: (value: unknown) => void;
+      let fulfillItems: (value: void | PromiseLike<void>) => void;
 
       await page.route("**/api/v1/queue/items", async (route) => {
         await new Promise<void>((resolve) => {
@@ -705,8 +705,8 @@ test.describe("Dashboard Queue Deep", () => {
       if (dateCount >= 2) {
         const startDate = new Date(now).toISOString().split("T")[0];
         const endDate = new Date(now + 86400000 * 7).toISOString().split("T")[0];
-        await dateInputs.nth(0).fill(startDate);
-        await dateInputs.nth(1).fill(endDate);
+        await dateInputs.nth(0).fill(startDate!);
+        await dateInputs.nth(1).fill(endDate!);
         await page.waitForTimeout(500);
 
         // Verify filtering occurred

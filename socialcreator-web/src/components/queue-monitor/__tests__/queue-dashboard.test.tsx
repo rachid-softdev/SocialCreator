@@ -22,10 +22,10 @@ import { QueueDashboard } from "../queue-dashboard";
 // ── Hoisted factories ─────────────────────────────────────────────────
 
 const mockStore = vi.hoisted(() => ({
-  status: null,
-  jobs: [],
+  status: null as Record<string, number> | null,
+  jobs: [] as any[],
   isLoading: false,
-  error: null,
+  error: null as string | null,
   autoRefresh: true,
   fetchStatus: vi.fn(),
   fetchJobs: vi.fn(),
@@ -262,7 +262,7 @@ describe("QueueDashboard", () => {
     render(<QueueDashboard />);
 
     const retryButtons = screen.getAllByText("Retry");
-    await user.click(retryButtons[0]);
+    await user.click(retryButtons[0]!);
 
     expect(mockStore.retryJob).toHaveBeenCalledWith("job-003-zzzzzzzz");
   });

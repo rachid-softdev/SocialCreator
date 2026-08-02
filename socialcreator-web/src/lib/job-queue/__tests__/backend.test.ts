@@ -14,7 +14,7 @@ describe("InMemoryQueueBackend", () => {
 
   const baseJob = {
     type: "publish" as const,
-    payload: { contentId: "c1", profileId: "p1", platform: "x" as const, userId: "u1" },
+    payload: { contentId: "c1", profileId: "p1", platform: "X" as const, userId: "u1" },
     priority: "normal" as const,
     status: "queued" as const,
     attempts: 0,

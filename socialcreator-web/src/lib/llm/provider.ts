@@ -53,13 +53,13 @@ function parseRetryAfter(headerValue: string | null): number | undefined {
 
   // Try seconds-as-integer first
   const seconds = parseInt(headerValue, 10);
-  if (!isNaN(seconds) && seconds >= 0 && String(seconds) === headerValue.trim()) {
+  if (!Number.isNaN(seconds) && seconds >= 0 && String(seconds) === headerValue.trim()) {
     return seconds * 1000;
   }
 
   // Try HTTP-date format
   const date = new Date(headerValue);
-  if (!isNaN(date.getTime())) {
+  if (!Number.isNaN(date.getTime())) {
     const delay = date.getTime() - Date.now();
     return Math.max(delay, 1000); // at least 1 second
   }

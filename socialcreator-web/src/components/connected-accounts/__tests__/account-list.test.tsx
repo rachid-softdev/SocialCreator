@@ -94,7 +94,7 @@ describe("AccountList", () => {
   });
 
   it("renders accounts sorted with active first", () => {
-    const accountsWithInactive = [{ ...mockAccounts[0], isActive: false }, mockAccounts[1]];
+    const accountsWithInactive = [{ ...mockAccounts[0]!, isActive: false }, mockAccounts[1]!];
 
     render(<AccountList accounts={accountsWithInactive} />);
 

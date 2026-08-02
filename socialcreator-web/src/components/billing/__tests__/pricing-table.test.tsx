@@ -160,7 +160,7 @@ describe("PricingTable", () => {
     });
 
     const selectButtons = screen.getAllByText("Select Plan");
-    await userEvent.click(selectButtons[0]);
+    await userEvent.click(selectButtons[0]!);
 
     expect(onSelectPlan).toHaveBeenCalledWith("starter");
   });

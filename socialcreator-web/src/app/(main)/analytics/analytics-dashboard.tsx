@@ -91,9 +91,9 @@ export function AnalyticsDashboard({
         acc[log.platform] = { success: 0, failed: 0 };
       }
       if (log.success) {
-        acc[log.platform].success++;
+        acc[log.platform]!.success++;
       } else {
-        acc[log.platform].failed++;
+        acc[log.platform]!.failed++;
       }
       return acc;
     },

@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     >();
 
     publishLogs.forEach((log) => {
-      const dateStr = log.publishedAt.toISOString().split("T")[0];
+      const dateStr = log.publishedAt.toISOString().split("T")[0]!;
       const existing = dailyMap.get(dateStr) || { date: dateStr, count: 0, success: 0, failed: 0 };
       existing.count++;
       if (log.success) {

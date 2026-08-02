@@ -59,7 +59,7 @@ describe("publishToFacebook", () => {
     expect(result.postId).toBe("fb_123");
 
     // Verify the request body includes the link field
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const body = JSON.parse(callArg.body as string);
     expect(body.link).toBe("https://example.com/image.jpg");
     expect(body.message).toContain("Hello Facebook");
@@ -75,7 +75,7 @@ describe("publishToFacebook", () => {
     expect(result.postId).toBe("fb_456");
 
     // Verify no link field in the body
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const body = JSON.parse(callArg.body as string);
     expect(body.link).toBeUndefined();
   });
@@ -86,7 +86,7 @@ describe("publishToFacebook", () => {
 
     await publishToFacebook(mockContent, mockAccount);
 
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const body = JSON.parse(callArg.body as string);
     expect(body.message).toContain("#test #social");
   });
@@ -133,7 +133,7 @@ describe("publishToFacebook", () => {
 
     await publishToFacebook(mockContent, mockAccount);
 
-    const headers = (mockFetch.mock.calls[0][1] as any).headers;
+    const headers = (mockFetch.mock.calls[0]![1] as any).headers;
     expect(headers).toHaveProperty("Authorization", "Bearer fb-token");
   });
 
@@ -143,7 +143,7 @@ describe("publishToFacebook", () => {
 
     await publishToFacebook(mockContent, mockAccount);
 
-    const callUrl = mockFetch.mock.calls[0][0];
+    const callUrl = mockFetch.mock.calls[0]![0];
     expect(callUrl).toContain("graph.facebook.com");
     expect(callUrl).toContain("page_123");
     expect(callUrl).toContain("/feed");

@@ -665,7 +665,7 @@ test.describe("Landing Page", () => {
       expect(headingLevels[0]).toBe(1);
       // No level should skip more than one level (e.g., h1 -> h3 is invalid)
       for (let i = 1; i < headingLevels.length; i++) {
-        const diff = headingLevels[i] - headingLevels[i - 1];
+        const diff = headingLevels[i]! - headingLevels[i - 1]!;
         expect(diff).toBeLessThanOrEqual(1);
       }
     });
@@ -725,7 +725,7 @@ test.describe("Landing Page", () => {
           new PerformanceObserver((list) => {
             const entries = list.getEntries();
             if (entries.length > 0) {
-              resolve(entries[entries.length - 1].startTime);
+              resolve(entries[entries.length - 1]!.startTime);
             } else {
               resolve(null);
             }

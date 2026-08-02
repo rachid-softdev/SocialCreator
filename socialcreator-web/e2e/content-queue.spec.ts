@@ -1393,8 +1393,8 @@ test.describe("Queue — Job Lifecycle", () => {
           low: 3,
         };
         for (let i = 1; i < jobs.length; i++) {
-          const prevRank = priorityRank[jobs[i - 1].priority || "normal"];
-          const currRank = priorityRank[jobs[i].priority || "normal"];
+          const prevRank = priorityRank[jobs[i - 1].priority || "normal"]!;
+          const currRank = priorityRank[jobs[i].priority || "normal"]!;
           expect(prevRank).toBeLessThanOrEqual(currRank);
         }
       }

@@ -362,7 +362,7 @@ test.describe("Blog Detail Deep", () => {
     // scaleX should be > 0.9 (close to 1.0 at bottom)
     const match = style?.match(/scaleX\(([\d.]+)\)/);
     if (match) {
-      const progress = Number.parseFloat(match[1]);
+      const progress = Number.parseFloat(match[1]!);
       expect(progress).toBeGreaterThan(0.8);
     }
   });

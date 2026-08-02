@@ -172,14 +172,14 @@ test.describe("Content Lifecycle - Generation", () => {
     // Select platform if available
     const platformOptions = await genPage.platformSelect.locator("option").all();
     if (platformOptions.length > 1) {
-      const value = (await platformOptions[1].getAttribute("value")) || "";
+      const value = (await platformOptions[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
     // Select profile if available
     const profileOptions = await genPage.profileSelect.locator("option").all();
     if (profileOptions.length > 1) {
-      const value = (await profileOptions[1].getAttribute("value")) || "";
+      const value = (await profileOptions[1]!.getAttribute("value")) || "";
       await genPage.profileSelect.selectOption(value);
     }
 

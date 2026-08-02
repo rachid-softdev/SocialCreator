@@ -89,7 +89,7 @@ describe("publishToPinterest", () => {
       const longText = "x".repeat(150);
       await publishToPinterest({ ...mockContent, textContent: longText }, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.title.length).toBe(100);
     });
@@ -100,7 +100,7 @@ describe("publishToPinterest", () => {
 
       await publishToPinterest(mockContent, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.board_id).toBe("board_123");
     });
@@ -111,7 +111,7 @@ describe("publishToPinterest", () => {
 
       await publishToPinterest(mockContent, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.link).toBe("https://example.com/pin-image.jpg");
       expect(body.mediaSource.source_type).toBe("image_url");
@@ -397,7 +397,7 @@ describe("createPinterestBoard", () => {
     expect(result.boardId).toBe("long_name_board");
 
     // Verify the long name was sent in the request body
-    const callBody = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+    const callBody = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
     expect(callBody.name).toBe(longName);
   });
 

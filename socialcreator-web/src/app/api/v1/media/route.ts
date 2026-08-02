@@ -63,7 +63,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
 
   const validationResult = createMediaSchema.safeParse(body);
   if (!validationResult.success) {
-    return badRequest(validationResult.error.errors[0].message);
+    return badRequest(validationResult.error.errors[0]!.message);
   }
 
   const { profile: profileRepo } = getRepositories();

@@ -36,7 +36,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
   const validationResult = createProfileSchema.safeParse(body);
 
   if (!validationResult.success) {
-    return NextResponse.json({ error: validationResult.error.errors[0].message }, { status: 400 });
+    return NextResponse.json({ error: validationResult.error.errors[0]!.message }, { status: 400 });
   }
 
   const hasQuota = await checkProfileQuota(userId);

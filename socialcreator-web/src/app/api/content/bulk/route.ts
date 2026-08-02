@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const validation = bulkActionSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const { contentIds, action } = validation.data;

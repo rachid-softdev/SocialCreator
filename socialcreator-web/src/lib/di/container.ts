@@ -17,10 +17,6 @@ export type Lifetime = "singleton" | "transient" | "scoped";
  * @deprecated Will be removed in future cleanup. Do not use in new code.
  */
 export class Container {
-  constructor() {
-    // No-op: use getRepositories() instead
-  }
-
   register<T>(_name: string, _factory: () => T, _lifetime: Lifetime = "singleton"): void {
     // No-op: use getRepositories() instead
   }

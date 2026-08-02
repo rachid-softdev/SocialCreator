@@ -825,7 +825,7 @@ test.describe("Admin Entitlements — Cross-Tab Navigation", () => {
     await expect(page.getByText("feature_a").first()).toBeVisible({ timeout: 5000 });
 
     // Switch to Plans — plans content should load
-    const plansCountBefore = fetchCounts.plans;
+    const plansCountBefore = fetchCounts.plans!;
     await page.getByText("Plans").click();
     await page.waitForTimeout(500);
     await expect(page.getByText("FREE").first()).toBeVisible({ timeout: 5000 });
@@ -833,7 +833,7 @@ test.describe("Admin Entitlements — Cross-Tab Navigation", () => {
     expect(fetchCounts.plans).toBeGreaterThan(plansCountBefore);
 
     // Switch to Features — features content should load
-    const featuresCountBefore = fetchCounts.features;
+    const featuresCountBefore = fetchCounts.features!;
     await page.getByText("Features").click();
     await page.waitForTimeout(500);
     await expect(page.getByText("advanced_analytics").first()).toBeVisible({ timeout: 5000 });
@@ -841,7 +841,7 @@ test.describe("Admin Entitlements — Cross-Tab Navigation", () => {
     expect(fetchCounts.features).toBeGreaterThan(featuresCountBefore);
 
     // Switch back to Overrides — overrides content should load
-    const overridesCountBefore = fetchCounts.overrides;
+    const overridesCountBefore = fetchCounts.overrides!;
     await page.getByText("Overrides").click();
     await page.waitForTimeout(500);
     await expect(page.getByText("feature_a").first()).toBeVisible({ timeout: 5000 });

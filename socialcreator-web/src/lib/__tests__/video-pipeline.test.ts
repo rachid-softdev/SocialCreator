@@ -19,9 +19,9 @@ describe("identifySegments", () => {
 
     const segments = await identifySegments("transcript text here");
     expect(segments).toHaveLength(2);
-    expect(segments[0].start).toBe(0);
-    expect(segments[0].end).toBe(45);
-    expect(segments[0].reason).toBe("Strong opening hook");
+    expect(segments[0]!.start).toBe(0);
+    expect(segments[0]!.end).toBe(45);
+    expect(segments[0]!.reason).toBe("Strong opening hook");
   });
 
   it("should throw when LLM returns invalid segments format", async () => {

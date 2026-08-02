@@ -214,8 +214,8 @@ describe("RunList", () => {
       />,
     );
 
-    const prevBtn = document.querySelectorAll("button")[0];
-    const nextBtn = document.querySelectorAll("button")[1];
+    const prevBtn = document.querySelectorAll("button")[0]!;
+    const nextBtn = document.querySelectorAll("button")[1]!;
 
     await userEvent.click(prevBtn);
     expect(onPageChange).toHaveBeenCalledWith(1);

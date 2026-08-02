@@ -216,7 +216,7 @@ describe("publishToX", () => {
       const longText = "a".repeat(300);
       await publishToX({ ...mockContent, textContent: longText }, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.text.length).toBe(280);
       expect(body.text).toBe("a".repeat(280));
@@ -234,7 +234,7 @@ describe("publishToX", () => {
       const shortText = "Short tweet";
       await publishToX({ ...mockContent, textContent: shortText }, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.text).toBe("Short tweet");
     });
@@ -263,7 +263,7 @@ describe("publishToX", () => {
         expect.stringContaining("Media upload not supported"),
       );
       // Verify text-only tweet was sent (no media field in body)
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const body = JSON.parse(callArg.body as string);
       expect(body.text).toBeDefined();
       expect(body.media).toBeUndefined();
@@ -282,7 +282,7 @@ describe("publishToX", () => {
 
       await publishToX(mockContent, mockAccount);
 
-      const callUrl = mockFetch.mock.calls[0][0];
+      const callUrl = mockFetch.mock.calls[0]![0];
       expect(callUrl).toBe("https://api.twitter.com/2/tweets");
     });
 
@@ -297,7 +297,7 @@ describe("publishToX", () => {
 
       await publishToX(mockContent, mockAccount);
 
-      const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+      const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
       const headers = callArg.headers as Record<string, string>;
       expect(headers.Authorization).toBe("Bearer x-token");
     });

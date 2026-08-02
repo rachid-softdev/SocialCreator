@@ -861,15 +861,15 @@ describe("PrismaContentRepository", () => {
       expect(prisma.generatedContent.update).toHaveBeenCalledTimes(3);
       expect(prisma.generatedContent.update).toHaveBeenCalledWith({
         where: { id: "c-1" },
-        data: { scheduledPublishAt: items[0].scheduledPublishAt },
+        data: { scheduledPublishAt: items[0]!.scheduledPublishAt },
       });
       expect(prisma.generatedContent.update).toHaveBeenCalledWith({
         where: { id: "c-2" },
-        data: { scheduledPublishAt: items[1].scheduledPublishAt },
+        data: { scheduledPublishAt: items[1]!.scheduledPublishAt },
       });
       expect(prisma.generatedContent.update).toHaveBeenCalledWith({
         where: { id: "c-3" },
-        data: { scheduledPublishAt: items[2].scheduledPublishAt },
+        data: { scheduledPublishAt: items[2]!.scheduledPublishAt },
       });
       expect(result).toBe(3);
     });
@@ -976,7 +976,7 @@ describe("advanced queries", () => {
       await repo.countPublishedToday("profile-1", "X" as any);
 
       const callArg = (prisma.generatedContent.count as unknown as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+        .calls[0]![0];
       const gteDate = callArg.where.publishedAt.gte as Date;
       expect(gteDate.getHours()).toBe(0);
       expect(gteDate.getMinutes()).toBe(0);
@@ -1002,8 +1002,8 @@ describe("advanced queries", () => {
         orderBy: { createdAt: "desc" },
       });
       // Verify the actual returned order is descending by createdAt
-      expect(result[0].createdAt).toEqual(contents[0].createdAt);
-      expect(result[1].createdAt).toEqual(contents[1].createdAt);
+      expect(result[0]!.createdAt).toEqual(contents[0]!.createdAt);
+      expect(result[1]!.createdAt).toEqual(contents[1]!.createdAt);
     });
   });
 
@@ -1050,7 +1050,7 @@ describe("advanced queries", () => {
       await repo.findScheduledByDateRange("user-1", new Date("2024-06-01"), new Date("2024-06-30"));
 
       const callArg = (prisma.generatedContent.findMany as unknown as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+        .calls[0]![0];
       expect(callArg.where.platform).toBeUndefined();
     });
   });
@@ -1112,8 +1112,8 @@ describe("status management", () => {
         data: { status: "PUBLISHING" },
       });
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe("PUBLISHING");
-      expect(result[1].status).toBe("PUBLISHING");
+      expect(result[0]!.status).toBe("PUBLISHING");
+      expect(result[1]!.status).toBe("PUBLISHING");
     });
 
     it("should return empty array when no content to claim", async () => {

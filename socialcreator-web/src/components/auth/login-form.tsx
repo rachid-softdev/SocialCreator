@@ -11,7 +11,7 @@ import { OAuthButton } from "./oauth-button";
  * alphanumeric paths. Blocks external URLs and protocol-relative URLs.
  */
 function isValidCallbackUrl(url: string): boolean {
-  if (!url || !url.startsWith("/")) return false;
+  if (!url?.startsWith("/")) return false;
   // Block protocol-relative URLs like //evil.com
   if (url.startsWith("//")) return false;
   // Only allow simple path patterns — no external hostnames
@@ -22,7 +22,8 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawCallbackUrl = searchParams.get("callbackUrl");
-  const callbackUrl = rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : "/dashboard";
+  const callbackUrl =
+    rawCallbackUrl && isValidCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

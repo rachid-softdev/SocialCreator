@@ -26,7 +26,7 @@ export const PUT = withApiMiddleware(async ({ userId, request }, params) => {
   const validation = scheduleSchema.safeParse(body);
 
   if (!validation.success) {
-    return badRequest(validation.error.errors[0].message);
+    return badRequest(validation.error.errors[0]!.message);
   }
 
   const { scheduledPublishAt, scheduledTimezone } = validation.data;

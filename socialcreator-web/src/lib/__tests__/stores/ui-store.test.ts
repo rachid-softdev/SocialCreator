@@ -150,10 +150,10 @@ describe("UIStore", () => {
 
       const toasts = useUIStore.getState().toasts;
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("info");
-      expect(toasts[0].message).toBe("Hello");
-      expect(toasts[0].id).toBeDefined();
-      expect(typeof toasts[0].id).toBe("string");
+      expect(toasts[0]!.type).toBe("info");
+      expect(toasts[0]!.message).toBe("Hello");
+      expect(toasts[0]!.id).toBeDefined();
+      expect(typeof toasts[0]!.id).toBe("string");
     });
 
     it("should add multiple toasts", () => {
@@ -178,7 +178,7 @@ describe("UIStore", () => {
 
     it("should include optional duration if provided", () => {
       useUIStore.getState().addToast({ type: "info", message: "Timed", duration: 5000 });
-      expect(useUIStore.getState().toasts[0].duration).toBe(5000);
+      expect(useUIStore.getState().toasts[0]!.duration).toBe(5000);
     });
   });
 
@@ -186,12 +186,12 @@ describe("UIStore", () => {
     it("should remove a toast by id", () => {
       useUIStore.getState().addToast({ type: "info", message: "Toast 1" });
       useUIStore.getState().addToast({ type: "error", message: "Toast 2" });
-      const id = useUIStore.getState().toasts[0].id;
+      const id = useUIStore.getState().toasts[0]!.id;
 
       useUIStore.getState().removeToast(id);
 
       expect(useUIStore.getState().toasts).toHaveLength(1);
-      expect(useUIStore.getState().toasts[0].message).toBe("Toast 2");
+      expect(useUIStore.getState().toasts[0]!.message).toBe("Toast 2");
     });
 
     it("should do nothing if id not found", () => {
@@ -206,8 +206,8 @@ describe("UIStore", () => {
       useUIStore.getState().addToast({ type: "info", message: "B" });
 
       const ids = useUIStore.getState().toasts.map((t) => t.id);
-      useUIStore.getState().removeToast(ids[0]);
-      useUIStore.getState().removeToast(ids[1]);
+      useUIStore.getState().removeToast(ids[0]!);
+      useUIStore.getState().removeToast(ids[1]!);
 
       expect(useUIStore.getState().toasts).toStrictEqual([]);
     });
@@ -307,10 +307,10 @@ describe("ui-store [integration] — persist, toast, modal", () => {
 
       const toasts = useRealUIStore.getState().toasts;
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("info");
-      expect(toasts[0].message).toBe("Test toast");
-      expect(typeof toasts[0].id).toBe("string");
-      expect(toasts[0].id.length).toBeGreaterThan(0);
+      expect(toasts[0]!.type).toBe("info");
+      expect(toasts[0]!.message).toBe("Test toast");
+      expect(typeof toasts[0]!.id).toBe("string");
+      expect(toasts[0]!.id.length).toBeGreaterThan(0);
     });
 
     it("addToast can accept optional duration", () => {
@@ -320,18 +320,18 @@ describe("ui-store [integration] — persist, toast, modal", () => {
         duration: 3000,
       });
 
-      expect(useRealUIStore.getState().toasts[0].duration).toBe(3000);
+      expect(useRealUIStore.getState().toasts[0]!.duration).toBe(3000);
     });
 
     it("removeToast dismisses a toast by id", () => {
       useRealUIStore.getState().addToast({ type: "info", message: "A" });
       useRealUIStore.getState().addToast({ type: "error", message: "B" });
-      const id = useRealUIStore.getState().toasts[0].id;
+      const id = useRealUIStore.getState().toasts[0]!.id;
 
       useRealUIStore.getState().removeToast(id);
 
       expect(useRealUIStore.getState().toasts).toHaveLength(1);
-      expect(useRealUIStore.getState().toasts[0].message).toBe("B");
+      expect(useRealUIStore.getState().toasts[0]!.message).toBe("B");
     });
 
     it("removeToast does nothing for nonexistent id", () => {

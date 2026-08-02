@@ -76,7 +76,7 @@ class InMemoryBackend implements QueueBackend {
     const idx = this.jobs.findIndex((j) => j.status === "queued");
     if (idx === -1) return null;
 
-    const job = this.jobs[idx];
+    const job = this.jobs[idx]!;
     job.status = "running";
     job.startedAt = Date.now();
     job.attempts++;
@@ -210,7 +210,7 @@ describe("Queue: getJobs (sync)", () => {
     expect(jobs).toHaveLength(3);
     // Sorted by createdAt descending (newest first)
     for (let i = 1; i < jobs.length; i++) {
-      expect(jobs[i - 1].createdAt).toBeGreaterThanOrEqual(jobs[i].createdAt);
+      expect(jobs[i - 1]!.createdAt).toBeGreaterThanOrEqual(jobs[i]!.createdAt);
     }
   });
 
@@ -297,7 +297,7 @@ describe("QueueBackend: list()", () => {
     expect(jobs).toHaveLength(3);
     // Should be sorted by createdAt descending
     for (let i = 1; i < jobs.length; i++) {
-      expect(jobs[i - 1].createdAt).toBeGreaterThanOrEqual(jobs[i].createdAt);
+      expect(jobs[i - 1]!.createdAt).toBeGreaterThanOrEqual(jobs[i]!.createdAt);
     }
   });
 

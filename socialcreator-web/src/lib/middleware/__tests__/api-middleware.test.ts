@@ -80,7 +80,7 @@ function createRequest(
   path = "/api/test",
   init?: RequestInit & { headers?: Record<string, string> },
 ): NextRequest {
-  return new NextRequest(`http://localhost:3000${path}`, init);
+  return new NextRequest(`http://localhost:3000${path}`, init as any);
 }
 
 // ---------------------------------------------------------------------------

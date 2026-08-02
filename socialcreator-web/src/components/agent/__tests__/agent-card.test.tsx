@@ -156,7 +156,7 @@ describe("AgentCard", () => {
     expect(screen.queryByText("Delete")).not.toBeInTheDocument();
 
     // Click the more button to open dropdown
-    const moreButton = screen.getAllByRole("button")[0];
+    const moreButton = screen.getAllByRole("button")[0]!;
     await userEvent.click(moreButton);
 
     expect(screen.getByText("Edit")).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe("AgentCard", () => {
     const onEdit = vi.fn();
     render(<AgentCard agent={mockAgent as any} onEdit={onEdit} />);
 
-    const moreButton = screen.getAllByRole("button")[0];
+    const moreButton = screen.getAllByRole("button")[0]!;
     await userEvent.click(moreButton);
 
     const editButton = screen.getByText("Edit");
@@ -181,7 +181,7 @@ describe("AgentCard", () => {
 
     render(<AgentCard agent={mockAgent as any} onDelete={onDelete} />);
 
-    const moreButton = screen.getAllByRole("button")[0];
+    const moreButton = screen.getAllByRole("button")[0]!;
     await userEvent.click(moreButton);
 
     const deleteButton = screen.getByText("Delete");
@@ -200,7 +200,7 @@ describe("AgentCard", () => {
 
     render(<AgentCard agent={mockAgent as any} onDelete={onDelete} />);
 
-    const moreButton = screen.getAllByRole("button")[0];
+    const moreButton = screen.getAllByRole("button")[0]!;
     await userEvent.click(moreButton);
 
     const deleteButton = screen.getByText("Delete");

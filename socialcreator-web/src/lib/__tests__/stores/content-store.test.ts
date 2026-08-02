@@ -175,7 +175,7 @@ describe("ContentStore", () => {
       useContentStore.getState().addItem(mockItem);
 
       expect(useContentStore.getState().items).toHaveLength(1);
-      expect(useContentStore.getState().items[0].id).toBe("content-1");
+      expect(useContentStore.getState().items[0]!.id).toBe("content-1");
     });
 
     it("should increment total count", () => {
@@ -188,8 +188,8 @@ describe("ContentStore", () => {
       useContentStore.getState().addItem(mockItem);
 
       const items = useContentStore.getState().items;
-      expect(items[0].id).toBe("content-1");
-      expect(items[1].id).toBe("content-2");
+      expect(items[0]!.id).toBe("content-1");
+      expect(items[1]!.id).toBe("content-2");
     });
   });
 
@@ -201,9 +201,9 @@ describe("ContentStore", () => {
         .updateItem("content-1", { status: "PUBLISHED", publishedAt: "2024-06-01T00:00:00Z" });
 
       const item = useContentStore.getState().items[0];
-      expect(item.status).toBe("PUBLISHED");
-      expect(item.publishedAt).toBe("2024-06-01T00:00:00Z");
-      expect(item.textContent).toBe("Test post"); // unchanged
+      expect(item!.status).toBe("PUBLISHED");
+      expect(item!.publishedAt).toBe("2024-06-01T00:00:00Z");
+      expect(item!.textContent).toBe("Test post"); // unchanged
     });
 
     it("should not modify other items when updating one", () => {
@@ -214,8 +214,8 @@ describe("ContentStore", () => {
 
       const items = useContentStore.getState().items;
       // items[0] = mockItem2 (id: content-2), items[1] = mockItem (id: content-1, updated)
-      expect(items[0].textContent).toBe("Second post");
-      expect(items[0].id).toBe("content-2");
+      expect(items[0]!.textContent).toBe("Second post");
+      expect(items[0]!.id).toBe("content-2");
     });
 
     it("should do nothing when id doesn't exist", () => {
@@ -234,7 +234,7 @@ describe("ContentStore", () => {
       useContentStore.getState().removeItem("content-1");
 
       expect(useContentStore.getState().items).toHaveLength(1);
-      expect(useContentStore.getState().items[0].id).toBe("content-2");
+      expect(useContentStore.getState().items[0]!.id).toBe("content-2");
     });
 
     it("should decrement total count", () => {
@@ -440,7 +440,7 @@ describe("content-store [integration] — fetchContent, filters, CRUD", () => {
       useRealContentStore.getState().addItem(mockContentItem);
 
       expect(useRealContentStore.getState().items).toHaveLength(1);
-      expect(useRealContentStore.getState().items[0].id).toBe("content-1");
+      expect(useRealContentStore.getState().items[0]!.id).toBe("content-1");
       expect(useRealContentStore.getState().total).toBe(1);
     });
 
@@ -450,7 +450,7 @@ describe("content-store [integration] — fetchContent, filters, CRUD", () => {
         status: "PUBLISHED",
       });
 
-      expect(useRealContentStore.getState().items[0].status).toBe("PUBLISHED");
+      expect(useRealContentStore.getState().items[0]!.status).toBe("PUBLISHED");
     });
 
     it("removeItem removes item and decrements total", () => {
@@ -520,8 +520,8 @@ describe("content-store [integration] — fetchContent, filters, CRUD", () => {
 
       const items = useRealContentStore.getState().items;
       expect(items).toHaveLength(2);
-      expect(items[0].id).toBe("content-1");
-      expect(items[1].id).toBe("content-1");
+      expect(items[0]!.id).toBe("content-1");
+      expect(items[1]!.id).toBe("content-1");
       expect(useRealContentStore.getState().total).toBe(2);
     });
   });

@@ -52,7 +52,7 @@ export const POST = withApiMiddleware(async ({ userId, request }, params) => {
   const body = await request.json();
   const validationResult = rejectSchema.safeParse(body);
   if (!validationResult.success) {
-    return badRequest(validationResult.error.errors[0].message);
+    return badRequest(validationResult.error.errors[0]!.message);
   }
 
   const updatedContent = await contentRepo.update(id, {

@@ -133,7 +133,7 @@ describe("PrismaAgentRepository", () => {
         take: 100,
       });
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe("agent-2");
+      expect(result[0]!.id).toBe("agent-2");
     });
 
     it("should return empty array when no agents found", async () => {
@@ -417,7 +417,7 @@ describe("PrismaAgentRunRepository", () => {
         orderBy: { createdAt: "desc" },
       });
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe("run-2");
+      expect(result[0]!.id).toBe("run-2");
     });
 
     it("should return empty array when agent has no runs", async () => {
@@ -584,7 +584,7 @@ describe("PrismaAgentRunRepository", () => {
 
       // The update data should NOT contain error field
       const callArg = (prisma.agentRun.update as unknown as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+        .calls[0]![0];
       expect(callArg.data).not.toHaveProperty("error");
     });
 

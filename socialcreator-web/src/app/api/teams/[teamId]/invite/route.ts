@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validation = inviteSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const { email, role } = validation.data;

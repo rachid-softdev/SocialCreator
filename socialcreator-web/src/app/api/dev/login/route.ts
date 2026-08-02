@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
 import { signIn } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * DEV-ONLY endpoint to obtain a real authenticated session cookie.
@@ -28,10 +28,11 @@ export async function POST() {
     create: { email: DEV_EMAIL, name: "Dev User", password: passwordHash, role: "ADMIN" },
   });
 
-  const fd = new FormData();
-  fd.set("email", DEV_EMAIL);
-  fd.set("password", DEV_PASSWORD);
-  const result = await signIn("credentials", fd, { redirect: false });
+  const result = await signIn("credentials", {
+    redirect: false,
+    email: DEV_EMAIL,
+    password: DEV_PASSWORD,
+  });
 
   if (result?.error) {
     return NextResponse.json(

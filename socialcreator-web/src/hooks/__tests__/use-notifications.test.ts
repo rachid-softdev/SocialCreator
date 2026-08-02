@@ -59,6 +59,7 @@ interface MockEventSourceInstance {
   onerror: ((event?: unknown) => void) | null;
   /** Emit a named event to registered listeners */
   emit: (event: string, data?: unknown) => void;
+  addEventListener: (event: string, handler: (event?: unknown) => void) => void;
 }
 
 let currentMockEventSource: MockEventSourceInstance | null = null;
@@ -264,7 +265,7 @@ describe("useNotifications", () => {
       });
 
       expect(result.current.notifications).toHaveLength(3);
-      expect(result.current.notifications[0].id).toBe("notif-3");
+      expect(result.current.notifications[0]!.id).toBe("notif-3");
       expect(result.current.unreadCount).toBe(4);
     });
 
@@ -323,14 +324,14 @@ describe("useNotifications", () => {
       const { result } = renderHook(() => useNotifications());
       await flushMicrotasks();
 
-      expect(result.current.notifications[0].read).toBe(false);
+      expect(result.current.notifications[0]!.read).toBe(false);
       expect(result.current.unreadCount).toBe(3);
 
       await act(async () => {
         await result.current.markAsRead("notif-1");
       });
 
-      expect(result.current.notifications[0].read).toBe(true);
+      expect(result.current.notifications[0]!.read).toBe(true);
       expect(result.current.unreadCount).toBe(2);
     });
 

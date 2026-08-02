@@ -42,7 +42,7 @@ const mockAccount: PublishAccount = {
   accessToken: "token-abc",
 };
 
-const mockPublish = vi.fn() as vi.Mock<(...args: any[]) => Promise<PublishResult>>;
+const mockPublish = vi.fn<[PublishContent, PublishAccount], Promise<PublishResult>>();
 const mockValidator = vi.fn();
 const mockPrePublish = vi.fn();
 const mockPostPublish = vi.fn();

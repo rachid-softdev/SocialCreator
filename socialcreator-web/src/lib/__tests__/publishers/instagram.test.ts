@@ -72,8 +72,8 @@ describe("publishToInstagram", () => {
       await publishToInstagram(contentWithMedia, mockAccount);
 
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      const firstUrl = mockFetch.mock.calls[0][0] as string;
-      const secondUrl = mockFetch.mock.calls[1][0] as string;
+      const firstUrl = mockFetch.mock.calls[0]![0] as string;
+      const secondUrl = mockFetch.mock.calls[1]![0] as string;
       expect(firstUrl).toContain("/media");
       expect(secondUrl).toContain("/media_publish");
     });
@@ -123,11 +123,11 @@ describe("publishToInstagram", () => {
 
       await publishToInstagram(contentWithMedia, mockAccount);
 
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(body.image_url).toBe("https://example.com/image.jpg");
       expect(body.caption).toContain("#instagram #social");
       // access_token is now passed as Authorization Bearer header
-      const headers = (mockFetch.mock.calls[0][1] as any).headers;
+      const headers = (mockFetch.mock.calls[0]![1] as any).headers;
       expect(headers).toHaveProperty("Authorization", "Bearer ig-token");
     });
 
@@ -139,7 +139,7 @@ describe("publishToInstagram", () => {
 
       await publishToInstagram(contentWithMedia, mockAccount);
 
-      const body = JSON.parse((mockFetch.mock.calls[1][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[1]![1] as RequestInit).body as string);
       expect(body.creation_id).toBe("media_123");
     });
   });
@@ -162,7 +162,7 @@ describe("publishToInstagram", () => {
 
       await publishToInstagram(mockContent, mockAccount);
 
-      const callUrl = mockFetch.mock.calls[0][0] as string;
+      const callUrl = mockFetch.mock.calls[0]![0] as string;
       expect(callUrl).toContain("/feed");
     });
 
@@ -197,7 +197,7 @@ describe("publishToInstagram", () => {
 
       expect(result.success).toBe(true);
       // Caption should still include hashtags
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(body.caption).toContain("#instagram #social");
     });
 
@@ -212,7 +212,7 @@ describe("publishToInstagram", () => {
 
       expect(result.success).toBe(true);
       // Message should still include hashtags
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       // caption is built from `${textContent}\n\n${hashtags}`
       // When textContent is empty, it becomes `\n\n#instagram #social`
       expect(body.message).toContain("#instagram #social");

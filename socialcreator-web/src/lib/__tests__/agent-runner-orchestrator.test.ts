@@ -181,8 +181,8 @@ describe("Agent Runner - execute.ts", () => {
       const results = await executeAgentRun(mockAgent as any, "Test brief");
 
       expect(results).toHaveLength(2);
-      expect(results[0].platform).toBe("INSTAGRAM");
-      expect(results[1].platform).toBe("LINKEDIN");
+      expect(results[0]!.platform).toBe("INSTAGRAM");
+      expect(results[1]!.platform).toBe("LINKEDIN");
       expect(generateContent).toHaveBeenCalledTimes(2);
     });
 

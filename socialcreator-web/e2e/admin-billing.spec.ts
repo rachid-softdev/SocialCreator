@@ -144,7 +144,7 @@ function mockPlan(key: string, overrides: Partial<Plan> = {}): Plan {
       ],
     },
   };
-  const base = plans[key] || plans.PRO;
+  const base = (plans[key] || plans.PRO)!;
   return {
     key,
     name: base.name,

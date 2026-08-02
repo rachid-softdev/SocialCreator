@@ -22,7 +22,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
   const validationResult = createInviteSchema.safeParse(body);
 
   if (!validationResult.success) {
-    return badRequest(validationResult.error.errors[0].message);
+    return badRequest(validationResult.error.errors[0]!.message);
   }
 
   const { team: teamRepo, invitation: invitationRepo } = getRepositories();

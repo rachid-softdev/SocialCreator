@@ -353,15 +353,15 @@ describe("PrismaPublishLogRepository", () => {
 
       // Expect 3 days of stats sorted by date
       expect(result).toHaveLength(3);
-      expect(result[0].date).toBe("2024-06-13");
-      expect(result[0].success).toBe(1);
-      expect(result[0].failed).toBe(0);
-      expect(result[1].date).toBe("2024-06-14");
-      expect(result[1].success).toBe(0);
-      expect(result[1].failed).toBe(1);
-      expect(result[2].date).toBe("2024-06-15");
-      expect(result[2].success).toBe(2);
-      expect(result[2].failed).toBe(0);
+      expect(result[0]!.date).toBe("2024-06-13");
+      expect(result[0]!.success).toBe(1);
+      expect(result[0]!.failed).toBe(0);
+      expect(result[1]!.date).toBe("2024-06-14");
+      expect(result[1]!.success).toBe(0);
+      expect(result[1]!.failed).toBe(1);
+      expect(result[2]!.date).toBe("2024-06-15");
+      expect(result[2]!.success).toBe(2);
+      expect(result[2]!.failed).toBe(0);
     });
 
     it("should return empty stats when no logs found", async () => {
@@ -391,9 +391,9 @@ describe("PrismaPublishLogRepository", () => {
       const result = await repo.getDailyStats("user-1", 1);
 
       expect(result).toHaveLength(1);
-      expect(result[0].date).toBe("2024-06-15");
-      expect(result[0].success).toBe(1);
-      expect(result[0].failed).toBe(1);
+      expect(result[0]!.date).toBe("2024-06-15");
+      expect(result[0]!.success).toBe(1);
+      expect(result[0]!.failed).toBe(1);
     });
 
     it("should handle multiple days with mixed results", async () => {
@@ -412,19 +412,19 @@ describe("PrismaPublishLogRepository", () => {
 
       // Should have 5 days: June 6, 7, 8, 9, 10
       expect(result).toHaveLength(5);
-      expect(result[0].date).toBe("2024-06-06");
-      expect(result[1].date).toBe("2024-06-07");
-      expect(result[2].date).toBe("2024-06-08");
-      expect(result[3].date).toBe("2024-06-09");
-      expect(result[4].date).toBe("2024-06-10");
+      expect(result[0]!.date).toBe("2024-06-06");
+      expect(result[1]!.date).toBe("2024-06-07");
+      expect(result[2]!.date).toBe("2024-06-08");
+      expect(result[3]!.date).toBe("2024-06-09");
+      expect(result[4]!.date).toBe("2024-06-10");
 
       // June 8: 2 success, 1 failed
-      expect(result[2].success).toBe(2);
-      expect(result[2].failed).toBe(1);
+      expect(result[2]!.success).toBe(2);
+      expect(result[2]!.failed).toBe(1);
 
       // June 9: 1 success, 0 failed
-      expect(result[3].success).toBe(1);
-      expect(result[3].failed).toBe(0);
+      expect(result[3]!.success).toBe(1);
+      expect(result[3]!.failed).toBe(0);
     });
 
     it("should reject when prisma throws", async () => {

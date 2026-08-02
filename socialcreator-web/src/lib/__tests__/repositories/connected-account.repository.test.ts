@@ -333,8 +333,8 @@ describe("PrismaConnectedAccountRepository — encryption", () => {
       const result = await repo.findByProfileId("profile-1");
 
       expect(result).toHaveLength(2);
-      expect(result[0].accessToken).toBe("legacy-token-1");
-      expect(result[1].accessToken).toBe("legacy-token-2");
+      expect(result[0]!.accessToken).toBe("legacy-token-1");
+      expect(result[1]!.accessToken).toBe("legacy-token-2");
     });
   });
 
@@ -398,7 +398,7 @@ describe("PrismaConnectedAccountRepository — encryption", () => {
         where: { isActive: true, expiresAt: { lte: futureDate } },
       });
       expect(result).toHaveLength(2);
-      expect(result[0].accessToken).toBe("decrypted-encrypted-access-token");
+      expect(result[0]!.accessToken).toBe("decrypted-encrypted-access-token");
     });
 
     it("should only return active accounts (isActive: true)", async () => {
@@ -472,8 +472,8 @@ describe("PrismaConnectedAccountRepository — encryption", () => {
         "encrypted-access-token",
         "encrypted-refresh-token",
       );
-      expect(result[0].accessToken).toBe("plaintext-access-token");
-      expect(result[0].refreshToken).toBe("plaintext-refresh-token");
+      expect(result[0]!.accessToken).toBe("plaintext-access-token");
+      expect(result[0]!.refreshToken).toBe("plaintext-refresh-token");
     });
   });
 });

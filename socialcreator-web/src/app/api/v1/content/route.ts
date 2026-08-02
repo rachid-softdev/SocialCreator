@@ -26,7 +26,7 @@ export const GET = withApiMiddleware(async ({ userId, request }) => {
   const validation = contentFilterSchema.safeParse(rawFilters);
 
   if (!validation.success) {
-    return badRequest(validation.error.errors[0].message);
+    return badRequest(validation.error.errors[0]!.message);
   }
 
   const { profileId, status, platform, page, pageSize } = validation.data;

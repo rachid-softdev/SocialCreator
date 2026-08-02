@@ -170,8 +170,8 @@ describe("ConflictDetector", () => {
 
       expect(result.hasWarning).toBe(true);
       expect(result.warnings).toHaveLength(2);
-      expect(result.warnings[0].type).toBe("time_conflict");
-      expect(result.warnings[1].type).toBe("daily_cap");
+      expect(result.warnings[0]!.type).toBe("time_conflict");
+      expect(result.warnings[1]!.type).toBe("daily_cap");
     });
 
     it("should use default maxPerDay of 50", async () => {
@@ -189,8 +189,8 @@ describe("ConflictDetector", () => {
 
       const result = await checkScheduleConflicts("profile-1", "X", mockDate);
 
-      expect(result.warnings[0].message).toContain("There is");
-      expect(result.warnings[0].message).toContain("1 other item");
+      expect(result.warnings[0]!.message).toContain("There is");
+      expect(result.warnings[0]!.message).toContain("1 other item");
     });
   });
 });

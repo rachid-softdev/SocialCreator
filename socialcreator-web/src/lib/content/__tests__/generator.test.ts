@@ -66,9 +66,9 @@ describe("Content Generator — generateAndSaveContent", () => {
       const results = await generateAndSaveContent(defaultInput);
 
       expect(results).toHaveLength(1);
-      expect(results[0].textContent).toBe("Hello world");
-      expect(results[0].hashtags).toEqual(["#test"]);
-      expect(results[0].status).toBe("DRAFT");
+      expect(results[0]!.textContent).toBe("Hello world");
+      expect(results[0]!.hashtags).toEqual(["#test"]);
+      expect(results[0]!.status).toBe("DRAFT");
       expect(mockContentRepo.create).toHaveBeenCalledTimes(1);
     });
 
@@ -142,7 +142,7 @@ describe("Content Generator — generateAndSaveContent", () => {
 
       const results = await generateAndSaveContent(defaultInput);
 
-      expect(results[0].textContent.length).toBe(280);
+      expect(results[0]!.textContent.length).toBe(280);
     });
 
     it("should not truncate text under the limit", async () => {
@@ -155,7 +155,7 @@ describe("Content Generator — generateAndSaveContent", () => {
 
       const results = await generateAndSaveContent(defaultInput);
 
-      expect(results[0].textContent).toBe(shortText);
+      expect(results[0]!.textContent).toBe(shortText);
     });
   });
 
@@ -169,8 +169,8 @@ describe("Content Generator — generateAndSaveContent", () => {
 
       const results = await generateAndSaveContent(defaultInput);
 
-      expect(results[0].textContent).toContain("Just a plain text response");
-      expect(results[0].hashtags).toEqual([]);
+      expect(results[0]!.textContent).toContain("Just a plain text response");
+      expect(results[0]!.hashtags).toEqual([]);
     });
 
     it("should extract JSON from markdown code blocks", async () => {
@@ -182,8 +182,8 @@ describe("Content Generator — generateAndSaveContent", () => {
 
       const results = await generateAndSaveContent(defaultInput);
 
-      expect(results[0].textContent).toBe("From code block");
-      expect(results[0].hashtags).toContain("#code");
+      expect(results[0]!.textContent).toBe("From code block");
+      expect(results[0]!.hashtags).toContain("#code");
     });
   });
 });

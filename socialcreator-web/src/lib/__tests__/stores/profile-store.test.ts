@@ -299,7 +299,7 @@ describe("profile-store [integration] — fetchProfiles, CRUD, persist", () => {
 
       await useRealProfileStore.getState().updateProfile("profile-1", { name: "Updated Name" });
 
-      expect(useRealProfileStore.getState().profiles[0].name).toBe("Updated Name");
+      expect(useRealProfileStore.getState().profiles[0]!.name).toBe("Updated Name");
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/profiles/profile-1",
         expect.objectContaining({ method: "PATCH" }),

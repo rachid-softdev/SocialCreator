@@ -99,9 +99,9 @@ describe("PrismaConnectedAccountRepository", () => {
 
       // Verify all 3 accounts returned
       expect(result).toHaveLength(3);
-      expect(result[0].id).toBe("ca-1");
-      expect(result[1].id).toBe("ca-2");
-      expect(result[2].id).toBe("ca-3");
+      expect(result[0]!.id).toBe("ca-1");
+      expect(result[1]!.id).toBe("ca-2");
+      expect(result[2]!.id).toBe("ca-3");
     });
 
     it("should filter by isActive: true", async () => {
@@ -120,7 +120,7 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findExpiringBefore(cutoffDate);
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("ca-active");
+      expect(result[0]!.id).toBe("ca-active");
 
       // Verify isActive: true was passed to Prisma
       expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith({
@@ -183,8 +183,8 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findExpiringBefore(cutoffDate);
 
       // Tokens should be decrypted (the mock strips "encrypted-" prefix)
-      expect(result[0].accessToken).toBe("my-access-token");
-      expect(result[0].refreshToken).toBe("my-refresh-token");
+      expect(result[0]!.accessToken).toBe("my-access-token");
+      expect(result[0]!.refreshToken).toBe("my-refresh-token");
     });
 
     it("should handle account without refreshToken", async () => {
@@ -204,8 +204,8 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findExpiringBefore(cutoffDate);
 
       expect(result).toHaveLength(1);
-      expect(result[0].accessToken).toBe("token");
-      expect(result[0].refreshToken).toBeNull();
+      expect(result[0]!.accessToken).toBe("token");
+      expect(result[0]!.refreshToken).toBeNull();
     });
 
     it("should handle accounts with exact cutoff date match", async () => {
@@ -222,7 +222,7 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findExpiringBefore(cutoffDate);
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("ca-exact");
+      expect(result[0]!.id).toBe("ca-exact");
 
       // Verify lte (less than or equal) is used
       expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith({
@@ -286,8 +286,8 @@ describe("PrismaConnectedAccountRepository", () => {
       const result = await repo.findByProfileId("profile-1");
 
       expect(result).toHaveLength(2);
-      expect(result[0].accessToken).toBe("token-a");
-      expect(result[1].accessToken).toBe("token-b");
+      expect(result[0]!.accessToken).toBe("token-a");
+      expect(result[1]!.accessToken).toBe("token-b");
       expect(prisma.connectedAccount.findMany).toHaveBeenCalledWith({
         where: { profileId: "profile-1" },
         orderBy: { createdAt: "desc" },

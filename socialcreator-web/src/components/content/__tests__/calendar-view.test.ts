@@ -183,8 +183,8 @@ describe("CalendarView — event mapping", () => {
 
     const events = mapApiResponseToEvents(apiResponse);
 
-    expect(events[0].title).toBe("Untitled");
-    expect(events[0].textContent).toBe("");
+    expect(events[0]!.title).toBe("Untitled");
+    expect(events[0]!.textContent).toBe("");
   });
 
   it("should use 'Untitled' when textContent is empty", () => {
@@ -200,8 +200,8 @@ describe("CalendarView — event mapping", () => {
 
     const events = mapApiResponseToEvents(apiResponse);
 
-    expect(events[0].title).toBe("Untitled");
-    expect(events[0].textContent).toBe("");
+    expect(events[0]!.title).toBe("Untitled");
+    expect(events[0]!.textContent).toBe("");
   });
 
   it("should truncate long textContent to 60 characters", () => {
@@ -218,8 +218,8 @@ describe("CalendarView — event mapping", () => {
 
     const events = mapApiResponseToEvents(apiResponse);
 
-    expect(events[0].title.length).toBeLessThanOrEqual(63); // 60 + "..."
-    expect(events[0].title).toMatch(/\.\.\.$/);
+    expect(events[0]!.title.length).toBeLessThanOrEqual(63); // 60 + "..."
+    expect(events[0]!.title).toMatch(/\.\.\.$/);
   });
 
   it("should handle empty API response array", () => {
@@ -366,7 +366,7 @@ describe("CalendarView — calendar grid calculations", () => {
     expect(days.length).toBeLessThanOrEqual(42); // max 6 rows × 7 cols
 
     // Verify first day is a Sunday (startOfWeek default)
-    expect(days[0].getDay()).toBe(0); // Sunday
+    expect(days[0]!.getDay()).toBe(0); // Sunday
   });
 
   it("should always start on Sunday and end on Saturday", () => {
@@ -378,8 +378,8 @@ describe("CalendarView — calendar grid calculations", () => {
 
     for (const dateStr of testDates) {
       const days = getCalendarDays(new Date(dateStr));
-      expect(days[0].getDay()).toBe(0); // Sunday
-      expect(days[days.length - 1].getDay()).toBe(6); // Saturday
+      expect(days[0]!.getDay()).toBe(0); // Sunday
+      expect(days[days.length - 1]!.getDay()).toBe(6); // Saturday
     }
   });
 
@@ -388,15 +388,15 @@ describe("CalendarView — calendar grid calculations", () => {
     const days = getCalendarDays(new Date("2025-01-15"));
 
     // Jan 1, 2025 = Wednesday. startOfWeek goes back to Sunday = Dec 29, 2024
-    expect(days[0].getDate()).toBe(29);
-    expect(days[0].getMonth()).toBe(11); // December (0-indexed)
-    expect(days[0].getFullYear()).toBe(2024);
+    expect(days[0]!.getDate()).toBe(29);
+    expect(days[0]!.getMonth()).toBe(11); // December (0-indexed)
+    expect(days[0]!.getFullYear()).toBe(2024);
 
     // The last day should be Feb 1 (Saturday)
     const lastDay = days[days.length - 1];
-    expect(lastDay.getDate()).toBe(1);
-    expect(lastDay.getMonth()).toBe(1); // February (0-indexed)
-    expect(lastDay.getFullYear()).toBe(2025);
+    expect(lastDay!.getDate()).toBe(1);
+    expect(lastDay!.getMonth()).toBe(1); // February (0-indexed)
+    expect(lastDay!.getFullYear()).toBe(2025);
   });
 
   it("should return correct number of days for a 5-week month", () => {
@@ -643,7 +643,7 @@ describe("CalendarView — today's schedule list", () => {
     const todayEvents = events.filter((e) => isToday(new Date(e.scheduledAt)));
 
     expect(todayEvents).toHaveLength(1);
-    expect(todayEvents[0].id).toBe("c-1");
+    expect(todayEvents[0]!.id).toBe("c-1");
   });
 
   it("should sort today's events by time ascending", () => {
@@ -692,9 +692,9 @@ describe("CalendarView — today's schedule list", () => {
       .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
     expect(todayEvents).toHaveLength(3);
-    expect(todayEvents[0].id).toBe("c-1"); // Morning first
-    expect(todayEvents[1].id).toBe("c-2"); // Afternoon second
-    expect(todayEvents[2].id).toBe("c-3"); // Evening third
+    expect(todayEvents[0]!.id).toBe("c-1"); // Morning first
+    expect(todayEvents[1]!.id).toBe("c-2"); // Afternoon second
+    expect(todayEvents[2]!.id).toBe("c-3"); // Evening third
   });
 
   it("should return empty array when no events are scheduled for today", () => {

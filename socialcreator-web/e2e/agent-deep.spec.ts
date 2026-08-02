@@ -213,7 +213,7 @@ test.describe("Agent Deep", () => {
       );
       await expect(errorMsg).toBeVisible({ timeout: 5000 });
       const errorText = await errorMsg.textContent().catch(() => "");
-      expect(errorText.length).toBeGreaterThan(0);
+      expect(errorText!.length).toBeGreaterThan(0);
     });
 
     test("13: should show validation error when maxPerDay is 0 or negative", async ({ page }) => {
@@ -253,7 +253,7 @@ test.describe("Agent Deep", () => {
       const hasError = await errorMsg.isVisible({ timeout: 5000 }).catch(() => false);
       if (hasError) {
         const errorText = await errorMsg.textContent().catch(() => "");
-        expect(errorText.length).toBeGreaterThan(0);
+        expect(errorText!.length).toBeGreaterThan(0);
       } else {
         // If no client-side validation, the form may submit — verify the page still shows the form (not redirected)
         const stillOnForm = await page

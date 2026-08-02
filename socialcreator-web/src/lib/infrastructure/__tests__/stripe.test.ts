@@ -20,8 +20,8 @@
  * - "@/lib/retry" — mocked withRetry passes through immediately
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock Stripe SDK (use vi.hoisted to avoid hoisting issues) ──
 const { mockStripeInstance, mockStripeLogger } = vi.hoisted(() => {
@@ -70,13 +70,8 @@ vi.mock("@/lib/retry", () => ({
   withRetry: vi.fn((fn: () => Promise<unknown>) => fn()),
 }));
 
-import { prisma } from "@/lib/prisma";
-import { getLogger } from "@/lib/observability";
-import { withRetry } from "@/lib/retry";
-
 // Need to reimport Stripe default after mock
 import Stripe from "stripe";
-
 import {
   clearPriceCache,
   createBillingPortal,
@@ -91,6 +86,8 @@ import {
   PLANS,
   STRIPE_TIMEOUT_MS,
 } from "@/lib/infrastructure/stripe";
+import { prisma } from "@/lib/prisma";
+import { withRetry } from "@/lib/retry";
 
 describe("Stripe Integration Service", () => {
   // Save original env
@@ -252,9 +249,7 @@ describe("Stripe Integration Service", () => {
 
       // Use a name that doesn't contain "starter", "pro", or "team" as substring
       mockStripeInstance.prices.list.mockResolvedValue({
-        data: [
-          { id: "p_enterprise", unit_amount: 3000, product: { name: "Enterprise Plan" } },
-        ],
+        data: [{ id: "p_enterprise", unit_amount: 3000, product: { name: "Enterprise Plan" } }],
       });
 
       const prices = await fetchActivePrices();
@@ -269,9 +264,7 @@ describe("Stripe Integration Service", () => {
       vi.mocked(withRetry).mockImplementationOnce((fn) => fn());
 
       mockStripeInstance.prices.list.mockResolvedValue({
-        data: [
-          { id: "p_custom", unit_amount: 4900, product: "price_basic" },
-        ],
+        data: [{ id: "p_custom", unit_amount: 4900, product: "price_basic" }],
       });
 
       // Product as string ID won't match any plan name — falls back to static
@@ -292,9 +285,7 @@ describe("Stripe Integration Service", () => {
       clearPriceCache();
 
       mockStripeInstance.prices.list.mockResolvedValue({
-        data: [
-          { id: "p_starter", unit_amount: 5000, product: { name: "Starter" } },
-        ],
+        data: [{ id: "p_starter", unit_amount: 5000, product: { name: "Starter" } }],
       });
 
       await fetchActivePrices();
@@ -311,9 +302,7 @@ describe("Stripe Integration Service", () => {
       vi.mocked(withRetry).mockImplementationOnce((fn) => fn());
 
       mockStripeInstance.prices.list.mockResolvedValue({
-        data: [
-          { id: "p_starter", unit_amount: 4900, product: { name: "Starter Plan" } },
-        ],
+        data: [{ id: "p_starter", unit_amount: 4900, product: { name: "Starter Plan" } }],
       });
 
       const price = await getPlanPrice("starter");
@@ -335,9 +324,7 @@ describe("Stripe Integration Service", () => {
       vi.mocked(withRetry).mockImplementationOnce((fn) => fn());
 
       mockStripeInstance.prices.list.mockResolvedValue({
-        data: [
-          { id: "p_starter", unit_amount: 4900, product: { name: "Starter Plan" } },
-        ],
+        data: [{ id: "p_starter", unit_amount: 4900, product: { name: "Starter Plan" } }],
       });
 
       const data = await getPlanDataWithDynamicPrice("starter");
@@ -375,9 +362,9 @@ describe("Stripe Integration Service", () => {
     };
 
     it("throws for free plan", async () => {
-      await expect(
-        createCheckoutSession("user-1", "test@test.com", "free"),
-      ).rejects.toThrow("Free plan does not require checkout");
+      await expect(createCheckoutSession("user-1", "test@test.com", "free")).rejects.toThrow(
+        "Free plan does not require checkout",
+      );
     });
 
     it("creates a checkout session for a paid plan", async () => {
@@ -447,13 +434,11 @@ describe("Stripe Integration Service", () => {
     });
 
     it("handles Stripe API error gracefully", async () => {
-      mockStripeInstance.checkout.sessions.create.mockRejectedValue(
-        new Error("Stripe API error"),
-      );
+      mockStripeInstance.checkout.sessions.create.mockRejectedValue(new Error("Stripe API error"));
 
-      await expect(
-        createCheckoutSession("user-1", "test@test.com", "starter"),
-      ).rejects.toThrow("Stripe API error");
+      await expect(createCheckoutSession("user-1", "test@test.com", "starter")).rejects.toThrow(
+        "Stripe API error",
+      );
     });
   });
 
@@ -657,9 +642,7 @@ describe("Stripe Integration Service", () => {
         stripeCustomerId: "cus_123",
       });
 
-      mockStripeInstance.subscriptions.retrieve.mockRejectedValue(
-        new Error("Stripe is down"),
-      );
+      mockStripeInstance.subscriptions.retrieve.mockRejectedValue(new Error("Stripe is down"));
 
       const details = await getPlanDetails("user-1");
 
@@ -694,7 +677,7 @@ describe("Stripe Integration Service", () => {
       const invoices = await getInvoices("user-1");
 
       expect(invoices).toHaveLength(2);
-      expect(invoices[0].id).toBe("in_1");
+      expect(invoices[0]!.id).toBe("in_1");
     });
 
     it("returns empty array when user has no stripe customer ID", async () => {

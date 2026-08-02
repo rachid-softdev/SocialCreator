@@ -11,7 +11,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type LogFn = (msg: string, ...args: any[]) => void;
+type LogFn = {
+  (msg: string, ...args: any[]): void;
+  (obj: Record<string, unknown>, msg: string, ...args: any[]): void;
+};
 
 interface Logger {
   level: string;

@@ -3,13 +3,13 @@
  * Covers: Teams list, team detail, member management, edge cases
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function mockSession(page, role = "ADMIN") {
+async function mockSession(page: Page, role = "ADMIN") {
   await page.route("**/api/auth/session", async (route) => {
     if (role === null) {
       await route.fulfill({ status: 200, json: {} });
@@ -30,7 +30,7 @@ async function mockSession(page, role = "ADMIN") {
   });
 }
 
-async function skipIfRedirected(page) {
+async function skipIfRedirected(page: Page) {
   if (new URL(page.url()).pathname === "/login") {
     test.skip();
     return true;
@@ -38,7 +38,7 @@ async function skipIfRedirected(page) {
   return false;
 }
 
-function mockTeam(id, index, overrides = {}) {
+function mockTeam(id: string, index: number, overrides = {}) {
   return {
     id,
     name: `Team ${index}`,
@@ -58,7 +58,7 @@ function mockTeam(id, index, overrides = {}) {
   };
 }
 
-function mockMember(id, index, overrides = {}) {
+function mockMember(id: string, index: number, overrides = {}) {
   const roles = ["ADMIN", "EDITOR", "VIEWER"];
   return {
     id,

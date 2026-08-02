@@ -69,8 +69,6 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-import { computeContentHash } from "@socialcreator/utils";
-
 // ── Helper ───────────────────────────────────────────────────
 
 function makePayload(overrides: Partial<PublishPayload> = {}): PublishPayload {

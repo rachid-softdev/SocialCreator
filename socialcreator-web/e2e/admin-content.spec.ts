@@ -11,12 +11,12 @@
  * Follows patterns established in admin.spec.ts, admin-components.spec.ts, and admin-dashboard-deep.spec.ts.
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Skip the current test if the page redirected to /login (not authenticated). */
-async function skipIfRedirected(page) {
+async function skipIfRedirected(page: Page) {
   const currentUrl = new URL(page.url());
   if (currentUrl.pathname === "/login") {
     test.skip();
@@ -26,7 +26,7 @@ async function skipIfRedirected(page) {
 }
 
 /** Mock /api/auth/session to return ADMIN role. */
-async function mockSession(page, role = "ADMIN") {
+async function mockSession(page: Page, role = "ADMIN") {
   await page.route("**/api/auth/session", async (route) => {
     if (role === null) {
       await route.fulfill({ status: 200, json: {} });
@@ -48,7 +48,7 @@ async function mockSession(page, role = "ADMIN") {
 }
 
 /** Build a mock content item with sensible defaults. */
-function mockContent(id, index, overrides = {}) {
+function mockContent(id: string, index: number, overrides = {}) {
   return {
     id,
     type: "SOCIAL_POST",
@@ -66,7 +66,10 @@ function mockContent(id, index, overrides = {}) {
 }
 
 /** Build the mock response body for the admin/content API. */
-function buildContentResponse(data, pagination = { total: 0, totalPages: 0, page: 1, limit: 20 }) {
+function buildContentResponse(
+  data: unknown,
+  pagination = { total: 0, totalPages: 0, page: 1, limit: 20 },
+) {
   return { data, pagination };
 }
 
@@ -117,7 +120,7 @@ test.describe("Admin Content — Page Display", () => {
 
     // Each prompt should be visible
     for (let i = 0; i < items.length; i++) {
-      await expect(page.getByText(items[i].prompt).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(items[i]!.prompt).first()).toBeVisible({ timeout: 5000 });
     }
   });
 

@@ -989,11 +989,11 @@ test.describe("Admin Responsive — Advanced", () => {
         // Verify it's a shade of red
         const rgbMatch = alertBg.match(/rgb\((\d+)/);
         if (rgbMatch) {
-          const r = parseInt(rgbMatch[1], 10);
+          const r = parseInt(rgbMatch[1]!, 10);
           const gbMatch = alertBg.match(/rgb\(\d+,\s*(\d+),\s*(\d+)/);
           if (gbMatch) {
-            const g = parseInt(gbMatch[1], 10);
-            const b = parseInt(gbMatch[2], 10);
+            const g = parseInt(gbMatch[1]!, 10);
+            const b = parseInt(gbMatch[2]!, 10);
             // Red-dominant color
             expect(r).toBeGreaterThan(g);
             expect(r).toBeGreaterThan(b);
@@ -1064,9 +1064,9 @@ test.describe("Admin Responsive — Advanced", () => {
               const sheets = document.styleSheets;
               for (let i = 0; i < sheets.length; i++) {
                 try {
-                  const rules = sheets[i].cssRules || sheets[i].rules;
+                  const rules = sheets[i]!.cssRules || sheets[i]!.rules;
                   for (let j = 0; j < rules.length; j++) {
-                    const cssText = rules[j].cssText || "";
+                    const cssText = rules[j]!.cssText || "";
                     if (
                       cssText.includes("prefers-reduced-motion") &&
                       cssText.includes("animation")
@@ -1096,9 +1096,9 @@ test.describe("Admin Responsive — Advanced", () => {
           const sheets = document.styleSheets;
           for (let i = 0; i < sheets.length; i++) {
             try {
-              const rules = sheets[i].cssRules || sheets[i].rules;
+              const rules = sheets[i]!.cssRules || sheets[i]!.rules;
               for (let j = 0; j < rules.length; j++) {
-                const cssText = rules[j].cssText || "";
+                const cssText = rules[j]!.cssText || "";
                 if (cssText.includes("prefers-reduced-motion")) {
                   return true;
                 }

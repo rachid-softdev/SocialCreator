@@ -108,7 +108,7 @@ describe("PrismaTeamRepository", () => {
       const result = await repo.findByOwnerId("user-1");
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe("team-1");
+      expect(result[0]!.id).toBe("team-1");
       expect(prisma.team.findMany).toHaveBeenCalledWith({
         where: { ownerId: "user-1" },
         orderBy: { createdAt: "desc" },

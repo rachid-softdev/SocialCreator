@@ -35,7 +35,7 @@ export default async function AnalyticsPage() {
   const [publishLogs, recentPublishes] = await Promise.all([
     prisma.publishLog.findMany({
       where: {
-        profileId: firstProfile.id,
+        profileId: firstProfile!.id,
         publishedAt: {
           gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
@@ -45,7 +45,7 @@ export default async function AnalyticsPage() {
     }),
     prisma.generatedContent.findMany({
       where: {
-        profileId: firstProfile.id,
+        profileId: firstProfile!.id,
         status: { in: ["PUBLISHED", "FAILED"] },
       },
       orderBy: { publishedAt: "desc" },
@@ -56,12 +56,12 @@ export default async function AnalyticsPage() {
     }),
   ]);
 
-  const capStatus = await getProfileCapStatus(firstProfile.id);
+  const capStatus = await getProfileCapStatus(firstProfile!.id);
 
   return (
     <AnalyticsDashboard
       profiles={profiles}
-      initialProfileId={firstProfile.id}
+      initialProfileId={firstProfile!.id}
       initialPublishLogs={publishLogs}
       initialRecentContent={recentPublishes.map((c) => ({
         ...c,

@@ -135,9 +135,9 @@ describe("Video Pipeline service", () => {
       const result = await identifySegments("Long transcript with multiple highlights");
 
       expect(result).toHaveLength(3);
-      expect(result[0].start).toBe(0);
-      expect(result[1].start).toBe(30);
-      expect(result[2].start).toBe(60);
+      expect(result[0]!.start).toBe(0);
+      expect(result[1]!.start).toBe(30);
+      expect(result[2]!.start).toBe(60);
     });
 
     it("should throw when LLM returns invalid segment (empty reason)", async () => {
@@ -223,15 +223,15 @@ describe("Video Pipeline service", () => {
       expect(result.contents).toHaveLength(2); // 1 segment × 2 platforms
 
       // Verify clip result
-      expect(result.clips[0].segment).toEqual(segments[0]);
-      expect(result.clips[0].assetId).toBe("clip-1");
-      expect(result.clips[0].playbackId).toBe("pb-1");
-      expect(result.clips[0].streamUrl).toContain("stream.mux.com");
-      expect(result.clips[0].thumbnailUrl).toContain("image.mux.com");
+      expect(result.clips[0]!.segment).toEqual(segments[0]);
+      expect(result.clips[0]!.assetId).toBe("clip-1");
+      expect(result.clips[0]!.playbackId).toBe("pb-1");
+      expect(result.clips[0]!.streamUrl).toContain("stream.mux.com");
+      expect(result.clips[0]!.thumbnailUrl).toContain("image.mux.com");
 
       // Verify content results
-      expect(result.contents[0].platform).toBe("INSTAGRAM");
-      expect(result.contents[0].textContent).toBe("Generated post");
+      expect(result.contents[0]!.platform).toBe("INSTAGRAM");
+      expect(result.contents[0]!.textContent).toBe("Generated post");
 
       // Verify pipeline steps
       expect(mockVideoAssetUpdate).toHaveBeenCalledWith(
@@ -331,8 +331,8 @@ describe("Video Pipeline service", () => {
       ] as any);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0].platform).toBe("INSTAGRAM");
-      expect(result.contents[1].platform).toBe("TIKTOK");
+      expect(result.contents[0]!.platform).toBe("INSTAGRAM");
+      expect(result.contents[1]!.platform).toBe("TIKTOK");
     });
 
     it("should persist generated content to the database", async () => {
@@ -401,8 +401,8 @@ describe("Video Pipeline service", () => {
 
       const result = await runVideoPipeline("video-1", defaultProfileId, ["X"] as any);
 
-      expect(result.clips[0].streamUrl).toBe("https://stream.mux.com/pb-a.m3u8");
-      expect(result.clips[0].thumbnailUrl).toBe("https://image.mux.com/pb-a/thumbnail.jpg");
+      expect(result.clips[0]!.streamUrl).toBe("https://stream.mux.com/pb-a.m3u8");
+      expect(result.clips[0]!.thumbnailUrl).toBe("https://image.mux.com/pb-a/thumbnail.jpg");
     });
 
     it("should handle empty target platforms array", async () => {

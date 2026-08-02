@@ -67,7 +67,7 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(mockKeyboardShortcuts.mock.calls[0][0]).toMatchObject({ open: false });
+    expect(mockKeyboardShortcuts.mock.calls[0]![0]!).toMatchObject({ open: false });
   });
 
   it("attaches keydown listener on mount", () => {
@@ -115,7 +115,7 @@ describe("AppShell", () => {
     });
 
     const lastCall = mockKeyboardShortcuts.mock.calls.length - 1;
-    expect(mockKeyboardShortcuts.mock.calls[lastCall][0]).toMatchObject({ open: true });
+    expect(mockKeyboardShortcuts.mock.calls[lastCall]![0]!).toMatchObject({ open: true });
   });
 
   it("opens keyboard shortcuts when Cmd+/ is pressed", () => {
@@ -132,7 +132,7 @@ describe("AppShell", () => {
     });
 
     const lastCall = mockKeyboardShortcuts.mock.calls.length - 1;
-    expect(mockKeyboardShortcuts.mock.calls[lastCall][0]).toMatchObject({ open: true });
+    expect(mockKeyboardShortcuts.mock.calls[lastCall]![0]!).toMatchObject({ open: true });
   });
 
   it("toggles keyboard shortcuts on repeated ? presses", () => {
@@ -148,13 +148,15 @@ describe("AppShell", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }));
     });
     const callsAfterFirst = mockKeyboardShortcuts.mock.calls.length;
-    expect(mockKeyboardShortcuts.mock.calls[callsAfterFirst - 1][0]).toMatchObject({ open: true });
+    expect(mockKeyboardShortcuts.mock.calls[callsAfterFirst - 1]![0]!).toMatchObject({
+      open: true,
+    });
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }));
     });
     expect(
-      mockKeyboardShortcuts.mock.calls[mockKeyboardShortcuts.mock.calls.length - 1][0],
+      mockKeyboardShortcuts.mock.calls[mockKeyboardShortcuts.mock.calls.length - 1]![0]!,
     ).toMatchObject({ open: false });
   });
 

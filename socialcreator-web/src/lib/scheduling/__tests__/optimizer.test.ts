@@ -173,7 +173,7 @@ describe("Scheduling Optimizer", () => {
       const result = await analyzeProfilePerformance(profileId);
 
       expect(result.schedules).toHaveLength(1);
-      expect(result.schedules[0].platform).toBe("INSTAGRAM");
+      expect(result.schedules[0]!.platform).toBe("INSTAGRAM");
     });
 
     it("should return default optimalTimes for platforms with < 5 entries", async () => {
@@ -196,9 +196,9 @@ describe("Scheduling Optimizer", () => {
       expect(linkedin).toBeDefined();
       expect(linkedin!.optimalTimes).toHaveLength(3);
       // First default for LINKEDIN: Tuesday at 8AM
-      expect(linkedin!.optimalTimes[0].hour).toBe(8);
-      expect(linkedin!.optimalTimes[0].dayOfWeek).toBe(2);
-      expect(linkedin!.optimalTimes[0].score).toBe(90);
+      expect(linkedin!.optimalTimes[0]!.hour).toBe(8);
+      expect(linkedin!.optimalTimes[0]!.dayOfWeek).toBe(2);
+      expect(linkedin!.optimalTimes[0]!.score).toBe(90);
     });
   });
 

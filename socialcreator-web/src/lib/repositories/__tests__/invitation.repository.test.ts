@@ -200,7 +200,7 @@ describe("PrismaInvitationRepository", () => {
       const result = await repo.findPendingByEmail("pending@example.com");
 
       expect(result).toHaveLength(1);
-      expect(result[0].status).toBe("PENDING");
+      expect(result[0]!.status).toBe("PENDING");
       expect((result[0] as any).team.name).toBe("My Team");
       expect((result[0] as any).invitedBy.name).toBe("Inviter");
       expect(prisma.invitation.findMany).toHaveBeenCalledWith({
@@ -324,7 +324,7 @@ describe("PrismaInvitationRepository", () => {
 
       expect(result.status).toBe("ACCEPTED");
       expect(result.acceptedAt).toBeInstanceOf(Date);
-      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0]![0];
       expect(callArgs.where).toEqual({ id: "inv-1" });
       expect(callArgs.data.status).toBe("ACCEPTED");
       expect(callArgs.data.acceptedAt).toBeInstanceOf(Date);
@@ -346,7 +346,7 @@ describe("PrismaInvitationRepository", () => {
 
       expect(result.status).toBe("REJECTED");
       expect(result.rejectedAt).toBeInstanceOf(Date);
-      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0]![0];
       expect(callArgs.where).toEqual({ id: "inv-1" });
       expect(callArgs.data.status).toBe("REJECTED");
       expect(callArgs.data.rejectedAt).toBeInstanceOf(Date);
@@ -364,7 +364,7 @@ describe("PrismaInvitationRepository", () => {
 
       await repo.updateStatus("inv-1", "PENDING");
 
-      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.invitation.update).mock.calls[0]![0];
       expect(callArgs.data.status).toBe("PENDING");
       expect(callArgs.data.acceptedAt).toBeUndefined();
       expect(callArgs.data.rejectedAt).toBeUndefined();

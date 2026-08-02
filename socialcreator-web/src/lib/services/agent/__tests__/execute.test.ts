@@ -73,10 +73,10 @@ describe("executeAgentRun", () => {
     const results = await executeAgentRun(mockAgent as any, "Test brief");
 
     expect(results).toHaveLength(2);
-    expect(results[0].platform).toBe("INSTAGRAM");
-    expect(results[1].platform).toBe("LINKEDIN");
-    expect(results[0].textContent).toBe("Generated content");
-    expect(results[1].hashtags).toEqual(["#test"]);
+    expect(results[0]!.platform).toBe("INSTAGRAM");
+    expect(results[1]!.platform).toBe("LINKEDIN");
+    expect(results[0]!.textContent).toBe("Generated content");
+    expect(results[1]!.hashtags).toEqual(["#test"]);
     expect(generateContent).toHaveBeenCalledTimes(2);
   });
 
@@ -138,7 +138,7 @@ describe("executeAgentRun", () => {
     const results = await executeAgentRun(singlePlatformAgent as any, "Brief");
 
     expect(results).toHaveLength(1);
-    expect(results[0].platform).toBe("X");
+    expect(results[0]!.platform).toBe("X");
     expect(generateContent).toHaveBeenCalledTimes(1);
   });
 
@@ -152,7 +152,7 @@ describe("executeAgentRun", () => {
     const { executeAgentRun } = await import("../execute");
     const results = await executeAgentRun(mockAgent as any, "Brief");
 
-    expect(results[0].hook).toBe("Amazing statistic!");
+    expect(results[0]!.hook).toBe("Amazing statistic!");
   });
 
   it("should handle empty hashtags array from LLM", async () => {
@@ -164,7 +164,7 @@ describe("executeAgentRun", () => {
     const { executeAgentRun } = await import("../execute");
     const results = await executeAgentRun(mockAgent as any, "Brief");
 
-    expect(results[0].hashtags).toEqual([]);
+    expect(results[0]!.hashtags).toEqual([]);
   });
 
   it("should return empty results when agent has 0 platforms", async () => {
@@ -204,8 +204,8 @@ describe("executeAgentRun", () => {
     const results = await executeAgentRun(allPlatformsAgent as any, "Brief");
 
     expect(results).toHaveLength(8);
-    expect(results[0].platform).toBe("INSTAGRAM");
-    expect(results[7].platform).toBe("PINTEREST");
+    expect(results[0]!.platform).toBe("INSTAGRAM");
+    expect(results[7]!.platform).toBe("PINTEREST");
     expect(generateContent).toHaveBeenCalledTimes(8);
   });
 
@@ -220,8 +220,8 @@ describe("executeAgentRun", () => {
     const results = await executeAgentRun(mockAgent as any, "Brief");
 
     expect(results).toHaveLength(2);
-    expect(results[0].textContent).toBe("");
-    expect(results[0].hashtags).toEqual([]);
+    expect(results[0]!.textContent).toBe("");
+    expect(results[0]!.hashtags).toEqual([]);
   });
 
   it("should handle very long brandVoice string", async () => {

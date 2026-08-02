@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const validation = approveContentSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const content = await getContentOr404(id, session.user.id);

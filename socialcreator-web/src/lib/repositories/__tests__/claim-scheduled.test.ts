@@ -54,8 +54,8 @@ describe("PrismaContentRepository — claimScheduled", () => {
     const result = await repo.claimScheduled(now);
 
     expect(result).toHaveLength(2);
-    expect(result[0].id).toBe("c-1");
-    expect(result[1].id).toBe("c-2");
+    expect(result[0]!.id).toBe("c-1");
+    expect(result[1]!.id).toBe("c-2");
   });
 
   it("should query with status SCHEDULED and scheduledPublishAt <= before date", async () => {
@@ -117,7 +117,7 @@ describe("PrismaContentRepository — claimScheduled", () => {
 
     const result = await repo.claimScheduled(before);
 
-    expect(result[0].status).toBe("PUBLISHING");
+    expect(result[0]!.status).toBe("PUBLISHING");
   });
 
   it("should not claim content that is not SCHEDULED", async () => {
@@ -151,7 +151,7 @@ describe("PrismaContentRepository — claimScheduled", () => {
     const result = await repo.claimScheduled(exactTime);
 
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("c-exact");
+    expect(result[0]!.id).toBe("c-exact");
   });
 
   it("should claim multiple items in a batch", async () => {

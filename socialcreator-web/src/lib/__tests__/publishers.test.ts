@@ -92,7 +92,7 @@ describe("Publisher factory", () => {
       expect(result.success).toBe(true);
       expect(result.postId).toBe("fb_result_456");
       // verify the Facebook endpoint was called
-      const callUrl = mockFetch.mock.calls[0][0] as string;
+      const callUrl = mockFetch.mock.calls[0]![0] as string;
       expect(callUrl).toContain("graph.facebook.com");
     });
 
@@ -171,9 +171,9 @@ describe("Publisher factory", () => {
         { accountId: "user1", accessToken: "tok1" },
       );
 
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       // access_token is now passed as Authorization Bearer header
-      const headers = (mockFetch.mock.calls[0][1] as any).headers;
+      const headers = (mockFetch.mock.calls[0]![1] as any).headers;
       expect(headers).toHaveProperty("Authorization", "Bearer tok1");
       expect(body.message).toBe("Hello");
     });

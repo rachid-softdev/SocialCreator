@@ -76,7 +76,7 @@ describe("publishToThreads", () => {
     const longText = "x".repeat(600);
     await publishToThreads({ ...mockContent, textContent: longText }, mockAccount);
 
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const body = JSON.parse(callArg.body as string);
     expect(body.message.length).toBe(500);
     expect(body.message).toBe("x".repeat(500));
@@ -108,7 +108,7 @@ describe("publishToThreads", () => {
 
     await publishToThreads(mockContent, mockAccount);
 
-    const callUrl = mockFetch.mock.calls[0][0] as string;
+    const callUrl = mockFetch.mock.calls[0]![0] as string;
     expect(callUrl).toContain("graph.facebook.com");
     expect(callUrl).toContain("/threads");
   });
@@ -119,7 +119,7 @@ describe("publishToThreads", () => {
 
     await publishToThreads(mockContent, mockAccount);
 
-    const headers = (mockFetch.mock.calls[0][1] as any).headers;
+    const headers = (mockFetch.mock.calls[0]![1] as any).headers;
     expect(headers).toHaveProperty("Authorization", "Bearer threads-token");
   });
 });

@@ -172,7 +172,7 @@ describe("publishToTikTok", () => {
       expect(result.postId).toBe("tiktok_text_789");
 
       // Should set post_mode to TEXT_ONLY
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(body.post_mode).toBe("TEXT_ONLY");
     });
 
@@ -435,7 +435,7 @@ describe("publishToTikTok", () => {
 
       expect(result.success).toBe(true);
       // Should use default title "TikTok Post" for empty text
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(body.title).toBe("TikTok Post");
     });
 
@@ -481,7 +481,7 @@ describe("publishToTikTok", () => {
 
       await publishToTikTok(mockContent, mockAccount);
 
-      const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const body = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(body.description).toContain("#test");
     });
   });

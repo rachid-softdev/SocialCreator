@@ -126,7 +126,7 @@ test.describe("Agent Edit Page", () => {
 
       // Verify the request body had the updated name
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody as string);
+      const parsed = JSON.parse(patchBody!);
       expect(parsed.name).toBe("Updated Agent Name");
     });
 
@@ -189,7 +189,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody as string);
+      const parsed = JSON.parse(patchBody!);
       expect(parsed.type).toBe("VIDEO_CLIP");
     });
 
@@ -458,7 +458,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody as string);
+      const parsed = JSON.parse(patchBody!);
       expect(parsed.name).toBe(longName);
     });
 
@@ -500,7 +500,7 @@ test.describe("Agent Edit Page", () => {
       await page.waitForURL(/\/profiles\/.*\/agents$/, { timeout: 10000 });
 
       expect(patchBody).not.toBeNull();
-      const parsed = JSON.parse(patchBody as string);
+      const parsed = JSON.parse(patchBody!);
       expect(parsed.name).toBe(specialName);
     });
 

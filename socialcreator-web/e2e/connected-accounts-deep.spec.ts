@@ -234,7 +234,7 @@ test.describe("Connected Accounts — Deep", () => {
             deleteApiCalled = true;
             const url = route.request().url();
             const match = url.match(/\/connected-accounts\/([^/?]+)/);
-            if (match) capturedAccountId = match[1];
+            if (match) capturedAccountId = match[1]!;
             await route.fulfill({
               status: 200,
               contentType: "application/json",

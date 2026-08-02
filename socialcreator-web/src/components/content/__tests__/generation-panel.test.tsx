@@ -176,7 +176,7 @@ describe("GenerationPanel", () => {
       expect(screen.getAllByRole("combobox")[0]).toBeInTheDocument();
     });
 
-    const platformSelect = screen.getAllByRole("combobox")[1]; // Second combobox is platform
+    const platformSelect = screen.getAllByRole("combobox")[1]!; // Second combobox is platform
     await user.selectOptions(platformSelect, "X");
 
     const textarea = screen.getByPlaceholderText("Describe what you want to generate...");
@@ -228,7 +228,7 @@ describe("GenerationPanel", () => {
       expect(screen.getAllByRole("combobox")[0]).toBeInTheDocument();
     });
 
-    const platformSelect = screen.getAllByRole("combobox")[1]; // Second combobox is platform
+    const platformSelect = screen.getAllByRole("combobox")[1]!; // Second combobox is platform
     await user.selectOptions(platformSelect, "X");
 
     const textarea = screen.getByPlaceholderText("Describe what you want to generate...");
@@ -262,7 +262,7 @@ describe("GenerationPanel", () => {
       expect(screen.getAllByRole("combobox")[0]).toBeInTheDocument();
     });
 
-    const platformSelect = screen.getAllByRole("combobox")[1]; // Second combobox is platform
+    const platformSelect = screen.getAllByRole("combobox")[1]!; // Second combobox is platform
     await user.selectOptions(platformSelect, "X");
 
     const textarea = screen.getByPlaceholderText("Describe what you want to generate...");

@@ -96,7 +96,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
   const validationResult = createAgentSchema.safeParse(body);
 
   if (!validationResult.success) {
-    return badRequest(validationResult.error.errors[0].message);
+    return badRequest(validationResult.error.errors[0]!.message);
   }
 
   const { profileId, name, type, platforms, scheduleCron, autoPublish, maxPerDay, config } =

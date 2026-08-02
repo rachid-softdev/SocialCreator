@@ -35,14 +35,14 @@ export function ContentEditor({ content, onSave, onCancel, isSaving }: ContentEd
     hashtags.some((tag, i) => tag !== initialHashtags.current[i]);
 
   useEffect(() => {
-    if (hasUnsavedChanges) {
-      const handler = (e: BeforeUnloadEvent) => {
-        e.preventDefault();
-        e.returnValue = "";
-      };
-      window.addEventListener("beforeunload", handler);
-      return () => window.removeEventListener("beforeunload", handler);
-    }
+    if (!hasUnsavedChanges) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [hasUnsavedChanges]);
 
   const handleAddHashtag = () => {

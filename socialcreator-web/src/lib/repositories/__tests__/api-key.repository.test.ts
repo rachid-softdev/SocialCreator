@@ -223,7 +223,7 @@ describe("PrismaApiKeyRepository", () => {
       const result = await repo.revoke("ak-1");
 
       expect(result.revokedAt).toBeInstanceOf(Date);
-      const callArgs = vi.mocked(prisma.apiKey.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.apiKey.update).mock.calls[0]![0];
       expect(callArgs.where).toEqual({ id: "ak-1" });
       expect(callArgs.data.revokedAt).toBeInstanceOf(Date);
       const calledAt = new Date((callArgs as any).data.revokedAt);
@@ -245,7 +245,7 @@ describe("PrismaApiKeyRepository", () => {
 
       await repo.updateLastUsed("ak-1");
 
-      const callArgs = vi.mocked(prisma.apiKey.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.apiKey.update).mock.calls[0]![0];
       expect(callArgs.where).toEqual({ id: "ak-1" });
       expect(callArgs.data.lastUsed).toBeInstanceOf(Date);
       const calledAt = new Date((callArgs as any).data.lastUsed);

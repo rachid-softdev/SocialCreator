@@ -183,7 +183,7 @@ test.describe("Content History Deep", () => {
       if (await skipIfRedirected(page)) return;
 
       // Wait for data to render
-      await expect(page.getByText(ACTION_LABELS.CREATED).first()).toBeVisible({
+      await expect(page.getByText(ACTION_LABELS.CREATED!).first()).toBeVisible({
         timeout: 10000,
       });
 
@@ -222,7 +222,7 @@ test.describe("Content History Deep", () => {
 
       // Verify each badge label appears
       for (const action of actions) {
-        const label = ACTION_LABELS[action];
+        const label = ACTION_LABELS[action]!;
         await expect(page.getByText(label).first()).toBeVisible({
           timeout: 5000,
         });
@@ -257,7 +257,7 @@ test.describe("Content History Deep", () => {
 
       // Skeleton should disappear and data should show
       await expect(skeleton).not.toBeVisible({ timeout: 10000 });
-      await expect(page.getByText(ACTION_LABELS.CREATED).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(ACTION_LABELS.CREATED!).first()).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -306,7 +306,7 @@ test.describe("Content History Deep", () => {
       if (await skipIfRedirected(page)) return;
 
       // Wait for initial load
-      await expect(page.getByText(ACTION_LABELS.CREATED).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(ACTION_LABELS.CREATED!).first()).toBeVisible({ timeout: 10000 });
 
       // Click the "Créé" filter button
       const filterButton = page.getByRole("button").filter({ hasText: ACTION_LABELS.CREATED });
@@ -446,7 +446,7 @@ test.describe("Content History Deep", () => {
       if (await skipIfRedirected(page)) return;
 
       // Wait for full list
-      await expect(page.getByText(ACTION_LABELS.CREATED).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(ACTION_LABELS.CREATED!).first()).toBeVisible({ timeout: 10000 });
 
       // Apply a filter (click on filter button)
       const filterBtn = page.getByRole("button").filter({ hasText: ACTION_LABELS.CREATED });

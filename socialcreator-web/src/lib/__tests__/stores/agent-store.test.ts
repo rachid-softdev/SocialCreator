@@ -216,7 +216,7 @@ describe("AgentStore", () => {
       useAgentStore.setState({ runs: { "agent-1": [mockRun] } });
       useAgentStore.getState().updateRunStatus("agent-1", "run-1", "FAILED");
 
-      const run = useAgentStore.getState().runs["agent-1"][0];
+      const run = useAgentStore.getState().runs["agent-1"]![0]!;
       expect(run.status).toBe("FAILED");
     });
 
@@ -230,16 +230,16 @@ describe("AgentStore", () => {
       useAgentStore.setState({ runs: { "agent-1": [mockRun] } });
       useAgentStore.getState().updateRunStatus("agent-1", "nonexistent", "FAILED");
 
-      expect(useAgentStore.getState().runs["agent-1"][0].status).toBe("SUCCESS");
+      expect(useAgentStore.getState().runs["agent-1"]![0]!.status).toBe("SUCCESS");
     });
 
     it("should not affect other runs of the same agent", () => {
       useAgentStore.setState({ runs: { "agent-1": [mockRun, mockRun2] } });
       useAgentStore.getState().updateRunStatus("agent-1", "run-1", "FAILED");
 
-      const runs = useAgentStore.getState().runs["agent-1"];
-      expect(runs[0].status).toBe("FAILED");
-      expect(runs[1].status).toBe("RUNNING");
+      const runs = useAgentStore.getState().runs["agent-1"]!;
+      expect(runs[0]!.status).toBe("FAILED");
+      expect(runs[1]!.status).toBe("RUNNING");
     });
   });
 
@@ -249,9 +249,9 @@ describe("AgentStore", () => {
       useAgentStore.getState().updateAgent("agent-1", { name: "Updated Bot", maxPerDay: 10 });
 
       const agent = useAgentStore.getState().agents[0];
-      expect(agent.name).toBe("Updated Bot");
-      expect(agent.maxPerDay).toBe(10);
-      expect(agent.type).toBe("content"); // unchanged
+      expect(agent!.name).toBe("Updated Bot");
+      expect(agent!.maxPerDay).toBe(10);
+      expect(agent!.type).toBe("content"); // unchanged
     });
 
     it("should do nothing if agent id not found", () => {
@@ -265,7 +265,7 @@ describe("AgentStore", () => {
       useAgentStore.setState({ agents: [mockAgent, mockAgent2] });
       useAgentStore.getState().updateAgent("agent-1", { isActive: false });
 
-      expect(useAgentStore.getState().agents[0].isActive).toBe(false);
+      expect(useAgentStore.getState().agents[0]!.isActive).toBe(false);
     });
   });
 
@@ -275,7 +275,7 @@ describe("AgentStore", () => {
       useAgentStore.getState().removeAgent("agent-1");
 
       expect(useAgentStore.getState().agents).toHaveLength(1);
-      expect(useAgentStore.getState().agents[0].id).toBe("agent-2");
+      expect(useAgentStore.getState().agents[0]!.id).toBe("agent-2");
     });
 
     it("should do nothing if id not found", () => {
@@ -500,7 +500,7 @@ describe("agent-store [integration] — fetchAgents, fetchRuns, runAgent", () =>
       useRealAgentStore.setState({ runs: { "agent-1": [mockAgentRun] } });
       useRealAgentStore.getState().updateRunStatus("agent-1", "run-1", "FAILED");
 
-      expect(useRealAgentStore.getState().runs["agent-1"][0].status).toBe("FAILED");
+      expect(useRealAgentStore.getState().runs["agent-1"]![0]!.status).toBe("FAILED");
     });
 
     it("updateAgent updates agent in agents array", () => {
@@ -509,7 +509,7 @@ describe("agent-store [integration] — fetchAgents, fetchRuns, runAgent", () =>
         name: "Updated Agent",
       });
 
-      expect(useRealAgentStore.getState().agents[0].name).toBe("Updated Agent");
+      expect(useRealAgentStore.getState().agents[0]!.name).toBe("Updated Agent");
     });
 
     it("removeAgent removes from agents array", () => {

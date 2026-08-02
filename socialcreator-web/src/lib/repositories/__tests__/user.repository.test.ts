@@ -226,7 +226,7 @@ describe("PrismaUserRepository", () => {
       expect(result.cguAccepted).toBe(true);
       expect(result.cguAcceptedAt).toBeInstanceOf(Date);
 
-      const callArgs = vi.mocked(prisma.user.update).mock.calls[0][0];
+      const callArgs = vi.mocked(prisma.user.update).mock.calls[0]![0];
       expect(callArgs.where).toEqual({ id: "user-1" });
       expect(callArgs.data.cguAccepted).toBe(true);
       expect(callArgs.data.cguAcceptedAt).toBeInstanceOf(Date);

@@ -109,7 +109,7 @@ describe("POST /api/auth/register", () => {
       await POST(createRequest(validBody));
 
       const createCallArgs = (prisma.user.create as unknown as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+        .calls[0]![0]!;
       expect(createCallArgs.data.password).toBe("hashed-password-123");
       expect(createCallArgs.data.password).not.toBe("password123");
     });

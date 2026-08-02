@@ -118,7 +118,7 @@ describe("ContentBankEditor", () => {
 
     // Find and click the delete (Trash2) buttons
     const deleteButtons = screen.getAllByText("svg-trash2");
-    await userEvent.click(deleteButtons[0]);
+    await userEvent.click(deleteButtons[0]!);
 
     expect(onChange).toHaveBeenCalled();
     const callArg = onChange.mock.calls[0][0];
@@ -168,7 +168,7 @@ describe("ContentBankEditor", () => {
 
     // Find the tag input (there should be one per example)
     const tagInputs = screen.getAllByPlaceholderText("Add tag...");
-    await userEvent.type(tagInputs[0], "new-tag");
+    await userEvent.type(tagInputs[0]!, "new-tag");
     await userEvent.keyboard("{Enter}");
 
     expect(onChange).toHaveBeenCalled();
@@ -183,7 +183,7 @@ describe("ContentBankEditor", () => {
 
     // Find and click the X buttons on tags
     const removeTagButtons = screen.getAllByText("svg-x");
-    await userEvent.click(removeTagButtons[0]);
+    await userEvent.click(removeTagButtons[0]!);
 
     expect(onChange).toHaveBeenCalled();
     const callArg = onChange.mock.calls[0][0];

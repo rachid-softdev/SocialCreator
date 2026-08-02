@@ -91,7 +91,7 @@ test.describe("Content Creation", () => {
       // Select platform if available
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const value = (await platformOptions[1].getAttribute("value")) || "";
+        const value = (await platformOptions[1]!.getAttribute("value")) || "";
         await genPage.platformSelect.selectOption(value);
       }
 
@@ -136,7 +136,7 @@ test.describe("Content Creation", () => {
       // Select platform if available
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const value = (await platformOptions[1].getAttribute("value")) || "";
+        const value = (await platformOptions[1]!.getAttribute("value")) || "";
         await genPage.platformSelect.selectOption(value);
       }
 
@@ -220,7 +220,7 @@ test.describe("Platform-Specific Generation", () => {
     // Select a platform option if available
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
       // Verify the selection was applied
       const selectedValue = await genPage.platformSelect.inputValue();
@@ -240,7 +240,7 @@ test.describe("Platform-Specific Generation", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
 
       // After selecting a platform, check for platform-specific options
@@ -364,7 +364,7 @@ test.describe("Generation States", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -397,7 +397,7 @@ test.describe("Generation States", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -432,7 +432,7 @@ test.describe("Generation States", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -465,7 +465,7 @@ test.describe("Generation States", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -604,7 +604,7 @@ test.describe("Content — Generation Quota & Errors", () => {
 
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -657,7 +657,7 @@ test.describe("Content — Generation Quota & Errors", () => {
     await genPage.fillKeywords("test, profile");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -693,7 +693,7 @@ test.describe("Content — Generation Quota & Errors", () => {
     await genPage.fillKeywords("error, 500");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -749,7 +749,7 @@ test.describe("Content — Generation Quota & Errors", () => {
     await genPage.fillKeywords("retry, test");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -807,7 +807,7 @@ test.describe("Content — Generation Quota & Errors", () => {
     await genPage.fillKeywords("loading, spinner");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -860,7 +860,7 @@ test.describe("Content — Generation Quota & Errors", () => {
     await genPage.fillKeywords("double, click");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -1337,7 +1337,7 @@ test.describe("Content — Multi-Variation & Platform", () => {
     await genPage.fillKeywords("multiple, variations");
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -1399,7 +1399,7 @@ test.describe("Content — Multi-Variation & Platform", () => {
     await genPage.fillKeywords(testKeywords);
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
     }
 
@@ -1453,7 +1453,7 @@ test.describe("Content — Multi-Variation & Platform", () => {
     // Select a specific platform
     const options = await genPage.platformSelect.locator("option").all();
     if (options.length > 1) {
-      const value = (await options[1].getAttribute("value")) || "";
+      const value = (await options[1]!.getAttribute("value")) || "";
       await genPage.platformSelect.selectOption(value);
       const selectedValue = await genPage.platformSelect.inputValue();
       expect(selectedValue).toBe(value);

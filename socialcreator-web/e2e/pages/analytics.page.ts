@@ -73,8 +73,8 @@ export class AnalyticsPage extends BasePage {
       if (text) {
         const parts = text.trim().split(/\s+/);
         if (parts.length >= 2) {
-          const platform = parts[0];
-          const value = parts[parts.length - 1];
+          const platform = parts[0]!;
+          const value = parts[parts.length - 1]!;
           breakdown[platform] = value;
         }
       }

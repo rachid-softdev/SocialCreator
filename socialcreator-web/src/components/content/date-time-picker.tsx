@@ -77,5 +77,5 @@ function toTimeInputValue(date: Date): string {
 function combineDateTime(dateStr: string, timeStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
   const [hours, minutes] = timeStr.split(":").map(Number);
-  return new Date(year, month - 1, day, hours, minutes);
+  return new Date(year!, month! - 1, day!, hours!, minutes!);
 }

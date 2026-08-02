@@ -111,7 +111,7 @@ describe("PrismaMediaAssetRepository", () => {
       const result = await repo.findByProfileId("profile-1", "VIDEO");
 
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe("VIDEO");
+      expect(result[0]!.type).toBe("VIDEO");
       expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith({
         where: { profileId: "profile-1", type: "VIDEO" },
         orderBy: { uploadedAt: "desc" },

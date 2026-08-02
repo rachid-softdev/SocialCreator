@@ -80,7 +80,7 @@ test.describe("Content Generation Panel UI", () => {
       expect(options.length).toBeGreaterThan(1);
 
       // Select a platform
-      const firstPlatformValue = await options[1].getAttribute("value");
+      const firstPlatformValue = await options[1]!.getAttribute("value");
       if (firstPlatformValue) {
         await genPage.selectPlatform(firstPlatformValue);
         const selectedValue = await genPage.getPlatformValue();
@@ -146,7 +146,7 @@ test.describe("Content Generation Panel UI", () => {
       // Select platform
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -183,7 +183,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -233,7 +233,7 @@ test.describe("Content Generation Panel UI", () => {
 
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -270,7 +270,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -332,7 +332,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch event");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -370,7 +370,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -399,7 +399,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch event");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -434,7 +434,7 @@ test.describe("Content Generation Panel UI", () => {
       // Generate button should be enabled (if platform is selected too)
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
         await expect(genPage.generateButton).toBeEnabled({ timeout: 3000 });
       }
@@ -468,7 +468,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product");
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const platformValue = await platformOptions[1].getAttribute("value");
+        const platformValue = await platformOptions[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -480,7 +480,7 @@ test.describe("Content Generation Panel UI", () => {
 
       // Now change the platform — results should be removed
       if (platformOptions.length > 2) {
-        const newPlatformValue = await platformOptions[2].getAttribute("value");
+        const newPlatformValue = await platformOptions[2]!.getAttribute("value");
         if (newPlatformValue) {
           await genPage.selectPlatform(newPlatformValue);
           // After platform change, results should be cleared (component resets results state)
@@ -517,7 +517,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch");
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const platformValue = await platformOptions[1].getAttribute("value");
+        const platformValue = await platformOptions[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -558,7 +558,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about our product launch");
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const platformValue = await platformOptions[1].getAttribute("value");
+        const platformValue = await platformOptions[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -666,7 +666,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about legacy content");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -719,7 +719,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about future content");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -886,7 +886,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Post with hashtags test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -940,7 +940,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Char count test post");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -989,7 +989,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Edit link test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -1046,7 +1046,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Edit navigation test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -1112,7 +1112,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Multiple edits test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickCount(3);
@@ -1168,7 +1168,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Rate limit test post");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -1223,7 +1223,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Quota display test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -1392,7 +1392,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Create a post about persistence test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1460,7 +1460,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("First batch of content for our brand launch");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
       await genPage.clickGenerate();
@@ -1521,7 +1521,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Generate five variations for this social campaign");
       const platformOptions = await genPage.platformSelect.locator("option").all();
       if (platformOptions.length > 1) {
-        const platformValue = await platformOptions[1].getAttribute("value");
+        const platformValue = await platformOptions[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1577,7 +1577,7 @@ test.describe("Content Generation Panel UI", () => {
       // Now select a platform — button should become enabled
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) {
           await genPage.selectPlatform(platformValue);
           await expect(genPage.generateButton).toBeEnabled({ timeout: 3000 });
@@ -1620,7 +1620,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Content that returns no results");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1672,7 +1672,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Test for 503 error handling");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1721,7 +1721,7 @@ test.describe("Content Generation Panel UI", () => {
       await genPage.fillBrief("Content without hashtags test");
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1779,7 +1779,7 @@ test.describe("Content Generation Panel UI", () => {
       // With platform selected, button should be enabled
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
         await expect(genPage.generateButton).toBeEnabled({ timeout: 3000 });
       }
@@ -1868,7 +1868,7 @@ test.describe("Content Generation Panel UI", () => {
       // Select platform and generate
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 
@@ -1928,7 +1928,7 @@ test.describe("Content Generation Panel UI", () => {
 
       const options = await genPage.platformSelect.locator("option").all();
       if (options.length > 1) {
-        const platformValue = await options[1].getAttribute("value");
+        const platformValue = await options[1]!.getAttribute("value");
         if (platformValue) await genPage.selectPlatform(platformValue);
       }
 

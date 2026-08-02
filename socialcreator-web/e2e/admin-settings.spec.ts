@@ -12,7 +12,7 @@
  * All tests assume French UI. Follows patterns from admin-components.spec.ts, admin.spec.ts, settings.spec.ts.
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -375,9 +375,14 @@ test.describe("Admin Settings — General", () => {
       // Try selecting a different locale
       const options = await localeSelect.locator("option").all();
       const currentValue = await localeSelect.inputValue().catch(() => "");
-      const targetOption = options.find(
-        (o) => o.textContent && !o.textContent.toLowerCase().includes(currentValue.toLowerCase()),
-      );
+      let targetOption: Locator | undefined;
+      for (const o of options) {
+        const text = await o.textContent();
+        if (text && !text.toLowerCase().includes(currentValue.toLowerCase())) {
+          targetOption = o;
+          break;
+        }
+      }
 
       if (targetOption) {
         const targetValue =

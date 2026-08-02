@@ -9,8 +9,8 @@
  * - DB storage (upsert) behavior
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock all external dependencies at the top level ──
 
@@ -39,10 +39,10 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
+import { syncProfileAnalytics, syncUserAnalytics } from "@/lib/analytics/ingestion";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getValidAccessToken } from "@/lib/tokens";
-import logger from "@/lib/logger";
-import { syncProfileAnalytics, syncUserAnalytics } from "@/lib/analytics/ingestion";
 
 // ── Helpers ──
 
@@ -211,7 +211,16 @@ describe("syncProfileAnalytics", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              items: [{ statistics: { viewCount: "500", likeCount: "30", commentCount: "5", subscriberCount: "200" } }],
+              items: [
+                {
+                  statistics: {
+                    viewCount: "500",
+                    likeCount: "30",
+                    commentCount: "5",
+                    subscriberCount: "200",
+                  },
+                },
+              ],
             }),
         });
 
@@ -348,10 +357,7 @@ describe("syncUserAnalytics", () => {
   });
 
   it("syncs all profiles for a user and returns total platforms", async () => {
-    (prisma.profile.findMany as Mock).mockResolvedValue([
-      { id: "profile-1" },
-      { id: "profile-2" },
-    ]);
+    (prisma.profile.findMany as Mock).mockResolvedValue([{ id: "profile-1" }, { id: "profile-2" }]);
 
     // syncProfileAnalytics("profile-1") → 2 connected accounts (INSTAGRAM + FACEBOOK)
     // syncProfileAnalytics("profile-2") → 1 connected account (YOUTUBE)

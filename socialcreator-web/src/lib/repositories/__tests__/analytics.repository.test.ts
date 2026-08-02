@@ -263,8 +263,8 @@ describe("PrismaAnalyticsRepository", () => {
       const result = await repo.getDailyStats("profile-1", 7);
 
       expect(result).toHaveLength(2);
-      expect(result[0].date).toEqual(new Date("2024-06-14"));
-      expect(result[1].date).toEqual(new Date("2024-06-15"));
+      expect(result[0]!.date).toEqual(new Date("2024-06-14"));
+      expect(result[1]!.date).toEqual(new Date("2024-06-15"));
       expect(prisma.analytics.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: { date: "asc" } }),
       );

@@ -273,7 +273,7 @@ describe("ClipSelector", () => {
     const user = userEvent.setup();
     render(
       <ClipSelector
-        segments={[mockSegments[0]]}
+        segments={[mockSegments[0]!]}
         onSelectSegments={onSelectSegments}
         onGenerateContent={onGenerateContent}
       />,

@@ -45,30 +45,26 @@ vi.mock("@/lib/job-queue/backend", () => ({
 }));
 
 import logger from "@/lib/logger";
-
 // These are the sync functions from the queue module itself
+// Async versions
 import {
   clearQueue,
   completeJob,
+  completeJobAsync,
   dequeueJob,
+  dequeueJobAsync,
   enqueueJob,
+  enqueueJobAsync,
   failJob,
+  failJobAsync,
   getActiveCount,
   getJob,
   getJobs,
+  getJobsAsync,
   getQueueSize,
   getQueueStatus,
-  retryJob,
-} from "../queue";
-
-// Async versions
-import {
-  enqueueJobAsync,
-  dequeueJobAsync,
-  completeJobAsync,
-  failJobAsync,
   getQueueStatusAsync,
-  getJobsAsync,
+  retryJob,
 } from "../queue";
 
 // ── Test helpers ──
@@ -428,7 +424,12 @@ describe("Sync Job Queue", () => {
     it("returns all jobs sorted by createdAt descending", () => {
       const id1 = enqueueJob("content-generate", samplePayload);
       vi.advanceTimersByTime(100);
-      const id2 = enqueueJob("publish", { contentId: "c1", profileId: "p1", platform: "X", userId: "u1" });
+      const id2 = enqueueJob("publish", {
+        contentId: "c1",
+        profileId: "p1",
+        platform: "X",
+        userId: "u1",
+      });
       vi.advanceTimersByTime(100);
       const id3 = enqueueJob("video-process", { videoAssetId: "v1", profileId: "p1" });
 
@@ -469,7 +470,12 @@ describe("Sync Job Queue", () => {
 
     it("reflects complex queue state", () => {
       const id1 = enqueueJob("content-generate", samplePayload, { maxAttempts: 1 });
-      const id2 = enqueueJob("publish", { contentId: "c1", profileId: "p1", platform: "X", userId: "u1" });
+      const id2 = enqueueJob("publish", {
+        contentId: "c1",
+        profileId: "p1",
+        platform: "X",
+        userId: "u1",
+      });
       enqueueJob("video-process", { videoAssetId: "v1", profileId: "p1" });
 
       dequeueJob(); // takes id1 (same priority, FIFO)
@@ -606,12 +612,16 @@ describe("Async Job Queue API", () => {
     it("passes delayMs to backend.schedule when provided", async () => {
       mockBackend.schedule.mockResolvedValue("scheduled-uuid");
 
-      const id = await enqueueJobAsync("publish", {
-        contentId: "c1",
-        profileId: "p1",
-        platform: "X",
-        userId: "u1",
-      }, { delayMs: 5000 });
+      const id = await enqueueJobAsync(
+        "publish",
+        {
+          contentId: "c1",
+          profileId: "p1",
+          platform: "X",
+          userId: "u1",
+        },
+        { delayMs: 5000 },
+      );
 
       expect(mockBackend.schedule).toHaveBeenCalledWith(
         expect.objectContaining({ type: "publish" }),
@@ -623,9 +633,13 @@ describe("Async Job Queue API", () => {
     it("merges options with defaults for async enqueue", async () => {
       mockBackend.enqueue.mockResolvedValue("id");
 
-      await enqueueJobAsync("video-process", { videoAssetId: "v1", profileId: "p1" }, {
-        priority: "critical",
-      });
+      await enqueueJobAsync(
+        "video-process",
+        { videoAssetId: "v1", profileId: "p1" },
+        {
+          priority: "critical",
+        },
+      );
 
       expect(mockBackend.enqueue).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -665,7 +679,11 @@ describe("Async Job Queue API", () => {
   describe("getQueueStatusAsync()", () => {
     it("delegates getStatus to backend", async () => {
       mockBackend.getStatus.mockResolvedValue({
-        queued: 5, running: 2, completed: 10, failed: 1, total: 18,
+        queued: 5,
+        running: 2,
+        completed: 10,
+        failed: 1,
+        total: 18,
       });
 
       const status = await getQueueStatusAsync();

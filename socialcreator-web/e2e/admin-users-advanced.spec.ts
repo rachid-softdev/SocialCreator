@@ -78,7 +78,7 @@ test.describe("Admin Users — Role Management", () => {
 
       if (request.method() === "PUT" && pathname.includes("/role")) {
         rolePutCalled = true;
-        const body = request.postData() ? JSON.parse(request.postData()) : {};
+        const body = request.postData() ? JSON.parse(request.postData()!) : {};
         expect(body.role).toBe("ADMIN");
         await route.fulfill({ status: 200, json: { success: true } });
         return;
@@ -163,7 +163,7 @@ test.describe("Admin Users — Role Management", () => {
 
       if (request.method() === "PUT" && pathname.includes("/role")) {
         rolePutCalled = true;
-        const body = request.postData() ? JSON.parse(request.postData()) : {};
+        const body = request.postData() ? JSON.parse(request.postData()!) : {};
         expect(body.role).toBe("USER");
         await route.fulfill({ status: 200, json: { success: true } });
         return;

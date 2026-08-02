@@ -54,7 +54,7 @@ export function SubscriptionStatus({
             {planData?.name || "Free"}
             {planData && (
               <span className="text-base font-normal text-muted ml-1">
-                /{formatDate(new Date()).split(",")[0].toLowerCase().split(" ")[1]}
+                /{formatDate(new Date()).split(",")[0]!.toLowerCase().split(" ")[1]}
               </span>
             )}
           </p>

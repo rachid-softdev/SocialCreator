@@ -27,7 +27,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
   const validation = batchRescheduleSchema.safeParse(body);
 
   if (!validation.success) {
-    return badRequest(validation.error.errors[0].message);
+    return badRequest(validation.error.errors[0]!.message);
   }
 
   const { items } = validation.data;

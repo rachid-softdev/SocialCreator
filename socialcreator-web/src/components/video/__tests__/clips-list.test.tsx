@@ -173,7 +173,7 @@ describe("ClipsList", () => {
     render(<ClipsList clips={[mockClip()]} onPreview={onPreview} />);
 
     const previewButtons = screen.getAllByTitle("Preview");
-    await user.click(previewButtons[0]);
+    await user.click(previewButtons[0]!);
 
     expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ assetId: "asset-1" }));
   });
@@ -183,7 +183,7 @@ describe("ClipsList", () => {
     render(<ClipsList clips={[mockClip()]} onDelete={onDelete} />);
 
     const deleteButtons = screen.getAllByTitle("Delete");
-    await user.click(deleteButtons[0]);
+    await user.click(deleteButtons[0]!);
 
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ assetId: "asset-1" }));
   });

@@ -11,7 +11,7 @@
  * - Circuit breaker operations
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mocks (must use vi.hoisted for hoisted code) ──────
 
@@ -330,13 +330,15 @@ describe("LLM Provider — generateText", () => {
       savedUnhandledRejectionHandlers = process.listeners("unhandledRejection") as Array<
         (...args: any[]) => void
       >;
-      savedUnhandledRejectionHandlers.forEach((h) =>
-        process.removeListener("unhandledRejection", h),
-      );
+      savedUnhandledRejectionHandlers.forEach((h) => {
+        process.removeListener("unhandledRejection", h);
+      });
       process.on("unhandledRejection", (reason: unknown) => {
         if (!(reason instanceof LLMError)) {
           // Re-route non-LLMError rejections to the original vitest handlers
-          savedUnhandledRejectionHandlers.forEach((h) => h(reason));
+          savedUnhandledRejectionHandlers.forEach((h) => {
+            h(reason);
+          });
         }
         // LLMError rejections are expected during circuit breaker tests — swallow
       });
@@ -348,9 +350,9 @@ describe("LLM Provider — generateText", () => {
       // Restore original vitest handlers
       process.removeAllListeners("unhandledRejection");
       process.removeAllListeners("rejectionHandled");
-      savedUnhandledRejectionHandlers.forEach((h) =>
-        process.on("unhandledRejection", h),
-      );
+      savedUnhandledRejectionHandlers.forEach((h) => {
+        process.on("unhandledRejection", h);
+      });
     });
 
     afterEach(async () => {
@@ -596,12 +598,14 @@ describe("LLM Provider — generateText", () => {
       savedUnhandledRejectionHandlers = process.listeners("unhandledRejection") as Array<
         (...args: any[]) => void
       >;
-      savedUnhandledRejectionHandlers.forEach((h) =>
-        process.removeListener("unhandledRejection", h),
-      );
+      savedUnhandledRejectionHandlers.forEach((h) => {
+        process.removeListener("unhandledRejection", h);
+      });
       process.on("unhandledRejection", (reason: unknown) => {
         if (!(reason instanceof LLMError)) {
-          savedUnhandledRejectionHandlers.forEach((h) => h(reason));
+          savedUnhandledRejectionHandlers.forEach((h) => {
+            h(reason);
+          });
         }
       });
       process.on("rejectionHandled", () => {});
@@ -610,9 +614,9 @@ describe("LLM Provider — generateText", () => {
     afterAll(() => {
       process.removeAllListeners("unhandledRejection");
       process.removeAllListeners("rejectionHandled");
-      savedUnhandledRejectionHandlers.forEach((h) =>
-        process.on("unhandledRejection", h),
-      );
+      savedUnhandledRejectionHandlers.forEach((h) => {
+        process.on("unhandledRejection", h);
+      });
     });
 
     afterEach(async () => {

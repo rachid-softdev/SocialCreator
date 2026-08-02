@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       case "plans": {
         const [plans, total] = await Promise.all([
           prisma.plan.findMany({
-            orderBy: { [sortField]: sortOrder },
+            orderBy: { [sortField as string]: sortOrder },
             skip: (page - 1) * limit,
             take: limit,
           }),

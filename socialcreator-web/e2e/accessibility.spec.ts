@@ -1187,9 +1187,9 @@ test.describe("Accessibility — Reduced Motion & Zoom", () => {
           const sheets = document.styleSheets;
           for (let i = 0; i < sheets.length; i++) {
             try {
-              const rules = sheets[i].cssRules || sheets[i].rules;
+              const rules = sheets[i]!.cssRules || sheets[i]!.rules;
               for (let j = 0; j < rules.length; j++) {
-                const cssText = rules[j].cssText || "";
+                const cssText = rules[j]!.cssText || "";
                 if (cssText.includes("prefers-reduced-motion")) {
                   return true;
                 }

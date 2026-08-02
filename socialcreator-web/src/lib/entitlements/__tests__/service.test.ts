@@ -20,8 +20,11 @@ import {
 import type {
   ExperimentConfig,
   FeatureDefinition,
+  FeatureNotAvailableError,
   IEntitlementRepository,
+  LimitReachedError,
   PlanFeatureConfig,
+  SubscriptionExpiredError,
   SubscriptionStatus,
 } from "../types";
 
@@ -954,10 +957,11 @@ describe("Error factory functions", () => {
     const error = createFeatureNotAvailableError("EXPORT_PDF", "free");
 
     expect(error.error).toBe("FEATURE_NOT_AVAILABLE");
-    expect(error.feature).toBe("EXPORT_PDF");
-    expect(error.planRequired).toBe("PRO"); // Currently hardcoded as "PRO"
-    expect(error.currentPlan).toBe("free");
-    expect(error.upgradeUrl).toBe("/settings/billing?upgrade=true");
+    const featureError = error as FeatureNotAvailableError;
+    expect(featureError.feature).toBe("EXPORT_PDF");
+    expect(featureError.planRequired).toBe("PRO"); // Currently hardcoded as "PRO"
+    expect(featureError.currentPlan).toBe("free");
+    expect(featureError.upgradeUrl).toBe("/settings/billing?upgrade=true");
 
     // Verify the complete shape matches the FeatureNotAvailableError interface
     expect(error).toMatchObject({
@@ -974,17 +978,18 @@ describe("Error factory functions", () => {
     const error = createLimitReachedError("AI_GENERATIONS", 10, 10, resetAt);
 
     expect(error.error).toBe("LIMIT_REACHED");
-    expect(error.feature).toBe("AI_GENERATIONS");
-    expect(error.limit).toBe(10);
-    expect(error.used).toBe(10);
-    expect(error.resetAt).toBe(resetAt.toISOString());
-    expect(error.upgradeUrl).toBe("/settings/billing?upgrade=true");
+    const limitError = error as LimitReachedError;
+    expect(limitError.feature).toBe("AI_GENERATIONS");
+    expect(limitError.limit).toBe(10);
+    expect(limitError.used).toBe(10);
+    expect(limitError.resetAt).toBe(resetAt.toISOString());
+    expect(limitError.upgradeUrl).toBe("/settings/billing?upgrade=true");
   });
 
   it("createSubscriptionExpiredError — returns correctly formatted error", () => {
     const error = createSubscriptionExpiredError();
 
     expect(error.error).toBe("SUBSCRIPTION_EXPIRED");
-    expect(error.renewUrl).toBe("/settings/billing");
+    expect((error as SubscriptionExpiredError).renewUrl).toBe("/settings/billing");
   });
 });

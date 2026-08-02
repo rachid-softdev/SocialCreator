@@ -4,7 +4,7 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { createBillingPortal } from "@/lib/stripe";
 
-export async function POST() {
+export async function POST(_request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {

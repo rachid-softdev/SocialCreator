@@ -129,7 +129,7 @@ describe("publishToLinkedIn", () => {
 
     await publishToLinkedIn(mockContent, mockAccount);
 
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const headers = callArg.headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer li-token");
     expect(headers["Content-Type"]).toBe("application/json");
@@ -143,7 +143,7 @@ describe("publishToLinkedIn", () => {
 
     await publishToLinkedIn(mockContent, mockAccount);
 
-    const callUrl = mockFetch.mock.calls[0][0];
+    const callUrl = mockFetch.mock.calls[0]![0];
     expect(callUrl).toBe("https://api.linkedin.com/rest/posts");
   });
 
@@ -153,7 +153,7 @@ describe("publishToLinkedIn", () => {
 
     await publishToLinkedIn(mockContent, mockAccount);
 
-    const callArg = mockFetch.mock.calls[0][1] as RequestInit;
+    const callArg = mockFetch.mock.calls[0]![1] as RequestInit;
     const body = JSON.parse(callArg.body as string);
     expect(body.commentary).toContain("#linkedin #b2b");
   });

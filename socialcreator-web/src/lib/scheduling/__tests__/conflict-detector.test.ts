@@ -67,9 +67,9 @@ describe("checkScheduleConflicts", () => {
 
     expect(result.hasWarning).toBe(true);
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0].type).toBe("time_conflict");
-    expect(result.warnings[0].conflictingIds).toEqual(["content-2", "content-3"]);
-    expect(result.warnings[0].message).toContain("2 other items");
+    expect(result.warnings[0]!.type).toBe("time_conflict");
+    expect(result.warnings[0]!.conflictingIds).toEqual(["content-2", "content-3"]);
+    expect(result.warnings[0]!.message).toContain("2 other items");
   });
 
   it("uses correct singular wording for a single conflict", async () => {
@@ -79,7 +79,7 @@ describe("checkScheduleConflicts", () => {
 
     const result = await checkScheduleConflicts("profile-1", "X" as any, baseDate);
 
-    expect(result.warnings[0].message).toContain("1 other item");
+    expect(result.warnings[0]!.message).toContain("1 other item");
   });
 
   it("uses custom time window when provided", async () => {
@@ -103,9 +103,9 @@ describe("checkScheduleConflicts", () => {
 
     expect(result.hasWarning).toBe(true);
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0].type).toBe("daily_cap");
-    expect(result.warnings[0].currentCount).toBe(50);
-    expect(result.warnings[0].maxCount).toBe(50);
+    expect(result.warnings[0]!.type).toBe("daily_cap");
+    expect(result.warnings[0]!.currentCount).toBe(50);
+    expect(result.warnings[0]!.maxCount).toBe(50);
   });
 
   it("uses custom maxPerDay when provided", async () => {
@@ -116,7 +116,7 @@ describe("checkScheduleConflicts", () => {
     });
 
     expect(result.hasWarning).toBe(true);
-    expect(result.warnings[0].type).toBe("daily_cap");
+    expect(result.warnings[0]!.type).toBe("daily_cap");
   });
 
   it("does not trigger daily cap warning when under limit", async () => {

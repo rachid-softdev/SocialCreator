@@ -184,8 +184,8 @@ test.describe("Admin Workflow — Dashboard to Users to Detail and Back", () => 
 
     // Step 3: Verify users list
     expect(page.url()).toContain("/admin/users");
-    await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(usersList[1].name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(usersList[1]!.name).first()).toBeVisible({ timeout: 5000 });
 
     // Step 4: Navigate to user detail via link
     const userDetailLink = page.locator(`a[href*="/admin/users/${userId}"]`).first();
@@ -217,7 +217,7 @@ test.describe("Admin Workflow — Dashboard to Users to Detail and Back", () => 
     // Step 7: Verify back on users list
     expect(page.url()).toContain("/admin/users");
     expect(page.url()).not.toContain(userId);
-    await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -285,8 +285,8 @@ test.describe("Admin Workflow — Dashboard to Orgs to Detail and Back", () => {
 
     // Step 3: Verify orgs list
     expect(page.url()).toContain("/admin/orgs");
-    await expect(page.getByText(orgsList[0].name).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(orgsList[1].name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(orgsList[0]!.name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(orgsList[1]!.name).first()).toBeVisible({ timeout: 5000 });
 
     // Step 4: Navigate to org detail via link
     const orgDetailLink = page.locator(`a[href*="/admin/orgs/${orgId}"]`).first();
@@ -331,7 +331,7 @@ test.describe("Admin Workflow — Dashboard to Orgs to Detail and Back", () => {
     // Step 7: Verify back on orgs list
     expect(page.url()).toContain("/admin/orgs");
     expect(page.url()).not.toContain(orgId);
-    await expect(page.getByText(orgsList[0].name).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(orgsList[0]!.name).first()).toBeVisible({ timeout: 5000 });
   });
 });
 

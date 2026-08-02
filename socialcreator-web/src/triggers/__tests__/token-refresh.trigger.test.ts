@@ -224,7 +224,7 @@ describe("runTokenRefresh", () => {
 
     // Verify fetch URL points to Meta's graph API with fb_exchange_token
     const fetchUrl = (fetchWithTimeout as unknown as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
+      .calls[0]![0] as string;
     expect(fetchUrl).toContain("graph.facebook.com");
 
     const parsedUrl = new URL(fetchUrl);
@@ -287,7 +287,7 @@ describe("runTokenRefresh", () => {
     expect(result.platform).toBe("FACEBOOK");
 
     const fetchUrl = (fetchWithTimeout as unknown as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
+      .calls[0]![0] as string;
     expect(fetchUrl).toContain("graph.facebook.com");
 
     expect(prisma.connectedAccount.update).toHaveBeenCalledWith(
@@ -326,7 +326,7 @@ describe("runTokenRefresh", () => {
     // Verify URL is the Google OAuth endpoint
     const fetchCalls = (fetchWithTimeout as unknown as ReturnType<typeof vi.fn>).mock
       .calls as Array<[string, Record<string, unknown>]>;
-    const [fetchUrl, fetchOptions] = fetchCalls[0];
+    const [fetchUrl, fetchOptions] = fetchCalls[0]!;
 
     expect(fetchUrl).toBe("https://oauth2.googleapis.com/token");
 
@@ -393,7 +393,7 @@ describe("runTokenRefresh", () => {
     // Verify URL is the LinkedIn OAuth endpoint
     const fetchCalls = (fetchWithTimeout as unknown as ReturnType<typeof vi.fn>).mock
       .calls as Array<[string, Record<string, unknown>]>;
-    const [fetchUrl, fetchOptions] = fetchCalls[0];
+    const [fetchUrl, fetchOptions] = fetchCalls[0]!;
 
     expect(fetchUrl).toBe("https://www.linkedin.com/oauth/v2/accessToken");
 

@@ -361,7 +361,7 @@ describe("ApiKeyManager", () => {
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
-      const revokeBtn = screen.getAllByText("Revoke")[0];
+      const revokeBtn = screen.getAllByText("Revoke")[0]!;
       await user.click(revokeBtn);
 
       expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
@@ -372,7 +372,7 @@ describe("ApiKeyManager", () => {
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
-      const revokeBtn = screen.getAllByText("Revoke")[0];
+      const revokeBtn = screen.getAllByText("Revoke")[0]!;
       await user.click(revokeBtn);
 
       // Click confirm in the dialog
@@ -388,7 +388,7 @@ describe("ApiKeyManager", () => {
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
-      const revokeBtn = screen.getAllByText("Revoke")[0];
+      const revokeBtn = screen.getAllByText("Revoke")[0]!;
       await user.click(revokeBtn);
 
       // Click cancel in the dialog
@@ -402,7 +402,7 @@ describe("ApiKeyManager", () => {
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
-      const revokeBtn = screen.getAllByText("Revoke")[0];
+      const revokeBtn = screen.getAllByText("Revoke")[0]!;
       await user.click(revokeBtn);
 
       // Click confirm in the dialog
@@ -441,7 +441,7 @@ describe("ApiKeyManager", () => {
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
 
-      const revokeBtn = screen.getAllByText("Revoke")[0];
+      const revokeBtn = screen.getAllByText("Revoke")[0]!;
       await user.click(revokeBtn);
 
       // Confirm in the dialog

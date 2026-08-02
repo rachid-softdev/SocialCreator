@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const validation = updateRoleSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const { role } = validation.data;

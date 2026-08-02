@@ -125,7 +125,7 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
   test.describe("Dashboard → Users → Edit Role → Verify", () => {
     const timestamp = Date.now();
     const usersList = mockUsersList();
-    const editUserId = usersList[1].id; // non-ADMIN user
+    const editUserId = usersList[1]!.id; // non-ADMIN user
 
     test.beforeEach(async ({ page }) => {
       // Mock dashboard stats
@@ -154,8 +154,8 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
             status: 200,
             json: {
               id: editUserId,
-              name: usersList[1].name,
-              email: usersList[1].email,
+              name: usersList[1]!.name,
+              email: usersList[1]!.email,
               role: "ADMIN",
             },
           });
@@ -169,8 +169,8 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
         await route.fulfill({
           json: {
             id: editUserId,
-            name: usersList[1].name,
-            email: usersList[1].email,
+            name: usersList[1]!.name,
+            email: usersList[1]!.email,
             role: "USER", // initial role before edit
             image: null,
             cguAccepted: true,
@@ -203,7 +203,7 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
       expect(page.url()).toContain("/admin/users");
 
       // Step 3: Verify user list shows
-      await expect(page.getByText(usersList[1].name).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(usersList[1]!.name).first()).toBeVisible({ timeout: 5000 });
 
       // Step 4: Click edit role for a non-ADMIN user
       const editRoleBtn = page.locator('button[title="Modifier le rôle"]').first();
@@ -362,7 +362,7 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
       // Step 7: Verify back on users list
       expect(page.url()).toContain("/admin/users");
       expect(page.url()).not.toContain(userId);
-      await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -489,7 +489,7 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
       expect(thomasVisible || marieVisible).toBe(false);
 
       // Step 4: Click the user link to go to detail
-      const userLink = page.locator(`a[href*="/admin/users/${allUsers[0].id}"]`).first();
+      const userLink = page.locator(`a[href*="/admin/users/${allUsers[0]!.id}"]`).first();
       const userLinkVisible = await userLink.isVisible().catch(() => false);
 
       if (userLinkVisible) {
@@ -503,14 +503,14 @@ test.describe("Advanced Admin Workflow — User Administration", () => {
           await page.waitForTimeout(500);
         }
         // If still not on detail, navigate directly
-        if (!page.url().includes(allUsers[0].id)) {
-          await page.goto(`/admin/users/${allUsers[0].id}`);
+        if (!page.url().includes(allUsers[0]!.id)) {
+          await page.goto(`/admin/users/${allUsers[0]!.id}`);
         }
       }
       await page.waitForLoadState("networkidle", { timeout: 5000 });
 
       // Step 5: Verify detail page shows Sophie's info
-      expect(page.url()).toContain(`/admin/users/${allUsers[0].id}`);
+      expect(page.url()).toContain(`/admin/users/${allUsers[0]!.id}`);
       await expect(page.getByText("Sophie Laurent").first()).toBeVisible({ timeout: 5000 });
       await expect(page.getByText("sophie@example.com").first()).toBeVisible({ timeout: 5000 });
     });
@@ -900,7 +900,7 @@ test.describe("Advanced Admin Workflow — Cross-Module", () => {
 
       // Step 4: Verify the pagination total matches — look for "42" or "42 total"
       // The pagination component or total indicator should reflect the count
-      await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -1201,7 +1201,7 @@ test.describe("Advanced Admin Workflow — Error Recovery", () => {
       await usersLink.click();
       await page.waitForLoadState("networkidle", { timeout: 5000 });
       expect(page.url()).toContain("/admin/users");
-      await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
 
       // Step 3: Navigate back to Dashboard — now the 2nd call should succeed
       const dashboardLink = page.locator('aside a[href="/admin"], a[href="/admin"]').first();
@@ -1342,7 +1342,7 @@ test.describe("Advanced Admin Workflow — Error Recovery", () => {
       // Step 3: Verify we're back on the users list
       expect(page.url()).toContain("/admin/users");
       expect(page.url()).not.toContain(nonexistentUserId);
-      await expect(page.getByText(usersList[0].name).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(usersList[0]!.name).first()).toBeVisible({ timeout: 5000 });
     });
   });
 });

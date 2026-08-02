@@ -39,7 +39,7 @@ function aggregateByDate<T extends Record<string, Date>>(
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().split("T")[0];
+    const key = d.toISOString().split("T")[0]!;
     map.set(key, 0);
   }
 
@@ -47,7 +47,7 @@ function aggregateByDate<T extends Record<string, Date>>(
   for (const item of items) {
     const d = item[dateField];
     if (d instanceof Date) {
-      const key = d.toISOString().split("T")[0];
+      const key = d.toISOString().split("T")[0]!;
       map.set(key, (map.get(key) || 0) + 1);
     }
   }

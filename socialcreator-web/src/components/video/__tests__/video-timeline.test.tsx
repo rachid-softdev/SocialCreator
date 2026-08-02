@@ -134,6 +134,7 @@ describe("VideoTimeline", () => {
       bottom: 64,
       x: 0,
       y: 0,
+      toJSON: () => ({}),
     });
 
     // user-event v14 click() does not accept clientX; use pointer() to specify coords
@@ -170,7 +171,7 @@ describe("VideoTimeline", () => {
       value: () => rect,
     });
 
-    await user.click(timeline, { clientX: 50 });
+    await user.click(timeline);
     // No error should occur
   });
 

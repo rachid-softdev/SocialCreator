@@ -165,7 +165,7 @@ describe("publishToYouTube", () => {
 
       await publishToYouTube(mockContent, mockAccount);
 
-      const initCall = mockFetch.mock.calls[0][1] as RequestInit;
+      const initCall = mockFetch.mock.calls[0]![1] as RequestInit;
       const headers = initCall.headers as Record<string, string>;
       expect(headers.Authorization).toBe("Bearer ya29.valid-token");
       expect(headers["Content-Type"]).toBe("application/json");
@@ -188,7 +188,7 @@ describe("publishToYouTube", () => {
 
       await publishToYouTube(mockContent, mockAccount);
 
-      const initBody = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const initBody = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(initBody.snippet.title).toBe("Test video");
       expect(initBody.snippet.description).toContain("#test #video");
       expect(initBody.snippet.tags).toEqual(["test", "video"]);
@@ -435,7 +435,7 @@ describe("publishToYouTube", () => {
       expect(result.postId).toBe("yt_empty_123");
 
       // Should use default title "Untitled Video"
-      const initBody = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string);
+      const initBody = JSON.parse((mockFetch.mock.calls[0]![1] as RequestInit).body as string);
       expect(initBody.snippet.title).toBe("Untitled Video");
     });
 

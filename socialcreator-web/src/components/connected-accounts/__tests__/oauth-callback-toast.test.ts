@@ -138,7 +138,7 @@ describe("OAuthCallbackToast — logic", () => {
       ];
       for (const code of knownCodes) {
         expect(ERROR_MESSAGES[code]).toBeDefined();
-        expect(ERROR_MESSAGES[code].length).toBeGreaterThan(0);
+        expect(ERROR_MESSAGES[code]!.length).toBeGreaterThan(0);
       }
     });
   });
@@ -148,9 +148,9 @@ describe("OAuthCallbackToast — logic", () => {
       const result = runCallbackToastLogic("?connected=success");
 
       expect(result.toastCalls).toHaveLength(1);
-      expect(result.toastCalls[0].type).toBe("success");
-      expect(result.toastCalls[0].title).toBe("Account connected successfully!");
-      expect(result.toastCalls[0].description).toContain("linked and is ready to use");
+      expect(result.toastCalls[0]!.type).toBe("success");
+      expect(result.toastCalls[0]!.title).toBe("Account connected successfully!");
+      expect(result.toastCalls[0]!.description).toContain("linked and is ready to use");
     });
 
     it("should clean URL when connected=success", () => {
@@ -183,9 +183,9 @@ describe("OAuthCallbackToast — logic", () => {
         const result = runCallbackToastLogic(`?error=${code}`);
 
         expect(result.toastCalls).toHaveLength(1);
-        expect(result.toastCalls[0].type).toBe("error");
-        expect(result.toastCalls[0].title).toBe("Connection failed");
-        expect(result.toastCalls[0].description).toBe(expectedMsg);
+        expect(result.toastCalls[0]!.type).toBe("error");
+        expect(result.toastCalls[0]!.title).toBe("Connection failed");
+        expect(result.toastCalls[0]!.description).toBe(expectedMsg);
       }
     });
 
@@ -193,8 +193,8 @@ describe("OAuthCallbackToast — logic", () => {
       const result = runCallbackToastLogic("?error=unknown_error_code");
 
       expect(result.toastCalls).toHaveLength(1);
-      expect(result.toastCalls[0].type).toBe("error");
-      expect(result.toastCalls[0].description).toBe(DEFAULT_ERROR_MESSAGE);
+      expect(result.toastCalls[0]!.type).toBe("error");
+      expect(result.toastCalls[0]!.description).toBe(DEFAULT_ERROR_MESSAGE);
     });
 
     it("should clean URL when error is present", () => {
@@ -232,7 +232,7 @@ describe("OAuthCallbackToast — logic", () => {
       const result = runCallbackToastLogic("?connected=success&error=invalid_state");
 
       expect(result.toastCalls).toHaveLength(1);
-      expect(result.toastCalls[0].type).toBe("success");
+      expect(result.toastCalls[0]!.type).toBe("success");
     });
   });
 });

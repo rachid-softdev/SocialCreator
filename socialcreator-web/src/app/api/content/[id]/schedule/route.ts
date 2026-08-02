@@ -59,7 +59,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const validation = scheduleSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const { scheduledPublishAt, scheduledTimezone } = validation.data;

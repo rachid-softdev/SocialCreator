@@ -115,9 +115,9 @@ describe("Blog service", () => {
 
       // Dates: June 10 > June 1 > May 15
       expect(posts).toHaveLength(3);
-      expect(posts[0].slug).toBe("third-post");
-      expect(posts[1].slug).toBe("first-post");
-      expect(posts[2].slug).toBe("second-post");
+      expect(posts[0]!.slug).toBe("third-post");
+      expect(posts[1]!.slug).toBe("first-post");
+      expect(posts[2]!.slug).toBe("second-post");
     });
 
     it("should return empty array when there are no posts", async () => {
@@ -266,8 +266,8 @@ describe("Blog service", () => {
       const { getRelatedPosts } = await import("@/lib/services/blog");
       const related = getRelatedPosts("current", ["a", "b", "c"], 3);
 
-      expect(related[0].slug).toBe("high-match"); // score 3
-      expect(related[1].slug).toBe("low-match"); // score 1
+      expect(related[0]!.slug).toBe("high-match"); // score 3
+      expect(related[1]!.slug).toBe("low-match"); // score 1
     });
   });
 

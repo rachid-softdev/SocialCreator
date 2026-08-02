@@ -116,10 +116,10 @@ describe("DowngradeService", () => {
 
       const impacts = await service.previewDowngrade("org-1", "free");
       expect(impacts).toHaveLength(1);
-      expect(impacts[0].featureKey).toBe("EXPORT_PDF");
-      expect(impacts[0].affected).toBe(true);
-      expect(impacts[0].currentEnabled).toBe(true);
-      expect(impacts[0].newEnabled).toBe(false);
+      expect(impacts[0]!.featureKey).toBe("EXPORT_PDF");
+      expect(impacts[0]!.affected).toBe(true);
+      expect(impacts[0]!.currentEnabled).toBe(true);
+      expect(impacts[0]!.newEnabled).toBe(false);
     });
 
     it("should NOT mark BOOLEAN as affected when already disabled", async () => {
@@ -186,10 +186,10 @@ describe("DowngradeService", () => {
 
       const impacts = await service.previewDowngrade("org-1", "starter");
       expect(impacts).toHaveLength(1);
-      expect(impacts[0].featureKey).toBe("AI_GENERATIONS");
-      expect(impacts[0].affected).toBe(true);
-      expect(impacts[0].currentLimit).toBe(1000);
-      expect(impacts[0].newLimit).toBe(100);
+      expect(impacts[0]!.featureKey).toBe("AI_GENERATIONS");
+      expect(impacts[0]!.affected).toBe(true);
+      expect(impacts[0]!.currentLimit).toBe(1000);
+      expect(impacts[0]!.newLimit).toBe(100);
     });
 
     it("should NOT mark LIMIT as affected when current limit <= new limit", async () => {

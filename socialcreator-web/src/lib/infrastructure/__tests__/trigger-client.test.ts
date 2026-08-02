@@ -50,7 +50,7 @@ describe("trigger-client (agent run queue helper)", () => {
       await enqueueAgentRun(payload);
 
       const { enqueueJob } = await import("@/lib/job-queue");
-      const callPayload = vi.mocked(enqueueJob).mock.calls[0][1];
+      const callPayload = vi.mocked(enqueueJob).mock.calls[0]![1];
       expect(callPayload).not.toHaveProperty("profileId");
     });
   });

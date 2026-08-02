@@ -216,8 +216,8 @@ describe("PrismaEntitlementRepository", () => {
 
       const features = await repo.getAllFeatures();
       expect(features).toHaveLength(2);
-      expect(features[0].key).toBe("EXPORT_PDF");
-      expect(features[1].type).toBe("LIMIT");
+      expect(features[0]!.key).toBe("EXPORT_PDF");
+      expect(features[1]!.type).toBe("LIMIT");
 
       expect(mockPrisma.feature.findMany).toHaveBeenCalledWith({
         where: { isActive: true },

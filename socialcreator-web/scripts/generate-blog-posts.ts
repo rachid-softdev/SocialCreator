@@ -174,7 +174,7 @@ Renvoie UNIQUEMENT le JSON, sans texte avant ou après. Pas de backticks, pas de
       });
 
       const rawText = response.content[0];
-      if (rawText.type !== "text") throw new Error("Unexpected response type");
+      if (!rawText || rawText.type !== "text") throw new Error("Unexpected response type");
 
       const text = rawText.text.trim();
 
@@ -197,7 +197,7 @@ Renvoie UNIQUEMENT le JSON, sans texte avant ou après. Pas de backticks, pas de
       const slug = slugify(parsed.title);
 
       // Select random author
-      const author = AUTHORS[Math.floor(Math.random() * AUTHORS.length)];
+      const author = AUTHORS[Math.floor(Math.random() * AUTHORS.length)]!;
 
       // Select random cover image based on topic
       const coverImages = {
@@ -290,16 +290,16 @@ async function main() {
   }> = [];
 
   // Long post
-  console.log(`\n--- Post LONG sur "${selectedTopics[0]}" ---`);
-  const longPost = await generatePost(client, "long", existingTitles, selectedTopics[0]);
+  console.log(`\n--- Post LONG sur "${selectedTopics[0]!}" ---`);
+  const longPost = await generatePost(client, "long", existingTitles, selectedTopics[0]!);
   if (longPost) {
     newPosts.push(longPost);
     existingTitles.push(longPost.title);
   }
 
   // Short post
-  console.log(`\n--- Post SHORT sur "${selectedTopics[1]}" ---`);
-  const shortPost = await generatePost(client, "short", existingTitles, selectedTopics[1]);
+  console.log(`\n--- Post SHORT sur "${selectedTopics[1]!}" ---`);
+  const shortPost = await generatePost(client, "short", existingTitles, selectedTopics[1]!);
   if (shortPost) {
     newPosts.push(shortPost);
   }

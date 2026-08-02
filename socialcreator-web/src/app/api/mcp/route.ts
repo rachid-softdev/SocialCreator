@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     logger.error({ err: error, handler: "mcp" }, "MCP handler error");
 
     if (error instanceof z.ZodError) {
-      return createJsonRpcErrorResponse(null, ERROR_INVALID_PARAMS, error.errors[0].message);
+      return createJsonRpcErrorResponse(null, ERROR_INVALID_PARAMS, error.errors[0]!.message);
     }
 
     return createJsonRpcErrorResponse(null, ERROR_INTERNAL_ERROR, "Internal server error");

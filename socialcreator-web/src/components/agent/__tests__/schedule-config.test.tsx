@@ -87,7 +87,7 @@ vi.mock("@/lib/cron", () => ({
 function findToggle(): HTMLElement {
   const buttons = screen.getAllByRole("button");
   // The toggle button renders only a single <span> child (no visible text content)
-  return buttons.find((btn) => btn.children.length === 1 && btn.children[0].tagName === "SPAN")!;
+  return buttons.find((btn) => btn.children.length === 1 && btn.children[0]!.tagName === "SPAN")!;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────

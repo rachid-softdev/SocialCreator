@@ -118,7 +118,7 @@ describe("Deepgram speech-to-text", () => {
 
       expect(result.transcript).toBe("Hello, this is a test transcription.");
       expect(result.paragraphs).toHaveLength(1);
-      expect(result.paragraphs[0].words[0].word).toBe("Hello");
+      expect(result.paragraphs[0]!.words[0]!.word).toBe("Hello");
     });
 
     it("calls preRecorded with correct URL and transcription options", async () => {
@@ -261,9 +261,9 @@ describe("Deepgram speech-to-text", () => {
       const result = await getTranscriptWithTimestamps("https://example.com/video.mp4");
 
       expect(result.words).toHaveLength(2);
-      expect(result.words[0].word).toBe("Hello");
-      expect(result.words[0].start).toBe(0.1);
-      expect(result.words[1].end).toBe(0.6);
+      expect(result.words[0]!.word).toBe("Hello");
+      expect(result.words[0]!.start).toBe(0.1);
+      expect(result.words[1]!.end).toBe(0.6);
     });
 
     it("calls preRecorded with detect_language option", async () => {

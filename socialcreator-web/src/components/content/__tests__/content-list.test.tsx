@@ -164,7 +164,7 @@ describe("ContentList", () => {
   it("shows 'No content matches your filters' when filtered results are empty", async () => {
     const user = userEvent.setup();
     // Single item that has status DRAFT
-    const singleDraft = [mockContents[0]];
+    const singleDraft = [mockContents[0]!];
     render(<ContentList contents={singleDraft} />);
 
     // Click on "Approved" filter — none of the items are Approved
@@ -210,7 +210,7 @@ describe("ContentList", () => {
     render(<ContentList contents={mockContents} />);
 
     // "Draft" appears in both filter tabs and status badges; click the first match (filter tab)
-    const draftFilter = screen.getAllByText("Draft")[0];
+    const draftFilter = screen.getAllByText("Draft")[0]!;
     await user.click(draftFilter);
 
     expect(screen.getByText("Draft post for testing")).toBeInTheDocument();

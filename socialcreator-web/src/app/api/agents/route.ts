@@ -89,7 +89,7 @@ export const POST = withApiMiddleware(async ({ userId, request }) => {
   const validationResult = createAgentSchema.safeParse(body);
 
   if (!validationResult.success) {
-    return NextResponse.json({ error: validationResult.error.errors[0].message }, { status: 400 });
+    return NextResponse.json({ error: validationResult.error.errors[0]!.message }, { status: 400 });
   }
 
   const { profileId, name, type, platforms, scheduleCron, autoPublish, maxPerDay, config } =

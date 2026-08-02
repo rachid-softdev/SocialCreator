@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const validation = uploadMediaSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.errors[0]!.message }, { status: 400 });
     }
 
     const { profileId, type, url, filename, mimeType, size, width, height, duration } =

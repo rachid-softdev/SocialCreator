@@ -175,7 +175,7 @@ describe("ProfileCard", () => {
 
     // Click more button
     const buttons = screen.getAllByRole("button");
-    await userEvent.click(buttons[0]);
+    await userEvent.click(buttons[0]!);
 
     // Click Delete
     const deleteBtn = screen.getByText("Delete");
@@ -195,7 +195,7 @@ describe("ProfileCard", () => {
     render(<ProfileCard profile={baseProfile as any} onDelete={onDelete} />);
 
     const buttons = screen.getAllByRole("button");
-    await userEvent.click(buttons[0]);
+    await userEvent.click(buttons[0]!);
 
     const deleteBtn = screen.getByText("Delete");
     await userEvent.click(deleteBtn);

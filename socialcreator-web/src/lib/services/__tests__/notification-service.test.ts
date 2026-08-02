@@ -227,12 +227,12 @@ describe("broadcastNotification", () => {
     const result = await broadcastNotification(userIds, input);
 
     expect(result).toHaveLength(3);
-    expect(result[0].id).toBe("n-1");
-    expect(result[1].id).toBe("n-2");
-    expect(result[2].id).toBe("n-3");
-    expect(result[0].userId).toBe("user-1");
-    expect(result[1].userId).toBe("user-2");
-    expect(result[2].userId).toBe("user-3");
+    expect(result[0]!.id).toBe("n-1");
+    expect(result[1]!.id).toBe("n-2");
+    expect(result[2]!.id).toBe("n-3");
+    expect(result[0]!.userId).toBe("user-1");
+    expect(result[1]!.userId).toBe("user-2");
+    expect(result[2]!.userId).toBe("user-3");
     expect(mockNotificationRepo.create).toHaveBeenCalledTimes(3);
   });
 
