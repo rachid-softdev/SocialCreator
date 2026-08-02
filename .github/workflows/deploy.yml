@@ -40,13 +40,13 @@ jobs:
         run: pnpm run build
         env:
           # Build-time only values: the production runtime env is configured
-          # inside Vercel itself. Fallbacks keep the workflow green even
-          # before secrets are configured in this repository.
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-build-fallback-auth-secret-0123456789abcdef' }}
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY || 'ci-build-fallback-encryption-key-0123456789abcdef' }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || 'ci-build-fallback-client-id' }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || 'ci-build-fallback-client-secret' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/socialcreator_build' }}
+          # inside Vercel itself. Hardcoded placeholders (no secrets
+          # expression) keep the workflow green before repo secrets exist.
+          AUTH_SECRET: ci-build-fallback-auth-secret-0123456789abcdef
+          ENCRYPTION_KEY: ci-build-fallback-encryption-key-0123456789abcdef
+          GOOGLE_CLIENT_ID: ci-build-fallback-client-id
+          GOOGLE_CLIENT_SECRET: ci-build-fallback-client-secret
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/socialcreator_build
 
   deploy:
     name: Deploy to Vercel

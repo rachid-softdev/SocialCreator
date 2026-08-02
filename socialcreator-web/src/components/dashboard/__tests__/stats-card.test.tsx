@@ -27,8 +27,8 @@ describe("StatsCard (dashboard)", () => {
   it("renders a formatted large number", () => {
     render(<StatsCard label="Total" value={1234} />);
 
-    // toLocaleString() output can vary by Node version/locale
-    expect(screen.getByText(/1\s*234/)).toBeInTheDocument();
+    // toLocaleString() output can vary by Node version/locale (e.g. "1,234" en-US vs "1 234" fr-FR)
+    expect(screen.getByText(/1[\s,.]*234/)).toBeInTheDocument();
   });
 
   it("renders icon when provided", () => {
