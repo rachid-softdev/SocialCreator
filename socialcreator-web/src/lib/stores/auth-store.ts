@@ -61,12 +61,16 @@ export const useAuthStore = create<AuthState>()(
 );
 
 /**
- * Sync the current auth session from NextAuth into the store
+ * Sync the current auth session from NextAuth into the store.
+ *
+ * Reads the session from the standard NextAuth HTTP endpoint so this module
+ * stays client-safe (importing `@/lib/auth` would pull server-only code —
+ * pino/async_hooks — into client bundles).
  */
 export async function syncAuthSession(): Promise<void> {
   try {
-    const { auth } = await import("@/lib/auth");
-    const session = await auth();
+    const res = await fetch("/api/auth/session");
+    const session = await res.json();
 
     if (session?.user?.id) {
       useAuthStore.getState().setUser({

@@ -2,9 +2,7 @@
 
 import { Button } from "@socialcreator/ui/button";
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
-import logger from "@/lib/logger";
-import { getPlanData, type PaidPlanKey, type PlanKey } from "@/lib/stripe";
+import { getPlanData, type PaidPlanKey, PLANS, type PlanKey } from "@/lib/plans-data";
 
 interface PricingTableProps {
   onSelectPlan?: (plan: PlanKey) => void;
@@ -12,29 +10,14 @@ interface PricingTableProps {
 }
 
 export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
-  const [loading, setLoading] = useState(true);
-  const [planPrices, setPlanPrices] = useState<Record<PaidPlanKey, number>>({
-    starter: 5000,
-    pro: 7000,
-    team: 11000,
-  });
-
-  useEffect(() => {
-    // Fetch dynamic prices from Stripe API
-    async function fetchPrices() {
-      try {
-        const { fetchActivePrices } = await import("@/lib/stripe");
-        const prices = await fetchActivePrices();
-        setPlanPrices(prices);
-      } catch (error) {
-        logger.error({ err: error }, "Failed to fetch prices");
-        // Fallback to static prices on error
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPrices();
-  }, []);
+  // Static prices from PLANS metadata. (Dynamic Stripe prices require a
+  // server endpoint — fetching them directly from the client is not possible
+  // since the Stripe secret key must never leave the server.)
+  const planPrices: Record<PaidPlanKey, number> = {
+    starter: PLANS.starter.price,
+    pro: PLANS.pro.price,
+    team: PLANS.team.price,
+  };
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -69,14 +52,10 @@ export function PricingTable({ onSelectPlan, currentPlan }: PricingTableProps) {
 
             <div className="mb-4">
               <h3 className="text-title-md font-medium">{plan.name}</h3>
-              {loading ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-300 rounded mt-2" />
-              ) : (
-                <p className="text-2xl font-semibold mt-2">
-                  {formatPrice(price)}
-                  <span className="text-base font-normal opacity-70">/month</span>
-                </p>
-              )}
+              <p className="text-2xl font-semibold mt-2">
+                {formatPrice(price)}
+                <span className="text-base font-normal opacity-70">/month</span>
+              </p>
             </div>
 
             <ul className="space-y-3 mb-6 flex-1">

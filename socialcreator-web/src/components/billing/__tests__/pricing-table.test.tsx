@@ -12,11 +12,48 @@ import { PricingTable } from "../pricing-table";
 // ── Mocks ────────────────────────────────────────────────────────────────
 
 const mockGetPlanData = vi.hoisted(() => vi.fn());
-const mockFetchActivePrices = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/stripe", () => ({
+vi.mock("@/lib/plans-data", () => ({
   getPlanData: mockGetPlanData,
-  fetchActivePrices: mockFetchActivePrices,
+  PLANS: {
+    starter: {
+      name: "Starter",
+      price: 5000,
+      profiles: 1,
+      addOnPrice: 2000,
+      addOnProfiles: 1,
+      features: ["1 profile", "AI content generation", "Basic scheduling", "Email support"],
+    },
+    pro: {
+      name: "Pro",
+      price: 7000,
+      profiles: 2,
+      addOnPrice: 2000,
+      addOnProfiles: 1,
+      features: [
+        "2 profiles",
+        "AI content generation",
+        "Advanced scheduling",
+        "Video clipping",
+        "Priority support",
+      ],
+    },
+    team: {
+      name: "Team",
+      price: 11000,
+      profiles: 4,
+      addOnPrice: 2000,
+      addOnProfiles: 1,
+      features: [
+        "4 profiles",
+        "AI content generation",
+        "Advanced scheduling",
+        "Video clipping",
+        "Team collaboration",
+        "Dedicated support",
+      ],
+    },
+  },
 }));
 
 vi.mock("@socialcreator/ui/button", () => ({
@@ -100,7 +137,6 @@ describe("PricingTable", () => {
           return null;
       }
     });
-    mockFetchActivePrices.mockResolvedValue({ starter: 5000, pro: 7000, team: 11000 });
   });
 
   it("renders all three plan tiers", async () => {
@@ -174,16 +210,6 @@ describe("PricingTable", () => {
 
     const currentPlanBtn = screen.getByText("Current Plan");
     expect(currentPlanBtn).toBeDisabled();
-  });
-
-  it("shows loading skeleton while prices are being fetched", () => {
-    // Don't resolve fetchActivePrices so it stays loading
-    mockFetchActivePrices.mockReturnValue(new Promise(() => {}));
-    const { container } = render(<PricingTable />);
-
-    // Should show animated skeleton divs for prices
-    const skeletons = container.querySelectorAll(".animate-pulse");
-    expect(skeletons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders all features from plan data", async () => {

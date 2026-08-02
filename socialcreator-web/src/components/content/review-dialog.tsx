@@ -17,7 +17,6 @@ import {
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import logger from "@/lib/logger";
 
 interface ReviewDialogProps {
   contentId: string;
@@ -49,7 +48,7 @@ export function ReviewDialog({ contentId, open, onOpenChange }: ReviewDialogProp
         setError(data.error || "Failed to approve content");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to approve content");
+      console.error("Failed to approve content", err);
       setError("Failed to approve content");
     } finally {
       setLoading(null);
@@ -80,7 +79,7 @@ export function ReviewDialog({ contentId, open, onOpenChange }: ReviewDialogProp
         setError(data.error || "Failed to reject content");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to reject content");
+      console.error("Failed to reject content", err);
       setError("Failed to reject content");
     } finally {
       setLoading(null);

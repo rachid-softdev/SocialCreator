@@ -9,7 +9,6 @@ import { PlatformBadge } from "@/components/content/platform-badge";
 import { PublishStats } from "@/components/dashboard/publish-stats";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
-import logger from "@/lib/logger";
 
 interface AnalyticsDashboardProps {
   profiles: { id: string; name: string }[];
@@ -72,7 +71,7 @@ export function AnalyticsDashboard({
         setCapStatus(data);
       }
     } catch (error) {
-      logger.error({ err: error }, "Failed to load analytics");
+      console.error("Failed to load analytics", error);
     } finally {
       setIsLoading(false);
     }

@@ -13,7 +13,7 @@ import { SubscriptionStatus } from "../subscription-status";
 
 const mockGetPlanData = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/stripe", () => ({
+vi.mock("@/lib/plans-data", () => ({
   getPlanData: mockGetPlanData,
 }));
 

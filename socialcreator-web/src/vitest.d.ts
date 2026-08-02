@@ -16,9 +16,7 @@
 
 /* ── Matcher types (subset of @testing-library/jest-dom/matchers) ── */
 
-type ToggleableMatcher<R, T> = (this: T, received?: any, expected?: any) => R;
-
-interface JestDOMMatchers<R, T = unknown> {
+interface JestDOMMatchers<R> {
   toBeInTheDocument(): R;
   toBeDisabled(): R;
   toBeEnabled(): R;
@@ -49,6 +47,6 @@ interface JestDOMMatchers<R, T = unknown> {
 import "vitest";
 
 declare module "vitest" {
-  interface Assertion<T = any> extends JestDOMMatchers<T, void> {}
-  interface AsymmetricMatchersContaining extends JestDOMMatchers<unknown, void> {}
+  interface Assertion<T = any> extends JestDOMMatchers<T> {}
+  interface AsymmetricMatchersContaining extends JestDOMMatchers<unknown> {}
 }

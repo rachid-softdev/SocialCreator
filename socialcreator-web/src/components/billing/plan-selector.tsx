@@ -3,7 +3,7 @@
 import { Button } from "@socialcreator/ui/button";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
-import { getPlanData, type PlanKey } from "@/lib/stripe";
+import { getPlanData, type PlanKey } from "@/lib/plans-data";
 
 interface PlanSelectorProps {
   onSubmit?: (plan: PlanKey, additionalProfiles: number) => void;

@@ -23,7 +23,6 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarEventDetail } from "@/components/calendar/calendar-event-detail";
 import { CalendarPlatformFilter } from "@/components/calendar/calendar-platform-filter";
 import { TodayScheduleList } from "@/components/calendar/today-schedule-list";
-import logger from "@/lib/logger";
 
 export interface CalendarEvent {
   id: string;
@@ -87,7 +86,7 @@ export function CalendarView() {
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load calendar events";
-        logger.error({ err }, "Failed to load calendar events");
+        console.error("Failed to load calendar events", err);
         if (!cancelled) setFetchError(message);
       } finally {
         if (!cancelled) setLoading(false);

@@ -15,7 +15,6 @@ import { DisconnectModal } from "@/components/connected-accounts/disconnect-moda
 import { OAuthCallbackToast } from "@/components/connected-accounts/oauth-callback-toast";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
-import logger from "@/lib/logger";
 
 /**
  * Serialized ConnectedAccount type for the client.
@@ -93,7 +92,7 @@ export function AccountsPageClient({ initialAccounts, profileId }: AccountsPageC
       // Refresh the list
       await fetchAccounts();
     } catch (err) {
-      logger.error({ err }, "Failed to disconnect");
+      console.error("Failed to disconnect", err);
     } finally {
       setIsDisconnecting(false);
       setDisconnectAccount(null);

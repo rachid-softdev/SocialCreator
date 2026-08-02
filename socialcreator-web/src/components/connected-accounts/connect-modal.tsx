@@ -16,7 +16,6 @@ import {
 } from "@socialcreator/ui/dialog";
 import { AlertTriangle, Check, ExternalLink, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import logger from "@/lib/logger";
 import { getUnconnectedPlatforms } from "./account-list";
 import { getPlatformName, PlatformIcon } from "./platform-icon";
 
@@ -140,7 +139,7 @@ export function ConnectModal({
           }
         }, 500);
       } catch (err) {
-        logger.error({ err }, "Failed to connect account");
+        console.error("Failed to connect account", err);
         setError(
           err instanceof Error ? err.message : "Failed to connect account. Please try again.",
         );

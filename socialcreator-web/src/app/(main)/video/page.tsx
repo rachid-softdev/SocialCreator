@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
-import logger from "@/lib/logger";
 
 interface VideoAsset {
   id: string;
@@ -68,7 +67,7 @@ export default function AllVideosPage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        logger.error({ err: error }, "Failed to fetch profiles");
+        console.error("Failed to fetch profiles", error);
       }
     };
 
@@ -104,7 +103,7 @@ export default function AllVideosPage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        logger.error({ err: error }, "Failed to fetch videos");
+        console.error("Failed to fetch videos", error);
       } finally {
         if (!signal.aborted) {
           setIsLoading(false);

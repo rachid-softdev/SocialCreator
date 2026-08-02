@@ -8,7 +8,6 @@ import { useState } from "react";
 import { AgentList } from "@/components/agent/agent-list";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
-import logger from "@/lib/logger";
 
 interface AllAgentsClientProps {
   initialAgents: AgentWithRelations[];
@@ -35,7 +34,7 @@ export function AllAgentsClient({ initialAgents, profiles }: AllAgentsClientProp
         router.refresh();
       }
     } catch (error) {
-      logger.error({ err: error }, "Error deleting agent");
+      console.error("Error deleting agent", error);
     }
   };
 

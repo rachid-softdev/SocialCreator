@@ -13,7 +13,7 @@ import { PlanSelector } from "../plan-selector";
 
 const mockGetPlanData = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/stripe", () => ({
+vi.mock("@/lib/plans-data", () => ({
   getPlanData: mockGetPlanData,
 }));
 

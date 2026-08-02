@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiKeyManager } from "@/components/mcp/api-key-manager";
 import { McpTester } from "@/components/mcp/mcp-tester";
-import logger from "@/lib/logger";
 
 interface ApiKey {
   id: string;
@@ -25,7 +24,7 @@ export default function ApiKeysPage() {
       const data = await response.json();
       setKeys(data.keys || []);
     } catch (error) {
-      logger.error({ err: error }, "Failed to fetch keys");
+      console.error("Failed to fetch keys", error);
     } finally {
       setIsLoading(false);
     }

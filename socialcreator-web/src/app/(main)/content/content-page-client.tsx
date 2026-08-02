@@ -12,7 +12,6 @@ import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { SearchBar } from "@/components/shared/search-bar";
-import logger from "@/lib/logger";
 
 interface ContentPageClientProps {
   initialContents: GeneratedContentWithRelations[];
@@ -100,7 +99,7 @@ export const ContentPageClient = memo(function ContentPageClient({
         setSelectedContent(null);
       }
     } catch (error) {
-      logger.error({ err: error }, "Error approving");
+      console.error("Error approving", error);
     } finally {
       setIsApproving(false);
     }
@@ -120,7 +119,7 @@ export const ContentPageClient = memo(function ContentPageClient({
         setSelectedContent(null);
       }
     } catch (error) {
-      logger.error({ err: error }, "Error rejecting");
+      console.error("Error rejecting", error);
     } finally {
       setIsApproving(false);
     }

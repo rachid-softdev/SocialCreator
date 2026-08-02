@@ -2,7 +2,7 @@
 
 import { Button } from "@socialcreator/ui/button";
 import { Calendar, CreditCard, ExternalLink } from "lucide-react";
-import { getPlanData, type PlanKey } from "@/lib/stripe";
+import { getPlanData, type PlanKey } from "@/lib/plans-data";
 
 interface SubscriptionStatusProps {
   plan?: PlanKey;

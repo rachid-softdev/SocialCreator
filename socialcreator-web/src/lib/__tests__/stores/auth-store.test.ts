@@ -7,10 +7,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
 
-const mockAuth = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/auth", () => ({
-  auth: mockAuth,
-}));
+const mockFetch = vi.hoisted(() => vi.fn());
 
 import { mockLocalStorage } from "@/lib/__tests__/__shared__/mock-factory";
 import { mockUser } from "@/lib/__tests__/__shared__/test-fixtures";
@@ -188,6 +185,7 @@ describe("AuthStore", () => {
 describe("auth-store [integration] — syncAuthSession & persist", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
     useRealAuthStore.setState({
       user: null,
       isLoading: false,
@@ -196,9 +194,11 @@ describe("auth-store [integration] — syncAuthSession & persist", () => {
   });
 
   describe("syncAuthSession", () => {
-    it("sets user when auth() returns session with id", async () => {
-      mockAuth.mockResolvedValue({
-        user: { id: "1", email: "a@b.com", name: null, image: null },
+    it("sets user when session endpoint returns a session with id", async () => {
+      mockFetch.mockResolvedValue({
+        json: async () => ({
+          user: { id: "1", email: "a@b.com", name: null, image: null },
+        }),
       });
 
       await syncAuthSession();
@@ -216,7 +216,7 @@ describe("auth-store [integration] — syncAuthSession & persist", () => {
     });
 
     it("sets isLoading false when no session", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockFetch.mockResolvedValue({ json: async () => null });
 
       await syncAuthSession();
 
@@ -226,8 +226,8 @@ describe("auth-store [integration] — syncAuthSession & persist", () => {
       expect(state.user).toBeNull();
     });
 
-    it("sets isLoading false when auth() throws", async () => {
-      mockAuth.mockRejectedValue(new Error("Auth service unavailable"));
+    it("sets isLoading false when the session request fails", async () => {
+      mockFetch.mockRejectedValue(new Error("Auth service unavailable"));
 
       await syncAuthSession();
 
@@ -322,6 +322,7 @@ describe("auth-store [integration] — syncAuthSession & persist", () => {
 describe("syncAuthSession — edge cases", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
     useRealAuthStore.setState({
       user: null,
       isLoading: false,
@@ -331,9 +332,11 @@ describe("syncAuthSession — edge cases", () => {
 
   describe("session.user.id missing", () => {
     it("sets isLoading false when user exists but id is absent", async () => {
-      mockAuth.mockResolvedValue({
-        user: { email: "a@b.com", name: "Test", image: null },
-        // no id
+      mockFetch.mockResolvedValue({
+        json: async () => ({
+          user: { email: "a@b.com", name: "Test", image: null },
+          // no id
+        }),
       });
 
       await syncAuthSession();
@@ -347,9 +350,11 @@ describe("syncAuthSession — edge cases", () => {
 
   describe("session.user.role absent", () => {
     it("defaults role to USER when session.user.role is not provided", async () => {
-      mockAuth.mockResolvedValue({
-        user: { id: "1", email: "a@b.com", name: null, image: null },
-        // no role
+      mockFetch.mockResolvedValue({
+        json: async () => ({
+          user: { id: "1", email: "a@b.com", name: null, image: null },
+          // no role
+        }),
       });
 
       await syncAuthSession();

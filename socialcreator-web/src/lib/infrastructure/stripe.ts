@@ -2,6 +2,12 @@ import Stripe from "stripe";
 import { getLogger } from "@/lib/observability";
 import { prisma } from "@/lib/prisma";
 import { withRetry } from "@/lib/retry";
+import { type PaidPlanKey, PLANS, type PlanKey } from "../plans-data";
+
+export type { PaidPlanKey, PlanKey } from "../plans-data";
+// Re-export client-safe plan metadata so server code keeps a single entry
+// point (`@/lib/stripe`). Client components should import from `@/lib/plans-data`.
+export { getPlanData, PLANS } from "../plans-data";
 
 const STRIPE_TIMEOUT_MS = 15_000; // 15 seconds
 
@@ -139,53 +145,6 @@ export async function getPlanPrice(plan: PaidPlanKey): Promise<number> {
 // ============================================
 
 /**
- * @deprecated Use FeatureGateService / PlanFeature table instead.
- * Migration tracked for future: Move plan limits to PlanFeature table.
- */
-export const PLANS = {
-  starter: {
-    name: "Starter",
-    price: 5000, // Will be overridden by dynamic fetch
-    profiles: 1,
-    addOnPrice: 2000,
-    addOnProfiles: 1,
-    features: ["1 profile", "AI content generation", "Basic scheduling", "Email support"],
-  },
-  pro: {
-    name: "Pro",
-    price: 7000, // Will be overridden by dynamic fetch
-    profiles: 2,
-    addOnPrice: 2000,
-    addOnProfiles: 1,
-    features: [
-      "2 profiles",
-      "AI content generation",
-      "Advanced scheduling",
-      "Video clipping",
-      "Priority support",
-    ],
-  },
-  team: {
-    name: "Team",
-    price: 11000, // Will be overridden by dynamic fetch
-    profiles: 4,
-    addOnPrice: 2000,
-    addOnProfiles: 1,
-    features: [
-      "4 profiles",
-      "AI content generation",
-      "Advanced scheduling",
-      "Video clipping",
-      "Team collaboration",
-      "Dedicated support",
-    ],
-  },
-} as const;
-
-export type PlanKey = keyof typeof PLANS | "free";
-export type PaidPlanKey = keyof typeof PLANS;
-
-/**
  * Get plan data - uses dynamic prices if available
  */
 export async function getPlanDataWithDynamicPrice(plan: PlanKey): Promise<{
@@ -206,14 +165,6 @@ export async function getPlanDataWithDynamicPrice(plan: PlanKey): Promise<{
     price: dynamicPrice,
     features: [...staticPlan.features] as string[],
   };
-}
-
-export function getPlanData(plan: "free"): null;
-export function getPlanData(plan: PaidPlanKey): (typeof PLANS)[PaidPlanKey];
-export function getPlanData(plan: PlanKey): (typeof PLANS)[PaidPlanKey] | null;
-export function getPlanData(plan: PlanKey) {
-  if (plan === "free") return null;
-  return PLANS[plan];
 }
 
 export async function createCheckoutSession(

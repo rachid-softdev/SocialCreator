@@ -2,7 +2,6 @@
 
 import { cn } from "@socialcreator/utils";
 import { useCallback, useEffect, useRef } from "react";
-import logger from "@/lib/logger";
 import { getMuxStreamUrl } from "@/lib/mux";
 
 interface MuxPlayerProps {
@@ -57,7 +56,7 @@ export function MuxPlayer({
           // Loop if endTime is set
           hls.on(Hls.Events.ERROR, (_, data) => {
             if (data.fatal) {
-              logger.error({ data }, "HLS fatal error");
+              console.error("HLS fatal error", data);
             }
           });
         }

@@ -23,7 +23,6 @@ import { AdminGuard } from "@/components/admin/admin-guard";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { PageHeader } from "@/components/layout/page-header";
-import logger from "@/lib/logger";
 
 interface Plan {
   id: string;
@@ -149,7 +148,7 @@ function EntitlementsContent() {
         setCreateError(data.error || "Failed to create override");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to create override");
+      console.error("Failed to create override", err);
       setCreateError("Failed to create override");
     } finally {
       setCreateLoading(false);
@@ -172,7 +171,7 @@ function EntitlementsContent() {
         setError(data.error || "Failed to delete override");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to delete override");
+      console.error("Failed to delete override", err);
       setError("Failed to delete override");
     } finally {
       setDeleteLoading(false);

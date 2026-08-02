@@ -40,15 +40,27 @@ jobs:
       - name: Build Next.js application
         run: pnpm run build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Build-time only values: the production runtime env is configured
+          # inside Vercel itself. Fallbacks keep the workflow green even
+          # before secrets are configured in this repository.
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-build-fallback-auth-secret-0123456789abcdef' }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY || 'ci-build-fallback-encryption-key-0123456789abcdef' }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || 'ci-build-fallback-client-id' }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || 'ci-build-fallback-client-secret' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/socialcreator_build' }}
 
       - name: Deploy to Vercel
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: "--prod"
+
+      - name: Warn about missing Vercel secrets
+        if: ${{ secrets.VERCEL_TOKEN == '' }}
+        run: echo "::warning::VERCEL_TOKEN is not configured. Skipping Vercel deployment. Add the Vercel secrets in repo settings to enable auto-deploy."
 
   notify:
     name: Notify

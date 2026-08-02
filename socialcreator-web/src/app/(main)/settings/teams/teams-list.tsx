@@ -28,7 +28,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import logger from "@/lib/logger";
 
 interface TeamWithRelations extends Team {
   owner: {
@@ -143,7 +142,7 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
         setInviteError(data.error || "Failed to send invitation");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to send invitation");
+      console.error("Failed to send invitation", err);
       setInviteError("Failed to send invitation");
     } finally {
       setInviteLoading(false);
@@ -164,7 +163,7 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
         showError(data.error || "Failed to remove member");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to remove member");
+      console.error("Failed to remove member", err);
       showError("Failed to remove member");
     }
   };
@@ -185,7 +184,7 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
         showError(data.error || "Failed to update role");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to update role");
+      console.error("Failed to update role", err);
       showError("Failed to update role");
     }
   };
@@ -206,7 +205,7 @@ export function TeamsList({ teams, currentUserId }: TeamsListProps) {
         showError(data.error || "Failed to delete team");
       }
     } catch (err) {
-      logger.error({ err }, "Failed to delete team");
+      console.error("Failed to delete team", err);
       showError("Failed to delete team");
     } finally {
       setDeleteLoading(false);
