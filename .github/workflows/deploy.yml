@@ -52,8 +52,10 @@ jobs:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
     needs: [build]
-    # Note: secrets are only allowed in job-level conditions, not step-level.
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    # secrets are not allowed in step-level OR job-level if conditions, so
+    # gate on a repo variable instead (set DEPLOY_ENABLED=true in repo
+    # settings once VERCEL_TOKEN/ORG/PROJECT secrets are configured).
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     environment: production
     steps:
       - name: Checkout repository
