@@ -178,13 +178,12 @@ describe("ErrorDisplay", () => {
     expect(screen.queryByText(/Error ID/)).not.toBeInTheDocument();
   });
 
-  it("logs the error to logger on mount", () => {
+  it("logs the error to console on mount", () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<ErrorDisplay error={makeError("Logged error")} reset={vi.fn()} />);
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.objectContaining({ err: expect.any(Error) }),
-      "Application error",
-    );
+    expect(consoleSpy).toHaveBeenCalledWith("[ErrorDisplay]", "Logged error", expect.any(Object));
+    consoleSpy.mockRestore();
   });
 });
 

@@ -89,9 +89,8 @@ describe("DashboardStats", () => {
     expect(mockFetch).toHaveBeenCalledWith("/api/v1/dashboard");
   });
 
-  it("returns null on error and calls logger", async () => {
-    const logger = await import("@/lib/logger");
-    const loggerError = vi.spyOn(logger.default, "error");
+  it("returns null on error and logs to console", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
@@ -101,10 +100,8 @@ describe("DashboardStats", () => {
       expect(container.innerHTML).toBe("");
     });
 
-    expect(loggerError).toHaveBeenCalledWith(
-      { err: expect.any(Error) },
-      "Dashboard stats fetch error",
-    );
+    expect(consoleError).toHaveBeenCalledWith("Dashboard stats fetch error", expect.any(Error));
+    consoleError.mockRestore();
   });
 
   it("calls fetch on mount", () => {

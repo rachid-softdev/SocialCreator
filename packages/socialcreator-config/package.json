@@ -11,5 +11,8 @@
   "files": [
     "tsconfig.base.json",
     "tailwind"
-  ]
+  ],
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
 }

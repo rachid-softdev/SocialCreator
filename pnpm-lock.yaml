@@ -42,7 +42,11 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/socialcreator-config: {}
+  packages/socialcreator-config:
+    devDependencies:
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.22.3)(yaml@2.9.0)
 
   packages/socialcreator-types:
     dependencies:
@@ -226,6 +230,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.2.1
+      dotenv:
+        specifier: ^16.6.1
+        version: 16.6.1
       hls.js:
         specifier: ^1.5.8
         version: 1.6.16

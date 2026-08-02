@@ -418,7 +418,7 @@ describe("ApiKeyManager", () => {
 
   describe("error handling", () => {
     it("logs error when create fails", async () => {
-      const logger = await import("@/lib/logger");
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
       const onCreate = vi.fn().mockRejectedValue(new Error("API error"));
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={onCreate} />);
@@ -431,12 +431,13 @@ describe("ApiKeyManager", () => {
       await user.click(screen.getByText("Create Key"));
 
       await waitFor(() => {
-        expect(logger.default.error).toHaveBeenCalled();
+        expect(consoleError).toHaveBeenCalled();
       });
+      consoleError.mockRestore();
     });
 
     it("logs error when revoke fails", async () => {
-      const logger = await import("@/lib/logger");
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
       const onRevoke = vi.fn().mockRejectedValue(new Error("Revoke error"));
       const user = userEvent.setup();
       render(<ApiKeyManager initialKeys={mockActiveKeys} onCreate={vi.fn()} onRevoke={onRevoke} />);
@@ -448,8 +449,9 @@ describe("ApiKeyManager", () => {
       await user.click(screen.getByTestId("confirm-btn"));
 
       await waitFor(() => {
-        expect(logger.default.error).toHaveBeenCalled();
+        expect(consoleError).toHaveBeenCalled();
       });
+      consoleError.mockRestore();
     });
   });
 });

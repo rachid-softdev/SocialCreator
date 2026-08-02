@@ -167,8 +167,7 @@ describe("AgentsClient", () => {
   });
 
   it("logs error when delete fails", async () => {
-    const logger = await import("@/lib/logger");
-    const loggerError = vi.spyOn(logger.default, "error");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
@@ -178,8 +177,10 @@ describe("AgentsClient", () => {
     await userEvent.click(deleteBtn);
 
     await waitFor(() => {
-      expect(loggerError).toHaveBeenCalledWith({ err: expect.any(Error) }, "Error deleting agent");
+      expect(consoleError).toHaveBeenCalledWith("Error deleting agent", expect.any(Error));
     });
+
+    consoleError.mockRestore();
   });
 
   it("calculates agent count with correct pluralization", () => {
