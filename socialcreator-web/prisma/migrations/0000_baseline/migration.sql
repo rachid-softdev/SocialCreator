@@ -301,6 +301,7 @@ CREATE TABLE "Organization" (
     "name" TEXT NOT NULL,
     "stripeCustomerId" TEXT,
     "stripeSubscriptionId" TEXT,
+    "teamId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
