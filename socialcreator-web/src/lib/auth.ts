@@ -11,6 +11,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import logger from "./logger";
 import { prisma } from "./prisma";
+import { authConfig } from "./auth.config";
 
 // Validate critical auth configuration at module load
 if (!process.env.AUTH_SECRET) {
@@ -27,6 +28,7 @@ if (!googleId || !googleSecret) {
 }
 
 const nextAuthResult: NextAuthResult = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {

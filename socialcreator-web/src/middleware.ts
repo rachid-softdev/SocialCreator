@@ -1,7 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
 import { addVersionHeaders, resolveApiVersion } from "@/lib/api-version";
-import { auth } from "@/lib/auth";
+import { authConfig } from "@/lib/auth.config";
+
+// Edge-safe auth (no Prisma) — full auth with DB adapter lives in @/lib/auth
+// and is used by API routes on the Node.js runtime.
+const { auth } = NextAuth(authConfig);
 
 export default auth(async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
