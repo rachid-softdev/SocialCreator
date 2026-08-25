@@ -11,6 +11,14 @@ const { auth } = NextAuth(authConfig);
 export default auth(async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Dev-only routes: block /dev/* in production
+  if (
+    process.env.NODE_ENV === "production" &&
+    (pathname === "/dev" || pathname.startsWith("/dev/"))
+  ) {
+    return NextResponse.rewrite(new URL("/404", req.url));
+  }
+
   // API version resolution
   // If the path already has a version prefix (e.g., /api/v1/content), just add headers.
   // If the path is a bare /api/* route and the client sent an Accept-version header,
