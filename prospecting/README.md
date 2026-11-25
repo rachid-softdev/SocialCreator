@@ -67,18 +67,18 @@ python run.py --stage replies --domain exemple.com
 
 ## Ã‰tats des prospects
 
-| Ã‰tat | Signification |
-|------|---------------|
-| `discovered` | TrouvÃ© par discovery |
-| `qualified` | Score â‰¥ seuil ICp |
-| `rejected` | Hors cible (spam, concurrent, B2C) |
-| `enriched` | Site crawlÃ©, email(s) trouvÃ©(s) |
-| `drafted` | Brouillon d'email crÃ©Ã© |
-| `approved` | ApprouvÃ© pour envoi (avec revue humaine) |
-| `declined` | RejetÃ© aprÃ¨s revue |
-| `sent` | Email envoyÃ© (DRY_RUN ou rÃ©el) |
-| `replied` | Prospect a rÃ©pondu |
-| `unsubscribed` | S'est dÃ©sabonnÃ© |
+| Ã‰tat           | Signification                            |
+| -------------- | ---------------------------------------- |
+| `discovered`   | TrouvÃ© par discovery                     |
+| `qualified`    | Score â‰¥ seuil ICp                        |
+| `rejected`     | Hors cible (spam, concurrent, B2C)       |
+| `enriched`     | Site crawlÃ©, email(s) trouvÃ©(s)          |
+| `drafted`      | Brouillon d'email crÃ©Ã©                   |
+| `approved`     | ApprouvÃ© pour envoi (avec revue humaine) |
+| `declined`     | RejetÃ© aprÃ¨s revue                       |
+| `sent`         | Email envoyÃ© (DRY_RUN ou rÃ©el)           |
+| `replied`      | Prospect a rÃ©pondu                       |
+| `unsubscribed` | S'est dÃ©sabonnÃ©                          |
 
 ## Qualification heuristique (Sans LLM)
 
@@ -117,18 +117,18 @@ Un seul runner Ã  la fois (`RunnerLock` sur `data/runner.lock`), Ã©vite les 
 
 ## Variables d'environnement
 
-| Variable | DÃ©faut | Description |
-|----------|--------|-------------|
-| `DRY_RUN` | `true` | Mode sec (aucun envoi rÃ©el) |
-| `USE_HEURISTIC` | `true` | Qualification heuristique si pas de LLM |
-| `LLM_API_KEY` | - | ClÃ© API LLM (Groq/OpenAI/Anthropic) |
-| `GROQ_API_KEY` | - | ClÃ© API Groq |
-| `RESEND_API_KEY` | - | ClÃ© API Resend (envoi rÃ©el) |
-| `RESEND_FROM` | `outreach@votre-domaine.com` | Adresse expÃ©diteur |
-| `UNSUBSCRIBE_URL` | `https://votre-domaine.com/unsubscribe` | URL de dÃ©sabonnement |
-| `UNSUBSCRIBE_SECRET` | `change-me-in-production` | Secret HMAC pour les tokens unsubscribe |
-| `DATABASE_URL` | - | PostgreSQL (Neon) pour CRM cloud |
-| `SQLITE_PATH` | `data/crm.db` | Chemin SQLite local |
+| Variable             | DÃ©faut                                  | Description                             |
+| -------------------- | --------------------------------------- | --------------------------------------- |
+| `DRY_RUN`            | `true`                                  | Mode sec (aucun envoi rÃ©el)             |
+| `USE_HEURISTIC`      | `true`                                  | Qualification heuristique si pas de LLM |
+| `LLM_API_KEY`        | -                                       | ClÃ© API LLM (Groq/OpenAI/Anthropic)     |
+| `GROQ_API_KEY`       | -                                       | ClÃ© API Groq                            |
+| `RESEND_API_KEY`     | -                                       | ClÃ© API Resend (envoi rÃ©el)             |
+| `RESEND_FROM`        | `outreach@votre-domaine.com`            | Adresse expÃ©diteur                      |
+| `UNSUBSCRIBE_URL`    | `https://votre-domaine.com/unsubscribe` | URL de dÃ©sabonnement                    |
+| `UNSUBSCRIBE_SECRET` | `change-me-in-production`               | Secret HMAC pour les tokens unsubscribe |
+| `DATABASE_URL`       | -                                       | PostgreSQL (Neon) pour CRM cloud        |
+| `SQLITE_PATH`        | `data/crm.db`                           | Chemin SQLite local                     |
 
 ## Tests
 
