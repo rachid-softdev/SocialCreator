@@ -1,0 +1,51 @@
+{
+  "markets": [
+    {
+      "code": "fr",
+      "name": "France",
+      "target_countries": ["FR"],
+      "search_places": ["Paris", "Lyon", "Marseille", "Lille", "Toulouse"],
+      "search_queries": [
+        "[place] cold email agence lead generation",
+        "[place] agence email marketing",
+        "[place] cold-mail outbound",
+        "[place] lead generation B2B"
+      ],
+      "exclude_keywords": [
+        "emploi", "recrutement", "job", "restaurant",
+        "immobilier", "annuaire"
+      ]
+    },
+    {
+      "code": "intl",
+      "name": "International",
+      "target_countries": ["US", "CA", "UK", "DE"],
+      "search_places": ["New York", "San Francisco", "London", "Berlin"],
+      "search_queries": [
+        "[place] cold email agency",
+        "[place] outbound sales",
+        "[place] lead generation"
+      ],
+      "exclude_keywords": [
+        "restaurant", "retail", "e-commerce"
+      ]
+    }
+  ],
+  "exclude_domains": [
+    "facebook.com", "instagram.com", "twitter.com", "x.com",
+    "linkedin.com", "youtube.com", "wikipedia.org"
+  ],
+  "qualification_threshold": 70,
+  "decision_maker_roles": [
+    "CEO", "CTO", "CMO", "VP Marketing", "VP Sales",
+    "Head of Growth", "Head of Marketing", "Head of Sales",
+    "Founder", "Co-founder"
+  ],
+  "campaigns": {
+    "default": {
+      "offer": "Prospection B2B",
+      "cta": "Appel de 15 minutes",
+      "templates": {}
+    }
+  }
+}
